@@ -3,18 +3,18 @@ import { T } from "../styles/tokens.js";
 import { SUBJECTS } from "../core/subjects.js";
 import { getAccuracy } from "../core/save.js";
 
-export default function HomeScreen({ save, uid, onSubject, onLeaderboard, onSettings }) {
-  const optData = save.subjects?.optellen || {};
-  const acc     = getAccuracy(optData);
-  const xp      = optData.xp || 0;
-  const level   = optData.currentLevel || 1;
-  const streak  = save.streak || 0;
+export default function HomeScreen({ save, uid, onSubject, onSettings }) {
+  var optData = save.subjects && save.subjects.optellen ? save.subjects.optellen : {};
+  var acc     = getAccuracy(optData);
+  var xp      = optData.xp || 0;
+  var level   = optData.currentLevel || 1;
+  var streak  = save.streak || 0;
 
-  // XP needed for next level (roughly)
-  const xpForNext = level * 30;
-  const xpInLevel = xp - (level > 1 ? (level - 1) * 30 : 0);
+  var xpForNext = level * 30;
+  var xpInLevel = xp - (level > 1 ? (level - 1) * 30 : 0);
 
-  const displayName = save.displayName || "Leerling";
+  var displayName = save.displayName || "Leerling";
+  var initials    = displayName.slice(0, 2).toUpperCase();
 
   return (
     <Screen>
@@ -31,36 +31,28 @@ export default function HomeScreen({ save, uid, onSubject, onLeaderboard, onSett
             </div>
             <Heading size={T.xxl}>{displayName}</Heading>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={onLeaderboard}
-              style={{
-                width: 40, height: 40,
-                borderRadius: T.r12,
-                background: T.primaryLight,
-                border: "1px solid " + T.border,
-                color: T.primary,
-                fontSize: 18,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}
-            >
-              #
-            </button>
-            <button
-              onClick={onSettings}
-              style={{
-                width: 40, height: 40,
-                borderRadius: T.r12,
-                background: T.bg,
-                border: "1px solid " + T.border,
-                color: T.textMid,
-                fontSize: 18,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}
-            >
-              &#9881;
-            </button>
-          </div>
+
+          {/* Profiel knop rechts boven */}
+          <button
+            onClick={onSettings}
+            style={{
+              width: 44, height: 44,
+              borderRadius: T.r999,
+              background: T.primary,
+              border: "none",
+              color: T.white,
+              fontSize: 15,
+              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+              letterSpacing: 0.5,
+            }}
+          >
+            {initials}
+          </button>
         </div>
 
         {/* Streak bar */}
@@ -83,26 +75,26 @@ export default function HomeScreen({ save, uid, onSubject, onLeaderboard, onSett
         )}
       </div>
 
-      {/* Content */}
+      {/* Content — extra padding-bottom voor de bottom sheet peek */}
       <div style={{
         flex: 1,
         overflowY: "auto",
         WebkitOverflowScrolling: "touch",
-        padding: "20px 20px 40px",
+        padding: "20px 20px 96px",
         display: "flex",
         flexDirection: "column",
         gap: 16,
       }}>
 
         {/* XP Progress card */}
-        <Card style={{ background: T.primary }}>
+        <Card style={{ background: T.primary, border: "none" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <div>
               <div style={{ fontSize: T.xs, color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>
                 TOTALE VOORTGANG
               </div>
               <div style={{ fontSize: T.xxl, fontWeight: 800, color: T.white }}>
-                {xp} XP
+                {save.totalXp || 0} XP
               </div>
             </div>
             <div style={{
@@ -127,7 +119,7 @@ export default function HomeScreen({ save, uid, onSubject, onLeaderboard, onSett
             style={{ background: "rgba(255,255,255,0.2)" }}
           />
           <div style={{ fontSize: T.xs, color: "rgba(255,255,255,0.65)", marginTop: 6 }}>
-            Niveau {level} - nog {Math.max(0, xpForNext - Math.max(xpInLevel, 0))} XP naar niveau {level + 1}
+            {"Niveau " + level + " – nog " + Math.max(0, xpForNext - Math.max(xpInLevel, 0)) + " XP naar niveau " + (level + 1)}
           </div>
         </Card>
 
@@ -153,16 +145,16 @@ export default function HomeScreen({ save, uid, onSubject, onLeaderboard, onSett
             ONDERDELEN
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {SUBJECTS.map(subject => {
-              const data    = save.subjects?.[subject.id] || {};
-              const subjAcc = getAccuracy(data);
-              const subjLvl = data.currentLevel || 1;
-              const isAvail = subject.available;
+            {SUBJECTS.map(function(subject) {
+              var data    = (save.subjects && save.subjects[subject.id]) ? save.subjects[subject.id] : {};
+              var subjAcc = getAccuracy(data);
+              var subjLvl = data.currentLevel || 1;
+              var isAvail = subject.available;
 
               return (
                 <Card
                   key={subject.id}
-                  onClick={isAvail ? () => onSubject(subject.id) : undefined}
+                  onClick={isAvail ? function() { onSubject(subject.id); } : undefined}
                   style={{
                     opacity: isAvail ? 1 : 0.55,
                     borderColor: isAvail ? subject.color + "30" : T.border,
@@ -233,16 +225,6 @@ export default function HomeScreen({ save, uid, onSubject, onLeaderboard, onSett
             })}
           </div>
         </div>
-
-        {/* Tip card */}
-        <Card style={{ background: "#f0fdf4", borderColor: "#bbf7d0" }}>
-          <div style={{ fontSize: T.sm, color: "#166534", fontWeight: 600, marginBottom: 4 }}>
-            &#128218; Tip
-          </div>
-          <Body size={T.sm} color="#15803d">
-            Oefen elke dag een beetje — consistentie is beter dan lange sessies!
-          </Body>
-        </Card>
 
       </div>
     </Screen>

@@ -1,92 +1,123 @@
 import { useState, useEffect } from "react";
-import { Screen, TopBar, Card, Badge, Loader, Empty } from "../components/UI.jsx";
+import { Screen, TopBar, Card, Loader, Empty } from "../components/UI.jsx";
 import { T } from "../styles/tokens.js";
 import { fetchGlobalTop10, fetchSubjectTop10, fetchMyRankGlobal } from "../services/leaderboard.js";
 
-const TABS = [
-  { id: "global",  label: "Globaal" },
+var MEDAL_GOLD   = "🥇";
+var MEDAL_SILVER = "🥈";
+var MEDAL_BRONZE = "🥉";
+var STAR_GLOW    = "⭐";
+
+var TABS = [
+  { id: "global",   label: "Globaal" },
   { id: "optellen", label: "Optellen" },
 ];
 
-export default function LeaderboardScreen({ uid, save, onBack }) {
-  const [tab, setTab]       = useState("global");
-  const [data, setData]     = useState([]);
-  const [myRank, setMyRank] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
+  var tabState    = useState("global");
+  var tab         = tabState[0];
+  var setTab      = tabState[1];
 
-  const displayName = save.displayName || "Jij";
-  const myXp        = save.totalXp || 0;
+  var dataState   = useState([]);
+  var data        = dataState[0];
+  var setData     = dataState[1];
 
-  useEffect(() => {
-    loadData();
-  }, [tab]);
+  var rankState   = useState(null);
+  var myRank      = rankState[0];
+  var setMyRank   = rankState[1];
+
+  var loadState   = useState(true);
+  var loading     = loadState[0];
+  var setLoading  = loadState[1];
+
+  var displayName = save.displayName || "Jij";
+  var myXp        = save.totalXp || 0;
+
+  useEffect(function() { loadData(); }, [tab]);
 
   async function loadData() {
     setLoading(true);
     setMyRank(null);
     try {
-      let rows = [];
+      var rows = [];
       if (tab === "global") {
         rows = await fetchGlobalTop10();
-        const rank = await fetchMyRankGlobal(uid, myXp);
+        var rank = await fetchMyRankGlobal(uid, myXp);
         setMyRank(rank);
       } else {
         rows = await fetchSubjectTop10(tab);
       }
       setData(rows);
-    } catch {
+    } catch(e) {
       setData([]);
     } finally {
       setLoading(false);
     }
   }
 
-  const isMe = (row) => row.uid === uid;
+  function isMe(row) { return row.uid === uid; }
 
-  return (
-    <Screen>
-      <TopBar title="Leaderboard" onBack={onBack} />
+  function rankIcon(i) {
+    if (i === 0) return MEDAL_GOLD;
+    if (i === 1) return MEDAL_SILVER;
+    if (i === 2) return MEDAL_BRONZE;
+    return null;
+  }
 
+  function rankBg(i) {
+    if (i === 0) return "#fef9c3";
+    if (i === 1) return "#f1f5f9";
+    if (i === 2) return "#fef3c7";
+    return T.bg;
+  }
+
+  function rankColor(i) {
+    if (i === 0) return "#a16207";
+    if (i === 1) return "#475569";
+    if (i === 2) return "#b45309";
+    return T.textMid;
+  }
+
+  // ── Gedeelde inner content ────────────────────────────────────
+  var inner = (
+    <div style={{ display: "flex", flexDirection: "column" }}>
       {/* Tabs */}
       <div style={{
         display: "flex",
-        gap: 0,
-        padding: "12px 20px 0",
+        padding: embedded ? "0 20px" : "12px 20px 0",
         background: T.white,
         borderBottom: "1px solid " + T.border,
       }}>
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{
-              flex: 1,
-              padding: "10px 8px",
-              background: "none",
-              border: "none",
-              borderBottom: "2px solid " + (tab === t.id ? T.primary : "transparent"),
-              color: tab === t.id ? T.primary : T.textSoft,
-              fontWeight: tab === t.id ? 700 : 500,
-              fontSize: T.sm,
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+        {TABS.map(function(t) {
+          return (
+            <button
+              key={t.id}
+              onClick={function() { setTab(t.id); }}
+              style={{
+                flex: 1,
+                padding: "10px 8px",
+                background: "none",
+                border: "none",
+                borderBottom: "2px solid " + (tab === t.id ? T.primary : "transparent"),
+                color: tab === t.id ? T.primary : T.textSoft,
+                fontWeight: tab === t.id ? 700 : 500,
+                fontSize: T.sm,
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
       <div style={{
-        flex: 1,
-        overflowY: "auto",
-        WebkitOverflowScrolling: "touch",
         padding: "16px 20px 40px",
         display: "flex",
         flexDirection: "column",
         gap: 10,
       }}>
-
         {/* My position */}
         <Card style={{ borderColor: T.primary + "30", background: T.primaryLight }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -101,7 +132,7 @@ export default function LeaderboardScreen({ uid, save, onBack }) {
             <div style={{ textAlign: "right" }}>
               {myRank && (
                 <div style={{ fontSize: T.xxl, fontWeight: 900, color: T.primary }}>
-                  #{myRank}
+                  {"#" + myRank}
                 </div>
               )}
               {tab === "global" && (
@@ -115,61 +146,75 @@ export default function LeaderboardScreen({ uid, save, onBack }) {
           <Loader />
         ) : data.length === 0 ? (
           <Empty
-            icon="&#127942;"
+            icon="🏆"
             title="Nog geen scores"
             body="Speel een sessie om op het leaderboard te verschijnen!"
           />
         ) : (
-          data.map((row, i) => (
-            <Card
-              key={row.uid || i}
-              style={{
-                background: isMe(row) ? T.primaryLight : T.white,
-                borderColor: isMe(row) ? T.primary + "40" : T.border,
-                padding: "12px 16px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                {/* Rank */}
-                <div style={{
-                  width: 36, height: 36,
-                  borderRadius: T.r999,
-                  background: i === 0 ? "#fef9c3" : i === 1 ? "#f1f5f9" : i === 2 ? "#fef3c7" : T.bg,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: i < 3 ? 20 : T.sm,
-                  fontWeight: 800,
-                  color: i === 0 ? "#a16207" : i === 1 ? "#475569" : i === 2 ? "#b45309" : T.textMid,
-                  flexShrink: 0,
-                }}>
-                  {i === 0 ? "&#127947;" : i === 1 ? "&#129352;" : i === 2 ? "&#129353;" : "#" + row.rank}
-                </div>
-
-                {/* Name */}
-                <div style={{ flex: 1 }}>
+          data.map(function(row, i) {
+            var icon = rankIcon(i);
+            var me   = isMe(row);
+            return (
+              <Card
+                key={row.uid || i}
+                style={{
+                  background: me ? T.primaryLight : T.white,
+                  borderColor: me ? T.primary + "40" : T.border,
+                  padding: "12px 16px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{
-                    fontWeight: isMe(row) ? 800 : 600,
-                    color: isMe(row) ? T.primary : T.text,
-                    fontSize: T.md,
+                    width: 36, height: 36,
+                    borderRadius: T.r999,
+                    background: rankBg(i),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: icon ? 22 : T.sm,
+                    fontWeight: 800,
+                    color: rankColor(i),
+                    flexShrink: 0,
                   }}>
-                    {row.displayName} {isMe(row) ? "&#11088;" : ""}
+                    {icon ? icon : ("#" + (row.rank || (i + 1)))}
                   </div>
-                  {row.tier && (
-                    <div style={{ fontSize: T.xs, color: T.textSoft }}>{row.tier}</div>
-                  )}
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontWeight: me ? 800 : 600,
+                      color: me ? T.primary : T.text,
+                      fontSize: T.md,
+                    }}>
+                      {row.displayName}{me ? (" " + STAR_GLOW) : ""}
+                    </div>
+                    {row.tier && (
+                      <div style={{ fontSize: T.xs, color: T.textSoft }}>{row.tier}</div>
+                    )}
+                  </div>
+                  <div style={{ textAlign: "right", fontWeight: 700, color: me ? T.primary : T.text }}>
+                    {tab === "global" ? (row.xp + " XP") : ("Lvl " + (row.level || 1))}
+                  </div>
                 </div>
-
-                {/* Score */}
-                <div style={{ textAlign: "right", fontWeight: 700, color: isMe(row) ? T.primary : T.text }}>
-                  {tab === "global" && (row.xp + " XP")}
-                  {tab !== "global" && ("Lvl " + (row.level || 1))}
-                </div>
-              </div>
-            </Card>
-          ))
+              </Card>
+            );
+          })
         )}
+      </div>
+    </div>
+  );
 
+  // Embedded in BottomSheet — geen extra Screen/TopBar
+  if (embedded) return inner;
+
+  // Standalone screen
+  return (
+    <Screen>
+      <TopBar title="Leaderboard" onBack={onBack} />
+      <div style={{
+        flex: 1,
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
+      }}>
+        {inner}
       </div>
     </Screen>
   );

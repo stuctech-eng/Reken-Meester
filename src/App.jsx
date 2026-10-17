@@ -4,6 +4,7 @@ import { checkLevelUnlock } from "./core/subjects.js";
 import { initAuth } from "./services/firebase.js";
 import { loadFromFirestore, saveToFirestore } from "./services/sync.js";
 import { claimUsername, updateGlobalLeaderboard, updateSubjectLeaderboard } from "./services/leaderboard.js";
+import { T } from "./styles/tokens.js";
 
 import HomeScreen      from "./screens/HomeScreen.jsx";
 import SubjectScreen   from "./screens/SubjectScreen.jsx";
@@ -12,45 +13,77 @@ import ResultScreen    from "./screens/ResultScreen.jsx";
 import LeaderboardScreen from "./screens/LeaderboardScreen.jsx";
 import SettingsScreen  from "./screens/SettingsScreen.jsx";
 import UsernameScreen  from "./screens/UsernameScreen.jsx";
+import BottomSheet     from "./components/BottomSheet.jsx";
+
+// Bottom sheet tabs
+var SHEET_TABS = [
+  { id: "leaderboard", label: "Scores",    icon: "🏆" }, // 🏆
+  { id: "more",        label: "Meer",      icon: "⋯" },       // ⋯
+];
 
 export default function App() {
-  const [uid, setUid]             = useState(null);
-  const [save, setSave]           = useState(dClone(DEFAULT_SAVE));
-  const [loading, setLoading]     = useState(true);
-  const [needsName, setNeedsName] = useState(false);
+  var uidState     = useState(null);
+  var uid          = uidState[0];
+  var setUid       = uidState[1];
 
-  // Navigation stack: [{screen, ...props}]
-  const [screen, setScreen]       = useState("home");
-  const [subjectId, setSubjectId] = useState("optellen");
-  const [practiceLevel, setPracticeLevel] = useState(1);
-  const [lastResult, setLastResult] = useState(null);
+  var saveState    = useState(dClone(DEFAULT_SAVE));
+  var save         = saveState[0];
+  var setSave      = saveState[1];
+
+  var loadState    = useState(true);
+  var loading      = loadState[0];
+  var setLoading   = loadState[1];
+
+  var nameState    = useState(false);
+  var needsName    = nameState[0];
+  var setNeedsName = nameState[1];
+
+  var screenState  = useState("home");
+  var screen       = screenState[0];
+  var setScreen    = screenState[1];
+
+  var subjState    = useState("optellen");
+  var subjectId    = subjState[0];
+  var setSubjectId = subjState[1];
+
+  var lvlState     = useState(1);
+  var practiceLevel = lvlState[0];
+  var setPracticeLevel = lvlState[1];
+
+  var resState     = useState(null);
+  var lastResult   = resState[0];
+  var setLastResult = resState[1];
+
+  var sheetTabState = useState("leaderboard");
+  var sheetTab      = sheetTabState[0];
+  var setSheetTab   = sheetTabState[1];
 
   // ── Init ─────────────────────────────────────────────────────
-  useEffect(() => {
+  useEffect(function() {
     initAuth()
-      .then(async (userId) => {
+      .then(async function(userId) {
         setUid(userId);
-        const data = await loadFromFirestore(userId);
+        var data = await loadFromFirestore(userId);
         setSave(data);
         if (!data.username) setNeedsName(true);
         setLoading(false);
       })
-      .catch(() => {
+      .catch(function() {
         try {
-          const local = localStorage.getItem("cumlaude_save");
+          var local = localStorage.getItem("cumlaude_save");
           if (local) setSave(dMerge(dClone(DEFAULT_SAVE), JSON.parse(local)));
-        } catch {}
+        } catch(e) {}
         setLoading(false);
       });
   }, []);
 
   // ── Save helper ───────────────────────────────────────────────
   function upSave(patch) {
-    setSave(prev => {
-      const next = dMerge(dClone(prev), patch);
+    setSave(function(prev) {
+      var next = dMerge(dClone(prev), patch);
       if (uid) saveToFirestore(uid, next);
       else {
-        try { localStorage.setItem("cumlaude_save", JSON.stringify(next)); } catch {}
+        try { localStorage.setItem("cumlaude_save", JSON.stringify(next)); } catch(e) {}
       }
       return next;
     });
@@ -58,7 +91,7 @@ export default function App() {
 
   // ── Username ──────────────────────────────────────────────────
   function handleUsernameDone(name) {
-    const slug = name.toLowerCase().replace(/\s+/g, "_");
+    var slug = name.toLowerCase().replace(/\s+/g, "_");
     upSave({ username: slug, displayName: name });
     setNeedsName(false);
     if (uid) updateGlobalLeaderboard(uid, name, 0, "Beginner");
@@ -66,39 +99,33 @@ export default function App() {
 
   // ── Practice finish ───────────────────────────────────────────
   function handleFinish(result) {
-    // Update subject data
-    setSave(prev => {
-      const next = dClone(prev);
-      const subj = next.subjects[result.subjectId] || dClone(DEFAULT_SAVE.subjects.optellen);
+    setSave(function(prev) {
+      var next = dClone(prev);
+      var subj = next.subjects[result.subjectId] || dClone(DEFAULT_SAVE.subjects.optellen);
 
       subj.totalCorrect   += result.totalCorrect;
       subj.totalQuestions += result.totalQuestions;
-      subj.xp             = (subj.xp || 0) + result.totalXp;
+      subj.xp              = (subj.xp || 0) + result.totalXp;
 
-      // Determine best level to use
-      const acc = Math.round((subj.totalCorrect / subj.totalQuestions) * 100);
+      var acc = Math.round((subj.totalCorrect / subj.totalQuestions) * 100);
       if (acc >= 80 && result.level === subj.currentLevel) {
-        // Good enough: unlock next if not already unlocked
-        const nextLvl = subj.currentLevel + 1;
+        var nextLvl = subj.currentLevel + 1;
         if (nextLvl <= 10 && !(subj.unlockedLevels || []).includes(nextLvl)) {
-          subj.unlockedLevels = [...(subj.unlockedLevels || [1]), nextLvl];
-          // Advance current level
-          subj.currentLevel = nextLvl;
-          subj.bestLevel    = Math.max(subj.bestLevel || 1, nextLvl);
+          subj.unlockedLevels = (subj.unlockedLevels || [1]).concat([nextLvl]);
+          subj.currentLevel   = nextLvl;
+          subj.bestLevel      = Math.max(subj.bestLevel || 1, nextLvl);
         }
       }
 
-      // Also check XP-based unlocks
       subj.unlockedLevels = checkLevelUnlock(subj);
-
       next.subjects[result.subjectId] = subj;
-      next.totalXp        = (next.totalXp || 0) + result.totalXp;
-      next.totalSessions  = (next.totalSessions || 0) + 1;
+      next.totalXp       = (next.totalXp || 0) + result.totalXp;
+      next.totalSessions = (next.totalSessions || 0) + 1;
 
-      // Streak logic
-      const today = new Date().toISOString().slice(0, 10);
+      // Streak
+      var today     = new Date().toISOString().slice(0, 10);
       if (next.lastSessionDate !== today) {
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        var yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
         if (next.lastSessionDate === yesterday) {
           next.streak = (next.streak || 0) + 1;
         } else {
@@ -110,14 +137,13 @@ export default function App() {
 
       if (uid) saveToFirestore(uid, next);
       else {
-        try { localStorage.setItem("cumlaude_save", JSON.stringify(next)); } catch {}
+        try { localStorage.setItem("cumlaude_save", JSON.stringify(next)); } catch(e) {}
       }
 
-      // Push to leaderboards
       if (uid && next.displayName) {
         updateGlobalLeaderboard(uid, next.displayName, next.totalXp, "Leerling");
-        const subjData = next.subjects[result.subjectId];
-        const subAcc   = subjData.totalQuestions > 0
+        var subjData = next.subjects[result.subjectId];
+        var subAcc   = subjData.totalQuestions > 0
           ? Math.round(subjData.totalCorrect / subjData.totalQuestions * 100) : 0;
         updateSubjectLeaderboard(uid, next.displayName, result.subjectId, subjData.currentLevel || 1, subAcc);
       }
@@ -132,11 +158,11 @@ export default function App() {
   // ── Reset ─────────────────────────────────────────────────────
   function handleReset() {
     if (!window.confirm("Weet je zeker dat je alles wilt wissen?")) return;
-    const fresh = dClone(DEFAULT_SAVE);
+    var fresh = dClone(DEFAULT_SAVE);
     setSave(fresh);
     if (uid) saveToFirestore(uid, fresh);
     else {
-      try { localStorage.removeItem("cumlaude_save"); } catch {}
+      try { localStorage.removeItem("cumlaude_save"); } catch(e) {}
     }
     setNeedsName(true);
     setScreen("home");
@@ -151,13 +177,13 @@ export default function App() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: "#f8f9fa",
+        background: T.bg,
         gap: 16,
       }}>
         <div style={{
           width: 64, height: 64,
           borderRadius: 18,
-          background: "#eef2ff",
+          background: T.primaryLight,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -165,7 +191,7 @@ export default function App() {
         }}>
           +
         </div>
-        <div style={{ fontSize: 15, color: "#9ca3af" }}>Reken Meester laden...</div>
+        <div style={{ fontSize: 15, color: T.textSoft }}>Reken Meester laden...</div>
       </div>
     );
   }
@@ -175,26 +201,14 @@ export default function App() {
     return <UsernameScreen uid={uid} onDone={handleUsernameDone} />;
   }
 
-  // ── Router ────────────────────────────────────────────────────
-  if (screen === "home") {
-    return (
-      <HomeScreen
-        save={save}
-        uid={uid}
-        onSubject={(id) => { setSubjectId(id); setScreen("subject"); }}
-        onLeaderboard={() => setScreen("leaderboard")}
-        onSettings={() => setScreen("settings")}
-      />
-    );
-  }
-
+  // ── Screens zonder bottom sheet ───────────────────────────────
   if (screen === "subject") {
     return (
       <SubjectScreen
         subjectId={subjectId}
         save={save}
-        onBack={() => setScreen("home")}
-        onStartLevel={(sId, lvl) => {
+        onBack={function() { setScreen("home"); }}
+        onStartLevel={function(sId, lvl) {
           setSubjectId(sId);
           setPracticeLevel(lvl);
           setScreen("practice");
@@ -208,33 +222,23 @@ export default function App() {
       <PracticeScreen
         subjectId={subjectId}
         level={practiceLevel}
-        onBack={() => setScreen("subject")}
+        onBack={function() { setScreen("subject"); }}
         onFinish={handleFinish}
       />
     );
   }
 
   if (screen === "result") {
-    const subjData = save.subjects?.[lastResult?.subjectId] || {};
-    const nextLvl  = (lastResult?.level || 1) + 1;
-    const hasNext  = nextLvl <= 10 && (subjData.unlockedLevels || [1]).includes(nextLvl);
+    var subjData = (save.subjects && save.subjects[lastResult && lastResult.subjectId]) || {};
+    var nextLvl  = ((lastResult && lastResult.level) || 1) + 1;
+    var hasNext  = nextLvl <= 10 && (subjData.unlockedLevels || [1]).includes(nextLvl);
 
     return (
       <ResultScreen
         result={lastResult}
-        onHome={() => setScreen("home")}
-        onRepeat={() => setScreen("practice")}
-        onNext={hasNext ? () => { setPracticeLevel(nextLvl); setScreen("practice"); } : null}
-      />
-    );
-  }
-
-  if (screen === "leaderboard") {
-    return (
-      <LeaderboardScreen
-        uid={uid}
-        save={save}
-        onBack={() => setScreen("home")}
+        onHome={function() { setScreen("home"); }}
+        onRepeat={function() { setScreen("practice"); }}
+        onNext={hasNext ? function() { setPracticeLevel(nextLvl); setScreen("practice"); } : null}
       />
     );
   }
@@ -243,11 +247,55 @@ export default function App() {
     return (
       <SettingsScreen
         save={save}
-        onBack={() => setScreen("home")}
+        onBack={function() { setScreen("home"); }}
         onReset={handleReset}
       />
     );
   }
 
-  return null;
+  // ── Home + bottom sheet ───────────────────────────────────────
+  // Alles wat niet hierboven matched = home view
+  return (
+    <div style={{ position: "relative", minHeight: "100dvh", background: T.bg }}>
+      <HomeScreen
+        save={save}
+        uid={uid}
+        onSubject={function(id) { setSubjectId(id); setScreen("subject"); }}
+        onSettings={function() { setScreen("settings"); }}
+      />
+
+      <BottomSheet
+        tabs={SHEET_TABS}
+        activeTab={sheetTab}
+        onTabChange={setSheetTab}
+      >
+        {sheetTab === "leaderboard" && (
+          <LeaderboardScreen
+            uid={uid}
+            save={save}
+            embedded={true}
+          />
+        )}
+        {sheetTab === "more" && (
+          <div style={{ padding: "24px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ fontSize: T.xs, fontWeight: 700, color: T.textSoft, letterSpacing: 0.5 }}>
+              MEER
+            </div>
+            {/* Hier komen later meer onderdelen */}
+            <div style={{
+              background: T.white,
+              border: "1px solid " + T.border,
+              borderRadius: T.r16,
+              padding: "16px 18px",
+              color: T.textSoft,
+              fontSize: T.sm,
+              textAlign: "center",
+            }}>
+              Meer onderdelen komen binnenkort!
+            </div>
+          </div>
+        )}
+      </BottomSheet>
+    </div>
+  );
 }
