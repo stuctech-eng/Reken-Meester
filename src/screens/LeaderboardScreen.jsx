@@ -5,9 +5,9 @@ import { fetchGlobalTop10, fetchSubjectTop10, fetchMyRankGlobal } from "../servi
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-var MEDAL_GOLD   = "\U0001F947";
-var MEDAL_SILVER = "\U0001F948";
-var MEDAL_BRONZE = "\U0001F949";
+var MEDAL_GOLD   = "🥇";
+var MEDAL_SILVER = "🥈";
+var MEDAL_BRONZE = "🥉";
 var STAR_GLOW    = "⭐";
 
 var TABS = [
@@ -169,7 +169,7 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
           <Loader />
         ) : data.length === 0 ? (
           <Empty
-            icon={"\U0001F3C6"}
+            icon={"🏆"}
             title={"Nog geen scores"}
             body={"Speel een sessie om op het leaderboard te verschijnen!"}
           />

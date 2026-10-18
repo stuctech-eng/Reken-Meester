@@ -14,7 +14,7 @@ export default function ResultScreen({ result, save, onHome, onRepeat, onNext })
   var stars    = acc >= 90 ? 3 : acc >= 70 ? 2 : acc >= 50 ? 1 : 0;
   var starRow  = "★★★".slice(0, stars * 3) + "☆☆☆".slice(stars * 3);
 
-  var emojiUnicode = acc >= 90 ? "\U0001F389" : acc >= 70 ? "\U0001F60A" : "\U0001F642";
+  var emojiUnicode = acc >= 90 ? "🎉" : acc >= 70 ? "😊" : "🙂";
 
   var message  = acc >= 90
     ? "Uitstekend! Je hebt dit goed begrepen!"
@@ -177,7 +177,7 @@ export default function ResultScreen({ result, save, onHome, onRepeat, onNext })
               lineHeight: 1.45,
               fontWeight: 600,
             }}>
-              {"\U0001F4A1 " + dominantSkill.tip}
+              {"💡 " + dominantSkill.tip}
             </div>
           </div>
         )}

@@ -54,7 +54,7 @@ export default function SettingsScreen({ save, onBack, onReset }) {
               fontSize: 22,
               color: A.primary,
             }}>
-              {"\u{1F464}"}
+              {"👤"}
             </div>
           </div>
         </div>

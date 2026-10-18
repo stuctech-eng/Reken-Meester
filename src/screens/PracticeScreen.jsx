@@ -6,6 +6,8 @@ import { getTitel } from "../core/save.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
+var SESSION_MAX = 20;
+
 export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish }) {
   // ── Initialisatie helpers ─────────────────────────────────────
   function initSkillId() {
@@ -110,6 +112,12 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   }
 
   function advanceToNext(nextSkillId) {
+    // Na SESSION_MAX vragen automatisch afsluiten
+    var answeredSoFar = results.length;
+    if (answeredSoFar >= SESSION_MAX) {
+      handleStop();
+      return;
+    }
     var nextQ = generateNext(nextSkillId);
     setCurrentQuestion(nextQ);
     setSelected(null);
@@ -363,14 +371,14 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           </button>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar — sessie voortgang */}
         <div style={{ padding: "0 20px 12px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
             <span style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 700 }}>
-              {"Vraag " + questionNumber}
+              {"Vraag " + questionNumber + " van " + SESSION_MAX}
             </span>
-            <span style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 700 }}>
-              {skillProgress + " / " + skillTarget}
+            <span style={{ fontSize: T.xs, color: A.primary, fontWeight: 800 }}>
+              {results.filter(function(r) { return r.correct; }).length + " goed"}
             </span>
           </div>
           <div style={{
@@ -381,7 +389,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           }}>
             <div style={{
               height: "100%",
-              width: (Math.round((skillProgress / skillTarget) * 100)) + "%",
+              width: (Math.round((Math.min(results.length, SESSION_MAX) / SESSION_MAX) * 100)) + "%",
               background: A.primary,
               borderRadius: A.r999,
               transition: "width 0.4s cubic-bezier(0.4,0,0.2,1)",
@@ -528,7 +536,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 gap: 10,
                 marginBottom: fbLevel >= 2 ? 10 : 0,
               }}>
-                <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{"\U0001F4A1"}</span>
+                <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{"💡"}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: T.xs, fontWeight: 800, color: A.tipTxt, letterSpacing: 0.8, marginBottom: 3 }}>
                     {"TIP — " + currentSkill.strategy.toUpperCase()}
@@ -637,7 +645,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             animation: "acPopIn 0.22s ease",
           }}>
             <div style={{ fontSize: 56, marginBottom: 14, lineHeight: 1 }}>
-              {"\U0001F393"}
+              {"🎓"}
             </div>
             <div style={{ fontSize: T.xxl, fontWeight: 900, color: A.text, marginBottom: 6 }}>
               {"Skill beheerst!"}
