@@ -265,6 +265,7 @@ export default function App() {
       />
 
       <BottomSheet
+        tipText="Oefen elke dag een beetje — consistentie is beter dan lange sessies!"
         tabs={SHEET_TABS}
         activeTab={sheetTab}
         onTabChange={setSheetTab}
