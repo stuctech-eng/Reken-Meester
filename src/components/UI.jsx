@@ -1,4 +1,7 @@
-import { T, D } from "../styles/tokens.js";
+import { A, T } from "../styles/tokens.js";
+
+// NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
+// Academy theme — licht, wit, professioneel.
 
 // ── Layout wrappers ──────────────────────────────────────────
 
@@ -6,9 +9,10 @@ export function Screen({ children, bg, style }) {
   return (
     <div style={{
       minHeight: "100dvh",
-      background: bg || D.bg,
+      background: bg || A.bg,
       display: "flex",
       flexDirection: "column",
+      fontFamily: "'Nunito', 'Inter', system-ui, sans-serif",
       ...style,
     }}>
       {children}
@@ -40,10 +44,10 @@ export function TopBar({ title, subtitle, onBack, rightEl, color }) {
     <div style={{
       display: "flex",
       alignItems: "center",
-      padding: "16px 20px 12px",
+      padding: "14px 20px 12px",
       gap: 12,
-      borderBottom: "1px solid " + D.border,
-      background: D.bg,
+      borderBottom: "1px solid " + A.border,
+      background: A.bg,
       position: "sticky",
       top: 0,
       zIndex: 10,
@@ -52,29 +56,35 @@ export function TopBar({ title, subtitle, onBack, rightEl, color }) {
         <button
           onClick={onBack}
           style={{
-            background: "none",
-            border: "none",
-            padding: "4px 8px 4px 0",
-            color: color || D.primary,
-            fontSize: T.lg,
-            fontWeight: 600,
+            background: A.bgCard,
+            border: "1.5px solid " + A.border,
+            borderRadius: A.r999,
+            width: 34,
+            height: 34,
             display: "flex",
             alignItems: "center",
-            gap: 4,
+            justifyContent: "center",
+            color: color || A.primary,
+            fontSize: 18,
+            fontWeight: 600,
+            cursor: "pointer",
+            boxShadow: A.shadow,
+            flexShrink: 0,
+            WebkitTapHighlightColor: "transparent",
           }}
         >
-          <span style={{ fontSize: 20 }}>&#8592;</span>
+          {"‹"}
         </button>
       )}
-      <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 700, fontSize: T.lg, color: D.text, lineHeight: 1.2 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 800, fontSize: T.lg, color: A.text, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {title}
         </div>
         {subtitle && (
-          <div style={{ fontSize: T.xs, color: D.textSoft, marginTop: 1 }}>{subtitle}</div>
+          <div style={{ fontSize: T.xs, color: A.textSoft, marginTop: 1, fontWeight: 600 }}>{subtitle}</div>
         )}
       </div>
-      {rightEl && <div>{rightEl}</div>}
+      {rightEl && <div style={{ flexShrink: 0 }}>{rightEl}</div>}
     </div>
   );
 }
@@ -82,18 +92,18 @@ export function TopBar({ title, subtitle, onBack, rightEl, color }) {
 // ── Cards ────────────────────────────────────────────────────
 
 export function Card({ children, style, onClick, color }) {
-  const isClickable = !!onClick;
+  var isClickable = !!onClick;
   return (
     <div
       onClick={onClick}
       style={{
-        background: D.bgCard,
-        border: "1px solid " + (color ? color + "30" : D.border),
-        borderRadius: T.r16,
+        background: A.bgCard,
+        border: "1.5px solid " + (color ? color + "30" : A.border),
+        borderRadius: A.r16,
         padding: "16px 18px",
-        boxShadow: T.shadow,
+        boxShadow: A.shadow,
         cursor: isClickable ? "pointer" : "default",
-        transition: isClickable ? "transform 0.1s, box-shadow 0.1s" : undefined,
+        WebkitTapHighlightColor: isClickable ? "transparent" : undefined,
         ...style,
       }}
     >
@@ -105,26 +115,28 @@ export function Card({ children, style, onClick, color }) {
 // ── Buttons ──────────────────────────────────────────────────
 
 export function Btn({ children, onClick, color, disabled, size, outline, style }) {
-  const c = color || T.primary;
-  const pad = size === "sm" ? "10px 18px" : size === "lg" ? "18px 32px" : "14px 24px";
-  const fs  = size === "sm" ? T.sm : size === "lg" ? T.xl : T.md;
+  var c   = color || A.primary;
+  var pad = size === "sm" ? "10px 18px" : size === "lg" ? "17px 28px" : "14px 24px";
+  var fs  = size === "sm" ? T.sm : size === "lg" ? T.lg : T.md;
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: outline ? "transparent" : (disabled ? D.border : c),
-        color: outline ? c : (disabled ? D.textSoft : D.text),
+        background: outline ? "transparent" : (disabled ? A.border : c),
+        color: outline ? c : (disabled ? A.textSoft : "#ffffff"),
         border: outline ? ("2px solid " + c) : "none",
-        borderRadius: T.r12,
+        borderRadius: A.r16,
         padding: pad,
         fontSize: fs,
-        fontWeight: 700,
-        letterSpacing: 0.3,
-        boxShadow: !outline && !disabled ? ("0 2px 8px " + c + "40") : "none",
+        fontWeight: 800,
+        letterSpacing: 0.2,
+        boxShadow: !outline && !disabled ? A.shadowMd : "none",
         transition: "opacity 0.15s, transform 0.1s",
-        opacity: disabled ? 0.6 : 1,
+        opacity: disabled ? 0.55 : 1,
+        cursor: disabled ? "default" : "pointer",
+        WebkitTapHighlightColor: "transparent",
         ...style,
       }}
     >
@@ -134,21 +146,23 @@ export function Btn({ children, onClick, color, disabled, size, outline, style }
 }
 
 export function IconBtn({ icon, onClick, color, size, style }) {
-  const sz = size || 40;
+  var sz = size || 40;
   return (
     <button
       onClick={onClick}
       style={{
         width: sz,
         height: sz,
-        borderRadius: T.r12,
-        background: D.primaryLight,
-        border: "1px solid " + D.border,
-        color: color || D.primary,
+        borderRadius: A.r12,
+        background: A.primaryLight,
+        border: "1.5px solid " + A.border,
+        color: color || A.primary,
         fontSize: T.lg,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        cursor: "pointer",
+        WebkitTapHighlightColor: "transparent",
         ...style,
       }}
     >
@@ -160,13 +174,13 @@ export function IconBtn({ icon, onClick, color, size, style }) {
 // ── Progress bar ─────────────────────────────────────────────
 
 export function ProgressBar({ value, max, color, height, style }) {
-  const pct = Math.min((value / Math.max(max, 1)) * 100, 100);
-  const c = color || T.primary;
+  var pct = Math.min((value / Math.max(max, 1)) * 100, 100);
+  var c = color || A.primary;
   return (
     <div style={{
-      height: height || 6,
-      background: D.border,
-      borderRadius: T.r999,
+      height: height || 8,
+      background: A.border,
+      borderRadius: A.r999,
       overflow: "hidden",
       ...style,
     }}>
@@ -174,7 +188,7 @@ export function ProgressBar({ value, max, color, height, style }) {
         height: "100%",
         width: pct + "%",
         background: c,
-        borderRadius: T.r999,
+        borderRadius: A.r999,
         transition: "width 0.5s ease",
       }} />
     </div>
@@ -188,12 +202,12 @@ export function Badge({ label, color, bg, style }) {
     <span style={{
       display: "inline-block",
       padding: "3px 10px",
-      borderRadius: T.r999,
-      background: bg || D.primaryLight,
-      color: color || D.primary,
+      borderRadius: A.r999,
+      background: bg || A.primaryLight,
+      color: color || A.primary,
       fontSize: T.xs,
-      fontWeight: 700,
-      letterSpacing: 0.5,
+      fontWeight: 800,
+      letterSpacing: 0.4,
       ...style,
     }}>
       {label}
@@ -207,8 +221,8 @@ export function Heading({ children, size, color, style }) {
   return (
     <div style={{
       fontSize: size || T.xxl,
-      fontWeight: 800,
-      color: color || D.text,
+      fontWeight: 900,
+      color: color || A.text,
       lineHeight: 1.2,
       ...style,
     }}>
@@ -221,7 +235,7 @@ export function Body({ children, color, size, style }) {
   return (
     <p style={{
       fontSize: size || T.md,
-      color: color || D.textMid,
+      color: color || A.textMid,
       lineHeight: 1.55,
       margin: 0,
       ...style,
@@ -234,7 +248,7 @@ export function Body({ children, color, size, style }) {
 // ── Divider ──────────────────────────────────────────────────
 
 export function Divider({ style }) {
-  return <div style={{ height: 1, background: D.border, margin: "4px 0", ...style }} />;
+  return <div style={{ height: 1, background: A.border, margin: "4px 0", ...style }} />;
 }
 
 // ── Loader ───────────────────────────────────────────────────
@@ -248,9 +262,10 @@ export function Loader({ color }) {
       flex: 1,
       minHeight: 200,
       fontSize: T.md,
-      color: color || D.textSoft,
+      color: color || A.textSoft,
+      fontWeight: 600,
     }}>
-      Laden...
+      {"Laden..."}
     </div>
   );
 }
@@ -262,11 +277,11 @@ export function Empty({ icon, title, body }) {
     <div style={{
       textAlign: "center",
       padding: "40px 20px",
-      color: D.textSoft,
+      color: A.textSoft,
     }}>
       {icon && <div style={{ fontSize: 40, marginBottom: 12 }}>{icon}</div>}
-      {title && <div style={{ fontSize: T.lg, fontWeight: 700, color: D.textMid, marginBottom: 6 }}>{title}</div>}
-      {body && <div style={{ fontSize: T.sm }}>{body}</div>}
+      {title && <div style={{ fontSize: T.lg, fontWeight: 800, color: A.textMid, marginBottom: 6 }}>{title}</div>}
+      {body && <div style={{ fontSize: T.sm, color: A.textSoft, lineHeight: 1.5 }}>{body}</div>}
     </div>
   );
 }

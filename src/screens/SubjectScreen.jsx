@@ -1,11 +1,13 @@
 import { Screen, TopBar, Card, Btn, ProgressBar, Badge } from "../components/UI.jsx";
-import { T, D } from "../styles/tokens.js";
+import { A, T } from "../styles/tokens.js";
 import { getSubject, OPTELLEN_SKILLS, SKILL_ORDER, getNextSkill } from "../core/subjects.js";
 import { getAccuracy } from "../core/save.js";
 
+// NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
+
 export default function SubjectScreen({ subjectId, save, onBack, onStartLevel }) {
-  var subject    = getSubject(subjectId);
-  var data       = (save.subjects && save.subjects[subjectId]) || {
+  var subject = getSubject(subjectId);
+  var data    = (save.subjects && save.subjects[subjectId]) || {
     unlockedLevels: [1], currentLevel: 1, xp: 0,
     totalCorrect: 0, totalQuestions: 0,
     skillStats: {}, currentSkillId: "s01_single_easy", totalSkillsMastered: 0,
@@ -22,8 +24,16 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
     onStartLevel(subjectId, data.currentLevel || 1);
   }
 
+  var startLabel = nextSkillInfo.reason === "nieuw"
+    ? "Start nieuwe vaardigheid"
+    : nextSkillInfo.reason === "herhaling"
+      ? "Herhalen en versterken"
+      : nextSkillInfo.reason === "verdiepen"
+        ? "Verdiepen en combineren"
+        : "Oefenen";
+
   return (
-    <Screen bg={D.bg}>
+    <Screen bg={A.bg}>
       <TopBar
         title={subject.label}
         subtitle={subject.description}
@@ -42,65 +52,89 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
       }}>
 
         {/* Stats card */}
-        <Card style={{ borderColor: subject.color + "40", background: D.bgCard }}>
-          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+        <div style={{
+          background: A.bgCard,
+          border: "1.5px solid " + subject.color + "35",
+          borderRadius: A.r20,
+          padding: "20px 18px",
+          boxShadow: A.shadowMd,
+        }}>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
             <div style={{
-              width: 56, height: 56,
-              borderRadius: T.r16,
-              background: subject.color + "22",
+              width: 56,
+              height: 56,
+              borderRadius: A.r16,
+              background: subject.color + "18",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: 26,
-              fontWeight: 900,
-              color: subject.color,
+              flexShrink: 0,
             }}>
               {subject.icon}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", gap: 20, marginBottom: 8 }}>
+              <div style={{ display: "flex", gap: 24, marginBottom: 10 }}>
                 <div>
-                  <div style={{ fontSize: T.xs, color: D.textSoft }}>BEHEERSD</div>
-                  <div style={{ fontSize: T.xl, fontWeight: 800, color: subject.color }}>
+                  <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 700, letterSpacing: 0.5, marginBottom: 2 }}>
+                    {"BEHEERST"}
+                  </div>
+                  <div style={{ fontSize: T.xl, fontWeight: 900, color: subject.color }}>
                     {totalMastered + "/" + SKILL_ORDER.length}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: T.xs, color: D.textSoft }}>NAUWKEURIGHEID</div>
-                  <div style={{ fontSize: T.xl, fontWeight: 800, color: D.text }}>{acc}%</div>
+                  <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 700, letterSpacing: 0.5, marginBottom: 2 }}>
+                    {"NAUWKEURIGHEID"}
+                  </div>
+                  <div style={{ fontSize: T.xl, fontWeight: 900, color: A.text }}>
+                    {acc + "%"}
+                  </div>
                 </div>
               </div>
-              <ProgressBar
-                value={totalMastered}
-                max={SKILL_ORDER.length}
-                color={subject.color}
-                height={5}
-              />
+              <div style={{
+                height: 6,
+                background: A.border,
+                borderRadius: A.r999,
+                overflow: "hidden",
+              }}>
+                <div style={{
+                  height: "100%",
+                  width: Math.round((totalMastered / SKILL_ORDER.length) * 100) + "%",
+                  background: subject.color,
+                  borderRadius: A.r999,
+                  transition: "width 0.4s ease",
+                }} />
+              </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Start knop */}
-        <Btn
+        <button
           onClick={startPractice}
-          color={subject.color}
-          size="lg"
-          style={{ width: "100%" }}
+          style={{
+            width: "100%",
+            padding: "18px 24px",
+            background: subject.color,
+            color: "#ffffff",
+            border: "none",
+            borderRadius: A.r16,
+            fontSize: T.lg,
+            fontWeight: 800,
+            cursor: "pointer",
+            boxShadow: "0 6px 20px " + subject.color + "40",
+            WebkitTapHighlightColor: "transparent",
+            letterSpacing: 0.2,
+          }}
         >
-          {nextSkillInfo.reason === "nieuw"
-            ? "Start nieuwe vaardigheid"
-            : nextSkillInfo.reason === "herhaling"
-              ? "Herhalen en versterken"
-              : nextSkillInfo.reason === "verdiepen"
-                ? "Verdiepen en combineren"
-                : "Oefenen"
-          }
-        </Btn>
+          {startLabel + " →"}
+        </button>
 
-        {/* Skills overzicht */}
+        {/* Vaardigheden lijst */}
         <div>
-          <div style={{ fontSize: T.sm, fontWeight: 700, color: D.textSoft, letterSpacing: 0.5, marginBottom: 10 }}>
-            VAARDIGHEDEN
+          <div style={{ fontSize: T.xs, fontWeight: 800, color: A.textSoft, letterSpacing: 0.8, marginBottom: 12 }}>
+            {"VAARDIGHEDEN"}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
 
@@ -119,45 +153,48 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
                 : (skill.minCorrect > 0 ? Math.min((stats.correct || 0) / skill.minCorrect, 0.99) : 0);
 
               var cardBg = mastered
-                ? D.successBg
+                ? A.successBg
                 : active
-                  ? D.bgCardHigh
-                  : D.bgCard;
+                  ? A.primaryLight
+                  : A.bgCard;
               var cardBorder = mastered
-                ? D.successBorder
+                ? A.successBorder
                 : active
-                  ? subject.color + "60"
-                  : D.border;
+                  ? subject.color + "50"
+                  : A.border;
 
               return (
-                <Card
+                <div
                   key={skill.id}
                   style={{
-                    opacity: available ? 1 : 0.4,
-                    borderColor: cardBorder,
                     background: cardBg,
+                    border: "1.5px solid " + cardBorder,
+                    borderRadius: A.r16,
                     padding: "12px 14px",
+                    opacity: available ? 1 : 0.38,
+                    boxShadow: A.shadow,
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
 
-                    {/* Status cirkel */}
+                    {/* Status indicator */}
                     <div style={{
-                      width: 38, height: 38,
-                      borderRadius: T.r999,
+                      width: 38,
+                      height: 38,
+                      borderRadius: A.r999,
                       background: mastered
-                        ? D.success
+                        ? A.success
                         : active
                           ? subject.color
                           : available
-                            ? subject.color + "22"
-                            : D.bgCardHigh,
+                            ? subject.color + "18"
+                            : A.bgCardHigh,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: (mastered || active) ? "#ffffff" : available ? subject.color : D.textSoft,
+                      color: (mastered || active) ? "#ffffff" : available ? subject.color : A.textSoft,
                       fontSize: mastered ? 16 : T.sm,
-                      fontWeight: 800,
+                      fontWeight: 900,
                       flexShrink: 0,
                     }}>
                       {mastered ? "✓" : (i + 1)}
@@ -166,26 +203,31 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2, flexWrap: "wrap" }}>
-                        <div style={{ fontWeight: 700, fontSize: T.sm, color: D.text }}>
+                        <div style={{ fontWeight: 800, fontSize: T.sm, color: A.text }}>
                           {skill.label}
                         </div>
                         {active && !mastered && (
-                          <Badge label="Actief" color={subject.color} bg={subject.color + "22"} />
+                          <Badge label={"Actief"} color={subject.color} bg={subject.color + "18"} />
                         )}
                         {mastered && (
-                          <Badge label="Beheerst" color={D.success} bg={D.successBg} />
+                          <Badge label={"Beheerst"} color={A.successTxt} bg={A.successBg} />
                         )}
                       </div>
-                      <div style={{ fontSize: 11, color: D.textSoft, marginBottom: started && !mastered ? 5 : 0 }}>
+                      <div style={{ fontSize: 11, color: A.textSoft, marginBottom: started && !mastered ? 6 : 0, fontWeight: 500 }}>
                         {skill.desc}
                       </div>
                       {started && !mastered && (
-                        <div style={{ height: 3, background: D.border, borderRadius: 99, overflow: "hidden" }}>
+                        <div style={{
+                          height: 4,
+                          background: A.border,
+                          borderRadius: A.r999,
+                          overflow: "hidden",
+                        }}>
                           <div style={{
                             height: "100%",
                             width: Math.round(progress * 100) + "%",
                             background: subject.color,
-                            borderRadius: 99,
+                            borderRadius: A.r999,
                             transition: "width 0.3s",
                           }} />
                         </div>
@@ -195,19 +237,19 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
                     {/* Strategy chip */}
                     <div style={{
                       fontSize: 10,
-                      fontWeight: 700,
-                      color: available ? subject.color : D.textSoft,
-                      background: available ? subject.color + "22" : D.bgCardHigh,
-                      borderRadius: T.r8,
-                      padding: "3px 7px",
+                      fontWeight: 800,
+                      color: available ? subject.color : A.textSoft,
+                      background: available ? subject.color + "15" : A.bgCardHigh,
+                      borderRadius: A.r8,
+                      padding: "4px 8px",
                       flexShrink: 0,
                       textTransform: "uppercase",
-                      letterSpacing: 0.3,
+                      letterSpacing: 0.4,
                     }}>
                       {skill.strategy}
                     </div>
                   </div>
-                </Card>
+                </div>
               );
             })}
           </div>

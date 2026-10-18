@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Screen, TopBar, Card, Loader, Empty } from "../components/UI.jsx";
-import { T, D } from "../styles/tokens.js";
+import { Screen, TopBar, Loader, Empty } from "../components/UI.jsx";
+import { A, T } from "../styles/tokens.js";
 import { fetchGlobalTop10, fetchSubjectTop10, fetchMyRankGlobal } from "../services/leaderboard.js";
 
-var MEDAL_GOLD   = "🥇";
-var MEDAL_SILVER = "🥈";
-var MEDAL_BRONZE = "🥉";
+// NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
+
+var MEDAL_GOLD   = "\U0001F947";
+var MEDAL_SILVER = "\U0001F948";
+var MEDAL_BRONZE = "\U0001F949";
 var STAR_GLOW    = "⭐";
 
 var TABS = [
@@ -14,21 +16,21 @@ var TABS = [
 ];
 
 export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
-  var tabState    = useState("global");
-  var tab         = tabState[0];
-  var setTab      = tabState[1];
+  var tabState   = useState("global");
+  var tab        = tabState[0];
+  var setTab     = tabState[1];
 
-  var dataState   = useState([]);
-  var data        = dataState[0];
-  var setData     = dataState[1];
+  var dataState  = useState([]);
+  var data       = dataState[0];
+  var setData    = dataState[1];
 
-  var rankState   = useState(null);
-  var myRank      = rankState[0];
-  var setMyRank   = rankState[1];
+  var rankState  = useState(null);
+  var myRank     = rankState[0];
+  var setMyRank  = rankState[1];
 
-  var loadState   = useState(true);
-  var loading     = loadState[0];
-  var setLoading  = loadState[1];
+  var loadState  = useState(true);
+  var loading    = loadState[0];
+  var setLoading = loadState[1];
 
   var displayName = save.displayName || "Jij";
 
@@ -63,58 +65,61 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
     return null;
   }
 
-  function rankBgColor(i) {
-    if (i === 0) return D.rankGoldBg;
-    if (i === 1) return D.rankSilverBg;
-    if (i === 2) return D.rankBronzeBg;
-    return D.bgCardHigh;
+  function rankBg(i) {
+    if (i === 0) return A.rankGoldBg;
+    if (i === 1) return A.rankSilverBg;
+    if (i === 2) return A.rankBronzeBg;
+    return A.bgCardHigh;
   }
 
-  function rankTxtColor(i) {
-    if (i === 0) return D.rankGoldTxt;
-    if (i === 1) return D.rankSilverTxt;
-    if (i === 2) return D.rankBronzeTxt;
-    return D.textMid;
+  function rankTxt(i) {
+    if (i === 0) return A.rankGoldTxt;
+    if (i === 1) return A.rankSilverTxt;
+    if (i === 2) return A.rankBronzeTxt;
+    return A.textMid;
   }
 
   var inner = (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* Banner */}
+      {/* Info banner */}
       <div style={{
         padding: "8px 20px",
-        background: D.bgCardHigh,
-        borderBottom: "1px solid " + D.border,
+        background: A.primaryLight,
+        borderBottom: "1px solid " + A.border,
         textAlign: "center",
         fontSize: T.xs,
-        color: D.textSoft,
-        fontWeight: 600,
+        color: A.primary,
+        fontWeight: 700,
+        letterSpacing: 0.3,
       }}>
-        Scores worden binnenkort vernieuwd
+        {"Scores worden binnenkort vernieuwd"}
       </div>
 
       {/* Tabs */}
       <div style={{
         display: "flex",
-        padding: embedded ? "0 20px" : "12px 20px 0",
-        background: D.bgCard,
-        borderBottom: "1px solid " + D.border,
+        padding: embedded ? "0 20px" : "0 20px",
+        background: A.bgCard,
+        borderBottom: "1.5px solid " + A.border,
       }}>
         {TABS.map(function(t) {
+          var isActive = tab === t.id;
           return (
             <button
               key={t.id}
               onClick={function() { setTab(t.id); }}
               style={{
                 flex: 1,
-                padding: "10px 8px",
+                padding: "14px 8px",
                 background: "none",
                 border: "none",
-                borderBottom: "2px solid " + (tab === t.id ? D.primary : "transparent"),
-                color: tab === t.id ? D.primary : D.textSoft,
-                fontWeight: tab === t.id ? 700 : 500,
+                borderBottom: "3px solid " + (isActive ? A.primary : "transparent"),
+                color: isActive ? A.primary : A.textSoft,
+                fontWeight: isActive ? 800 : 600,
                 fontSize: T.sm,
                 cursor: "pointer",
                 transition: "all 0.15s",
+                WebkitTapHighlightColor: "transparent",
               }}
             >
               {t.label}
@@ -129,74 +134,90 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
         flexDirection: "column",
         gap: 10,
       }}>
-        {/* My position */}
-        <Card style={{ borderColor: D.borderHigh, background: D.primaryLight }}>
+
+        {/* Mijn positie kaart */}
+        <div style={{
+          background: A.primaryLight,
+          border: "2px solid " + A.primary,
+          borderRadius: A.r16,
+          padding: "14px 18px",
+          boxShadow: A.shadow,
+        }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: T.xs, color: D.primary, fontWeight: 600, marginBottom: 2 }}>
-                JOUW POSITIE
+              <div style={{ fontSize: T.xs, color: A.primary, fontWeight: 800, letterSpacing: 0.5, marginBottom: 3 }}>
+                {"JOUW POSITIE"}
               </div>
-              <div style={{ fontWeight: 800, fontSize: T.lg, color: D.text }}>
+              <div style={{ fontWeight: 900, fontSize: T.lg, color: A.text }}>
                 {displayName}
               </div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              {myRank && (
-                <div style={{ fontSize: T.xxl, fontWeight: 900, color: D.primary }}>
-                  {"#" + myRank}
-                </div>
-              )}
-            </div>
+            {myRank && (
+              <div style={{
+                fontSize: T.xxl,
+                fontWeight: 900,
+                color: A.primary,
+                letterSpacing: -1,
+              }}>
+                {"#" + myRank}
+              </div>
+            )}
           </div>
-        </Card>
+        </div>
 
         {loading ? (
           <Loader />
         ) : data.length === 0 ? (
           <Empty
-            icon="🏆"
-            title="Nog geen scores"
-            body="Speel een sessie om op het leaderboard te verschijnen!"
+            icon={"\U0001F3C6"}
+            title={"Nog geen scores"}
+            body={"Speel een sessie om op het leaderboard te verschijnen!"}
           />
         ) : (
           data.map(function(row, i) {
             var icon = rankIcon(i);
             var me   = isMe(row);
             return (
-              <Card
+              <div
                 key={row.uid || i}
                 style={{
-                  background: me ? D.primaryLight : D.bgCard,
-                  borderColor: me ? D.borderHigh : D.border,
+                  background: me ? A.primaryLight : A.bgCard,
+                  border: "1.5px solid " + (me ? A.primary : A.border),
+                  borderRadius: A.r16,
                   padding: "12px 16px",
+                  boxShadow: A.shadow,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{
-                    width: 36, height: 36,
-                    borderRadius: T.r999,
-                    background: rankBgColor(i),
+                    width: 40,
+                    height: 40,
+                    borderRadius: A.r999,
+                    background: rankBg(i),
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: icon ? 22 : T.sm,
-                    fontWeight: 800,
-                    color: rankTxtColor(i),
+                    fontWeight: 900,
+                    color: rankTxt(i),
                     flexShrink: 0,
                   }}>
                     {icon ? icon : ("#" + (row.rank || (i + 1)))}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontWeight: me ? 800 : 600,
-                      color: me ? D.primary : D.text,
+                      fontWeight: me ? 900 : 700,
+                      color: me ? A.primary : A.text,
                       fontSize: T.md,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}>
                       {row.displayName}{me ? (" " + STAR_GLOW) : ""}
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
             );
           })
         )}
@@ -207,8 +228,8 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
   if (embedded) return inner;
 
   return (
-    <Screen bg={D.bg}>
-      <TopBar title="Leaderboard" onBack={onBack} />
+    <Screen bg={A.bg}>
+      <TopBar title={"Leaderboard"} onBack={onBack} />
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         {inner}
       </div>

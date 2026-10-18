@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Screen, TopBar, Card, ProgressBar } from "../components/UI.jsx";
-import { T, D } from "../styles/tokens.js";
+import { Screen, ProgressBar } from "../components/UI.jsx";
+import { A, T } from "../styles/tokens.js";
 import { getSkill, getNextSkill, SKILL_ORDER } from "../core/subjects.js";
 import { getTitel } from "../core/save.js";
+
+// NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish }) {
   // ── Initialisatie helpers ─────────────────────────────────────
@@ -23,8 +25,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // ── State ──────────────────────────────────────────────────────
   var startSkillId = initSkillId();
 
-  var curQState      = useState(function() { return makeQuestion(startSkillId); });
-  var currentQuestion = curQState[0];
+  var curQState         = useState(function() { return makeQuestion(startSkillId); });
+  var currentQuestion   = curQState[0];
   var setCurrentQuestion = curQState[1];
 
   var selState    = useState(null);
@@ -39,24 +41,25 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var fbLevel     = fbLvlState[0];
   var setFbLevel  = fbLvlState[1];
 
-  var tipOpenState = useState(false);
-  var tipOpen      = tipOpenState[0];
-  var setTipOpen   = tipOpenState[1];
+  // uitlegVisible: kaart zichtbaar na fout (blijft staan tot "Volgende vraag" getikt)
+  var uitlegVisState = useState(false);
+  var uitlegVisible  = uitlegVisState[0];
+  var setUitlegVisible = uitlegVisState[1];
 
   var resState    = useState([]);
   var results     = resState[0];
   var setResults  = resState[1];
 
-  var qNumState   = useState(1);
-  var questionNumber = qNumState[0];
+  var qNumState       = useState(1);
+  var questionNumber  = qNumState[0];
   var setQuestionNumber = qNumState[1];
 
-  var showLUState = useState(false);
-  var showLevelUp = showLUState[0];
+  var showLUState   = useState(false);
+  var showLevelUp   = showLUState[0];
   var setShowLevelUp = showLUState[1];
 
-  var luDataState = useState(null);
-  var levelUpData = luDataState[0];
+  var luDataState   = useState(null);
+  var levelUpData   = luDataState[0];
   var setLevelUpData = luDataState[1];
 
   // ── Refs (geen re-render) ─────────────────────────────────────
@@ -69,7 +72,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var liveCorrectOnFallbackRef   = useRef(0);
   var promotedThisSession        = useRef(new Set());
   var lastQuestionRef            = useRef(currentQuestion.question);
-  var advanceTimeoutRef          = useRef(null);
+  var nextSkillIdRef             = useRef(startSkillId);
   var timeRef                    = useRef(Date.now());
 
   // Initialiseer sessionSkillStats voor alle skills
@@ -97,7 +100,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     var skill = getSkill(skillId);
     if (!skill) skill = getSkill(SKILL_ORDER[0]);
     var q = skill.generate();
-    // Herhalingspreventie: één herpoging bij identieke som
     if (q.question === lastQuestionRef.current) {
       q = skill.generate();
     }
@@ -113,14 +115,13 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setSelected(null);
     setFeedback(null);
     setFbLevel(0);
-    setTipOpen(false);
+    setUitlegVisible(false);
     timeRef.current = Date.now();
     setQuestionNumber(function(n) { return n + 1; });
   }
 
   // ── Stop-functie ──────────────────────────────────────────────
   function handleStop() {
-    clearTimeout(advanceTimeoutRef.current);
     var ss    = sessionSkillStatsRef.current;
     var total = 0;
     var cor   = 0;
@@ -134,15 +135,15 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       avgTime = Math.round(rr.reduce(function(s, r) { return s + r.timeMs; }, 0) / rr.length);
     }
     onFinish({
-      subjectId:      subjectId,
-      level:          level,
-      totalCorrect:   cor,
-      totalQuestions: total,
-      totalXp:        0,
-      avgTime:        avgTime,
-      results:        rr,
+      subjectId:         subjectId,
+      level:             level,
+      totalCorrect:      cor,
+      totalQuestions:    total,
+      totalXp:           0,
+      avgTime:           avgTime,
+      results:           rr,
       sessionSkillStats: ss,
-      dominantSkillId: activeSkillIdRef.current,
+      dominantSkillId:   activeSkillIdRef.current,
     });
   }
 
@@ -150,6 +151,11 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   function handleLevelUpContinue() {
     setShowLevelUp(false);
     advanceToNext(activeSkillIdRef.current);
+  }
+
+  // ── "Volgende vraag" knop (na fout) ───────────────────────────
+  function handleNextQuestion() {
+    advanceToNext(nextSkillIdRef.current);
   }
 
   // ── Antwoord verwerken ─────────────────────────────────────────
@@ -163,11 +169,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setSelected(choice);
     setFeedback(isCorrect ? "correct" : "wrong");
 
-    // STAP 3 — Antwoord toerekenen aan answerSkillId
     if (!sessionSkillStatsRef.current[answerSkillId]) {
       sessionSkillStatsRef.current[answerSkillId] = { correct: 0, total: 0 };
     }
-    sessionSkillStatsRef.current[answerSkillId].total   += 1;
+    sessionSkillStatsRef.current[answerSkillId].total += 1;
     if (isCorrect) sessionSkillStatsRef.current[answerSkillId].correct += 1;
 
     var newResults = results.concat([{
@@ -180,33 +185,32 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     }]);
     setResults(newResults);
 
-    // STAP 4 — fbLevel bijwerken
     if (!isCorrect) {
       skillErrorsRef.current[answerSkillId] = (skillErrorsRef.current[answerSkillId] || 0) + 1;
       var errCount = skillErrorsRef.current[answerSkillId];
       setFbLevel(errCount >= 3 ? 3 : errCount >= 2 ? 2 : 1);
+      setUitlegVisible(true);
     } else {
       setFbLevel(0);
+      setUitlegVisible(false);
     }
-    setTipOpen(false);
 
-    // STAP 5 — Terugval-window bijwerken (max 10 bewaren)
     var recentList = (recentRef.current[answerSkillId] || []).concat([isCorrect]);
     if (recentList.length > 10) recentList = recentList.slice(recentList.length - 10);
     recentRef.current[answerSkillId] = recentList;
 
-    // STAP 6 — Next activeSkillId bepalen
+    // Next activeSkillId bepalen
     var nextSkillId = activeSkillIdRef.current;
 
-    // 6a — Terugval-check (alleen als !fallbackActive)
+    // Terugval-check
     if (!fallbackActiveRef.current) {
       var window5 = recentList.slice(-5);
       var foutInWindow = window5.filter(function(c) { return !c; }).length;
       if (foutInWindow >= 3) {
         var curIdx = SKILL_ORDER.indexOf(answerSkillId);
         if (curIdx > 0) {
-          fallbackActiveRef.current      = true;
-          fallbackReturnSkillRef.current = answerSkillId;
+          fallbackActiveRef.current       = true;
+          fallbackReturnSkillRef.current  = answerSkillId;
           liveCorrectOnFallbackRef.current = 0;
           nextSkillId = SKILL_ORDER[curIdx - 1];
           activeSkillIdRef.current = nextSkillId;
@@ -214,7 +218,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       }
     }
 
-    // 6b — Terugkeer uit terugval (alleen als fallbackActive EN correct OP de terugval-skill)
+    // Terugkeer uit terugval
     if (fallbackActiveRef.current && isCorrect && answerSkillId === activeSkillIdRef.current) {
       liveCorrectOnFallbackRef.current++;
       if (liveCorrectOnFallbackRef.current >= 3) {
@@ -226,9 +230,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       }
     }
 
-    // 6c — Promotie-check (alleen als !fallbackActive EN correct EN niet al gepromoveerd)
+    // Promotie-check
     if (!fallbackActiveRef.current && isCorrect && !promotedThisSession.current.has(answerSkillId)) {
-      var storedSkill  = (skillStats && skillStats[answerSkillId]) || {};
+      var storedSkill     = (skillStats && skillStats[answerSkillId]) || {};
       if (!storedSkill.mastered) {
         var storedCorrect   = storedSkill.correct || 0;
         var sessionCorrect  = sessionSkillStatsRef.current[answerSkillId].correct;
@@ -241,13 +245,13 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         if (cumulativeC >= minC && sessionTotal >= 4 && sessionAcc >= 0.70) {
           promotedThisSession.current.add(answerSkillId);
 
-          // Volgende skill bepalen na promotie
           var promIdx = SKILL_ORDER.indexOf(answerSkillId);
           var nextIdx = promIdx + 1;
           nextSkillId = nextIdx < SKILL_ORDER.length ? SKILL_ORDER[nextIdx] : answerSkillId;
           activeSkillIdRef.current = nextSkillId;
+          nextSkillIdRef.current   = nextSkillId;
 
-          var liveTotal  = getLiveTotal();
+          var liveTotal   = getLiveTotal();
           var newTitelObj = getTitel(liveTotal);
           setLevelUpData({
             skillLabel: checkSkill ? checkSkill.label : answerSkillId,
@@ -255,214 +259,313 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             liveTotal:  liveTotal,
           });
           setShowLevelUp(true);
-          clearTimeout(advanceTimeoutRef.current);
-          return; // Wacht op "Ga verder" klik
+          return;
         }
       }
     }
 
-    // STAP 7 — Auto-advance (als geen level-up overlay)
-    advanceTimeoutRef.current = setTimeout(function() {
-      advanceToNext(nextSkillId);
-    }, isCorrect ? 900 : 1400);
+    nextSkillIdRef.current = nextSkillId;
+
+    // Auto-advance alleen bij correct antwoord
+    if (isCorrect) {
+      setTimeout(function() {
+        advanceToNext(nextSkillId);
+      }, 900);
+    }
+    // Bij fout: wachten op "Volgende vraag" tik
   }
 
   // ── Afgeleide waarden ─────────────────────────────────────────
   var currentSkill = currentQuestion.skill || getSkill(currentQuestion.skillId || SKILL_ORDER[0]);
 
-  var bgColor = feedback === "correct" ? D.successBg
-    : feedback === "wrong" ? D.errorBg
-    : D.bg;
-
-  var cardBorder = feedback === "correct" ? D.successBorder
-    : feedback === "wrong" ? D.errorBorder
-    : D.border;
-
-  var showFeedbackBlock = feedback === "wrong" && fbLevel > 0 && currentSkill;
-
-  // Skill voortgang berekenen
-  var storedCorrectForSkill = (skillStats && skillStats[currentQuestion.skillId] && skillStats[currentQuestion.skillId].correct) || 0;
+  var storedCorrectForSkill  = (skillStats && skillStats[currentQuestion.skillId] && skillStats[currentQuestion.skillId].correct) || 0;
   var sessionCorrectForSkill = sessionSkillStatsRef.current[currentQuestion.skillId]
     ? sessionSkillStatsRef.current[currentQuestion.skillId].correct
     : 0;
-  var skillTarget = currentSkill ? (currentSkill.minCorrect || 8) : 8;
+  var skillTarget   = currentSkill ? (currentSkill.minCorrect || 8) : 8;
   var skillProgress = Math.min(storedCorrectForSkill + sessionCorrectForSkill, skillTarget);
 
-  // Stopknop
-  var stopBtn = (
-    <button
-      onClick={handleStop}
-      style={{
-        background: "none",
-        border: "none",
-        color: D.textSoft,
-        fontSize: 20,
-        fontWeight: 700,
-        padding: "4px 8px",
-        cursor: "pointer",
-        lineHeight: 1,
-      }}
-    >
-      {"✕"}
-    </button>
-  );
+  var showUitlegBlock = feedback === "wrong" && fbLevel > 0 && currentSkill && uitlegVisible;
 
+  // ── Render ────────────────────────────────────────────────────
   return (
-    <Screen bg={bgColor} style={{ transition: "background 0.25s" }}>
-      <TopBar
-        title={"Optellen" + (currentSkill ? (" · " + currentSkill.label) : "")}
-        subtitle={currentSkill ? currentSkill.strategy : ""}
-        onBack={onBack}
-        color={D.primary}
-        rightEl={stopBtn}
-      />
+    <Screen bg={A.bg} style={{ fontFamily: "'Nunito', 'Inter', system-ui, sans-serif" }}>
 
+      {/* Top bar */}
+      <div style={{
+        background: A.bg,
+        padding: "env(safe-area-inset-top, 0px) 0 0 0",
+        borderBottom: "1px solid " + A.border,
+        flexShrink: 0,
+      }}>
+        {/* Nav rij */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "12px 20px",
+        }}>
+          {/* Terug / Sluiten knop */}
+          <button
+            onClick={onBack}
+            style={{
+              background: A.bgCard,
+              border: "1.5px solid " + A.border,
+              borderRadius: A.r999,
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 18,
+              color: A.textMid,
+              cursor: "pointer",
+              boxShadow: A.shadow,
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            {"‹"}
+          </button>
+
+          {/* Skill naam */}
+          <div style={{ textAlign: "center", flex: 1, margin: "0 12px" }}>
+            <div style={{ fontSize: T.sm, fontWeight: 800, color: A.primary, letterSpacing: 0.5 }}>
+              {"OPTELLEN"}
+            </div>
+            {currentSkill && (
+              <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 1 }}>
+                {currentSkill.label}
+              </div>
+            )}
+          </div>
+
+          {/* Stop knop */}
+          <button
+            onClick={handleStop}
+            style={{
+              background: A.bgCard,
+              border: "1.5px solid " + A.border,
+              borderRadius: A.r999,
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 15,
+              fontWeight: 700,
+              color: A.textSoft,
+              cursor: "pointer",
+              boxShadow: A.shadow,
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            {"✕"}
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ padding: "0 20px 12px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <span style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 700 }}>
+              {"Vraag " + questionNumber}
+            </span>
+            <span style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 700 }}>
+              {skillProgress + " / " + skillTarget}
+            </span>
+          </div>
+          <div style={{
+            height: 8,
+            background: A.border,
+            borderRadius: A.r999,
+            overflow: "hidden",
+          }}>
+            <div style={{
+              height: "100%",
+              width: (Math.round((skillProgress / skillTarget) * 100)) + "%",
+              background: A.primary,
+              borderRadius: A.r999,
+              transition: "width 0.4s cubic-bezier(0.4,0,0.2,1)",
+            }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollbaar content */}
       <div style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        padding: "16px 20px 28px",
-        gap: 14,
+        padding: "20px 20px 32px",
+        gap: 16,
         overflowY: "auto",
         WebkitOverflowScrolling: "touch",
       }}>
 
-        {/* Voortgang */}
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <span style={{ fontSize: T.sm, color: D.textSoft, fontWeight: 500 }}>
-              {"Vraag " + questionNumber}
-            </span>
-            <span style={{ fontSize: T.sm, color: D.textSoft, fontWeight: 500 }}>
-              {skillProgress + " / " + skillTarget + " correct"}
-            </span>
+        {/* Vraagkaart */}
+        <div style={{
+          background: A.bgCard,
+          borderRadius: A.r20,
+          padding: "36px 24px 28px",
+          textAlign: "center",
+          boxShadow: A.shadowMd,
+          border: "2px solid " + (
+            feedback === "correct" ? A.successBorder
+            : feedback === "wrong"   ? A.errorBorder
+            : A.border
+          ),
+          transition: "border-color 0.2s",
+        }}>
+
+          {/* Strategie label (voor antwoord) */}
+          {currentSkill && currentSkill.strategy && !feedback && (
+            <div style={{
+              fontSize: 10,
+              fontWeight: 800,
+              color: A.primary,
+              letterSpacing: 1.2,
+              textTransform: "uppercase",
+              marginBottom: 14,
+              opacity: 0.7,
+            }}>
+              {currentSkill.strategy}
+            </div>
+          )}
+
+          {/* De som */}
+          <div style={{
+            fontSize: 60,
+            fontWeight: 900,
+            color: A.text,
+            letterSpacing: -1.5,
+            lineHeight: 1.05,
+          }}>
+            {currentQuestion.question}
           </div>
-          <ProgressBar value={skillProgress} max={skillTarget} color={D.primary} height={4} />
+
+          {/* Feedback na antwoord */}
+          {feedback && (
+            <div style={{
+              marginTop: 16,
+              fontSize: T.xl,
+              fontWeight: 800,
+              color: feedback === "correct" ? A.success : A.error,
+              animation: "acPopIn 0.18s ease",
+            }}>
+              {feedback === "correct"
+                ? ("✓ Goed zo!")
+                : ("✖  Antwoord: " + currentQuestion.answer)
+              }
+            </div>
+          )}
         </div>
 
-        {/* Vraag + feedback */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 14 }}>
+        {/* Antwoordgrid */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+        }}>
+          {currentQuestion.choices.map(function(choice) {
+            var isSelected   = selected === choice;
+            var isCorrectAns = choice === currentQuestion.answer;
+            var bg     = A.bgCard;
+            var border = A.border;
+            var color  = A.text;
+            var shadow = A.shadow;
 
-          <Card style={{
-            textAlign: "center",
-            padding: "40px 24px 32px",
-            borderColor: cardBorder,
-            background: D.bgCard,
-            boxShadow: D.shadowMd,
-            transition: "border-color 0.2s",
-          }}>
+            if (feedback) {
+              if (isCorrectAns) {
+                bg = A.successBg; border = A.successBorder; color = A.successTxt; shadow = "none";
+              } else if (isSelected) {
+                bg = A.errorBg; border = A.errorBorder; color = A.errorTxt; shadow = "none";
+              }
+            }
 
-            {/* Strategie label */}
-            {currentSkill && currentSkill.strategy && !feedback && (
-              <div style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: D.primary + "90",
-                letterSpacing: 0.8,
-                textTransform: "uppercase",
-                marginBottom: 10,
-              }}>
-                {currentSkill.strategy}
-              </div>
-            )}
-
-            {/* De som */}
-            <div style={{
-              fontSize: 52,
-              fontWeight: 900,
-              color: D.text,
-              letterSpacing: -1,
-              lineHeight: 1.1,
-              marginBottom: feedback ? 18 : 0,
-            }}>
-              {currentQuestion.question}
-            </div>
-
-            {/* Feedback na antwoord */}
-            {feedback && (
-              <div style={{
-                fontSize: T.lg,
-                fontWeight: 700,
-                color: feedback === "correct" ? D.success : D.error,
-                animation: "popIn 0.2s ease",
-              }}>
-                {feedback === "correct"
-                  ? "✓"
-                  : ("✖  Antwoord: " + currentQuestion.answer)
-                }
-              </div>
-            )}
-          </Card>
-
-          {/* Feedback blok */}
-          {showFeedbackBlock && (
-            <div>
-              {/* TIP */}
-              <div
-                onClick={function() { setTipOpen(function(v) { return !v; }); }}
+            return (
+              <button
+                key={choice}
+                onClick={function() { handleChoice(choice); }}
+                disabled={selected !== null}
                 style={{
-                  borderRadius: T.r12,
-                  border: "1px solid " + D.tipGreenBorder,
-                  background: D.tipGreenBg,
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 8,
+                  padding: "20px 12px",
+                  borderRadius: A.r16,
+                  border: "2.5px solid " + border,
+                  background: bg,
+                  color: color,
+                  fontSize: 38,
+                  fontWeight: 900,
+                  boxShadow: shadow,
+                  transition: "background 0.15s, border-color 0.15s, transform 0.1s",
+                  cursor: selected !== null ? "default" : "pointer",
+                  WebkitTapHighlightColor: "transparent",
+                  minHeight: 80,
+                  transform: "scale(1)",
+                  letterSpacing: -0.5,
                 }}
               >
-                <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{"💡"}</span>
+                {choice}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Uitlegkaart — verschijnt na fout, blijft tot "Volgende vraag" */}
+        {showUitlegBlock && (
+          <div style={{
+            animation: "acSlideUp 0.22s ease",
+          }}>
+            {/* TIP blok */}
+            <div style={{
+              borderRadius: A.r16,
+              border: "1.5px solid " + A.tipBorder,
+              background: A.tipBg,
+              padding: "14px 16px",
+              borderLeft: "4px solid " + A.success,
+            }}>
+              <div style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10,
+                marginBottom: fbLevel >= 2 ? 10 : 0,
+              }}>
+                <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{"\U0001F4A1"}</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: T.xs, fontWeight: 700, color: D.tipGreenTxt, marginBottom: 2 }}>
+                  <div style={{ fontSize: T.xs, fontWeight: 800, color: A.tipTxt, letterSpacing: 0.8, marginBottom: 3 }}>
                     {"TIP — " + currentSkill.strategy.toUpperCase()}
                   </div>
-                  <div style={{ fontSize: T.sm, color: D.tipGreenTxt, lineHeight: 1.4 }}>
+                  <div style={{ fontSize: T.sm, color: A.tipTxt, lineHeight: 1.55, fontWeight: 600 }}>
                     {currentSkill.tip}
                   </div>
                 </div>
-                {fbLevel >= 2 && (
-                  <span style={{
-                    fontSize: 11,
-                    color: D.tipGreenTxt,
-                    transform: tipOpen ? "rotate(180deg)" : "rotate(0deg)",
-                    transition: "transform 0.2s",
-                    display: "inline-block",
-                    marginTop: 2,
-                  }}>
-                    {"▼"}
-                  </span>
-                )}
               </div>
 
-              {/* UITLEG */}
-              {fbLevel >= 2 && tipOpen && (
+              {/* UITLEG (bij 2+ fouten op deze skill) */}
+              {fbLevel >= 2 && (
                 <div style={{
-                  borderRadius: "0 0 " + T.r12 + "px " + T.r12 + "px",
-                  border: "1px solid " + D.uitlegBorder,
-                  borderTop: "none",
-                  background: D.uitlegBg,
-                  padding: "10px 14px",
+                  borderTop: "1px solid " + A.uitlegBorder,
+                  paddingTop: 10,
+                  marginTop: 2,
                 }}>
-                  <div style={{ fontSize: T.xs, fontWeight: 700, color: D.uitlegTxt, marginBottom: 4 }}>
-                    UITLEG
+                  <div style={{ fontSize: T.xs, fontWeight: 800, color: A.uitlegTxt, letterSpacing: 0.8, marginBottom: 4 }}>
+                    {"UITLEG"}
                   </div>
-                  <div style={{ fontSize: T.sm, color: D.uitlegTxt, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: T.sm, color: A.uitlegTxt, lineHeight: 1.55 }}>
                     {currentSkill.uitleg}
                   </div>
 
-                  {/* VOORBEELD */}
+                  {/* VOORBEELD (bij 3+ fouten) */}
                   {fbLevel >= 3 && (
                     <div style={{
                       marginTop: 10,
-                      padding: "8px 10px",
-                      background: D.voorbeeldBg,
-                      border: "1px solid " + D.voorbeeldBorder,
-                      borderRadius: T.r8,
+                      padding: "10px 12px",
+                      background: A.voorbeeldBg,
+                      border: "1.5px solid " + A.voorbeeldBorder,
+                      borderRadius: A.r12,
                     }}>
-                      <div style={{ fontSize: T.xs, fontWeight: 700, color: D.voorbeeldTxt, marginBottom: 4 }}>
-                        VOORBEELD
+                      <div style={{ fontSize: T.xs, fontWeight: 800, color: A.voorbeeldTxt, letterSpacing: 0.8, marginBottom: 4 }}>
+                        {"VOORBEELD"}
                       </div>
-                      <div style={{ fontSize: T.sm, color: D.voorbeeldTxt, lineHeight: 1.5, whiteSpace: "pre-line" }}>
+                      <div style={{ fontSize: T.sm, color: A.voorbeeldTxt, lineHeight: 1.55, whiteSpace: "pre-line" }}>
                         {currentSkill.voorbeeld}
                       </div>
                     </div>
@@ -470,56 +573,43 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 </div>
               )}
             </div>
-          )}
 
-          {/* Antwoordknoppen */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 10,
-          }}>
-            {currentQuestion.choices.map(function(choice) {
-              var isSelected   = selected === choice;
-              var isCorrectAns = choice === currentQuestion.answer;
-              var bg      = D.bgCard;
-              var border  = D.border;
-              var txtCol  = D.text;
-
-              if (feedback) {
-                if (isCorrectAns) {
-                  bg = D.successBg; border = D.successBorder; txtCol = D.success;
-                } else if (isSelected) {
-                  bg = D.errorBg; border = D.errorBorder; txtCol = D.error;
-                }
-              }
-
-              return (
-                <button
-                  key={choice}
-                  onClick={function() { handleChoice(choice); }}
-                  disabled={selected !== null}
-                  style={{
-                    padding: "18px 12px",
-                    borderRadius: T.r16,
-                    border: "2px solid " + border,
-                    background: bg,
-                    color: txtCol,
-                    fontSize: 36,
-                    fontWeight: 900,
-                    boxShadow: selected === null ? D.shadow : "none",
-                    transition: "background 0.15s, border-color 0.15s",
-                    cursor: selected !== null ? "default" : "pointer",
-                    WebkitTapHighlightColor: "transparent",
-                    minHeight: 76,
-                  }}
-                >
-                  {choice}
-                </button>
-              );
-            })}
+            {/* Volgende vraag knop */}
+            <button
+              onClick={handleNextQuestion}
+              style={{
+                marginTop: 12,
+                width: "100%",
+                padding: "17px 24px",
+                background: A.primary,
+                color: "#ffffff",
+                border: "none",
+                borderRadius: A.r16,
+                fontSize: T.lg,
+                fontWeight: 800,
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+                boxShadow: A.shadowMd,
+                letterSpacing: 0.2,
+              }}
+            >
+              {"Volgende vraag →"}
+            </button>
           </div>
+        )}
 
-        </div>
+        {/* Bij correct: subtiele doorgaan-indicator */}
+        {feedback === "correct" && (
+          <div style={{
+            textAlign: "center",
+            fontSize: T.sm,
+            color: A.success,
+            fontWeight: 700,
+            animation: "acFadeIn 0.3s ease",
+          }}>
+            {"✓ Volgende vraag..."}
+          </div>
+        )}
       </div>
 
       {/* Level-up overlay */}
@@ -527,54 +617,80 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         <div style={{
           position: "fixed",
           inset: 0,
-          background: "rgba(0,0,0,0.70)",
+          background: "rgba(26,29,58,0.65)",
           zIndex: 100,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           padding: "0 24px",
+          backdropFilter: "blur(4px)",
         }}>
           <div style={{
-            background: D.bgCard,
-            borderRadius: T.r20,
-            padding: "36px 28px",
+            background: A.bgCard,
+            borderRadius: A.r20,
+            padding: "40px 28px",
             textAlign: "center",
-            boxShadow: D.shadowLg,
+            boxShadow: A.shadowLg,
             maxWidth: 340,
             width: "100%",
-            border: "1px solid " + D.borderHigh,
+            border: "2px solid " + A.primary,
+            animation: "acPopIn 0.22s ease",
           }}>
-            <div style={{ fontSize: 52, marginBottom: 12 }}>{"🎓"}</div>
-            <div style={{ fontSize: T.xxl, fontWeight: 900, color: D.text, marginBottom: 6 }}>
+            <div style={{ fontSize: 56, marginBottom: 14, lineHeight: 1 }}>
+              {"\U0001F393"}
+            </div>
+            <div style={{ fontSize: T.xxl, fontWeight: 900, color: A.text, marginBottom: 6 }}>
               {"Skill beheerst!"}
             </div>
-            <div style={{ fontSize: T.lg, color: D.primary, fontWeight: 700, marginBottom: 8 }}>
+            <div style={{
+              fontSize: T.lg,
+              fontWeight: 800,
+              color: A.primary,
+              marginBottom: 8,
+            }}>
               {levelUpData.skillLabel}
             </div>
-            <div style={{ fontSize: T.sm, color: D.textMid, marginBottom: 24 }}>
-              {levelUpData.liveTotal + " van 12 skills beheerst — " + levelUpData.newTitel + " optellen"}
+            <div style={{
+              display: "inline-block",
+              background: A.primaryLight,
+              border: "1px solid " + A.border,
+              borderRadius: A.r999,
+              padding: "4px 14px",
+              fontSize: T.sm,
+              color: A.primary,
+              fontWeight: 700,
+              marginBottom: 24,
+            }}>
+              {levelUpData.liveTotal + " van 12 — " + levelUpData.newTitel + " optellen"}
             </div>
             <button
               onClick={handleLevelUpContinue}
               style={{
-                background: D.primary,
-                color: D.text,
+                background: A.primary,
+                color: "#ffffff",
                 border: "none",
-                borderRadius: T.r12,
-                padding: "16px 32px",
+                borderRadius: A.r16,
+                padding: "17px 32px",
                 fontSize: T.lg,
-                fontWeight: 700,
+                fontWeight: 800,
                 cursor: "pointer",
                 width: "100%",
+                boxShadow: A.shadowMd,
+                WebkitTapHighlightColor: "transparent",
               }}
             >
-              Ga verder
+              {"Ga verder →"}
             </button>
           </div>
         </div>
       )}
 
-      <style>{"@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }"}</style>
+      <style>
+        {"@keyframes acPopIn { from { transform: scale(0.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }" +
+        "@keyframes acSlideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }" +
+        "@keyframes acFadeIn { from { opacity: 0; } to { opacity: 1; } }" +
+        "button:active { transform: scale(0.97) !important; }"}
+      </style>
     </Screen>
   );
 }

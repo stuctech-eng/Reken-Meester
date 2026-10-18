@@ -105,6 +105,58 @@ export var D = {
   shadowLg: "0 10px 25px rgba(0,0,0,0.45), 0 4px 10px rgba(0,0,0,0.30)",
 };
 
+// Academy theme tokens (licht, professioneel, Duolingo-stijl)
+export var A = {
+  bg:             "#f0f4ff",
+  bgCard:         "#ffffff",
+  bgCardHigh:     "#e8edf8",
+  border:         "#dde3f5",
+  borderHigh:     "#5b5ef6",
+  text:           "#1a1d3a",
+  textMid:        "#4a5068",
+  textSoft:       "#9099bb",
+  primary:        "#5b5ef6",
+  primaryLight:   "#eef0ff",
+  primaryDark:    "#3f42d4",
+  success:        "#16a34a",
+  successBg:      "#f0fdf4",
+  successBorder:  "#86efac",
+  successTxt:     "#15803d",
+  error:          "#dc2626",
+  errorBg:        "#fef2f2",
+  errorBorder:    "#fca5a5",
+  errorTxt:       "#b91c1c",
+  gold:           "#d97706",
+  goldBg:         "#fffbeb",
+  // Feedback blokken
+  tipBg:          "#f0fdf4",
+  tipBorder:      "#86efac",
+  tipTxt:         "#15803d",
+  uitlegBg:       "#eff6ff",
+  uitlegBorder:   "#93c5fd",
+  uitlegTxt:      "#1d4ed8",
+  voorbeeldBg:    "#fffbeb",
+  voorbeeldBorder:"#fde68a",
+  voorbeeldTxt:   "#92400e",
+  // Leaderboard ranks
+  rankGoldBg:     "#fffbeb",
+  rankGoldTxt:    "#d97706",
+  rankSilverBg:   "#f8fafc",
+  rankSilverTxt:  "#64748b",
+  rankBronzeBg:   "#fff7ed",
+  rankBronzeTxt:  "#c2410c",
+  // Radius en shadows
+  r4:   4,
+  r8:   8,
+  r12:  12,
+  r16:  16,
+  r20:  20,
+  r999: 999,
+  shadow:   "0 1px 4px rgba(91,94,246,0.08), 0 1px 2px rgba(0,0,0,0.04)",
+  shadowMd: "0 4px 16px rgba(91,94,246,0.10), 0 2px 4px rgba(0,0,0,0.04)",
+  shadowLg: "0 10px 32px rgba(91,94,246,0.12), 0 4px 10px rgba(0,0,0,0.06)",
+};
+
 // Subject colors
 export const SUBJECT_COLORS = {
   optellen:         { main: "#4f46e5", light: "#eef2ff", dark: "#3730a3" },
