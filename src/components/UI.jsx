@@ -1,4 +1,4 @@
-import { T } from "../styles/tokens.js";
+import { T, D } from "../styles/tokens.js";
 
 // ── Layout wrappers ──────────────────────────────────────────
 
@@ -6,7 +6,7 @@ export function Screen({ children, bg, style }) {
   return (
     <div style={{
       minHeight: "100dvh",
-      background: bg || T.bg,
+      background: bg || D.bg,
       display: "flex",
       flexDirection: "column",
       ...style,
@@ -42,8 +42,8 @@ export function TopBar({ title, subtitle, onBack, rightEl, color }) {
       alignItems: "center",
       padding: "16px 20px 12px",
       gap: 12,
-      borderBottom: "1px solid " + T.border,
-      background: T.white,
+      borderBottom: "1px solid " + D.border,
+      background: D.bg,
       position: "sticky",
       top: 0,
       zIndex: 10,
@@ -55,7 +55,7 @@ export function TopBar({ title, subtitle, onBack, rightEl, color }) {
             background: "none",
             border: "none",
             padding: "4px 8px 4px 0",
-            color: color || T.primary,
+            color: color || D.primary,
             fontSize: T.lg,
             fontWeight: 600,
             display: "flex",
@@ -67,11 +67,11 @@ export function TopBar({ title, subtitle, onBack, rightEl, color }) {
         </button>
       )}
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 700, fontSize: T.lg, color: T.text, lineHeight: 1.2 }}>
+        <div style={{ fontWeight: 700, fontSize: T.lg, color: D.text, lineHeight: 1.2 }}>
           {title}
         </div>
         {subtitle && (
-          <div style={{ fontSize: T.xs, color: T.textSoft, marginTop: 1 }}>{subtitle}</div>
+          <div style={{ fontSize: T.xs, color: D.textSoft, marginTop: 1 }}>{subtitle}</div>
         )}
       </div>
       {rightEl && <div>{rightEl}</div>}
@@ -87,8 +87,8 @@ export function Card({ children, style, onClick, color }) {
     <div
       onClick={onClick}
       style={{
-        background: T.white,
-        border: "1px solid " + (color ? color + "30" : T.border),
+        background: D.bgCard,
+        border: "1px solid " + (color ? color + "30" : D.border),
         borderRadius: T.r16,
         padding: "16px 18px",
         boxShadow: T.shadow,
@@ -114,8 +114,8 @@ export function Btn({ children, onClick, color, disabled, size, outline, style }
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: outline ? "transparent" : (disabled ? "#e5e7eb" : c),
-        color: outline ? c : (disabled ? T.textSoft : T.white),
+        background: outline ? "transparent" : (disabled ? D.border : c),
+        color: outline ? c : (disabled ? D.textSoft : D.text),
         border: outline ? ("2px solid " + c) : "none",
         borderRadius: T.r12,
         padding: pad,
@@ -142,9 +142,9 @@ export function IconBtn({ icon, onClick, color, size, style }) {
         width: sz,
         height: sz,
         borderRadius: T.r12,
-        background: T.primaryLight,
-        border: "1px solid " + T.border,
-        color: color || T.primary,
+        background: D.primaryLight,
+        border: "1px solid " + D.border,
+        color: color || D.primary,
         fontSize: T.lg,
         display: "flex",
         alignItems: "center",
@@ -165,7 +165,7 @@ export function ProgressBar({ value, max, color, height, style }) {
   return (
     <div style={{
       height: height || 6,
-      background: T.border,
+      background: D.border,
       borderRadius: T.r999,
       overflow: "hidden",
       ...style,
@@ -189,8 +189,8 @@ export function Badge({ label, color, bg, style }) {
       display: "inline-block",
       padding: "3px 10px",
       borderRadius: T.r999,
-      background: bg || T.primaryLight,
-      color: color || T.primary,
+      background: bg || D.primaryLight,
+      color: color || D.primary,
       fontSize: T.xs,
       fontWeight: 700,
       letterSpacing: 0.5,
@@ -208,7 +208,7 @@ export function Heading({ children, size, color, style }) {
     <div style={{
       fontSize: size || T.xxl,
       fontWeight: 800,
-      color: color || T.text,
+      color: color || D.text,
       lineHeight: 1.2,
       ...style,
     }}>
@@ -221,7 +221,7 @@ export function Body({ children, color, size, style }) {
   return (
     <p style={{
       fontSize: size || T.md,
-      color: color || T.textMid,
+      color: color || D.textMid,
       lineHeight: 1.55,
       margin: 0,
       ...style,
@@ -234,7 +234,7 @@ export function Body({ children, color, size, style }) {
 // ── Divider ──────────────────────────────────────────────────
 
 export function Divider({ style }) {
-  return <div style={{ height: 1, background: T.border, margin: "4px 0", ...style }} />;
+  return <div style={{ height: 1, background: D.border, margin: "4px 0", ...style }} />;
 }
 
 // ── Loader ───────────────────────────────────────────────────
@@ -247,9 +247,8 @@ export function Loader({ color }) {
       justifyContent: "center",
       flex: 1,
       minHeight: 200,
-      color: color || T.primary,
       fontSize: T.md,
-      color: T.textSoft,
+      color: color || D.textSoft,
     }}>
       Laden...
     </div>
@@ -263,10 +262,10 @@ export function Empty({ icon, title, body }) {
     <div style={{
       textAlign: "center",
       padding: "40px 20px",
-      color: T.textSoft,
+      color: D.textSoft,
     }}>
       {icon && <div style={{ fontSize: 40, marginBottom: 12 }}>{icon}</div>}
-      {title && <div style={{ fontSize: T.lg, fontWeight: 700, color: T.textMid, marginBottom: 6 }}>{title}</div>}
+      {title && <div style={{ fontSize: T.lg, fontWeight: 700, color: D.textMid, marginBottom: 6 }}>{title}</div>}
       {body && <div style={{ fontSize: T.sm }}>{body}</div>}
     </div>
   );

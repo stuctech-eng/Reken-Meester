@@ -55,6 +55,56 @@ export const T = {
   gap32: 32,
 };
 
+// Dark theme tokens (ORBIT-stijl)
+export var D = {
+  bg:             "#0d1b2a",
+  bgCard:         "#112240",
+  bgCardHigh:     "#1a3a6b",
+  border:         "#1e3a5f",
+  borderHigh:     "#2563eb",
+  text:           "#e8f4fd",
+  textMid:        "#94b8d4",
+  textSoft:       "#4a7a9b",
+  primary:        "#3b82f6",
+  primaryLight:   "#1e3a5f",
+  success:        "#22c55e",
+  successBg:      "#052e16",
+  successBorder:  "#166534",
+  error:          "#ef4444",
+  errorBg:        "#450a0a",
+  errorBorder:    "#991b1b",
+  gold:           "#f59e0b",
+  goldBg:         "#451a03",
+  white:          "#112240",
+  // Feedback blokken
+  tipGreenBg:     "#052e16",
+  tipGreenBorder: "#166534",
+  tipGreenTxt:    "#4ade80",
+  uitlegBg:       "#0c1a3a",
+  uitlegBorder:   "#1e3a5f",
+  uitlegTxt:      "#93c5fd",
+  voorbeeldBg:    "#451a03",
+  voorbeeldBorder:"#92400e",
+  voorbeeldTxt:   "#fcd34d",
+  // Leaderboard ranks
+  rankGoldBg:     "#451a03",
+  rankGoldTxt:    "#f59e0b",
+  rankSilverBg:   "#1a3a6b",
+  rankSilverTxt:  "#94b8d4",
+  rankBronzeBg:   "#2d1a00",
+  rankBronzeTxt:  "#f97316",
+  // Radius en shadows (zelfde schaal als T)
+  r4:   4,
+  r8:   8,
+  r12:  12,
+  r16:  16,
+  r20:  20,
+  r999: 999,
+  shadow:   "0 1px 3px rgba(0,0,0,0.40), 0 1px 2px rgba(0,0,0,0.30)",
+  shadowMd: "0 4px 6px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.25)",
+  shadowLg: "0 10px 25px rgba(0,0,0,0.45), 0 4px 10px rgba(0,0,0,0.30)",
+};
+
 // Subject colors
 export const SUBJECT_COLORS = {
   optellen:         { main: "#4f46e5", light: "#eef2ff", dark: "#3730a3" },

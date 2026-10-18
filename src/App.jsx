@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { DEFAULT_SAVE, dClone, dMerge, calcXp } from "./core/save.js";
+import { DEFAULT_SAVE, dClone, dMerge, calcXp, getTitel } from "./core/save.js";
 import { checkLevelUnlock, updateSkillStats, getNextSkill, SKILL_ORDER } from "./core/subjects.js";
 import { initAuth } from "./services/firebase.js";
 import { loadFromFirestore, saveToFirestore } from "./services/sync.js";
 import { claimUsername, updateGlobalLeaderboard, updateSubjectLeaderboard } from "./services/leaderboard.js";
-import { T } from "./styles/tokens.js";
+import { T, D } from "./styles/tokens.js";
 
 import HomeScreen        from "./screens/HomeScreen.jsx";
 import SubjectScreen     from "./screens/SubjectScreen.jsx";
@@ -162,7 +162,8 @@ export default function App() {
       }
 
       if (uid && next.displayName) {
-        updateGlobalLeaderboard(uid, next.displayName, next.totalXp, "Leerling");
+        var titelNu = getTitel(next.subjects.optellen ? (next.subjects.optellen.totalSkillsMastered || 0) : 0);
+        updateGlobalLeaderboard(uid, next.displayName, next.totalXp, titelNu.label);
         var subjData = next.subjects[result.subjectId];
         var subAcc   = subjData.totalQuestions > 0
           ? Math.round(subjData.totalCorrect / subjData.totalQuestions * 100) : 0;
@@ -198,13 +199,13 @@ export default function App() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: T.bg,
+        background: D.bg,
         gap: 16,
       }}>
         <div style={{
           width: 64, height: 64,
           borderRadius: 18,
-          background: T.primaryLight,
+          background: D.primaryLight,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -212,7 +213,7 @@ export default function App() {
         }}>
           +
         </div>
-        <div style={{ fontSize: 15, color: T.textSoft }}>Reken Meester laden...</div>
+        <div style={{ fontSize: 15, color: D.textSoft }}>Reken Meester laden...</div>
       </div>
     );
   }

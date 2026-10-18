@@ -83,3 +83,31 @@ export function calcSkillXp(skillIndex, isCorrect, timeMs) {
   var speedBonus = timeMs < 4000 ? 3 : timeMs < 8000 ? 2 : 1;
   return base + speedBonus;
 }
+
+// Titel-progressie op basis van beheerste skills
+export var TITEL_MILESTONES = [
+  { minSkills: 0,  label: "Leerling"   },
+  { minSkills: 3,  label: "Rekenaar"   },
+  { minSkills: 6,  label: "Gevorderde" },
+  { minSkills: 9,  label: "Expert"     },
+  { minSkills: 11, label: "Professor"  },
+];
+
+export function getTitel(totalMastered) {
+  var titel = TITEL_MILESTONES[0];
+  for (var i = 0; i < TITEL_MILESTONES.length; i++) {
+    if (totalMastered >= TITEL_MILESTONES[i].minSkills) {
+      titel = TITEL_MILESTONES[i];
+    }
+  }
+  return titel;
+}
+
+export function getNextTitel(totalMastered) {
+  for (var i = 0; i < TITEL_MILESTONES.length; i++) {
+    if (TITEL_MILESTONES[i].minSkills > totalMastered) {
+      return TITEL_MILESTONES[i];
+    }
+  }
+  return null;
+}

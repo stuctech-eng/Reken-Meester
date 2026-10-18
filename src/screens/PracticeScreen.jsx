@@ -1,176 +1,320 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Screen, TopBar, Card, ProgressBar } from "../components/UI.jsx";
-import { T } from "../styles/tokens.js";
-import { getSubject, generateAdaptive, generateOptellen, getSkill, SKILL_ORDER } from "../core/subjects.js";
-import { calcSkillXp, calcXp } from "../core/save.js";
-
-// Sessie van 12 vragen per keer (oneindig: na afloop direct opnieuw)
-var SESSION_SIZE = 12;
-
-// ── FEEDBACK LEVELS ───────────────────────────────────────────────
-// Na 1 fout: tip (kort, groen)
-// Na 2 fouten op zelfde skill: uitleg (blauw, iets langer)
-// Na 3+ fouten op zelfde skill: voorbeeld (oranje, doorgerekend)
+import { T, D } from "../styles/tokens.js";
+import { getSkill, getNextSkill, SKILL_ORDER } from "../core/subjects.js";
+import { getTitel } from "../core/save.js";
 
 export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish }) {
-  var subject = getSubject(subjectId);
+  // ── Initialisatie helpers ─────────────────────────────────────
+  function initSkillId() {
+    var res = getNextSkill(skillStats || {});
+    return res ? res.skillId : SKILL_ORDER[0];
+  }
+
+  function makeQuestion(skillId) {
+    var skill = getSkill(skillId);
+    if (!skill) skill = getSkill(SKILL_ORDER[0]);
+    var q = skill.generate();
+    q.skillId = skillId;
+    q.skill   = skill;
+    return q;
+  }
 
   // ── State ──────────────────────────────────────────────────────
-  var qState       = useState(function() { return genQuestions(level, skillStats); });
-  var questions    = qState[0];
-  var setQuestions = qState[1];
+  var startSkillId = initSkillId();
 
-  var idxState  = useState(0);
-  var qIndex    = idxState[0];
-  var setQIndex = idxState[1];
+  var curQState      = useState(function() { return makeQuestion(startSkillId); });
+  var currentQuestion = curQState[0];
+  var setCurrentQuestion = curQState[1];
 
   var selState    = useState(null);
   var selected    = selState[0];
   var setSelected = selState[1];
 
-  var fbState     = useState(null);   // "correct" | "wrong"
+  var fbState     = useState(null);
   var feedback    = fbState[0];
   var setFeedback = fbState[1];
+
+  var fbLvlState  = useState(0);
+  var fbLevel     = fbLvlState[0];
+  var setFbLevel  = fbLvlState[1];
+
+  var tipOpenState = useState(false);
+  var tipOpen      = tipOpenState[0];
+  var setTipOpen   = tipOpenState[1];
 
   var resState    = useState([]);
   var results     = resState[0];
   var setResults  = resState[1];
 
-  var comboState  = useState(0);
-  var combo       = comboState[0];
-  var setCombo    = comboState[1];
+  var qNumState   = useState(1);
+  var questionNumber = qNumState[0];
+  var setQuestionNumber = qNumState[1];
 
-  // fouten per skill-id in deze sessie (voor feedback-escalatie)
-  var skillErrState = useState({});
-  var skillErrors   = skillErrState[0];
-  var setSkillErrors = skillErrState[1];
+  var showLUState = useState(false);
+  var showLevelUp = showLUState[0];
+  var setShowLevelUp = showLUState[1];
 
-  // Welk feedback-niveau tonen we? 0=geen, 1=tip, 2=uitleg, 3=voorbeeld
-  var fbLvlState  = useState(0);
-  var fbLevel     = fbLvlState[0];
-  var setFbLevel  = fbLvlState[1];
+  var luDataState = useState(null);
+  var levelUpData = luDataState[0];
+  var setLevelUpData = luDataState[1];
 
-  // Tip uitklappen
-  var tipOpenState = useState(false);
-  var tipOpen      = tipOpenState[0];
-  var setTipOpen   = tipOpenState[1];
+  // ── Refs (geen re-render) ─────────────────────────────────────
+  var activeSkillIdRef           = useRef(startSkillId);
+  var sessionSkillStatsRef       = useRef({});
+  var skillErrorsRef             = useRef({});
+  var recentRef                  = useRef({});
+  var fallbackActiveRef          = useRef(false);
+  var fallbackReturnSkillRef     = useRef(null);
+  var liveCorrectOnFallbackRef   = useRef(0);
+  var promotedThisSession        = useRef(new Set());
+  var lastQuestionRef            = useRef(currentQuestion.question);
+  var advanceTimeoutRef          = useRef(null);
+  var timeRef                    = useRef(Date.now());
 
-  var timeRef = useRef(Date.now());
+  // Initialiseer sessionSkillStats voor alle skills
+  useEffect(function() {
+    SKILL_ORDER.forEach(function(id) {
+      sessionSkillStatsRef.current[id] = { correct: 0, total: 0 };
+    });
+  }, []);
 
-  var current = questions[qIndex];
+  // ── Helpers ───────────────────────────────────────────────────
+  function getLiveTotal() {
+    var stored = Object.keys(skillStats || {}).filter(function(id) {
+      return skillStats[id] && skillStats[id].mastered;
+    }).length;
+    var genuinelyNew = 0;
+    promotedThisSession.current.forEach(function(id) {
+      if (!(skillStats && skillStats[id] && skillStats[id].mastered)) {
+        genuinelyNew++;
+      }
+    });
+    return stored + genuinelyNew;
+  }
 
-  // Haal skill op voor huidige vraag
-  var currentSkill = current && current.skill ? current.skill : (current ? getSkill(current.skillId || "s01_single_easy") : null);
-  var skillIdx     = currentSkill ? SKILL_ORDER.indexOf(currentSkill.id) : 0;
+  function generateNext(skillId) {
+    var skill = getSkill(skillId);
+    if (!skill) skill = getSkill(SKILL_ORDER[0]);
+    var q = skill.generate();
+    // Herhalingspreventie: één herpoging bij identieke som
+    if (q.question === lastQuestionRef.current) {
+      q = skill.generate();
+    }
+    q.skillId = skillId;
+    q.skill   = skill;
+    lastQuestionRef.current = q.question;
+    return q;
+  }
 
+  function advanceToNext(nextSkillId) {
+    var nextQ = generateNext(nextSkillId);
+    setCurrentQuestion(nextQ);
+    setSelected(null);
+    setFeedback(null);
+    setFbLevel(0);
+    setTipOpen(false);
+    timeRef.current = Date.now();
+    setQuestionNumber(function(n) { return n + 1; });
+  }
+
+  // ── Stop-functie ──────────────────────────────────────────────
+  function handleStop() {
+    clearTimeout(advanceTimeoutRef.current);
+    var ss    = sessionSkillStatsRef.current;
+    var total = 0;
+    var cor   = 0;
+    SKILL_ORDER.forEach(function(id) {
+      total += (ss[id] ? ss[id].total : 0);
+      cor   += (ss[id] ? ss[id].correct : 0);
+    });
+    var avgTime = 0;
+    var rr = results;
+    if (rr.length > 0) {
+      avgTime = Math.round(rr.reduce(function(s, r) { return s + r.timeMs; }, 0) / rr.length);
+    }
+    onFinish({
+      subjectId:      subjectId,
+      level:          level,
+      totalCorrect:   cor,
+      totalQuestions: total,
+      totalXp:        0,
+      avgTime:        avgTime,
+      results:        rr,
+      sessionSkillStats: ss,
+      dominantSkillId: activeSkillIdRef.current,
+    });
+  }
+
+  // ── Level-up overlay doorgaan ──────────────────────────────────
+  function handleLevelUpContinue() {
+    setShowLevelUp(false);
+    advanceToNext(activeSkillIdRef.current);
+  }
+
+  // ── Antwoord verwerken ─────────────────────────────────────────
   function handleChoice(choice) {
     if (selected !== null) return;
 
-    var timeMs    = Date.now() - timeRef.current;
-    var isCorrect = choice === current.answer;
-    var xp        = calcSkillXp(skillIdx >= 0 ? skillIdx : 0, isCorrect, timeMs);
-    var newCombo  = isCorrect ? combo + 1 : 0;
+    var answerSkillId = currentQuestion.skillId;
+    var timeMs        = Date.now() - timeRef.current;
+    var isCorrect     = choice === currentQuestion.answer;
 
     setSelected(choice);
     setFeedback(isCorrect ? "correct" : "wrong");
-    setCombo(newCombo);
 
-    // Feedback-niveau bepalen
-    var newSkillErrors = {};
-    for (var k in skillErrors) { newSkillErrors[k] = skillErrors[k]; }
-    if (!isCorrect && currentSkill) {
-      var sid = currentSkill.id;
-      newSkillErrors[sid] = (newSkillErrors[sid] || 0) + 1;
-      setSkillErrors(newSkillErrors);
-      var errCount = newSkillErrors[sid];
+    // STAP 3 — Antwoord toerekenen aan answerSkillId
+    if (!sessionSkillStatsRef.current[answerSkillId]) {
+      sessionSkillStatsRef.current[answerSkillId] = { correct: 0, total: 0 };
+    }
+    sessionSkillStatsRef.current[answerSkillId].total   += 1;
+    if (isCorrect) sessionSkillStatsRef.current[answerSkillId].correct += 1;
+
+    var newResults = results.concat([{
+      correct:  isCorrect,
+      timeMs:   timeMs,
+      answer:   currentQuestion.answer,
+      chosen:   choice,
+      question: currentQuestion.question,
+      skillId:  answerSkillId,
+    }]);
+    setResults(newResults);
+
+    // STAP 4 — fbLevel bijwerken
+    if (!isCorrect) {
+      skillErrorsRef.current[answerSkillId] = (skillErrorsRef.current[answerSkillId] || 0) + 1;
+      var errCount = skillErrorsRef.current[answerSkillId];
       setFbLevel(errCount >= 3 ? 3 : errCount >= 2 ? 2 : 1);
     } else {
       setFbLevel(0);
     }
     setTipOpen(false);
 
-    var newResults = results.concat([{
-      correct:  isCorrect,
-      timeMs:   timeMs,
-      xp:       xp,
-      answer:   current.answer,
-      chosen:   choice,
-      question: current.question,
-      skillId:  current.skillId || (currentSkill ? currentSkill.id : ""),
-    }]);
-    setResults(newResults);
+    // STAP 5 — Terugval-window bijwerken (max 10 bewaren)
+    var recentList = (recentRef.current[answerSkillId] || []).concat([isCorrect]);
+    if (recentList.length > 10) recentList = recentList.slice(recentList.length - 10);
+    recentRef.current[answerSkillId] = recentList;
 
-    // Auto-advance
-    setTimeout(function() {
-      var next = qIndex + 1;
-      if (next >= SESSION_SIZE) {
-        // Sessie klaar — stuur resultaten op
-        var totalCorrect = newResults.filter(function(r) { return r.correct; }).length;
-        var totalXp      = newResults.reduce(function(s, r) { return s + r.xp; }, 0);
-        var avgTime      = Math.round(newResults.reduce(function(s, r) { return s + r.timeMs; }, 0) / newResults.length);
+    // STAP 6 — Next activeSkillId bepalen
+    var nextSkillId = activeSkillIdRef.current;
 
-        // Skill-stats per skill-id verzamelen
-        var sessionSkillStats = {};
-        newResults.forEach(function(r) {
-          var sid = r.skillId;
-          if (!sid) return;
-          if (!sessionSkillStats[sid]) { sessionSkillStats[sid] = { correct: 0, total: 0 }; }
-          sessionSkillStats[sid].total += 1;
-          if (r.correct) sessionSkillStats[sid].correct += 1;
-        });
-
-        onFinish({
-          subjectId:      subjectId,
-          level:          level,
-          totalCorrect:   totalCorrect,
-          totalQuestions: SESSION_SIZE,
-          totalXp:        totalXp,
-          avgTime:        avgTime,
-          results:        newResults,
-          sessionSkillStats: sessionSkillStats,
-          dominantSkillId: current.skillId || "",
-        });
-      } else {
-        setQIndex(next);
-        setSelected(null);
-        setFeedback(null);
-        setFbLevel(0);
-        setTipOpen(false);
-        timeRef.current = Date.now();
+    // 6a — Terugval-check (alleen als !fallbackActive)
+    if (!fallbackActiveRef.current) {
+      var window5 = recentList.slice(-5);
+      var foutInWindow = window5.filter(function(c) { return !c; }).length;
+      if (foutInWindow >= 3) {
+        var curIdx = SKILL_ORDER.indexOf(answerSkillId);
+        if (curIdx > 0) {
+          fallbackActiveRef.current      = true;
+          fallbackReturnSkillRef.current = answerSkillId;
+          liveCorrectOnFallbackRef.current = 0;
+          nextSkillId = SKILL_ORDER[curIdx - 1];
+          activeSkillIdRef.current = nextSkillId;
+        }
       }
+    }
+
+    // 6b — Terugkeer uit terugval (alleen als fallbackActive EN correct OP de terugval-skill)
+    if (fallbackActiveRef.current && isCorrect && answerSkillId === activeSkillIdRef.current) {
+      liveCorrectOnFallbackRef.current++;
+      if (liveCorrectOnFallbackRef.current >= 3) {
+        fallbackActiveRef.current = false;
+        nextSkillId = fallbackReturnSkillRef.current;
+        activeSkillIdRef.current = nextSkillId;
+        liveCorrectOnFallbackRef.current = 0;
+        fallbackReturnSkillRef.current   = null;
+      }
+    }
+
+    // 6c — Promotie-check (alleen als !fallbackActive EN correct EN niet al gepromoveerd)
+    if (!fallbackActiveRef.current && isCorrect && !promotedThisSession.current.has(answerSkillId)) {
+      var storedSkill  = (skillStats && skillStats[answerSkillId]) || {};
+      if (!storedSkill.mastered) {
+        var storedCorrect   = storedSkill.correct || 0;
+        var sessionCorrect  = sessionSkillStatsRef.current[answerSkillId].correct;
+        var sessionTotal    = sessionSkillStatsRef.current[answerSkillId].total;
+        var cumulativeC     = storedCorrect + sessionCorrect;
+        var sessionAcc      = sessionTotal > 0 ? sessionCorrect / sessionTotal : 0;
+        var checkSkill      = getSkill(answerSkillId);
+        var minC            = checkSkill ? (checkSkill.minCorrect || 8) : 8;
+
+        if (cumulativeC >= minC && sessionTotal >= 4 && sessionAcc >= 0.70) {
+          promotedThisSession.current.add(answerSkillId);
+
+          // Volgende skill bepalen na promotie
+          var promIdx = SKILL_ORDER.indexOf(answerSkillId);
+          var nextIdx = promIdx + 1;
+          nextSkillId = nextIdx < SKILL_ORDER.length ? SKILL_ORDER[nextIdx] : answerSkillId;
+          activeSkillIdRef.current = nextSkillId;
+
+          var liveTotal  = getLiveTotal();
+          var newTitelObj = getTitel(liveTotal);
+          setLevelUpData({
+            skillLabel: checkSkill ? checkSkill.label : answerSkillId,
+            newTitel:   newTitelObj.label,
+            liveTotal:  liveTotal,
+          });
+          setShowLevelUp(true);
+          clearTimeout(advanceTimeoutRef.current);
+          return; // Wacht op "Ga verder" klik
+        }
+      }
+    }
+
+    // STAP 7 — Auto-advance (als geen level-up overlay)
+    advanceTimeoutRef.current = setTimeout(function() {
+      advanceToNext(nextSkillId);
     }, isCorrect ? 900 : 1400);
   }
 
-  // ── Kleuren op basis van feedback ─────────────────────────────
-  var bgColor    = feedback === "correct" ? "#f0fdf4"
-    : feedback === "wrong"   ? "#fef2f2"
-    : T.bg;
+  // ── Afgeleide waarden ─────────────────────────────────────────
+  var currentSkill = currentQuestion.skill || getSkill(currentQuestion.skillId || SKILL_ORDER[0]);
 
-  var cardBorder = feedback === "correct" ? T.success + "60"
-    : feedback === "wrong"   ? T.error + "60"
-    : subject.color + "20";
+  var bgColor = feedback === "correct" ? D.successBg
+    : feedback === "wrong" ? D.errorBg
+    : D.bg;
 
-  var lastRes = results.length > 0 ? results[results.length - 1] : null;
+  var cardBorder = feedback === "correct" ? D.successBorder
+    : feedback === "wrong" ? D.errorBorder
+    : D.border;
 
-  // ── Skill voortgang balk (hoeveel van de skill-correcten) ──────
-  var skillCorrectSoFar = 0;
-  if (currentSkill) {
-    for (var i = 0; i < results.length; i++) {
-      if (results[i].skillId === currentSkill.id && results[i].correct) skillCorrectSoFar++;
-    }
-  }
-  var skillTarget = currentSkill ? (currentSkill.minCorrect || 8) : 8;
-
-  // ── Welk feedback-blok tonen? ─────────────────────────────────
   var showFeedbackBlock = feedback === "wrong" && fbLevel > 0 && currentSkill;
+
+  // Skill voortgang berekenen
+  var storedCorrectForSkill = (skillStats && skillStats[currentQuestion.skillId] && skillStats[currentQuestion.skillId].correct) || 0;
+  var sessionCorrectForSkill = sessionSkillStatsRef.current[currentQuestion.skillId]
+    ? sessionSkillStatsRef.current[currentQuestion.skillId].correct
+    : 0;
+  var skillTarget = currentSkill ? (currentSkill.minCorrect || 8) : 8;
+  var skillProgress = Math.min(storedCorrectForSkill + sessionCorrectForSkill, skillTarget);
+
+  // Stopknop
+  var stopBtn = (
+    <button
+      onClick={handleStop}
+      style={{
+        background: "none",
+        border: "none",
+        color: D.textSoft,
+        fontSize: 20,
+        fontWeight: 700,
+        padding: "4px 8px",
+        cursor: "pointer",
+        lineHeight: 1,
+      }}
+    >
+      {"✕"}
+    </button>
+  );
 
   return (
     <Screen bg={bgColor} style={{ transition: "background 0.25s" }}>
       <TopBar
         title={"Optellen" + (currentSkill ? (" · " + currentSkill.label) : "")}
-        subtitle={currentSkill ? currentSkill.desc : ""}
+        subtitle={currentSkill ? currentSkill.strategy : ""}
         onBack={onBack}
-        color={subject.color}
+        color={D.primary}
+        rightEl={stopBtn}
       />
 
       <div style={{
@@ -183,19 +327,17 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         WebkitOverflowScrolling: "touch",
       }}>
 
-        {/* Progress + combo */}
+        {/* Voortgang */}
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <span style={{ fontSize: T.sm, color: T.textSoft, fontWeight: 500 }}>
-              {qIndex + 1} / {SESSION_SIZE}
+            <span style={{ fontSize: T.sm, color: D.textSoft, fontWeight: 500 }}>
+              {"Vraag " + questionNumber}
             </span>
-            {combo >= 2 && (
-              <span style={{ fontSize: T.sm, color: "#f59e0b", fontWeight: 700 }}>
-                {"🔥"} {combo} op rij!
-              </span>
-            )}
+            <span style={{ fontSize: T.sm, color: D.textSoft, fontWeight: 500 }}>
+              {skillProgress + " / " + skillTarget + " correct"}
+            </span>
           </div>
-          <ProgressBar value={qIndex} max={SESSION_SIZE} color={subject.color} height={4} />
+          <ProgressBar value={skillProgress} max={skillTarget} color={D.primary} height={4} />
         </div>
 
         {/* Vraag + feedback */}
@@ -205,16 +347,17 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             textAlign: "center",
             padding: "40px 24px 32px",
             borderColor: cardBorder,
-            boxShadow: T.shadowMd,
+            background: D.bgCard,
+            boxShadow: D.shadowMd,
             transition: "border-color 0.2s",
           }}>
 
-            {/* Strategie label (klein, boven de som) */}
+            {/* Strategie label */}
             {currentSkill && currentSkill.strategy && !feedback && (
               <div style={{
                 fontSize: 11,
                 fontWeight: 700,
-                color: subject.color + "80",
+                color: D.primary + "90",
                 letterSpacing: 0.8,
                 textTransform: "uppercase",
                 marginBottom: 10,
@@ -227,61 +370,60 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             <div style={{
               fontSize: 52,
               fontWeight: 900,
-              color: T.text,
+              color: D.text,
               letterSpacing: -1,
               lineHeight: 1.1,
               marginBottom: feedback ? 18 : 0,
             }}>
-              {current.question}
+              {currentQuestion.question}
             </div>
 
             {/* Feedback na antwoord */}
-            {feedback && lastRes && (
+            {feedback && (
               <div style={{
                 fontSize: T.lg,
                 fontWeight: 700,
-                color: feedback === "correct" ? T.success : T.error,
+                color: feedback === "correct" ? D.success : D.error,
                 animation: "popIn 0.2s ease",
               }}>
                 {feedback === "correct"
-                  ? ("+" + lastRes.xp + " XP" + (combo >= 3 ? "  🔥" : ""))
-                  : ("✖  Antwoord: " + current.answer)
+                  ? "✓"
+                  : ("✖  Antwoord: " + currentQuestion.answer)
                 }
               </div>
             )}
           </Card>
 
-          {/* ── Feedback blok (tip / uitleg / voorbeeld) ── */}
+          {/* Feedback blok */}
           {showFeedbackBlock && (
             <div>
-              {/* TIP (altijd tonen bij fout) */}
+              {/* TIP */}
               <div
                 onClick={function() { setTipOpen(function(v) { return !v; }); }}
                 style={{
                   borderRadius: T.r12,
-                  border: "1px solid #bbf7d0",
-                  background: "#f0fdf4",
+                  border: "1px solid " + D.tipGreenBorder,
+                  background: D.tipGreenBg,
                   padding: "10px 14px",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "flex-start",
                   gap: 8,
-                  marginBottom: fbLevel >= 2 && tipOpen ? 0 : 0,
                 }}
               >
                 <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{"💡"}</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: T.xs, fontWeight: 700, color: "#166534", marginBottom: 2 }}>
+                  <div style={{ fontSize: T.xs, fontWeight: 700, color: D.tipGreenTxt, marginBottom: 2 }}>
                     {"TIP — " + currentSkill.strategy.toUpperCase()}
                   </div>
-                  <div style={{ fontSize: T.sm, color: "#15803d", lineHeight: 1.4 }}>
+                  <div style={{ fontSize: T.sm, color: D.tipGreenTxt, lineHeight: 1.4 }}>
                     {currentSkill.tip}
                   </div>
                 </div>
                 {fbLevel >= 2 && (
                   <span style={{
                     fontSize: 11,
-                    color: "#166534",
+                    color: D.tipGreenTxt,
                     transform: tipOpen ? "rotate(180deg)" : "rotate(0deg)",
                     transition: "transform 0.2s",
                     display: "inline-block",
@@ -292,40 +434,35 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 )}
               </div>
 
-              {/* UITLEG (na 2 fouten, uitklapbaar) */}
+              {/* UITLEG */}
               {fbLevel >= 2 && tipOpen && (
                 <div style={{
-                  borderRadius: "0 0 " + T.r12 + " " + T.r12,
-                  border: "1px solid #bfdbfe",
+                  borderRadius: "0 0 " + T.r12 + "px " + T.r12 + "px",
+                  border: "1px solid " + D.uitlegBorder,
                   borderTop: "none",
-                  background: "#eff6ff",
+                  background: D.uitlegBg,
                   padding: "10px 14px",
                 }}>
-                  <div style={{ fontSize: T.xs, fontWeight: 700, color: "#1e40af", marginBottom: 4 }}>
+                  <div style={{ fontSize: T.xs, fontWeight: 700, color: D.uitlegTxt, marginBottom: 4 }}>
                     UITLEG
                   </div>
-                  <div style={{ fontSize: T.sm, color: "#1d4ed8", lineHeight: 1.5 }}>
+                  <div style={{ fontSize: T.sm, color: D.uitlegTxt, lineHeight: 1.5 }}>
                     {currentSkill.uitleg}
                   </div>
 
-                  {/* VOORBEELD (na 3 fouten) */}
+                  {/* VOORBEELD */}
                   {fbLevel >= 3 && (
                     <div style={{
                       marginTop: 10,
                       padding: "8px 10px",
-                      background: "#fef3c7",
-                      border: "1px solid #fde68a",
+                      background: D.voorbeeldBg,
+                      border: "1px solid " + D.voorbeeldBorder,
                       borderRadius: T.r8,
                     }}>
-                      <div style={{ fontSize: T.xs, fontWeight: 700, color: "#92400e", marginBottom: 4 }}>
+                      <div style={{ fontSize: T.xs, fontWeight: 700, color: D.voorbeeldTxt, marginBottom: 4 }}>
                         VOORBEELD
                       </div>
-                      <div style={{
-                        fontSize: T.sm,
-                        color: "#78350f",
-                        lineHeight: 1.5,
-                        whiteSpace: "pre-line",
-                      }}>
+                      <div style={{ fontSize: T.sm, color: D.voorbeeldTxt, lineHeight: 1.5, whiteSpace: "pre-line" }}>
                         {currentSkill.voorbeeld}
                       </div>
                     </div>
@@ -341,18 +478,18 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             gridTemplateColumns: "1fr 1fr",
             gap: 10,
           }}>
-            {current.choices.map(function(choice) {
+            {currentQuestion.choices.map(function(choice) {
               var isSelected   = selected === choice;
-              var isCorrectAns = choice === current.answer;
-              var bg           = T.white;
-              var border       = T.border;
-              var textColor    = T.text;
+              var isCorrectAns = choice === currentQuestion.answer;
+              var bg      = D.bgCard;
+              var border  = D.border;
+              var txtCol  = D.text;
 
               if (feedback) {
                 if (isCorrectAns) {
-                  bg = T.successLight; border = T.success; textColor = "#166534";
+                  bg = D.successBg; border = D.successBorder; txtCol = D.success;
                 } else if (isSelected) {
-                  bg = T.errorLight; border = T.error; textColor = "#991b1b";
+                  bg = D.errorBg; border = D.errorBorder; txtCol = D.error;
                 }
               }
 
@@ -366,10 +503,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                     borderRadius: T.r16,
                     border: "2px solid " + border,
                     background: bg,
-                    color: textColor,
+                    color: txtCol,
                     fontSize: 36,
                     fontWeight: 900,
-                    boxShadow: selected === null ? T.shadow : "none",
+                    boxShadow: selected === null ? D.shadow : "none",
                     transition: "background 0.15s, border-color 0.15s",
                     cursor: selected !== null ? "default" : "pointer",
                     WebkitTapHighlightColor: "transparent",
@@ -385,27 +522,59 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         </div>
       </div>
 
+      {/* Level-up overlay */}
+      {showLevelUp && levelUpData && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.70)",
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 24px",
+        }}>
+          <div style={{
+            background: D.bgCard,
+            borderRadius: T.r20,
+            padding: "36px 28px",
+            textAlign: "center",
+            boxShadow: D.shadowLg,
+            maxWidth: 340,
+            width: "100%",
+            border: "1px solid " + D.borderHigh,
+          }}>
+            <div style={{ fontSize: 52, marginBottom: 12 }}>{"🎓"}</div>
+            <div style={{ fontSize: T.xxl, fontWeight: 900, color: D.text, marginBottom: 6 }}>
+              {"Skill beheerst!"}
+            </div>
+            <div style={{ fontSize: T.lg, color: D.primary, fontWeight: 700, marginBottom: 8 }}>
+              {levelUpData.skillLabel}
+            </div>
+            <div style={{ fontSize: T.sm, color: D.textMid, marginBottom: 24 }}>
+              {levelUpData.liveTotal + " van 12 skills beheerst — " + levelUpData.newTitel + " optellen"}
+            </div>
+            <button
+              onClick={handleLevelUpContinue}
+              style={{
+                background: D.primary,
+                color: D.text,
+                border: "none",
+                borderRadius: T.r12,
+                padding: "16px 32px",
+                fontSize: T.lg,
+                fontWeight: 700,
+                cursor: "pointer",
+                width: "100%",
+              }}
+            >
+              Ga verder
+            </button>
+          </div>
+        </div>
+      )}
+
       <style>{"@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }"}</style>
     </Screen>
   );
-}
-
-// ── Vraag-batch genereren ─────────────────────────────────────────
-// Genereert SESSION_SIZE vragen adaptief op basis van skillStats.
-// Bij gebruik vanuit legacy level-flow: valt terug op level-gebaseerde gen.
-
-function genQuestions(level, skillStats) {
-  var questions = [];
-  for (var i = 0; i < SESSION_SIZE; i++) {
-    var q;
-    if (skillStats && Object.keys(skillStats).length >= 0) {
-      // Adaptive: gebruik skillStats
-      // Af en toe wisselen we van skill (na 4 vragen) voor variatie
-      q = generateAdaptive(skillStats);
-    } else {
-      q = generateOptellen(level || 1);
-    }
-    questions.push(q);
-  }
-  return questions;
 }

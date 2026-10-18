@@ -1,15 +1,23 @@
 import { useState } from "react";
 import { Screen, Card, Btn, Heading, Body } from "../components/UI.jsx";
-import { T } from "../styles/tokens.js";
+import { T, D } from "../styles/tokens.js";
 import { claimUsername } from "../services/leaderboard.js";
 
 export default function UsernameScreen({ uid, onDone }) {
-  const [input, setInput]     = useState("");
-  const [error, setError]     = useState(null);
-  const [loading, setLoading] = useState(false);
+  var inputState   = useState("");
+  var input        = inputState[0];
+  var setInput     = inputState[1];
+
+  var errorState   = useState(null);
+  var error        = errorState[0];
+  var setError     = errorState[1];
+
+  var loadingState = useState(false);
+  var loading      = loadingState[0];
+  var setLoading   = loadingState[1];
 
   async function handleSubmit() {
-    const name = input.trim();
+    var name = input.trim();
     if (!name) return;
     setLoading(true);
     setError(null);
@@ -24,12 +32,12 @@ export default function UsernameScreen({ uid, onDone }) {
   }
 
   return (
-    <Screen style={{ justifyContent: "center", padding: 24 }}>
+    <Screen bg={D.bg} style={{ justifyContent: "center", padding: 24 }}>
       <div style={{ textAlign: "center", marginBottom: 32 }}>
         <div style={{
           width: 72, height: 72,
           borderRadius: T.r20,
-          background: T.primaryLight,
+          background: D.primaryLight,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -38,41 +46,42 @@ export default function UsernameScreen({ uid, onDone }) {
         }}>
           &#127891;
         </div>
-        <Heading size={T.xxxl} style={{ marginBottom: 8 }}>
+        <Heading size={T.xxxl} color={D.text} style={{ marginBottom: 8 }}>
           Kies je naam
         </Heading>
-        <Body>
+        <Body color={D.textMid}>
           Deze naam verschijnt op het leaderboard. Je kiest hem eenmalig.
         </Body>
       </div>
 
-      <Card style={{ padding: 20 }}>
+      <Card style={{ padding: 20, background: D.bgCard }}>
         <input
           type="text"
           value={input}
-          onChange={e => { setInput(e.target.value); setError(null); }}
-          onKeyDown={e => e.key === "Enter" && handleSubmit()}
+          onChange={function(e) { setInput(e.target.value); setError(null); }}
+          onKeyDown={function(e) { if (e.key === "Enter") handleSubmit(); }}
           placeholder="Jouw naam..."
           maxLength={20}
           autoFocus
           style={{
             width: "100%",
             padding: "14px 16px",
-            background: T.bg,
-            border: "2px solid " + (error ? T.error : T.border),
+            background: D.bg,
+            border: "2px solid " + (error ? D.errorBorder : D.border),
             borderRadius: T.r12,
-            color: T.text,
+            color: D.text,
             fontSize: T.xl,
             fontWeight: 700,
             outline: "none",
             textAlign: "center",
+            boxSizing: "border-box",
           }}
         />
 
         {error && (
           <div style={{
             marginTop: 10,
-            color: T.error,
+            color: D.error,
             fontSize: T.sm,
             textAlign: "center",
             fontWeight: 600,
@@ -81,13 +90,13 @@ export default function UsernameScreen({ uid, onDone }) {
           </div>
         )}
 
-        <div style={{ marginTop: 8, fontSize: T.xs, color: T.textSoft, textAlign: "center" }}>
-          2-20 tekens · Uniek · Niet meer aan te passen
+        <div style={{ marginTop: 8, fontSize: T.xs, color: D.textSoft, textAlign: "center" }}>
+          2-20 tekens &middot; Uniek &middot; Niet meer aan te passen
         </div>
 
         <Btn
           onClick={handleSubmit}
-          color={T.primary}
+          color={D.primary}
           size="lg"
           disabled={!input.trim() || loading}
           style={{ width: "100%", marginTop: 16 }}

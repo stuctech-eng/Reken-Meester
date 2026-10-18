@@ -1,5 +1,5 @@
 import { Screen, TopBar, Card, Btn, ProgressBar, Badge } from "../components/UI.jsx";
-import { T } from "../styles/tokens.js";
+import { T, D } from "../styles/tokens.js";
 import { getSubject, OPTELLEN_SKILLS, SKILL_ORDER, getNextSkill } from "../core/subjects.js";
 import { getAccuracy } from "../core/save.js";
 
@@ -13,10 +13,8 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
 
   var skillStats    = data.skillStats || {};
   var totalMastered = data.totalSkillsMastered || 0;
-  var totalXp       = data.xp || 0;
   var acc           = getAccuracy(data);
 
-  // Welke skill is actief?
   var nextSkillInfo = getNextSkill(skillStats);
   var activeSkillId = nextSkillInfo.skillId;
 
@@ -25,7 +23,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
   }
 
   return (
-    <Screen>
+    <Screen bg={D.bg}>
       <TopBar
         title={subject.label}
         subtitle={subject.description}
@@ -44,12 +42,12 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
       }}>
 
         {/* Stats card */}
-        <Card style={{ borderColor: subject.color + "30" }}>
+        <Card style={{ borderColor: subject.color + "40", background: D.bgCard }}>
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
             <div style={{
               width: 56, height: 56,
               borderRadius: T.r16,
-              background: subject.lightColor,
+              background: subject.color + "22",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -62,18 +60,14 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
             <div style={{ flex: 1 }}>
               <div style={{ display: "flex", gap: 20, marginBottom: 8 }}>
                 <div>
-                  <div style={{ fontSize: T.xs, color: T.textSoft }}>XP</div>
-                  <div style={{ fontSize: T.xl, fontWeight: 800, color: subject.color }}>{totalXp}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: T.xs, color: T.textSoft }}>NAUWKEURIGHEID</div>
-                  <div style={{ fontSize: T.xl, fontWeight: 800, color: T.text }}>{acc}%</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: T.xs, color: T.textSoft }}>SKILLS</div>
-                  <div style={{ fontSize: T.xl, fontWeight: 800, color: T.text }}>
-                    {totalMastered}/{SKILL_ORDER.length}
+                  <div style={{ fontSize: T.xs, color: D.textSoft }}>BEHEERSD</div>
+                  <div style={{ fontSize: T.xl, fontWeight: 800, color: subject.color }}>
+                    {totalMastered + "/" + SKILL_ORDER.length}
                   </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: T.xs, color: D.textSoft }}>NAUWKEURIGHEID</div>
+                  <div style={{ fontSize: T.xl, fontWeight: 800, color: D.text }}>{acc}%</div>
                 </div>
               </div>
               <ProgressBar
@@ -105,7 +99,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
 
         {/* Skills overzicht */}
         <div>
-          <div style={{ fontSize: T.sm, fontWeight: 700, color: T.textSoft, letterSpacing: 0.5, marginBottom: 10 }}>
+          <div style={{ fontSize: T.sm, fontWeight: 700, color: D.textSoft, letterSpacing: 0.5, marginBottom: 10 }}>
             VAARDIGHEDEN
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -114,32 +108,34 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
               var stats    = skillStats[skill.id] || { correct: 0, attempts: 0, mastered: false };
               var mastered = stats.mastered;
               var active   = skill.id === activeSkillId;
-              var started  = stats.attempts > 0;
+              var started  = (stats.attempts || 0) > 0 || (stats.total || 0) > 0;
 
-              // Skill is beschikbaar als de vorige beheerst is (of het is de eerste)
               var available = i === 0
                 || (skillStats[SKILL_ORDER[i - 1]] && skillStats[SKILL_ORDER[i - 1]].mastered)
                 || mastered
                 || active;
 
               var progress = mastered ? 1
-                : (skill.minCorrect > 0 ? Math.min(stats.correct / skill.minCorrect, 0.99) : 0);
+                : (skill.minCorrect > 0 ? Math.min((stats.correct || 0) / skill.minCorrect, 0.99) : 0);
+
+              var cardBg = mastered
+                ? D.successBg
+                : active
+                  ? D.bgCardHigh
+                  : D.bgCard;
+              var cardBorder = mastered
+                ? D.successBorder
+                : active
+                  ? subject.color + "60"
+                  : D.border;
 
               return (
                 <Card
                   key={skill.id}
                   style={{
                     opacity: available ? 1 : 0.4,
-                    borderColor: mastered
-                      ? T.success + "60"
-                      : active
-                        ? subject.color + "60"
-                        : T.border,
-                    background: mastered
-                      ? "#f0fdf4"
-                      : active
-                        ? subject.lightColor
-                        : T.white,
+                    borderColor: cardBorder,
+                    background: cardBg,
                     padding: "12px 14px",
                   }}
                 >
@@ -150,16 +146,16 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
                       width: 38, height: 38,
                       borderRadius: T.r999,
                       background: mastered
-                        ? T.success
+                        ? D.success
                         : active
                           ? subject.color
                           : available
-                            ? subject.lightColor
-                            : T.bg,
+                            ? subject.color + "22"
+                            : D.bgCardHigh,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: (mastered || active) ? T.white : available ? subject.color : T.textSoft,
+                      color: (mastered || active) ? "#ffffff" : available ? subject.color : D.textSoft,
                       fontSize: mastered ? 16 : T.sm,
                       fontWeight: 800,
                       flexShrink: 0,
@@ -170,22 +166,21 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2, flexWrap: "wrap" }}>
-                        <div style={{ fontWeight: 700, fontSize: T.sm, color: T.text }}>
+                        <div style={{ fontWeight: 700, fontSize: T.sm, color: D.text }}>
                           {skill.label}
                         </div>
                         {active && !mastered && (
-                          <Badge label="Actief" color={subject.color} bg={subject.lightColor} />
+                          <Badge label="Actief" color={subject.color} bg={subject.color + "22"} />
                         )}
                         {mastered && (
-                          <Badge label="Beheerst" color="#166534" bg="#dcfce7" />
+                          <Badge label="Beheerst" color={D.success} bg={D.successBg} />
                         )}
                       </div>
-                      <div style={{ fontSize: 11, color: T.textSoft, marginBottom: started && !mastered ? 5 : 0 }}>
+                      <div style={{ fontSize: 11, color: D.textSoft, marginBottom: started && !mastered ? 5 : 0 }}>
                         {skill.desc}
                       </div>
-                      {/* Mini progress bar */}
                       {started && !mastered && (
-                        <div style={{ height: 3, background: T.border, borderRadius: 99, overflow: "hidden" }}>
+                        <div style={{ height: 3, background: D.border, borderRadius: 99, overflow: "hidden" }}>
                           <div style={{
                             height: "100%",
                             width: Math.round(progress * 100) + "%",
@@ -201,8 +196,8 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
                     <div style={{
                       fontSize: 10,
                       fontWeight: 700,
-                      color: available ? subject.color : T.textSoft,
-                      background: available ? subject.lightColor : T.bg,
+                      color: available ? subject.color : D.textSoft,
+                      background: available ? subject.color + "22" : D.bgCardHigh,
                       borderRadius: T.r8,
                       padding: "3px 7px",
                       flexShrink: 0,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Screen, TopBar, Card, Loader, Empty } from "../components/UI.jsx";
-import { T } from "../styles/tokens.js";
+import { T, D } from "../styles/tokens.js";
 import { fetchGlobalTop10, fetchSubjectTop10, fetchMyRankGlobal } from "../services/leaderboard.js";
 
 var MEDAL_GOLD   = "🥇";
@@ -31,7 +31,6 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
   var setLoading  = loadState[1];
 
   var displayName = save.displayName || "Jij";
-  var myXp        = save.totalXp || 0;
 
   useEffect(function() { loadData(); }, [tab]);
 
@@ -42,7 +41,7 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
       var rows = [];
       if (tab === "global") {
         rows = await fetchGlobalTop10();
-        var rank = await fetchMyRankGlobal(uid, myXp);
+        var rank = await fetchMyRankGlobal(uid, save.totalXp || 0);
         setMyRank(rank);
       } else {
         rows = await fetchSubjectTop10(tab);
@@ -64,29 +63,41 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
     return null;
   }
 
-  function rankBg(i) {
-    if (i === 0) return "#fef9c3";
-    if (i === 1) return "#f1f5f9";
-    if (i === 2) return "#fef3c7";
-    return T.bg;
+  function rankBgColor(i) {
+    if (i === 0) return D.rankGoldBg;
+    if (i === 1) return D.rankSilverBg;
+    if (i === 2) return D.rankBronzeBg;
+    return D.bgCardHigh;
   }
 
-  function rankColor(i) {
-    if (i === 0) return "#a16207";
-    if (i === 1) return "#475569";
-    if (i === 2) return "#b45309";
-    return T.textMid;
+  function rankTxtColor(i) {
+    if (i === 0) return D.rankGoldTxt;
+    if (i === 1) return D.rankSilverTxt;
+    if (i === 2) return D.rankBronzeTxt;
+    return D.textMid;
   }
 
-  // ── Gedeelde inner content ────────────────────────────────────
   var inner = (
     <div style={{ display: "flex", flexDirection: "column" }}>
+      {/* Banner */}
+      <div style={{
+        padding: "8px 20px",
+        background: D.bgCardHigh,
+        borderBottom: "1px solid " + D.border,
+        textAlign: "center",
+        fontSize: T.xs,
+        color: D.textSoft,
+        fontWeight: 600,
+      }}>
+        Scores worden binnenkort vernieuwd
+      </div>
+
       {/* Tabs */}
       <div style={{
         display: "flex",
         padding: embedded ? "0 20px" : "12px 20px 0",
-        background: T.white,
-        borderBottom: "1px solid " + T.border,
+        background: D.bgCard,
+        borderBottom: "1px solid " + D.border,
       }}>
         {TABS.map(function(t) {
           return (
@@ -98,8 +109,8 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
                 padding: "10px 8px",
                 background: "none",
                 border: "none",
-                borderBottom: "2px solid " + (tab === t.id ? T.primary : "transparent"),
-                color: tab === t.id ? T.primary : T.textSoft,
+                borderBottom: "2px solid " + (tab === t.id ? D.primary : "transparent"),
+                color: tab === t.id ? D.primary : D.textSoft,
                 fontWeight: tab === t.id ? 700 : 500,
                 fontSize: T.sm,
                 cursor: "pointer",
@@ -119,24 +130,21 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
         gap: 10,
       }}>
         {/* My position */}
-        <Card style={{ borderColor: T.primary + "30", background: T.primaryLight }}>
+        <Card style={{ borderColor: D.borderHigh, background: D.primaryLight }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: T.xs, color: T.primary, fontWeight: 600, marginBottom: 2 }}>
+              <div style={{ fontSize: T.xs, color: D.primary, fontWeight: 600, marginBottom: 2 }}>
                 JOUW POSITIE
               </div>
-              <div style={{ fontWeight: 800, fontSize: T.lg, color: T.text }}>
+              <div style={{ fontWeight: 800, fontSize: T.lg, color: D.text }}>
                 {displayName}
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
               {myRank && (
-                <div style={{ fontSize: T.xxl, fontWeight: 900, color: T.primary }}>
+                <div style={{ fontSize: T.xxl, fontWeight: 900, color: D.primary }}>
                   {"#" + myRank}
                 </div>
-              )}
-              {tab === "global" && (
-                <div style={{ fontSize: T.sm, color: T.textSoft }}>{myXp} XP</div>
               )}
             </div>
           </div>
@@ -158,8 +166,8 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
               <Card
                 key={row.uid || i}
                 style={{
-                  background: me ? T.primaryLight : T.white,
-                  borderColor: me ? T.primary + "40" : T.border,
+                  background: me ? D.primaryLight : D.bgCard,
+                  borderColor: me ? D.borderHigh : D.border,
                   padding: "12px 16px",
                 }}
               >
@@ -167,13 +175,13 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
                   <div style={{
                     width: 36, height: 36,
                     borderRadius: T.r999,
-                    background: rankBg(i),
+                    background: rankBgColor(i),
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: icon ? 22 : T.sm,
                     fontWeight: 800,
-                    color: rankColor(i),
+                    color: rankTxtColor(i),
                     flexShrink: 0,
                   }}>
                     {icon ? icon : ("#" + (row.rank || (i + 1)))}
@@ -181,17 +189,11 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
                   <div style={{ flex: 1 }}>
                     <div style={{
                       fontWeight: me ? 800 : 600,
-                      color: me ? T.primary : T.text,
+                      color: me ? D.primary : D.text,
                       fontSize: T.md,
                     }}>
                       {row.displayName}{me ? (" " + STAR_GLOW) : ""}
                     </div>
-                    {row.tier && (
-                      <div style={{ fontSize: T.xs, color: T.textSoft }}>{row.tier}</div>
-                    )}
-                  </div>
-                  <div style={{ textAlign: "right", fontWeight: 700, color: me ? T.primary : T.text }}>
-                    {tab === "global" ? (row.xp + " XP") : ("Lvl " + (row.level || 1))}
                   </div>
                 </div>
               </Card>
@@ -202,18 +204,12 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
     </div>
   );
 
-  // Embedded in BottomSheet — geen extra Screen/TopBar
   if (embedded) return inner;
 
-  // Standalone screen
   return (
-    <Screen>
+    <Screen bg={D.bg}>
       <TopBar title="Leaderboard" onBack={onBack} />
-      <div style={{
-        flex: 1,
-        overflowY: "auto",
-        WebkitOverflowScrolling: "touch",
-      }}>
+      <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         {inner}
       </div>
     </Screen>
