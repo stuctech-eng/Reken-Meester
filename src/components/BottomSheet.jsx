@@ -121,7 +121,7 @@ export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, chi
                 cursor: "pointer",
               }}
             >
-              <span style={{ fontSize: 16 }}>&#128218;</span>
+              <span style={{ fontSize: 16 }}>{"📚"}</span>
               <span style={{
                 fontSize: T.sm,
                 color: "#15803d",
@@ -137,7 +137,7 @@ export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, chi
                 transition: "transform 0.35s",
                 display: "inline-block",
               }}>
-                &#9650;
+                {"▲"}
               </span>
             </div>
           )}

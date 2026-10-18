@@ -1,24 +1,23 @@
 import { useState, useEffect } from "react";
 import { DEFAULT_SAVE, dClone, dMerge, calcXp } from "./core/save.js";
-import { checkLevelUnlock } from "./core/subjects.js";
+import { checkLevelUnlock, updateSkillStats, getNextSkill, SKILL_ORDER } from "./core/subjects.js";
 import { initAuth } from "./services/firebase.js";
 import { loadFromFirestore, saveToFirestore } from "./services/sync.js";
 import { claimUsername, updateGlobalLeaderboard, updateSubjectLeaderboard } from "./services/leaderboard.js";
 import { T } from "./styles/tokens.js";
 
-import HomeScreen      from "./screens/HomeScreen.jsx";
-import SubjectScreen   from "./screens/SubjectScreen.jsx";
-import PracticeScreen  from "./screens/PracticeScreen.jsx";
-import ResultScreen    from "./screens/ResultScreen.jsx";
+import HomeScreen        from "./screens/HomeScreen.jsx";
+import SubjectScreen     from "./screens/SubjectScreen.jsx";
+import PracticeScreen    from "./screens/PracticeScreen.jsx";
+import ResultScreen      from "./screens/ResultScreen.jsx";
 import LeaderboardScreen from "./screens/LeaderboardScreen.jsx";
-import SettingsScreen  from "./screens/SettingsScreen.jsx";
-import UsernameScreen  from "./screens/UsernameScreen.jsx";
-import BottomSheet     from "./components/BottomSheet.jsx";
+import SettingsScreen    from "./screens/SettingsScreen.jsx";
+import UsernameScreen    from "./screens/UsernameScreen.jsx";
+import BottomSheet       from "./components/BottomSheet.jsx";
 
-// Bottom sheet tabs
 var SHEET_TABS = [
-  { id: "leaderboard", label: "Scores",    icon: "🏆" }, // 🏆
-  { id: "more",        label: "Meer",      icon: "⋯" },       // ⋯
+  { id: "leaderboard", label: "Scores", icon: "🏆" },
+  { id: "more",        label: "Meer",   icon: "⋯"       },
 ];
 
 export default function App() {
@@ -58,7 +57,7 @@ export default function App() {
   var sheetTab      = sheetTabState[0];
   var setSheetTab   = sheetTabState[1];
 
-  // ── Init ─────────────────────────────────────────────────────
+  // ── Init ─────────────────────────────────────────────────────────
   useEffect(function() {
     initAuth()
       .then(async function(userId) {
@@ -77,7 +76,7 @@ export default function App() {
       });
   }, []);
 
-  // ── Save helper ───────────────────────────────────────────────
+  // ── Save helper ───────────────────────────────────────────────────
   function upSave(patch) {
     setSave(function(prev) {
       var next = dMerge(dClone(prev), patch);
@@ -89,7 +88,7 @@ export default function App() {
     });
   }
 
-  // ── Username ──────────────────────────────────────────────────
+  // ── Username ──────────────────────────────────────────────────────
   function handleUsernameDone(name) {
     var slug = name.toLowerCase().replace(/\s+/g, "_");
     upSave({ username: slug, displayName: name });
@@ -97,7 +96,7 @@ export default function App() {
     if (uid) updateGlobalLeaderboard(uid, name, 0, "Beginner");
   }
 
-  // ── Practice finish ───────────────────────────────────────────
+  // ── Practice finish ───────────────────────────────────────────────
   function handleFinish(result) {
     setSave(function(prev) {
       var next = dClone(prev);
@@ -107,17 +106,39 @@ export default function App() {
       subj.totalQuestions += result.totalQuestions;
       subj.xp              = (subj.xp || 0) + result.totalXp;
 
+      // ── Skill stats bijwerken ────────────────────────────────────
+      var currentSkillStats = subj.skillStats || {};
+      var sessionSkills     = result.sessionSkillStats || {};
+      var skillId;
+      for (skillId in sessionSkills) {
+        var ss = sessionSkills[skillId];
+        currentSkillStats = updateSkillStats(currentSkillStats, skillId, ss.correct, ss.total);
+      }
+      subj.skillStats = currentSkillStats;
+
+      // Bereken volgende skill
+      var nextSkillInfo   = getNextSkill(currentSkillStats);
+      subj.currentSkillId = nextSkillInfo.skillId;
+
+      // Totaal beheerste skills
+      var masteredCount = 0;
+      for (var sid in currentSkillStats) {
+        if (currentSkillStats[sid].mastered) masteredCount++;
+      }
+      subj.totalSkillsMastered = masteredCount;
+
+      // ── Legacy level unlock (XP-gebaseerd) ──────────────────────
       var acc = Math.round((subj.totalCorrect / subj.totalQuestions) * 100);
       if (acc >= 80 && result.level === subj.currentLevel) {
         var nextLvl = subj.currentLevel + 1;
-        if (nextLvl <= 10 && !(subj.unlockedLevels || []).includes(nextLvl)) {
+        if (nextLvl <= 10 && (subj.unlockedLevels || []).indexOf(nextLvl) === -1) {
           subj.unlockedLevels = (subj.unlockedLevels || [1]).concat([nextLvl]);
           subj.currentLevel   = nextLvl;
           subj.bestLevel      = Math.max(subj.bestLevel || 1, nextLvl);
         }
       }
-
       subj.unlockedLevels = checkLevelUnlock(subj);
+
       next.subjects[result.subjectId] = subj;
       next.totalXp       = (next.totalXp || 0) + result.totalXp;
       next.totalSessions = (next.totalSessions || 0) + 1;
@@ -155,7 +176,7 @@ export default function App() {
     setScreen("result");
   }
 
-  // ── Reset ─────────────────────────────────────────────────────
+  // ── Reset ─────────────────────────────────────────────────────────
   function handleReset() {
     if (!window.confirm("Weet je zeker dat je alles wilt wissen?")) return;
     var fresh = dClone(DEFAULT_SAVE);
@@ -168,7 +189,7 @@ export default function App() {
     setScreen("home");
   }
 
-  // ── Loading ───────────────────────────────────────────────────
+  // ── Loading ───────────────────────────────────────────────────────
   if (loading) {
     return (
       <div style={{
@@ -196,12 +217,10 @@ export default function App() {
     );
   }
 
-  // ── Username screen ───────────────────────────────────────────
   if (needsName) {
     return <UsernameScreen uid={uid} onDone={handleUsernameDone} />;
   }
 
-  // ── Screens zonder bottom sheet ───────────────────────────────
   if (screen === "subject") {
     return (
       <SubjectScreen
@@ -218,10 +237,13 @@ export default function App() {
   }
 
   if (screen === "practice") {
+    var practiceSubjData = (save.subjects && save.subjects[subjectId]) || {};
+    var practiceSkillStats = practiceSubjData.skillStats || {};
     return (
       <PracticeScreen
         subjectId={subjectId}
         level={practiceLevel}
+        skillStats={practiceSkillStats}
         onBack={function() { setScreen("subject"); }}
         onFinish={handleFinish}
       />
@@ -231,11 +253,12 @@ export default function App() {
   if (screen === "result") {
     var subjData = (save.subjects && save.subjects[lastResult && lastResult.subjectId]) || {};
     var nextLvl  = ((lastResult && lastResult.level) || 1) + 1;
-    var hasNext  = nextLvl <= 10 && (subjData.unlockedLevels || [1]).includes(nextLvl);
+    var hasNext  = nextLvl <= 10 && (subjData.unlockedLevels || [1]).indexOf(nextLvl) !== -1;
 
     return (
       <ResultScreen
         result={lastResult}
+        save={save}
         onHome={function() { setScreen("home"); }}
         onRepeat={function() { setScreen("practice"); }}
         onNext={hasNext ? function() { setPracticeLevel(nextLvl); setScreen("practice"); } : null}
@@ -253,8 +276,7 @@ export default function App() {
     );
   }
 
-  // ── Home + bottom sheet ───────────────────────────────────────
-  // Alles wat niet hierboven matched = home view
+  // ── Home + bottom sheet ───────────────────────────────────────────
   return (
     <div style={{ position: "relative", minHeight: "100dvh", background: T.bg }}>
       <HomeScreen
@@ -282,7 +304,6 @@ export default function App() {
             <div style={{ fontSize: T.xs, fontWeight: 700, color: T.textSoft, letterSpacing: 0.5 }}>
               MEER
             </div>
-            {/* Hier komen later meer onderdelen */}
             <div style={{
               background: T.white,
               border: "1px solid " + T.border,
