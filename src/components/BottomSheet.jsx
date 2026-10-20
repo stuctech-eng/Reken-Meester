@@ -102,58 +102,65 @@ export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, chi
         }}
       >
 
-        {/* ── Peek balk (altijd zichtbaar) ── */}
+        {/* ── Peek balk (altijd zichtbaar, volledig klikbaar en sleepbaar) ── */}
         <div style={{ flexShrink: 0 }}>
 
-          {/* Drag handle */}
-          <div
-            onClick={handlePeekClick}
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              padding: "10px 0 6px",
-              cursor: "pointer",
-            }}
-          >
-            <div style={{
-              width: 40,
-              height: 4,
-              borderRadius: T.r999,
-              background: T.border,
-              transition: "background 0.2s",
-            }} />
-          </div>
-
-          {/* Tip tekst — altijd zichtbaar in peek */}
+          {/* Tip tekst met streepje erboven — hele balk is drag-zone */}
           {tipText && (
             <div
               onClick={handlePeekClick}
               style={{
                 display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "6px 20px 10px",
-                cursor: "pointer",
+                flexDirection: "column",
+                alignItems: "stretch",
+                cursor: "grab",
+                paddingBottom: 10,
               }}
             >
-              <span style={{ fontSize: 16 }}>{"📚"}</span>
-              <span style={{
-                fontSize: T.sm,
-                color: "#15803d",
-                fontWeight: 600,
-                flex: 1,
+              {/* Drag-streepje bovenin de tipbalk */}
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                padding: "10px 0 8px",
               }}>
-                {tipText}
-              </span>
-              <span style={{
-                fontSize: 12,
-                color: T.textSoft,
-                transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.35s",
-                display: "inline-block",
+                <div style={{
+                  width: 40,
+                  height: 4,
+                  borderRadius: T.r999,
+                  background: T.border,
+                }} />
+              </div>
+
+              {/* Tekstrij: emoji — tip — pijltje */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                paddingLeft: 16,
+                paddingRight: 16,
               }}>
-                {"▲"}
-              </span>
+                <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{"📚"}</span>
+                <span style={{
+                  fontSize: T.sm,
+                  color: "#15803d",
+                  fontWeight: 600,
+                  flex: 1,
+                  lineHeight: 1.35,
+                }}>
+                  {tipText}
+                </span>
+                <span style={{
+                  fontSize: 13,
+                  color: T.textSoft,
+                  transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.35s",
+                  display: "inline-block",
+                  flexShrink: 0,
+                  lineHeight: 1,
+                }}>
+                  {"▲"}
+                </span>
+              </div>
             </div>
           )}
 
