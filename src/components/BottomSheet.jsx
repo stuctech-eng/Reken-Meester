@@ -4,37 +4,52 @@ import { T } from "../styles/tokens.js";
 var PEEK_H  = 80;   // altijd zichtbaar onderaan (tip + handles)
 var FULL_H  = "88vh";
 
+// NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
+
 export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, children }) {
   var openState = useState(false);
   var isOpen    = openState[0];
   var setIsOpen = openState[1];
 
-  // Touch tracking voor soepel slepen
-  var startY     = useRef(0);
-  var startOpen  = useRef(false);
-  var dragging   = useRef(false);
-  var moved      = useRef(0);
+  // dragOffset: pixels die de sheet tijdens slepen extra verschoven is (positief = naar beneden)
+  var dragOffsetState = useState(0);
+  var dragOffset      = dragOffsetState[0];
+  var setDragOffset   = dragOffsetState[1];
+
+  var isDraggingState = useState(false);
+  var isDragging      = isDraggingState[0];
+  var setIsDragging   = isDraggingState[1];
+
+  var startY       = useRef(0);
+  var startOpen    = useRef(false);
+  var currentDelta = useRef(0);
 
   function onTouchStart(e) {
-    startY.current    = e.touches[0].clientY;
-    startOpen.current = isOpen;
-    dragging.current  = true;
-    moved.current     = 0;
+    startY.current       = e.touches[0].clientY;
+    startOpen.current    = isOpen;
+    currentDelta.current = 0;
+    setIsDragging(true);
   }
 
   function onTouchMove(e) {
-    if (!dragging.current) return;
-    moved.current = e.touches[0].clientY - startY.current;
+    var delta = e.touches[0].clientY - startY.current;
+    currentDelta.current = delta;
+    if (startOpen.current && delta > 0) {
+      setDragOffset(delta);
+    } else if (!startOpen.current && delta < 0) {
+      setDragOffset(delta);
+    } else {
+      setDragOffset(0);
+    }
   }
 
   function onTouchEnd() {
-    if (!dragging.current) return;
-    dragging.current = false;
-    var delta = moved.current;
-    // Drempel: 50px
+    var delta = currentDelta.current;
+    setIsDragging(false);
+    setDragOffset(0);
     if (delta < -50) setIsOpen(true);
     else if (delta > 50) setIsOpen(false);
-    moved.current = 0;
+    currentDelta.current = 0;
   }
 
   function handleTabClick(tabId, e) {
@@ -76,9 +91,9 @@ export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, chi
           height: FULL_H,
           zIndex: 50,
           transform: isOpen
-            ? "translateY(0)"
-            : ("translateY(calc(100% - " + PEEK_H + "px))"),
-          transition: "transform 0.42s cubic-bezier(0.22, 1, 0.36, 1)",
+            ? ("translateY(" + Math.max(0, dragOffset) + "px)")
+            : ("translateY(calc(100% - " + PEEK_H + "px + " + Math.max(0, -dragOffset) + "px))"),
+          transition: isDragging ? "none" : "transform 0.42s cubic-bezier(0.22, 1, 0.36, 1)",
           display: "flex",
           flexDirection: "column",
           background: T.white,
