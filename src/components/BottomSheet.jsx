@@ -34,12 +34,12 @@ export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, chi
   function onTouchMove(e) {
     var delta = e.touches[0].clientY - startY.current;
     currentDelta.current = delta;
-    if (startOpen.current && delta > 0) {
-      setDragOffset(delta);
-    } else if (!startOpen.current && delta < 0) {
-      setDragOffset(delta);
+    // Open sheet: sleepbaar naar beneden (positief), naar boven begrensd op 0
+    // Gesloten sheet: sleepbaar naar boven (negatief), naar beneden begrensd op 0
+    if (startOpen.current) {
+      setDragOffset(Math.max(0, delta));
     } else {
-      setDragOffset(0);
+      setDragOffset(Math.min(0, delta));
     }
   }
 
@@ -91,8 +91,8 @@ export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, chi
           height: FULL_H,
           zIndex: 50,
           transform: isOpen
-            ? ("translateY(" + Math.max(0, dragOffset) + "px)")
-            : ("translateY(calc(100% - " + PEEK_H + "px + " + Math.max(0, -dragOffset) + "px))"),
+            ? ("translateY(" + dragOffset + "px)")
+            : ("translateY(calc(100% - " + PEEK_H + "px - " + (-dragOffset) + "px))"),
           transition: isDragging ? "none" : "transform 0.42s cubic-bezier(0.22, 1, 0.36, 1)",
           display: "flex",
           flexDirection: "column",
