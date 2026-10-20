@@ -542,7 +542,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                     {"TIP — " + currentSkill.strategy.toUpperCase()}
                   </div>
                   <div style={{ fontSize: T.sm, color: A.tipTxt, lineHeight: 1.55, fontWeight: 600 }}>
-                    {currentSkill.tip}
+                    {typeof currentSkill.tip === "function" ? currentSkill.tip(currentQuestion.terms, currentQuestion.answer) : currentSkill.tip}
                   </div>
                 </div>
               </div>
