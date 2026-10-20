@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { T } from "../styles/tokens.js";
 
 var PEEK_H  = 80;   // altijd zichtbaar onderaan (tip + handles)
@@ -23,6 +23,32 @@ export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, chi
   var startY       = useRef(0);
   var startOpen    = useRef(false);
   var currentDelta = useRef(0);
+  var isOpenRef    = useRef(isOpen);
+  var sheetRef     = useRef(null);
+
+  // Houd isOpenRef synchroon met isOpen voor gebruik in DOM-listeners
+  useEffect(function() { isOpenRef.current = isOpen; }, [isOpen]);
+
+  // Registreer touchmove als non-passive zodat preventDefault werkt
+  useEffect(function() {
+    var el = sheetRef.current;
+    if (!el) return;
+
+    function handleMove(e) {
+      if (!startY.current && startY.current !== 0) return;
+      e.preventDefault();
+      var delta = e.touches[0].clientY - startY.current;
+      currentDelta.current = delta;
+      if (isOpenRef.current) {
+        setDragOffset(Math.max(0, delta));
+      } else {
+        setDragOffset(Math.min(0, delta));
+      }
+    }
+
+    el.addEventListener("touchmove", handleMove, { passive: false });
+    return function() { el.removeEventListener("touchmove", handleMove); };
+  }, []);
 
   function onTouchStart(e) {
     startY.current       = e.touches[0].clientY;
@@ -31,22 +57,11 @@ export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, chi
     setIsDragging(true);
   }
 
-  function onTouchMove(e) {
-    var delta = e.touches[0].clientY - startY.current;
-    currentDelta.current = delta;
-    // Open sheet: sleepbaar naar beneden (positief), naar boven begrensd op 0
-    // Gesloten sheet: sleepbaar naar boven (negatief), naar beneden begrensd op 0
-    if (startOpen.current) {
-      setDragOffset(Math.max(0, delta));
-    } else {
-      setDragOffset(Math.min(0, delta));
-    }
-  }
-
   function onTouchEnd() {
     var delta = currentDelta.current;
     setIsDragging(false);
     setDragOffset(0);
+    startY.current = null;
     if (delta < -50) setIsOpen(true);
     else if (delta > 50) setIsOpen(false);
     currentDelta.current = 0;
@@ -80,8 +95,8 @@ export default function BottomSheet({ tipText, tabs, activeTab, onTabChange, chi
 
       {/* Sheet */}
       <div
+        ref={sheetRef}
         onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         style={{
           position: "fixed",
