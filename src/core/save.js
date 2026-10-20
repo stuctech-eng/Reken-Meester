@@ -25,6 +25,8 @@ export var DEFAULT_SAVE = {
       currentSkillId: "s01_single_easy",
       // totalSkillsMastered: teller
       totalSkillsMastered: 0,
+      // bonusStats: statistieken voor bonus-modus (na alle 100 skills beheerst)
+      bonusStats: {},
     }
   },
 
@@ -84,13 +86,16 @@ export function calcSkillXp(skillIndex, isCorrect, timeMs) {
   return base + speedBonus;
 }
 
-// Titel-progressie op basis van beheerste skills
+// Titel-progressie op basis van beheerste skills (8 mijlpalen voor 100 skills)
 export var TITEL_MILESTONES = [
-  { minSkills: 0,  label: "Leerling"   },
-  { minSkills: 3,  label: "Rekenaar"   },
-  { minSkills: 6,  label: "Gevorderde" },
-  { minSkills: 9,  label: "Expert"     },
-  { minSkills: 11, label: "Professor"  },
+  { minSkills: 0,   label: "Leerling"       },
+  { minSkills: 5,   label: "Rekenaar"       },
+  { minSkills: 15,  label: "Gevorderde"     },
+  { minSkills: 30,  label: "Expert"         },
+  { minSkills: 50,  label: "Professor"      },
+  { minSkills: 75,  label: "Meester"        },
+  { minSkills: 95,  label: "Reken-Meester"  },
+  { minSkills: 100, label: "Groot Meester"  },
 ];
 
 export function getTitel(totalMastered) {
