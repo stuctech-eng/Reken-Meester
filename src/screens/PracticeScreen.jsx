@@ -417,7 +417,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
         {/* Vraagkaart */}
         <div style={{
-          flex: 1,
           background: A.bgCard,
           borderRadius: A.r20,
           padding: "36px 24px 28px",
@@ -429,9 +428,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             : A.border
           ),
           transition: "border-color 0.2s",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
         }}>
 
           {/* Strategie label (voor antwoord) */}
@@ -451,11 +447,11 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
           {/* De som */}
           <div style={{
-            fontSize: currentQuestion.question.length > 30 ? 28 : currentQuestion.question.length > 15 ? 42 : 60,
+            fontSize: 60,
             fontWeight: 900,
             color: A.text,
-            letterSpacing: -1,
-            lineHeight: 1.1,
+            letterSpacing: -1.5,
+            lineHeight: 1.05,
           }}>
             {currentQuestion.question}
           </div>
@@ -476,9 +472,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             </div>
           )}
         </div>
-
-        {/* Antwoord + uitleg */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
         {/* Antwoordgrid */}
         <div style={{
@@ -631,7 +624,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             {"✓ Volgende vraag..."}
           </div>
         )}
-        </div>{/* einde antwoord+uitleg wrapper */}
       </div>
 
       {/* Level-up overlay */}

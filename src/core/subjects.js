@@ -836,39 +836,37 @@ export var OPTELLEN_SKILLS = [
 
   {
     id: "s21_number_line_10",
-    label: "Tellen tot 10",
+    label: "Getallenlijn tot 10",
     group: "Getallenlijn",
-    desc: "Tel verder: start + stappen (tot 10)",
+    desc: "Welk getal hoort op de stip? (0–10)",
     strategy: "tellen",
-    tip: "Tel stap voor stap verder vanaf het startgetal.",
-    uitleg: "Begin bij het startgetal en tel het aantal stappen erbij op. Bij 3 + 4 stap je 4 keer verder: 4, 5, 6, 7.",
-    voorbeeld: "3 + 4 = 7",
+    tip: "Tel de stappen van links naar rechts en van rechts naar links.",
+    uitleg: "Op een getallenlijn van 0 tot 10 staan de getallen op gelijke afstand. Als de stip tussen 3 en 5 staat midden erop, is het 4. Gebruik de bekende getallen als ankers.",
+    voorbeeld: "Getallenlijn 0→10. De stip staat op de 7de streep. Welk getal? Antwoord: 7.",
     minCorrect: 8,
     generate: function() {
-      var start  = rnd(0, 6);
-      var stappen = rnd(1, 4);
-      var answer = start + stappen;
+      var answer = rnd(1, 9);
       var ws = wrongChoices(answer, 3, 0);
-      return makeQ([start, stappen], answer);
+      return { question: "Getallenlijn 0–10: de pijl wijst naar getal " + answer + ". Klopt dat? Kies het juiste getal.", answer: answer, choices: shuffle([answer].concat(ws)) };
     },
   },
 
   {
     id: "s22_number_line_100",
-    label: "Tellen tot 100",
+    label: "Getallenlijn tot 100",
     group: "Getallenlijn",
-    desc: "Tiental + eenheden (tot 100)",
+    desc: "Welk getal hoort op de stip? (0–100, tientallen)",
     strategy: "tellen",
-    tip: "Gebruik het dichtstbijzijnde tiental als anker en tel dan de losse eenheden erbij.",
+    tip: "Elke grote streep is een tiental; kleine strepen zijn eenheden.",
     uitleg: "Op een lijn van 0 tot 100 kun je de tientallen als anker gebruiken. Ligt de stip twee strepen rechts van 60? Dan is het 62. Tel altijd vanaf het dichtstbijzijnde tiental.",
-    voorbeeld: "40 + 3 = ?  →  43",
+    voorbeeld: "Getallenlijn 0–100. Stip staat 3 verder dan 40. Antwoord: 43.",
     minCorrect: 8,
     generate: function() {
-      var anchor = rnd(1, 9) * 10;
+      var anchor = rnd(0, 9) * 10;
       var extra  = rnd(1, 9);
       var answer = anchor + extra;
       var ws = wrongChoices(answer, 3, 0);
-      return makeQ([anchor, extra], answer);
+      return { question: "Getallenlijn: het getal " + answer + " staat op de lijn. Kies het juiste getal.", answer: answer, choices: shuffle([answer].concat(ws)) };
     },
   },
 
@@ -1966,7 +1964,7 @@ export var OPTELLEN_SKILLS = [
       var answer = pos * step;
       var ws = wrongChoices(answer, 3, 0);
       var choices = shuffle([answer].concat(ws));
-      return { question: "Lijn 0–" + total + ", elke stap = " + step + ". Na " + pos + " stappen =", answer: answer, choices: choices, terms: [step, pos] };
+      return { question: "Getallenlijn 0-" + total + " (" + steps + " vakjes). Stip op positie " + pos + " =", answer: answer, choices: choices };
     },
   },
 
