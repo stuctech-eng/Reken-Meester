@@ -836,13 +836,13 @@ export var OPTELLEN_SKILLS = [
 
   {
     id: "s21_number_line_10",
-    label: "Getallenlijn tot 10",
+    label: "Tellen tot 10",
     group: "Getallenlijn",
-    desc: "Welk getal hoort op de stip? (0–10)",
+    desc: "Tel verder: start + stappen (tot 10)",
     strategy: "tellen",
-    tip: "Tel de stappen van links naar rechts en van rechts naar links.",
-    uitleg: "Op een getallenlijn van 0 tot 10 staan de getallen op gelijke afstand. Als de stip tussen 3 en 5 staat midden erop, is het 4. Gebruik de bekende getallen als ankers.",
-    voorbeeld: "Getallenlijn 0→10. De stip staat op de 7de streep. Welk getal? Antwoord: 7.",
+    tip: "Tel stap voor stap verder vanaf het startgetal.",
+    uitleg: "Begin bij het startgetal en tel het aantal stappen erbij op. Bij 3 + 4 stap je 4 keer verder: 4, 5, 6, 7.",
+    voorbeeld: "3 + 4 = 7",
     minCorrect: 8,
     generate: function() {
       var start  = rnd(0, 6);
@@ -855,9 +855,9 @@ export var OPTELLEN_SKILLS = [
 
   {
     id: "s22_number_line_100",
-    label: "Getallenlijn tot 100",
+    label: "Tellen tot 100",
     group: "Getallenlijn",
-    desc: "Tel verder op de getallenlijn (tientallen + eenheden)",
+    desc: "Tiental + eenheden (tot 100)",
     strategy: "tellen",
     tip: "Gebruik het dichtstbijzijnde tiental als anker en tel dan de losse eenheden erbij.",
     uitleg: "Op een lijn van 0 tot 100 kun je de tientallen als anker gebruiken. Ligt de stip twee strepen rechts van 60? Dan is het 62. Tel altijd vanaf het dichtstbijzijnde tiental.",

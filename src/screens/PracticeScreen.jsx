@@ -409,6 +409,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         flex: 1,
         display: "flex",
         flexDirection: "column",
+        justifyContent: "space-between",
         padding: "20px 20px 32px",
         gap: 16,
         overflowY: "auto",
