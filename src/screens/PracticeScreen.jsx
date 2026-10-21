@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Screen, ProgressBar } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
-import { getSkill, getNextSkill, SKILL_ORDER } from "../core/subjects.js";
-import { getTitel } from "../core/save.js";
+import { getSkill, getNextSkill, getSubject, SKILL_ORDER } from "../core/subjects.js";
+import { getTitel, calcXp } from "../core/save.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -51,6 +51,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var resState    = useState([]);
   var results     = resState[0];
   var setResults  = resState[1];
+  var totalXpRef  = useRef(0);
 
   var qNumState       = useState(1);
   var questionNumber  = qNumState[0];
@@ -147,7 +148,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       level:             level,
       totalCorrect:      cor,
       totalQuestions:    total,
-      totalXp:           0,
+      totalXp:           totalXpRef.current,
       avgTime:           avgTime,
       results:           rr,
       sessionSkillStats: ss,
@@ -183,6 +184,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     sessionSkillStatsRef.current[answerSkillId].total += 1;
     if (isCorrect) sessionSkillStatsRef.current[answerSkillId].correct += 1;
 
+    var earnedXp = calcXp(level, isCorrect, timeMs);
+    totalXpRef.current += earnedXp;
+
     var newResults = results.concat([{
       correct:  isCorrect,
       timeMs:   timeMs,
@@ -190,6 +194,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       chosen:   choice,
       question: currentQuestion.question,
       skillId:  answerSkillId,
+      terms:    currentQuestion.terms || null,
+      xp:       earnedXp,
     }]);
     setResults(newResults);
 
@@ -338,7 +344,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           {/* Skill naam */}
           <div style={{ textAlign: "center", flex: 1, margin: "0 12px" }}>
             <div style={{ fontSize: T.sm, fontWeight: 800, color: A.primary, letterSpacing: 0.5 }}>
-              {"OPTELLEN"}
+              {getSubject(subjectId) ? getSubject(subjectId).label.toUpperCase() : "OPTELLEN"}
             </div>
             {currentSkill && (
               <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 1 }}>
@@ -669,7 +675,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
               fontWeight: 700,
               marginBottom: 24,
             }}>
-              {levelUpData.liveTotal + " van 12 — " + levelUpData.newTitel + " optellen"}
+              {levelUpData.liveTotal + " van 12 — " + levelUpData.newTitel + " " + (getSubject(subjectId) ? getSubject(subjectId).label.toLowerCase() : "optellen")}
             </div>
             <button
               onClick={handleLevelUpContinue}

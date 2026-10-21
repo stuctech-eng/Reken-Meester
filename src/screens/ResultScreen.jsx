@@ -30,8 +30,21 @@ export default function ResultScreen({ result, save, onHome, onRepeat, onNext })
   var totalMastered     = subjData.totalSkillsMastered || 0;
 
   var dominantSkill = null;
+  var dominantTip   = null;
   if (result.dominantSkillId) {
     dominantSkill = getSkill(result.dominantSkillId);
+    if (dominantSkill) {
+      if (typeof dominantSkill.tip === "function") {
+        // Zoek een vraag van deze skill in de resultaten om terms uit te halen
+        var domResults = (result.results || []).filter(function(r) {
+          return r.skillId === result.dominantSkillId && r.terms && r.terms.length > 0;
+        });
+        var domTerms = domResults.length > 0 ? domResults[domResults.length - 1].terms : null;
+        dominantTip = domTerms ? dominantSkill.tip(domTerms) : dominantSkill.strategy;
+      } else {
+        dominantTip = dominantSkill.tip;
+      }
+    }
   }
 
   return (
@@ -177,7 +190,7 @@ export default function ResultScreen({ result, save, onHome, onRepeat, onNext })
               lineHeight: 1.45,
               fontWeight: 600,
             }}>
-              {"💡 " + dominantSkill.tip}
+              {"💡 " + dominantTip}
             </div>
           </div>
         )}
@@ -192,7 +205,7 @@ export default function ResultScreen({ result, save, onHome, onRepeat, onNext })
             boxShadow: A.shadow,
           }}>
             <div style={{ fontSize: T.xs, fontWeight: 800, color: A.textSoft, letterSpacing: 0.8, marginBottom: 10 }}>
-              {"VOORTGANG OPTELLEN"}
+              {"VOORTGANG " + (subject ? subject.label.toUpperCase() : "OPTELLEN")}
             </div>
             <div style={{
               height: 10,
