@@ -2,7 +2,7 @@ import { Screen, Card, Btn, ProgressBar, Badge, Heading } from "../components/UI
 import { A, T } from "../styles/tokens.js";
 import { SUBJECTS } from "../core/subjects.js";
 import { getAccuracy, getTitel, getNextTitel } from "../core/save.js";
-import { SKILL_ORDER } from "../core/subjects.js";
+import { getSkillOrder } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -128,7 +128,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings }) {
                 {totalMastered}
               </div>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.70)", fontWeight: 700, marginTop: 1 }}>
-                {"/ " + SKILL_ORDER.length + " skills"}
+                {"/ " + getSkillOrder("optellen").length + " skills"}
               </div>
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings }) {
           }}>
             <div style={{
               height: "100%",
-              width: Math.round((totalMastered / SKILL_ORDER.length) * 100) + "%",
+              width: Math.round((totalMastered / getSkillOrder("optellen").length) * 100) + "%",
               background: "#ffffff",
               borderRadius: A.r999,
               transition: "width 0.5s ease",
@@ -247,7 +247,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings }) {
                         )}
                         {isAvail && (
                           <Badge
-                            label={mastered + "/" + SKILL_ORDER.length}
+                            label={mastered + "/" + getSkillOrder(subject.id).length}
                             color={subject.color}
                             bg={subject.color + "18"}
                           />
@@ -266,7 +266,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings }) {
                         }}>
                           <div style={{
                             height: "100%",
-                            width: Math.round((mastered / SKILL_ORDER.length) * 100) + "%",
+                            width: Math.round((mastered / getSkillOrder(subject.id).length) * 100) + "%",
                             background: subject.color,
                             borderRadius: A.r999,
                             transition: "width 0.4s ease",

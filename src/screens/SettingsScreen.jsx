@@ -1,7 +1,7 @@
 import { Screen, TopBar, Card, Btn, Divider, Body } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { getTitel } from "../core/save.js";
-import { SKILL_ORDER } from "../core/subjects.js";
+import { getSkillOrder } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -86,7 +86,7 @@ export default function SettingsScreen({ save, onBack, onReset }) {
             }}>
               <StatRow
                 label={"Skills beheerst"}
-                value={totalMastered + " van " + SKILL_ORDER.length}
+                value={totalMastered + " van " + getSkillOrder("optellen").length}
                 highlight={true}
               />
               <Divider style={{ margin: "12px 0" }} />

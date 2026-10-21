@@ -1,22 +1,24 @@
 import { useState, useRef, useEffect } from "react";
 import { Screen, ProgressBar } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
-import { getSkill, getNextSkill, getSubject, SKILL_ORDER } from "../core/subjects.js";
+import { getSkill, getNextSkill, getSubject, getSkillOrder } from "../core/subjects.js";
 import { getTitel, calcXp } from "../core/save.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 
 export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish }) {
+  var skillOrder = getSkillOrder(subjectId);
+
   // ── Initialisatie helpers ─────────────────────────────────────
   function initSkillId() {
-    var res = getNextSkill(skillStats || {});
-    return res ? res.skillId : SKILL_ORDER[0];
+    var res = getNextSkill(subjectId, skillStats || {});
+    return res ? res.skillId : skillOrder[0];
   }
 
   function makeQuestion(skillId) {
-    var skill = getSkill(skillId);
-    if (!skill) skill = getSkill(SKILL_ORDER[0]);
+    var skill = getSkill(subjectId, skillId);
+    if (!skill) skill = getSkill(subjectId, skillOrder[0]);
     var q = skill.generate();
     q.skillId = skillId;
     q.skill   = skill;
@@ -75,7 +77,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   // Initialiseer sessionSkillStats voor alle skills
   useEffect(function() {
-    SKILL_ORDER.forEach(function(id) {
+    skillOrder.forEach(function(id) {
       sessionSkillStatsRef.current[id] = { correct: 0, total: 0 };
     });
   }, []);
@@ -95,8 +97,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   }
 
   function generateNext(skillId) {
-    var skill = getSkill(skillId);
-    if (!skill) skill = getSkill(SKILL_ORDER[0]);
+    var skill = getSkill(subjectId, skillId);
+    if (!skill) skill = getSkill(subjectId, skillOrder[0]);
     var q = skill.generate();
     if (q.question === lastQuestionRef.current) {
       q = skill.generate();
@@ -122,7 +124,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     var ss    = sessionSkillStatsRef.current;
     var total = 0;
     var cor   = 0;
-    SKILL_ORDER.forEach(function(id) {
+    skillOrder.forEach(function(id) {
       total += (ss[id] ? ss[id].total : 0);
       cor   += (ss[id] ? ss[id].correct : 0);
     });
@@ -209,12 +211,12 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       var window5 = recentList.slice(-5);
       var foutInWindow = window5.filter(function(c) { return !c; }).length;
       if (foutInWindow >= 3) {
-        var curIdx = SKILL_ORDER.indexOf(answerSkillId);
+        var curIdx = skillOrder.indexOf(answerSkillId);
         if (curIdx > 0) {
           fallbackActiveRef.current       = true;
           fallbackReturnSkillRef.current  = answerSkillId;
           liveCorrectOnFallbackRef.current = 0;
-          nextSkillId = SKILL_ORDER[curIdx - 1];
+          nextSkillId = skillOrder[curIdx - 1];
           activeSkillIdRef.current = nextSkillId;
         }
       }
@@ -241,15 +243,15 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         var sessionTotal    = sessionSkillStatsRef.current[answerSkillId].total;
         var cumulativeC     = storedCorrect + sessionCorrect;
         var sessionAcc      = sessionTotal > 0 ? sessionCorrect / sessionTotal : 0;
-        var checkSkill      = getSkill(answerSkillId);
+        var checkSkill      = getSkill(subjectId, answerSkillId);
         var minC            = checkSkill ? (checkSkill.minCorrect || 8) : 8;
 
         if (cumulativeC >= minC && sessionTotal >= 4 && sessionAcc >= 0.70) {
           promotedThisSession.current.add(answerSkillId);
 
-          var promIdx = SKILL_ORDER.indexOf(answerSkillId);
+          var promIdx = skillOrder.indexOf(answerSkillId);
           var nextIdx = promIdx + 1;
-          nextSkillId = nextIdx < SKILL_ORDER.length ? SKILL_ORDER[nextIdx] : answerSkillId;
+          nextSkillId = nextIdx < skillOrder.length ? skillOrder[nextIdx] : answerSkillId;
           activeSkillIdRef.current = nextSkillId;
           nextSkillIdRef.current   = nextSkillId;
 
@@ -278,7 +280,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   }
 
   // ── Afgeleide waarden ─────────────────────────────────────────
-  var currentSkill = currentQuestion.skill || getSkill(currentQuestion.skillId || SKILL_ORDER[0]);
+  var currentSkill = currentQuestion.skill || getSkill(subjectId, currentQuestion.skillId || skillOrder[0]);
 
   var storedCorrectForSkill  = (skillStats && skillStats[currentQuestion.skillId] && skillStats[currentQuestion.skillId].correct) || 0;
   var sessionCorrectForSkill = sessionSkillStatsRef.current[currentQuestion.skillId]

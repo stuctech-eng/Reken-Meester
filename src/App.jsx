@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { DEFAULT_SAVE, dClone, dMerge, calcXp, getTitel } from "./core/save.js";
-import { checkLevelUnlock, updateSkillStats, getNextSkill, SKILL_ORDER } from "./core/subjects.js";
+import { checkLevelUnlock, updateSkillStats, getNextSkill, getSkillOrder } from "./core/subjects.js";
 import { initAuth } from "./services/firebase.js";
 import { loadFromFirestore, saveToFirestore } from "./services/sync.js";
 import { claimUsername, updateGlobalLeaderboard, updateSubjectLeaderboard } from "./services/leaderboard.js";
@@ -112,18 +112,19 @@ export default function App() {
       var skillId;
       for (skillId in sessionSkills) {
         var ss = sessionSkills[skillId];
-        currentSkillStats = updateSkillStats(currentSkillStats, skillId, ss.correct, ss.total);
+        currentSkillStats = updateSkillStats(result.subjectId, currentSkillStats, skillId, ss.correct, ss.total);
       }
       subj.skillStats = currentSkillStats;
 
       // Bereken volgende skill
-      var nextSkillInfo   = getNextSkill(currentSkillStats);
+      var nextSkillInfo   = getNextSkill(result.subjectId, currentSkillStats);
       subj.currentSkillId = nextSkillInfo.skillId;
 
-      // Totaal beheerste skills — alleen skills in de actieve SKILL_ORDER tellen
+      // Totaal beheerste skills — alleen skills in de actieve skillvolgorde tellen
+      var skillOrder    = getSkillOrder(result.subjectId);
       var masteredCount = 0;
       for (var sid in currentSkillStats) {
-        if (currentSkillStats[sid].mastered && SKILL_ORDER.indexOf(sid) !== -1) masteredCount++;
+        if (currentSkillStats[sid].mastered && skillOrder.indexOf(sid) !== -1) masteredCount++;
       }
       subj.totalSkillsMastered = masteredCount;
 

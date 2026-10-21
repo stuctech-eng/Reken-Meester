@@ -1,6 +1,6 @@
 import { Screen, TopBar, Card, Btn, ProgressBar } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
-import { getSubject, getSkill, SKILL_ORDER } from "../core/subjects.js";
+import { getSubject, getSkill, getSkillOrder } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -32,7 +32,7 @@ export default function ResultScreen({ result, save, onHome, onRepeat, onNext })
   var dominantSkill = null;
   var dominantTip   = null;
   if (result.dominantSkillId) {
-    dominantSkill = getSkill(result.dominantSkillId);
+    dominantSkill = getSkill(result.subjectId, result.dominantSkillId);
     if (dominantSkill) {
       if (typeof dominantSkill.tip === "function") {
         // Zoek een vraag van deze skill in de resultaten om terms uit te halen
@@ -156,7 +156,7 @@ export default function ResultScreen({ result, save, onHome, onRepeat, onNext })
               {"SKILLS"}
             </div>
             <div style={{ fontSize: T.xxl, fontWeight: 900, color: A.primary }}>
-              {totalMastered + "/" + SKILL_ORDER.length}
+              {totalMastered + "/" + getSkillOrder(result.subjectId).length}
             </div>
           </div>
         </div>
@@ -216,14 +216,14 @@ export default function ResultScreen({ result, save, onHome, onRepeat, onNext })
             }}>
               <div style={{
                 height: "100%",
-                width: Math.round((totalMastered / SKILL_ORDER.length) * 100) + "%",
+                width: Math.round((totalMastered / getSkillOrder(result.subjectId).length) * 100) + "%",
                 background: subject.color,
                 borderRadius: A.r999,
                 transition: "width 0.5s ease",
               }} />
             </div>
             <div style={{ fontSize: T.sm, color: A.textSoft, fontWeight: 600 }}>
-              {totalMastered + " van de " + SKILL_ORDER.length + " vaardigheden beheerst"}
+              {totalMastered + " van de " + getSkillOrder(result.subjectId).length + " vaardigheden beheerst"}
             </div>
           </div>
         )}

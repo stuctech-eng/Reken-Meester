@@ -1,12 +1,14 @@
 import { Screen, TopBar, Card, Btn, ProgressBar, Badge } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
-import { getSubject, OPTELLEN_SKILLS, SKILL_ORDER, getNextSkill } from "../core/subjects.js";
+import { getSubject, getSkillList, getSkillOrder, getNextSkill } from "../core/subjects.js";
 import { getAccuracy } from "../core/save.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 export default function SubjectScreen({ subjectId, save, onBack, onStartLevel }) {
-  var subject = getSubject(subjectId);
+  var subject    = getSubject(subjectId);
+  var skillList  = getSkillList(subjectId);
+  var skillOrder = getSkillOrder(subjectId);
   var data    = (save.subjects && save.subjects[subjectId]) || {
     unlockedLevels: [1], currentLevel: 1, xp: 0,
     totalCorrect: 0, totalQuestions: 0,
@@ -17,7 +19,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
   var totalMastered = data.totalSkillsMastered || 0;
   var acc           = getAccuracy(data);
 
-  var nextSkillInfo = getNextSkill(skillStats);
+  var nextSkillInfo = getNextSkill(subjectId, skillStats);
   var activeSkillId = nextSkillInfo.skillId;
 
   function startPractice() {
@@ -80,7 +82,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
                     {"BEHEERST"}
                   </div>
                   <div style={{ fontSize: T.xl, fontWeight: 900, color: subject.color }}>
-                    {totalMastered + "/" + SKILL_ORDER.length}
+                    {totalMastered + "/" + skillOrder.length}
                   </div>
                 </div>
                 <div>
@@ -100,7 +102,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
               }}>
                 <div style={{
                   height: "100%",
-                  width: Math.round((totalMastered / SKILL_ORDER.length) * 100) + "%",
+                  width: Math.round((totalMastered / skillOrder.length) * 100) + "%",
                   background: subject.color,
                   borderRadius: A.r999,
                   transition: "width 0.4s ease",
@@ -138,8 +140,8 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
 
-            {SKILL_ORDER.map(function(skillId, i) {
-              var skill    = OPTELLEN_SKILLS.find(function(s) { return s.id === skillId; });
+            {skillOrder.map(function(skillId, i) {
+              var skill    = skillList.find(function(s) { return s.id === skillId; });
               if (!skill) return null;
               var stats    = skillStats[skill.id] || { correct: 0, attempts: 0, mastered: false };
               var mastered = stats.mastered;
@@ -147,7 +149,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
               var started  = (stats.attempts || 0) > 0 || (stats.total || 0) > 0;
 
               var available = i === 0
-                || (skillStats[SKILL_ORDER[i - 1]] && skillStats[SKILL_ORDER[i - 1]].mastered)
+                || (skillStats[skillOrder[i - 1]] && skillStats[skillOrder[i - 1]].mastered)
                 || mastered
                 || active;
 
