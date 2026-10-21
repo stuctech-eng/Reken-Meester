@@ -409,7 +409,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
         padding: "20px 20px 32px",
         gap: 16,
         overflowY: "auto",
@@ -473,6 +472,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             </div>
           )}
         </div>
+
+        {/* Antwoord + uitleg — altijd onderaan */}
+        <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
 
         {/* Antwoordgrid */}
         <div style={{
@@ -625,6 +627,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             {"✓ Volgende vraag..."}
           </div>
         )}
+        </div>{/* einde antwoord+uitleg wrapper */}
       </div>
 
       {/* Level-up overlay */}
