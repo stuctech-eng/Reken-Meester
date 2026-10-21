@@ -417,6 +417,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
         {/* Vraagkaart */}
         <div style={{
+          flex: 1,
           background: A.bgCard,
           borderRadius: A.r20,
           padding: "36px 24px 28px",
@@ -428,6 +429,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             : A.border
           ),
           transition: "border-color 0.2s",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
         }}>
 
           {/* Strategie label (voor antwoord) */}
@@ -473,8 +477,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           )}
         </div>
 
-        {/* Antwoord + uitleg — altijd onderaan */}
-        <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Antwoord + uitleg */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
         {/* Antwoordgrid */}
         <div style={{
