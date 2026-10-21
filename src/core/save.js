@@ -88,14 +88,14 @@ export function calcSkillXp(skillIndex, isCorrect, timeMs) {
 
 // Titel-progressie op basis van beheerste skills (8 mijlpalen voor 100 skills)
 export var TITEL_MILESTONES = [
-  { minSkills: 0,   label: "Leerling"       },
-  { minSkills: 5,   label: "Rekenaar"       },
-  { minSkills: 15,  label: "Gevorderde"     },
-  { minSkills: 30,  label: "Expert"         },
-  { minSkills: 50,  label: "Professor"      },
-  { minSkills: 75,  label: "Meester"        },
-  { minSkills: 95,  label: "Reken-Meester"  },
-  { minSkills: 100, label: "Groot Meester"  },
+  { minSkills: 0,  label: "Leerling"      },
+  { minSkills: 5,  label: "Rekenaar"      },
+  { minSkills: 12, label: "Gevorderde"    },
+  { minSkills: 20, label: "Expert"        },
+  { minSkills: 28, label: "Professor"     },
+  { minSkills: 33, label: "Meester"       },
+  { minSkills: 36, label: "Reken-Meester" },
+  { minSkills: 37, label: "Groot Meester" },
 ];
 
 export function getTitel(totalMastered) {
