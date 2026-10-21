@@ -6,7 +6,6 @@ import { getTitel, calcXp } from "../core/save.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-var SESSION_MAX = 20;
 
 export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish }) {
   // ── Initialisatie helpers ─────────────────────────────────────
@@ -52,10 +51,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var results     = resState[0];
   var setResults  = resState[1];
   var totalXpRef  = useRef(0);
-
-  var qNumState       = useState(1);
-  var questionNumber  = qNumState[0];
-  var setQuestionNumber = qNumState[1];
 
   var showLUState   = useState(false);
   var showLevelUp   = showLUState[0];
@@ -113,12 +108,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   }
 
   function advanceToNext(nextSkillId) {
-    // Na SESSION_MAX vragen automatisch afsluiten
-    var answeredSoFar = results.length;
-    if (answeredSoFar >= SESSION_MAX) {
-      handleStop();
-      return;
-    }
     var nextQ = generateNext(nextSkillId);
     setCurrentQuestion(nextQ);
     setSelected(null);
@@ -126,7 +115,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setFbLevel(0);
     setUitlegVisible(false);
     timeRef.current = Date.now();
-    setQuestionNumber(function(n) { return n + 1; });
   }
 
   // ── Stop-functie ──────────────────────────────────────────────
@@ -377,29 +365,12 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           </button>
         </div>
 
-        {/* Progress bar — sessie voortgang */}
+        {/* Sessieteller — aantal goed deze sessie */}
         <div style={{ padding: "0 20px 12px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-            <span style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 700 }}>
-              {"Vraag " + questionNumber + " van " + SESSION_MAX}
-            </span>
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
             <span style={{ fontSize: T.xs, color: A.primary, fontWeight: 800 }}>
               {results.filter(function(r) { return r.correct; }).length + " goed"}
             </span>
-          </div>
-          <div style={{
-            height: 8,
-            background: A.border,
-            borderRadius: A.r999,
-            overflow: "hidden",
-          }}>
-            <div style={{
-              height: "100%",
-              width: (Math.round((Math.min(results.length, SESSION_MAX) / SESSION_MAX) * 100)) + "%",
-              background: A.primary,
-              borderRadius: A.r999,
-              transition: "width 0.4s cubic-bezier(0.4,0,0.2,1)",
-            }} />
           </div>
         </div>
       </div>
