@@ -138,7 +138,9 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
 
-            {OPTELLEN_SKILLS.map(function(skill, i) {
+            {SKILL_ORDER.map(function(skillId, i) {
+              var skill    = OPTELLEN_SKILLS.find(function(s) { return s.id === skillId; });
+              if (!skill) return null;
               var stats    = skillStats[skill.id] || { correct: 0, attempts: 0, mastered: false };
               var mastered = stats.mastered;
               var active   = skill.id === activeSkillId;
