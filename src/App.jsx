@@ -120,10 +120,10 @@ export default function App() {
       var nextSkillInfo   = getNextSkill(currentSkillStats);
       subj.currentSkillId = nextSkillInfo.skillId;
 
-      // Totaal beheerste skills
+      // Totaal beheerste skills — alleen skills in de actieve SKILL_ORDER tellen
       var masteredCount = 0;
       for (var sid in currentSkillStats) {
-        if (currentSkillStats[sid].mastered) masteredCount++;
+        if (currentSkillStats[sid].mastered && SKILL_ORDER.indexOf(sid) !== -1) masteredCount++;
       }
       subj.totalSkillsMastered = masteredCount;
 
