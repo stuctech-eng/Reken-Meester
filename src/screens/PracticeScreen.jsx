@@ -447,11 +447,11 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
           {/* De som */}
           <div style={{
-            fontSize: 60,
+            fontSize: currentQuestion.question.length > 30 ? 28 : currentQuestion.question.length > 15 ? 42 : 60,
             fontWeight: 900,
             color: A.text,
-            letterSpacing: -1.5,
-            lineHeight: 1.05,
+            letterSpacing: -1,
+            lineHeight: 1.1,
           }}>
             {currentQuestion.question}
           </div>
