@@ -296,6 +296,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   var showUitlegBlock = feedback === "wrong" && fbLevel > 0 && currentSkill && uitlegVisible;
 
+  var isMultiLineQuestion = String(currentQuestion.question).indexOf("\n") !== -1;
+
   // ── Render ────────────────────────────────────────────────────
   return (
     <Screen bg={A.bg} style={{ fontFamily: "'Nunito', 'Inter', system-ui, sans-serif" }}>
@@ -423,8 +425,20 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             </div>
           )}
 
-          {/* De som */}
-          <div style={{
+          {/* De som — een vraag met regeleinden is een kolomsom: regels rechts uitgelijnd,
+              cijfers even breed, streep onder de laatste regel. Zonder regeleinde: ongewijzigd. */}
+          <div style={isMultiLineQuestion ? {
+            display: "inline-block",
+            fontSize: 44,
+            fontWeight: 900,
+            color: A.text,
+            lineHeight: 1.15,
+            whiteSpace: "pre-line",
+            textAlign: "right",
+            fontVariantNumeric: "tabular-nums",
+            borderBottom: "3px solid " + A.text,
+            paddingBottom: 4,
+          } : {
             fontSize: 60,
             fontWeight: 900,
             color: A.text,
