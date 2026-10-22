@@ -168,7 +168,8 @@ export default function App() {
         var subjData = next.subjects[result.subjectId];
         var subAcc   = subjData.totalQuestions > 0
           ? Math.round(subjData.totalCorrect / subjData.totalQuestions * 100) : 0;
-        updateSubjectLeaderboard(uid, next.displayName, result.subjectId, subjData.currentLevel || 1, subAcc);
+        var subSkills = subjData.totalSkillsMastered || 0;
+        updateSubjectLeaderboard(uid, next.displayName, result.subjectId, subjData.currentLevel || 1, subAcc, subSkills, getTitel(subSkills).label);
       }
 
       return next;

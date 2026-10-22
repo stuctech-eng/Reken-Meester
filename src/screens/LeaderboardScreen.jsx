@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Screen, TopBar, Loader, Empty } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { fetchGlobalTop10, fetchSubjectTop10, fetchMyRankGlobal } from "../services/leaderboard.js";
+import { getSkillOrder } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -215,6 +216,11 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
                       whiteSpace: "nowrap",
                     }}>
                       {row.displayName}{me ? (" " + STAR_GLOW) : ""}
+                    </div>
+                    <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 1 }}>
+                      {tab === "global"
+                        ? ((row.tier ? row.tier + " \u00b7 " : "") + (row.xp || 0) + " XP")
+                        : ((row.titel ? row.titel + " \u00b7 " : "") + (row.skills || 0) + "/" + getSkillOrder(tab).length)}
                     </div>
                   </div>
                 </div>

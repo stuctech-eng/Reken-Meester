@@ -31,11 +31,11 @@ export async function updateGlobalLeaderboard(uid, displayName, totalXp, tier) {
   } catch {}
 }
 
-// Update module leaderboard
-export async function updateSubjectLeaderboard(uid, displayName, subject, level, accuracy) {
+// Update module leaderboard (skills = beheerste vaardigheden, titel = titel van deze modus)
+export async function updateSubjectLeaderboard(uid, displayName, subject, level, accuracy, skills, titel) {
   try {
     const ref = doc(db, "leaderboard_subject_" + subject, uid);
-    await setDoc(ref, { uid, displayName, level, accuracy, updatedAt: Date.now() }, { merge: true });
+    await setDoc(ref, { uid, displayName, level, accuracy, skills, titel, updatedAt: Date.now() }, { merge: true });
   } catch {}
 }
 
@@ -52,12 +52,12 @@ export async function fetchGlobalTop10() {
   } catch { return []; }
 }
 
-// Fetch top 10 for a subject
+// Fetch top 10 for a subject (gesorteerd op beheerste vaardigheden)
 export async function fetchSubjectTop10(subject) {
   try {
     const q = query(
       collection(db, "leaderboard_subject_" + subject),
-      orderBy("level", "desc"),
+      orderBy("skills", "desc"),
       limit(10)
     );
     const snap = await getDocs(q);
