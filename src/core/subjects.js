@@ -2,6 +2,7 @@
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 
 import { OPTELLEN_SKILLS, OPTELLEN_ORDER } from "./skills/optellen.js";
+import { AFTREK_SKILLS, AFTREK_ORDER } from "./skills/aftrekken.js";
 
 export var SUBJECTS = [
   {
@@ -60,6 +61,7 @@ export function getSubject(id) {
 
 export var SUBJECT_SKILLS = {
   optellen: { skills: OPTELLEN_SKILLS, order: OPTELLEN_ORDER },
+  aftrekken: { skills: AFTREK_SKILLS, order: AFTREK_ORDER },
 };
 
 function getSubjectSkills(subjectId) {

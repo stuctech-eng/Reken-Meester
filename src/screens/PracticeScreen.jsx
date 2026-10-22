@@ -75,12 +75,20 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var lastQuestionRef            = useRef(currentQuestion.question);
   var nextSkillIdRef             = useRef(startSkillId);
   var timeRef                    = useRef(Date.now());
+  var advanceTimerRef            = useRef(null);
 
   // Initialiseer sessionSkillStats voor alle skills
   useEffect(function() {
     skillOrder.forEach(function(id) {
       sessionSkillStatsRef.current[id] = { correct: 0, total: 0 };
     });
+  }, []);
+
+  // Bij verlaten van het scherm: lopende auto-advance stoppen (geen niet-getoonde vraag maken)
+  useEffect(function() {
+    return function() {
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+    };
   }, []);
 
   // ── Helpers ───────────────────────────────────────────────────
@@ -277,7 +285,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
     // Auto-advance alleen bij correct antwoord
     if (isCorrect) {
-      setTimeout(function() {
+      advanceTimerRef.current = setTimeout(function() {
+        advanceTimerRef.current = null;
         advanceToNext(nextSkillId);
       }, 900);
     }
