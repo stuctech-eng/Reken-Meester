@@ -112,7 +112,7 @@ export default function App() {
       var skillId;
       for (skillId in sessionSkills) {
         var ss = sessionSkills[skillId];
-        currentSkillStats = updateSkillStats(result.subjectId, currentSkillStats, skillId, ss.correct, ss.total);
+        currentSkillStats = updateSkillStats(result.subjectId, currentSkillStats, skillId, ss.correct, ss.total, (result.promotionSnapshots || {})[skillId]);
       }
       subj.skillStats = currentSkillStats;
 

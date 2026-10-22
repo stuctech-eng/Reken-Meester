@@ -123,7 +123,17 @@ export function getNextSkill(subjectId, skillStats) {
 // Controleer of een skill beheerst is na een sessie-update.
 // Geeft de bijgewerkte skillStats terug.
 
-export function updateSkillStats(subjectId, skillStats, skillId, sessionCorrect, sessionTotal) {
+// Masteryregel: minCorrect correct (opgeslagen + sessie) EN minstens 4 vragen in de sessie
+// EN minstens 70% accuracy in de sessie (zelfde regel als de promotie in PracticeScreen)
+function meetsMastery(skill, storedCorrect, sessionCorrect, sessionTotal) {
+  var sessionAcc = sessionTotal > 0 ? (sessionCorrect / sessionTotal) : 0;
+  return (storedCorrect + sessionCorrect) >= (skill.minCorrect || 8) && sessionTotal >= 4 && sessionAcc >= 0.70;
+}
+
+// promotionSnap (optioneel): { correct, total } van deze skill in de sessie op het moment
+// van de live-promotie. De engine toetst die momentopname aan dezelfde masteryregel,
+// zodat latere fouten in dezelfde sessie een geldige promotie niet ongedaan maken.
+export function updateSkillStats(subjectId, skillStats, skillId, sessionCorrect, sessionTotal, promotionSnap) {
   skillStats = skillStats || {};
   var existing = skillStats[skillId] || { correct: 0, attempts: 0, mastered: false };
   var skill    = getSkill(subjectId, skillId);
@@ -131,10 +141,9 @@ export function updateSkillStats(subjectId, skillStats, skillId, sessionCorrect,
   var newCorrect  = existing.correct  + sessionCorrect;
   var newAttempts = existing.attempts + sessionTotal;
 
-  // Beheerst als: minCorrect correct (cumulatief) EN minstens 70% accuracy in deze sessie
-  var sessionAcc = sessionTotal > 0 ? (sessionCorrect / sessionTotal) : 0;
-  var mastered   = existing.mastered
-    || (newCorrect >= (skill.minCorrect || 8) && sessionAcc >= 0.70);
+  var mastered = existing.mastered
+    || meetsMastery(skill, existing.correct, sessionCorrect, sessionTotal)
+    || (promotionSnap ? meetsMastery(skill, existing.correct, promotionSnap.correct, promotionSnap.total) : false);
 
   var updated = {};
   for (var k in skillStats) { updated[k] = skillStats[k]; }

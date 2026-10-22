@@ -71,6 +71,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var fallbackReturnSkillRef     = useRef(null);
   var liveCorrectOnFallbackRef   = useRef(0);
   var promotedThisSession        = useRef(new Set());
+  var promotionSnapRef           = useRef({});
   var lastQuestionRef            = useRef(currentQuestion.question);
   var nextSkillIdRef             = useRef(startSkillId);
   var timeRef                    = useRef(Date.now());
@@ -83,12 +84,14 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   }, []);
 
   // ── Helpers ───────────────────────────────────────────────────
+  // Alleen skills in de actieve skillvolgorde tellen (zelfde regel als App.handleFinish)
   function getLiveTotal() {
     var stored = Object.keys(skillStats || {}).filter(function(id) {
-      return skillStats[id] && skillStats[id].mastered;
+      return skillStats[id] && skillStats[id].mastered && skillOrder.indexOf(id) !== -1;
     }).length;
     var genuinelyNew = 0;
     promotedThisSession.current.forEach(function(id) {
+      if (skillOrder.indexOf(id) === -1) return;
       if (!(skillStats && skillStats[id] && skillStats[id].mastered)) {
         genuinelyNew++;
       }
@@ -143,6 +146,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       results:           rr,
       sessionSkillStats: ss,
       dominantSkillId:   activeSkillIdRef.current,
+      promotionSnapshots: promotionSnapRef.current,
     });
   }
 
@@ -248,6 +252,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
         if (cumulativeC >= minC && sessionTotal >= 4 && sessionAcc >= 0.70) {
           promotedThisSession.current.add(answerSkillId);
+          promotionSnapRef.current[answerSkillId] = { correct: sessionCorrect, total: sessionTotal };
 
           var promIdx = skillOrder.indexOf(answerSkillId);
           var nextIdx = promIdx + 1;
@@ -648,7 +653,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
               fontWeight: 700,
               marginBottom: 24,
             }}>
-              {levelUpData.liveTotal + " van 12 — " + levelUpData.newTitel + " " + (getSubject(subjectId) ? getSubject(subjectId).label.toLowerCase() : "optellen")}
+              {levelUpData.liveTotal + " van " + skillOrder.length + " — " + levelUpData.newTitel + " " + (getSubject(subjectId) ? getSubject(subjectId).label.toLowerCase() : "optellen")}
             </div>
             <button
               onClick={handleLevelUpContinue}
