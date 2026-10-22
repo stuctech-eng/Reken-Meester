@@ -100,7 +100,7 @@ export default function App() {
   function handleFinish(result) {
     setSave(function(prev) {
       var next = dClone(prev);
-      var subj = next.subjects[result.subjectId] || dClone(DEFAULT_SAVE.subjects.optellen);
+      var subj = next.subjects[result.subjectId] || dClone(DEFAULT_SAVE.subjects[result.subjectId] || DEFAULT_SAVE.subjects.optellen);
 
       subj.totalCorrect   += result.totalCorrect;
       subj.totalQuestions += result.totalQuestions;

@@ -22,7 +22,7 @@ export var SUBJECTS = [
     color: "#0891b2",
     lightColor: "#ecfeff",
     description: "Getallen van elkaar aftrekken",
-    available: false,
+    available: true,
     levels: 10,
   },
   {

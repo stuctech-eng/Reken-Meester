@@ -111,7 +111,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, position: "relative" }}>
             <div>
               <div style={{ fontSize: T.xs, color: "rgba(255,255,255,0.70)", fontWeight: 700, letterSpacing: 0.8, marginBottom: 4 }}>
-                {"JOUW TITEL"}
+                {"OPTELLEN \u00b7 JOUW TITEL"}
               </div>
               <div style={{ fontSize: T.xxl, fontWeight: 900, color: "#ffffff", lineHeight: 1.1 }}>
                 {titelObj.label}
@@ -152,7 +152,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings }) {
 
           <div style={{ fontSize: T.xs, color: "rgba(255,255,255,0.65)", fontWeight: 600, position: "relative" }}>
             {nextTitelObj
-              ? ((nextTitelObj.minSkills - totalMastered) + " skills voor " + nextTitelObj.label)
+              ? ((nextTitelObj.minSkills - totalMastered) + ((nextTitelObj.minSkills - totalMastered) === 1 ? " skill voor " : " skills voor ") + nextTitelObj.label)
               : ("Alle skills beheerst! \U0001F393")
             }
           </div>
@@ -256,6 +256,11 @@ export default function HomeScreen({ save, uid, onSubject, onSettings }) {
                       <div style={{ fontSize: T.sm, color: A.textSoft }}>
                         {subject.description}
                       </div>
+                      {isAvail && (
+                        <div style={{ fontSize: T.xs, color: subject.color, fontWeight: 700, marginTop: 3 }}>
+                          {"Titel: " + getTitel(mastered).label}
+                        </div>
+                      )}
                       {isAvail && data.totalQuestions > 0 && (
                         <div style={{
                           height: 4,

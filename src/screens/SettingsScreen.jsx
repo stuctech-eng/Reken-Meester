@@ -1,16 +1,16 @@
+import { Fragment } from "react";
 import { Screen, TopBar, Card, Btn, Divider, Body } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { getTitel } from "../core/save.js";
-import { getSkillOrder } from "../core/subjects.js";
+import { SUBJECTS, getSkillOrder } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 export default function SettingsScreen({ save, onBack, onReset }) {
   var name          = save.displayName || "—";
-  var optData       = (save.subjects && save.subjects.optellen) || {};
-  var totalMastered = optData.totalSkillsMastered || 0;
-  var titelObj      = getTitel(totalMastered);
-  var activeSkillId = optData.currentSkillId || "s01";
+  // Elke beschikbare rekenmodus heeft een eigen titel en eigen statistieken
+  var availSubjects = SUBJECTS.filter(function(s) { return s.available; });
+  function subjData(id) { return (save.subjects && save.subjects[id]) || {}; }
 
   return (
     <Screen bg={A.bg}>
@@ -68,42 +68,56 @@ export default function SettingsScreen({ save, onBack, onReset }) {
           padding: "16px 18px",
           boxShadow: A.shadow,
         }}>
-          <StatRow label={"Titel"}            value={titelObj.label} />
-          <Divider style={{ margin: "12px 0" }} />
+          {availSubjects.map(function(subject) {
+            return (
+              <Fragment key={subject.id}>
+                <StatRow
+                  label={"Titel " + subject.label.toLowerCase()}
+                  value={getTitel(subjData(subject.id).totalSkillsMastered || 0).label}
+                />
+                <Divider style={{ margin: "12px 0" }} />
+              </Fragment>
+            );
+          })}
           <StatRow label={"Sessies gespeeld"} value={save.totalSessions || 0} />
         </div>
 
-        {/* Optellen stats */}
-        {optData.totalQuestions > 0 && (
-          <>
-            <SectionLabel style={{ marginTop: 4 }}>{"OPTELLEN"}</SectionLabel>
-            <div style={{
-              background: A.bgCard,
-              border: "1.5px solid " + A.border,
-              borderRadius: A.r16,
-              padding: "16px 18px",
-              boxShadow: A.shadow,
-            }}>
-              <StatRow
-                label={"Skills beheerst"}
-                value={totalMastered + " van " + getSkillOrder("optellen").length}
-                highlight={true}
-              />
-              <Divider style={{ margin: "12px 0" }} />
-              <StatRow label={"Vragen beantwoord"} value={optData.totalQuestions || 0} />
-              <Divider style={{ margin: "12px 0" }} />
-              <StatRow
-                label={"Nauwkeurigheid"}
-                value={optData.totalQuestions > 0
-                  ? Math.round(optData.totalCorrect / optData.totalQuestions * 100) + "%"
-                  : "—"
-                }
-              />
-              <Divider style={{ margin: "12px 0" }} />
-              <StatRow label={"Actieve skill"} value={activeSkillId} soft={true} />
-            </div>
-          </>
-        )}
+        {/* Statistieken per rekenmodus (alleen als er al geoefend is) */}
+        {availSubjects.map(function(subject) {
+          var data          = subjData(subject.id);
+          var totalMastered = data.totalSkillsMastered || 0;
+          if (!(data.totalQuestions > 0)) return null;
+          return (
+            <Fragment key={subject.id}>
+              <SectionLabel style={{ marginTop: 4 }}>{subject.label.toUpperCase()}</SectionLabel>
+              <div style={{
+                background: A.bgCard,
+                border: "1.5px solid " + A.border,
+                borderRadius: A.r16,
+                padding: "16px 18px",
+                boxShadow: A.shadow,
+              }}>
+                <StatRow
+                  label={"Skills beheerst"}
+                  value={totalMastered + " van " + getSkillOrder(subject.id).length}
+                  highlight={true}
+                />
+                <Divider style={{ margin: "12px 0" }} />
+                <StatRow label={"Vragen beantwoord"} value={data.totalQuestions || 0} />
+                <Divider style={{ margin: "12px 0" }} />
+                <StatRow
+                  label={"Nauwkeurigheid"}
+                  value={data.totalQuestions > 0
+                    ? Math.round(data.totalCorrect / data.totalQuestions * 100) + "%"
+                    : "—"
+                  }
+                />
+                <Divider style={{ margin: "12px 0" }} />
+                <StatRow label={"Actieve skill"} value={data.currentSkillId || "—"} soft={true} />
+              </div>
+            </Fragment>
+          );
+        })}
 
         {/* Danger zone */}
         <SectionLabel style={{ marginTop: 4, color: A.error }}>{"ACCOUNT"}</SectionLabel>

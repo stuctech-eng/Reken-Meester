@@ -27,6 +27,21 @@ export var DEFAULT_SAVE = {
       totalSkillsMastered: 0,
       // bonusStats: statistieken voor bonus-modus (na alle 100 skills beheerst)
       bonusStats: {},
+    },
+
+    // Aftrekken: zelfde structuur als optellen, eigen voortgang
+    aftrekken: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "a01_tot_10",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 
