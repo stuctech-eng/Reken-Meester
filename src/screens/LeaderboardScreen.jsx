@@ -15,6 +15,7 @@ var TABS = [
   { id: "global",   label: "Globaal" },
   { id: "optellen", label: "Optellen" },
   { id: "aftrekken", label: "Aftrekken" },
+  { id: "vermenigvuldigen", label: "Vermenigvuldigen" },
 ];
 
 export default function LeaderboardScreen({ uid, save, onBack, embedded }) {

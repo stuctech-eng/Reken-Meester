@@ -42,6 +42,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "a01_tot_10",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Vermenigvuldigen: zelfde structuur, eigen voortgang
+    vermenigvuldigen: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "v01_groepjes",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 

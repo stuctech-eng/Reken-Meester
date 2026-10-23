@@ -32,8 +32,8 @@ export var SUBJECTS = [
     icon: "×",
     color: "#059669",
     lightColor: "#ecfdf5",
-    description: "Tafels oefenen",
-    available: false,
+    description: "Tafels en vermenigvuldigen",
+    available: true,
     levels: 10,
   },
   {
