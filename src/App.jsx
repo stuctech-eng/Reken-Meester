@@ -94,8 +94,8 @@ export default function App() {
 
   var autoCountedRef  = useRef(false);
 
-  // Vak Rekenen op Home: open of dicht, alleen in het geheugen (na herstart weer open)
-  var rekenenState    = useState(true);
+  // Vak Rekenen op Home: open of dicht, alleen in het geheugen (na herstart weer ingeklapt)
+  var rekenenState    = useState(false);
   var rekenenOpen     = rekenenState[0];
   var setRekenenOpen  = rekenenState[1];
 
