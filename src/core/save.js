@@ -72,6 +72,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "d01_eerlijk_verdelen",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Breuken: zelfde structuur, eigen voortgang
+    breuken: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "b01_strook",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 

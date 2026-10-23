@@ -229,7 +229,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, r
               </div>
               <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 2 }}>
                 {rekenenOpen
-                  ? (onAuto ? "Auto wisselt van modus na elk behaald level" : "Alle modi beheerst")
+                  ? (onAuto ? "Auto wisselt tussen + − × ÷ na elk behaald level" : "Auto: + − × ÷ beheerst")
                   : SUBJECTS.filter(function(s) { return s.available; }).map(function(s) {
                       var sd = (save.subjects && save.subjects[s.id]) ? save.subjects[s.id] : {};
                       return s.icon + " " + (sd.totalSkillsMastered || 0);

@@ -48,6 +48,16 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
   },
+  {
+    id: "breuken",
+    label: "Breuken",
+    icon: "½",
+    color: "#c026d3",
+    lightColor: "#fdf4ff",
+    description: "Breuken begrijpen en rekenen",
+    available: true,
+    levels: 10,
+  },
 ];
 
 export function getSubject(id) {
@@ -67,7 +77,6 @@ export var SUBJECT_SKILLS = {
   aftrekken: { skills: AFTREK_SKILLS, order: AFTREK_ORDER },
   vermenigvuldigen: { skills: MAAL_SKILLS, order: MAAL_ORDER },
   delen: { skills: DEEL_SKILLS, order: DEEL_ORDER },
-  // Breuken: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3)
   breuken: { skills: BREUK_SKILLS, order: BREUK_ORDER },
 };
 
