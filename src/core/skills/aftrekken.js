@@ -1,105 +1,22 @@
 // Onderdeel Aftrekken: skills, volgorde en aftrek-specifieke generatoren.
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
-// Vraagverloop:
-// - Alle aanroepen van generate() in hetzelfde synchrone rekenmoment tellen als één getoonde vraag.
-//   Dat dekt de herkansing in PracticeScreen.generateNext en de dubbele start in React StrictMode.
-// - Geschiedenis per skill: geen herhaling binnen de laatste 10 getoonde vragen. Bij skills met
-//   minder mogelijke sommen: zo lang mogelijk geen herhaling (de generator stopt altijd).
-// - a37: geschudde ronde langs blok 1-10, binnen elk blok een geschudde ronde langs de skills.
-//   Deze garantie geldt voor normale vraagovergangen en herkansingen, niet als het oefenscherm
-//   wordt verlaten terwijl de timer van 0,9 s na een goed antwoord nog loopt.
+// Het vraagverloop (rekenmoment, geschiedenis, subtypen, gemengde ronde) staat in ./flow.js.
+// a37: geschudde ronde langs blok 1-10, binnen elk blok een geschudde ronde langs de skills.
 
-import { rnd, shuffle, wrongChoices } from "./helpers.js";
+import { rnd, shuffle } from "./helpers.js";
+import {
+  makeChoices, digitsOf, hasZeroDigit, round10, round100, estimateChoices, randomWith,
+  registerSkillId, createSkills, createMixer,
+} from "./flow.js";
 
 var MIN    = "−";
 var SP_MIN = " − ";
 var APPROX = "≈";
 
 // ─────────────────────────────────────────────────────────────────
-// VRAAGVERLOOP: rekenmoment, geschiedenis en subtypen
+// AFTREK-SPECIFIEKE VRAAG-HELPERS
 // ─────────────────────────────────────────────────────────────────
-
-var tickId   = 0;
-var tickOpen = false;
-
-function currentTick() {
-  if (!tickOpen) {
-    tickOpen = true;
-    tickId++;
-    Promise.resolve().then(function() { tickOpen = false; });
-  }
-  return tickId;
-}
-
-// Een vraag wordt herkend aan vraagtekst + antwoord (ook bij fout spotten, waar de tekst vast is)
-function qKey(q) {
-  return q.question + "|" + String(q.answer);
-}
-
-var HIST_MAX  = 10;
-var MAX_TRIES = 40;
-var HISTORY   = {};
-var SUBTYPE   = {};
-
-// Subtypen wisselen per getoonde vraag (binnen hetzelfde moment blijft het subtype gelijk)
-function pickSubtype(skillId, count, t) {
-  var s = SUBTYPE[skillId];
-  if (s && s.tick === t) return s.index;
-  var index = s ? (s.index + 1) % count : rnd(0, count - 1);
-  SUBTYPE[skillId] = { tick: t, index: index };
-  return index;
-}
-
-function noRepeat(skillId, makeFn, subtypes) {
-  return function() {
-    var t        = currentTick();
-    var sub      = subtypes ? pickSubtype(skillId, subtypes, t) : 0;
-    var h        = HISTORY[skillId] || (HISTORY[skillId] = []);
-    var sameTick = h.length > 0 && h[h.length - 1].tick === t;
-    // Een eerdere vraag uit hetzelfde moment is weggegooid en telt niet als getoond
-    var shown    = (sameTick ? h.slice(0, h.length - 1) : h).slice(-HIST_MAX);
-    var best     = null;
-    var bestIdx  = Infinity;
-    for (var i = 0; i < MAX_TRIES; i++) {
-      var q   = makeFn(sub);
-      var k   = qKey(q);
-      var idx = -1;
-      for (var j = shown.length - 1; j >= 0; j--) {
-        if (shown[j].key === k) { idx = j; break; }
-      }
-      if (idx === -1) { best = q; break; }
-      if (idx < bestIdx) { bestIdx = idx; best = q; }
-    }
-    var entry = { tick: t, key: qKey(best) };
-    if (sameTick) { h[h.length - 1] = entry; } else { h.push(entry); }
-    // Eén plaats extra: een herkansing in hetzelfde moment moet nog met 10 getoonde vragen vergelijken
-    if (h.length > HIST_MAX + 1) h.shift();
-    return best;
-  };
-}
-
-// ─────────────────────────────────────────────────────────────────
-// VRAAG-HELPERS
-// ─────────────────────────────────────────────────────────────────
-
-// Vier unieke keuzes, nooit negatief; typische fouten (extras) gaan voor
-function makeChoices(answer, extras) {
-  var list = [answer];
-  var seen = {};
-  seen[String(answer)] = true;
-  function add(x) {
-    if (list.length < 4 && typeof x === "number" && x >= 0 && !seen[String(x)]) {
-      seen[String(x)] = true;
-      list.push(x);
-    }
-  }
-  (extras || []).forEach(add);
-  if (list.length < 4) wrongChoices(answer, 6, 0).forEach(add);
-  var f = answer + 1;
-  while (list.length < 4) { add(f); f++; }
-  return shuffle(list);
-}
 
 function plainQ(terms, answer, extras) {
   return { terms: terms, question: terms.join(SP_MIN) + " =", answer: answer, choices: makeChoices(answer, extras) };
@@ -108,17 +25,6 @@ function plainQ(terms, answer, extras) {
 // Kolomsom: twee regels, PracticeScreen lijnt rechts uit en zet een streep eronder
 function columnQ(a, b, extras) {
   return { terms: [a, b], question: a + "\n" + MIN + " " + b, answer: a - b, choices: makeChoices(a - b, extras) };
-}
-
-// Cijfers van rechts naar links: 402 -> [2, 0, 4]
-function digitsOf(n) {
-  var d = [];
-  do { d.push(n % 10); n = Math.floor(n / 10); } while (n > 0);
-  return d;
-}
-
-function hasZeroDigit(n) {
-  return digitsOf(n).indexOf(0) !== -1;
 }
 
 function borrowCount(a, b) {
@@ -144,25 +50,6 @@ function noBorrowResult(a, b) {
     p *= 10;
   }
   return r;
-}
-
-function round10(n)  { return Math.round(n / 10) * 10; }
-function round100(n) { return Math.round(n / 100) * 100; }
-
-// Schatkeuzes: alleen veelvouden van step, allemaal groter dan 0
-function estimateChoices(answer, step) {
-  var opts = [answer - 2 * step, answer - step, answer + step, answer + 2 * step].filter(function(v) { return v > 0; });
-  var extra = 3;
-  while (opts.length < 3) { opts.push(answer + extra * step); extra++; }
-  return shuffle([answer].concat(shuffle(opts).slice(0, 3)));
-}
-
-function randomWith(fn) {
-  for (var i = 0; i < 500; i++) {
-    var r = fn();
-    if (r) return r;
-  }
-  return null;
 }
 
 // Fout spotten: vier unieke aftreksommen, precies één fout (vaak de typische lenen-fout van 10)
@@ -972,57 +859,12 @@ var RAW_SKILLS = [
 // SKILLS MET VRAAGVERLOOP + a37 SNELHEIDSRONDE
 // ─────────────────────────────────────────────────────────────────
 
-var SKILL_BY_ID = {};
+var SKILLS = createSkills("aftrekken", RAW_SKILLS);
+var MIXER  = createMixer(RAW_SKILLS, BLOCK_GROUPS, SKILLS.byId);
 
-export var AFTREK_SKILLS = RAW_SKILLS.map(function(s) {
-  var skill = {
-    id:         s.id,
-    label:      s.label,
-    group:      s.group,
-    desc:       s.desc,
-    strategy:   s.strategy,
-    tip:        s.tip,
-    uitleg:     s.uitleg,
-    voorbeeld:  s.voorbeeld,
-    minCorrect: s.minCorrect,
-    generate:   noRepeat(s.id, s.make, s.subtypes),
-  };
-  SKILL_BY_ID[s.id] = skill;
-  return skill;
-});
+export var AFTREK_SKILLS = SKILLS.list;
 
-var A37 = { tick: -1, block: null, skillId: null, blockCycle: [], lastBlock: null, skillCycles: {} };
-
-function skillsOfBlock(b) {
-  var group = BLOCK_GROUPS[b - 1];
-  return RAW_SKILLS.filter(function(s) { return s.group === group; }).map(function(s) { return s.id; });
-}
-
-function nextBlock() {
-  if (A37.blockCycle.length === 0) {
-    var c = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-    if (c[0] === A37.lastBlock) { var tmp = c[0]; c[0] = c[1]; c[1] = tmp; }
-    A37.blockCycle = c;
-  }
-  A37.lastBlock = A37.blockCycle.shift();
-  return A37.lastBlock;
-}
-
-function nextSkillInBlock(b) {
-  var c = A37.skillCycles[b];
-  if (!c || c.length === 0) { c = A37.skillCycles[b] = shuffle(skillsOfBlock(b)); }
-  return c.shift();
-}
-
-function generateA37() {
-  var t = currentTick();
-  if (A37.tick !== t) {
-    A37.tick    = t;
-    A37.block   = nextBlock();
-    A37.skillId = nextSkillInBlock(A37.block);
-  }
-  return SKILL_BY_ID[A37.skillId].generate();
-}
+registerSkillId("aftrekken", "a37_snelheid");
 
 AFTREK_SKILLS.push({
   id:         "a37_snelheid",
@@ -1034,7 +876,7 @@ AFTREK_SKILLS.push({
   uitleg:     "In de snelheidsronde komen alle soorten aftreksommen door elkaar voorbij. Kies per som de aanpak die je hebt geleerd.",
   voorbeeld:  "Gemengd, bijvoorbeeld:\n13 − 5, 72 − 29, 402 − 167, Schat: 82 − 39 ≈ ?",
   minCorrect: 15,
-  generate:   generateA37,
+  generate:   MIXER.generate,
 });
 
 export var AFTREK_ORDER = AFTREK_SKILLS.map(function(s) { return s.id; });
