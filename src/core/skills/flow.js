@@ -155,12 +155,57 @@ export function createSkills(owner, rawSkills) {
       uitleg:     s.uitleg,
       voorbeeld:  s.voorbeeld,
       minCorrect: s.minCorrect,
-      generate:   noRepeat(s.id, s.make, s.subtypes),
+      // Skills met een eigen stapel (deck) regelen hun volgorde zelf; de rest via noRepeat
+      generate:   s.deck ? s.make : noRepeat(s.id, s.make, s.subtypes),
     };
     byId[s.id] = skill;
     return skill;
   });
   return { list: list, byId: byId };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// KLEINE SETS: STAPEL (DECK)
+// Elk item van de set komt precies één keer langs voordat de stapel opnieuw wordt geschud.
+// Bij het schudden is het eerste item nooit gelijk aan het laatst getoonde.
+// Aanroepen in hetzelfde rekenmoment tellen als één getoonde vraag: het eerder getrokken
+// item gaat terug op de stapel en er wordt een ander item getrokken (herkansing, StrictMode).
+// Staat los van noRepeat; gebruik via een ruwe skill met deck: true.
+// ─────────────────────────────────────────────────────────────────
+
+var DECKS = {};
+
+export function deckPick(skillId, items) {
+  var t    = currentTick();
+  var d    = DECKS[skillId] || (DECKS[skillId] = { order: [], tick: -1, last: null, shown: null });
+  var back = null;
+  if (d.tick === t && d.last !== null) {
+    back = d.last;
+  } else {
+    d.shown = d.last;
+  }
+  if (d.order.length === 0 && back !== null) {
+    // Tweede aanroep in hetzelfde moment terwijl de ronde op is: geen nieuwe ronde beginnen,
+    // de laatste som van deze ronde blijft de getoonde som (anders schuiven de rondes uit de pas)
+    return items[back];
+  }
+  if (d.order.length === 0) {
+    var all = [];
+    for (var i = 0; i < items.length; i++) { if (i !== back) all.push(i); }
+    var o = shuffle(all);
+    if (o.length > 1 && o[0] === d.shown) { var tmp = o[0]; o[0] = o[1]; o[1] = tmp; }
+    d.order = o;
+  }
+  // Nooit direct de vorige getoonde som, zolang er een andere in de ronde is
+  var idx = back;
+  if (d.order.length > 0) {
+    var pos = (d.order[0] === d.shown && d.order.length > 1) ? 1 : 0;
+    idx = d.order.splice(pos, 1)[0];
+  }
+  if (back !== null && back !== idx) d.order.unshift(back);
+  d.tick = t;
+  d.last = idx;
+  return items[idx];
 }
 
 // Gemengde ronde: geschudde ronde langs alle blokken, binnen elk blok een geschudde ronde
