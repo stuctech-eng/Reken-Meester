@@ -256,22 +256,26 @@ BASE_2_6.forEach(function(p) {
   });
 });
 
-// Fout spotten: foute sommen (type 1 en 2) en juiste sommen, elk ≤ 16 tekens
+// Fout spotten: foute sommen (type 1 en 2) en juiste sommen, elk ≤ 16 tekens.
+// De foute uitkomst staat onvereenvoudigd, zodat het foutpatroon zichtbaar blijft
+// (1/10 + 1/2 = 2/12, niet 1/6). Alle foute sommen samen vormen één pool waaruit gelijk
+// wordt gekozen: elke foute som komt even vaak voor, ongeacht het fouttype.
 function sumStr(a, b, c, d, rn, rd) { return a + "/" + b + " + " + c + "/" + d + " = " + fstr(rn, rd); }
-var FOUT_1 = [], FOUT_2 = [], GOED = [];
+var FOUT = [], GOED = [];
 ITEMS_REL_PLUS.concat(ITEMS_FREE_PLUS).forEach(function(t) {
   var v = plus(t[0], t[1], t[2], t[3]);
-  var w = red(t[0] + t[2], t[1] + t[3]);
-  if (w[0] * v[1] !== v[0] * w[1]) {
-    var s = sumStr(t[0], t[1], t[2], t[3], t[0] + t[2], t[1] + t[3]);
-    if (s.length <= 16) FOUT_1.push({ t: t, s: s });
+  // Type 1: tellers én noemers opgeteld
+  if ((t[0] + t[2]) * v[1] !== v[0] * (t[1] + t[3])) {
+    var s = t[0] + "/" + t[1] + " + " + t[2] + "/" + t[3] + " = " + raw(t[0] + t[2], t[1] + t[3]);
+    if (s.length <= 16) FOUT.push({ t: t, s: s, type: 1 });
   }
 });
 ITEMS_REL_PLUS.forEach(function(t) {
   var v = plus(t[0], t[1], t[2], t[3]);
   var big = Math.max(t[1], t[3]);
+  // Type 2: de breuk met de kleinste noemer niet omgezet (tellers opgeteld, grootste noemer)
   var s = t[0] + "/" + t[1] + " + " + t[2] + "/" + t[3] + " = " + raw(t[0] + t[2], big);
-  if ((t[0] + t[2]) * v[1] !== v[0] * big && s.length <= 16) FOUT_2.push({ t: t, s: s });
+  if ((t[0] + t[2]) * v[1] !== v[0] * big && s.length <= 16) FOUT.push({ t: t, s: s, type: 2 });
 });
 ITEMS_PLUS_1.forEach(function(t) {
   var s = sumStr(t[0], t[2], t[1], t[2], t[0] + t[1], t[2]);
@@ -1023,8 +1027,8 @@ var RAW_SKILLS = [
     voorbeeld: "Welke som is FOUT?\n1/2 + 1/3 = 2/5? Goed is 5/6, dus fout.",
     minCorrect: 8,
     make: function() {
-      var type = rnd(1, 2);
-      var w = pickFrom(type === 1 ? FOUT_1 : FOUT_2);
+      var w = pickFrom(FOUT);
+      var type = w.type;
       var good = [];
       var seen = {};
       seen[w.s] = true;
