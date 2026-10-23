@@ -7,7 +7,8 @@ import { getSkillOrder } from "../core/subjects.js";
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 // onAuto: start de Auto-modus; null als geen enkele modus nog een level kan opleveren
-export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto }) {
+// rekenenOpen / onToggleRekenen: open of dicht van het vak Rekenen (stand bewaard in App)
+export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, rekenenOpen, onToggleRekenen }) {
   var optData       = save.subjects && save.subjects.optellen ? save.subjects.optellen : {};
   var acc           = getAccuracy(optData);
   var totalMastered = optData.totalSkillsMastered || 0;
@@ -195,22 +196,46 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto })
           </div>
         </div>
 
-        {/* Vak Rekenen: de vier rekenmodi + Auto */}
+        {/* Onderdelen: het vak Rekenen (inklapbaar) met de vier rekenmodi + Auto */}
+        <div>
+        <div style={{ fontSize: T.xs, fontWeight: 800, color: A.textSoft, letterSpacing: 0.8, marginBottom: 12 }}>
+          {"ONDERDELEN"}
+        </div>
         <div style={{
           background: A.bgCardHigh,
           border: "1.5px solid " + A.border,
           borderRadius: A.r20,
-          padding: "14px 12px 12px",
+          padding: rekenenOpen ? "14px 12px 12px" : "12px",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "0 4px 12px" }}>
-            <div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: rekenenOpen ? "0 4px 12px" : "0 4px" }}>
+            <button
+              onClick={onToggleRekenen}
+              aria-expanded={rekenenOpen}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                minHeight: 44,
+                background: "none",
+                border: "none",
+                padding: 0,
+                textAlign: "left",
+                cursor: "pointer",
+                color: A.text,
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
               <div style={{ fontSize: T.xl, fontWeight: 900, color: A.text, lineHeight: 1.1 }}>
-                {"Rekenen"}
+                {(rekenenOpen ? "▾ " : "▸ ") + "Rekenen"}
               </div>
               <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 2 }}>
-                {onAuto ? "Auto wisselt van modus na elk behaald level" : "Alle modi beheerst"}
+                {rekenenOpen
+                  ? (onAuto ? "Auto wisselt van modus na elk behaald level" : "Alle modi beheerst")
+                  : SUBJECTS.filter(function(s) { return s.available; }).map(function(s) {
+                      var sd = (save.subjects && save.subjects[s.id]) ? save.subjects[s.id] : {};
+                      return s.icon + " " + (sd.totalSkillsMastered || 0);
+                    }).join("  ·  ")}
               </div>
-            </div>
+            </button>
             <button
               onClick={onAuto || undefined}
               disabled={!onAuto}
@@ -234,6 +259,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto })
               {"Auto"}
             </button>
           </div>
+          {rekenenOpen && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {SUBJECTS.map(function(subject) {
               var data     = (save.subjects && save.subjects[subject.id]) ? save.subjects[subject.id] : {};
@@ -331,6 +357,8 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto })
               );
             })}
           </div>
+          )}
+        </div>
         </div>
 
       </div>

@@ -94,6 +94,11 @@ export default function App() {
 
   var autoCountedRef  = useRef(false);
 
+  // Vak Rekenen op Home: open of dicht, alleen in het geheugen (na herstart weer open)
+  var rekenenState    = useState(true);
+  var rekenenOpen     = rekenenState[0];
+  var setRekenenOpen  = rekenenState[1];
+
   var sheetTabState = useState("leaderboard");
   var sheetTab      = sheetTabState[0];
   var setSheetTab   = sheetTabState[1];
@@ -397,6 +402,8 @@ export default function App() {
         uid={uid}
         onSubject={function(id) { setSubjectId(id); setScreen("subject"); }}
         onAuto={autoSubjectFrom(save, "optellen", true) ? startAuto : null}
+        rekenenOpen={rekenenOpen}
+        onToggleRekenen={function() { setRekenenOpen(!rekenenOpen); }}
         onSettings={function() { setScreen("settings"); }}
       />
 
