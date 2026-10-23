@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Screen, TopBar, Card, Btn, ProgressBar, Badge } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { getSubject, getSkillList, getSkillOrder, getNextSkill } from "../core/subjects.js";
@@ -21,6 +22,20 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
 
   var nextSkillInfo = getNextSkill(subjectId, skillStats);
   var activeSkillId = nextSkillInfo.skillId;
+
+  // Beheerste vaardigheden standaard ingeklapt; alleen de laatst behaalde (hoogste in de
+  // volgorde) blijft zichtbaar. Elk bezoek aan dit scherm begint weer ingeklapt.
+  var collapseState = useState(true);
+  var collapsed     = collapseState[0];
+  var setCollapsed  = collapseState[1];
+
+  var masteredIdx = [];
+  skillOrder.forEach(function(id, i) {
+    if (skillStats[id] && skillStats[id].mastered) masteredIdx.push(i);
+  });
+  var lastMasteredIdx = masteredIdx.length > 0 ? masteredIdx[masteredIdx.length - 1] : -1;
+  var hiddenCount     = masteredIdx.length - 1;
+  var canCollapse     = masteredIdx.length >= 2;
 
   function startPractice() {
     onStartLevel(subjectId, data.currentLevel || 1);
@@ -140,11 +155,36 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
 
+            {canCollapse && (
+              <button
+                onClick={function() { setCollapsed(!collapsed); }}
+                aria-expanded={!collapsed}
+                style={{
+                  minHeight: 44,
+                  padding: "10px 14px",
+                  background: A.successBg,
+                  border: "1.5px solid " + A.successBorder,
+                  borderRadius: A.r16,
+                  color: A.successTxt,
+                  fontSize: T.sm,
+                  fontWeight: 800,
+                  textAlign: "left",
+                  cursor: "pointer",
+                  WebkitTapHighlightColor: "transparent",
+                }}
+              >
+                {collapsed
+                  ? ("▸ " + hiddenCount + (hiddenCount === 1 ? " beheerste vaardigheid tonen" : " beheerste vaardigheden tonen"))
+                  : "▾ Beheerste vaardigheden verbergen"}
+              </button>
+            )}
+
             {skillOrder.map(function(skillId, i) {
               var skill    = skillList.find(function(s) { return s.id === skillId; });
               if (!skill) return null;
               var stats    = skillStats[skill.id] || { correct: 0, attempts: 0, mastered: false };
               var mastered = stats.mastered;
+              if (collapsed && canCollapse && mastered && i !== lastMasteredIdx) return null;
               var active   = skill.id === activeSkillId;
               var started  = (stats.attempts || 0) > 0 || (stats.total || 0) > 0;
 

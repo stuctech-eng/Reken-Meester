@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DEFAULT_SAVE, dClone, dMerge, calcXp, getTitel } from "./core/save.js";
-import { checkLevelUnlock, updateSkillStats, getNextSkill, getSkillOrder } from "./core/subjects.js";
+import { checkLevelUnlock, updateSkillStats, getNextSkill, getSkillOrder, getSubject } from "./core/subjects.js";
 import { initAuth } from "./services/firebase.js";
 import { loadFromFirestore, saveToFirestore } from "./services/sync.js";
 import { claimUsername, updateGlobalLeaderboard, updateSubjectLeaderboard } from "./services/leaderboard.js";
@@ -19,6 +19,32 @@ var SHEET_TABS = [
   { id: "leaderboard", label: "Scores", icon: "🏆" },
   { id: "more",        label: "Meer",   icon: "⋯"       },
 ];
+
+// ── Auto-modus ──────────────────────────────────────────────────────
+// Vaste volgorde; na een behaald level gaat Auto naar de volgende modus die nog een level
+// kan opleveren. Volledig beheerste (of niet-beschikbare) modi worden overgeslagen.
+var AUTO_ORDER = ["optellen", "aftrekken", "vermenigvuldigen", "delen"];
+
+function canLevel(saveObj, id) {
+  var subject = getSubject(id);
+  if (!subject || subject.id !== id || !subject.available) return false;
+  var stats = (saveObj.subjects && saveObj.subjects[id] && saveObj.subjects[id].skillStats) || {};
+  return getNextSkill(id, stats).skillId !== null;
+}
+
+// includeFrom: fromId zelf eerst proberen (start). Anders eerst de volgende modi en als
+// laatste fromId zelf (als alle andere modi volledig beheerst zijn).
+function autoSubjectFrom(saveObj, fromId, includeFrom) {
+  var start = AUTO_ORDER.indexOf(fromId);
+  if (start === -1) start = 0;
+  var first = includeFrom ? 0 : 1;
+  var last  = includeFrom ? AUTO_ORDER.length - 1 : AUTO_ORDER.length;
+  for (var k = first; k <= last; k++) {
+    var id = AUTO_ORDER[(start + k) % AUTO_ORDER.length];
+    if (canLevel(saveObj, id)) return id;
+  }
+  return null;
+}
 
 export default function App() {
   var uidState     = useState(null);
@@ -52,6 +78,21 @@ export default function App() {
   var resState     = useState(null);
   var lastResult   = resState[0];
   var setLastResult = resState[1];
+
+  // Auto: alleen in het geheugen. autoCountedRef: deze Auto-ronde telt al als sessie.
+  var autoState       = useState(false);
+  var autoActive      = autoState[0];
+  var setAutoActive   = autoState[1];
+
+  var pendingState    = useState(null);
+  var pendingAuto     = pendingState[0];
+  var setPendingAuto  = pendingState[1];
+
+  var autoKeyState    = useState(0);
+  var autoKey         = autoKeyState[0];
+  var setAutoKey      = autoKeyState[1];
+
+  var autoCountedRef  = useRef(false);
 
   var sheetTabState = useState("leaderboard");
   var sheetTab      = sheetTabState[0];
@@ -142,7 +183,8 @@ export default function App() {
 
       next.subjects[result.subjectId] = subj;
       next.totalXp       = (next.totalXp || 0) + result.totalXp;
-      next.totalSessions = (next.totalSessions || 0) + 1;
+      // Een Auto-ronde telt als één sessie: volgende opslagen in dezelfde ronde tellen niet mee
+      next.totalSessions = (next.totalSessions || 0) + (result.sameSession ? 0 : 1);
 
       // Streak
       var today     = new Date().toISOString().slice(0, 10);
@@ -178,6 +220,59 @@ export default function App() {
     setLastResult(result);
     setScreen("result");
   }
+
+  // ── Auto-modus ────────────────────────────────────────────────────
+  function openPractice(saveObj, sId) {
+    var d = (saveObj.subjects && saveObj.subjects[sId]) || {};
+    setSubjectId(sId);
+    setPracticeLevel(d.currentLevel || 1);
+    setAutoKey(function(k) { return k + 1; });
+    setScreen("practice");
+  }
+
+  function startAuto() {
+    var sId = autoSubjectFrom(save, "optellen", true);
+    if (!sId) return;
+    autoCountedRef.current = false;
+    setAutoActive(true);
+    openPractice(save, sId);
+  }
+
+  // Elke opslag binnen een Auto-ronde loopt via de bestaande handleFinish
+  function saveAutoPart(result) {
+    result.sameSession = autoCountedRef.current;
+    autoCountedRef.current = true;
+    handleFinish(result);
+  }
+
+  // Behaald level in Auto: huidige modus opslaan, daarna (in het effect, met de bijgewerkte
+  // voortgang) de volgende modus openen
+  function handleAutoNext(result) {
+    saveAutoPart(result);
+    setPendingAuto(result.subjectId);
+  }
+
+  function handlePracticeFinish(result) {
+    if (autoActive) {
+      saveAutoPart(result);
+      setAutoActive(false);
+    } else {
+      handleFinish(result);
+    }
+  }
+
+  useEffect(function() {
+    if (pendingAuto === null) return;
+    var fromId = pendingAuto;
+    setPendingAuto(null);
+    var nextId = autoSubjectFrom(save, fromId, false);
+    if (nextId) {
+      openPractice(save, nextId);
+    } else {
+      // Alles beheerst: Auto stopt, het resultaatscherm van de laatste modus blijft staan
+      setAutoActive(false);
+    }
+  }, [pendingAuto]);
 
   // ── Reset ─────────────────────────────────────────────────────────
   function handleReset() {
@@ -224,6 +319,11 @@ export default function App() {
     return <UsernameScreen uid={uid} onDone={handleUsernameDone} />;
   }
 
+  // Tussenstap tijdens een Auto-wissel (één render, tot het effect de volgende modus opent)
+  if (pendingAuto !== null) {
+    return <div style={{ minHeight: "100dvh", background: T.bg }} />;
+  }
+
   if (screen === "subject") {
     return (
       <SubjectScreen
@@ -242,13 +342,23 @@ export default function App() {
   if (screen === "practice") {
     var practiceSubjData = (save.subjects && save.subjects[subjectId]) || {};
     var practiceSkillStats = practiceSubjData.skillStats || {};
+    var autoNextLabel = null;
+    if (autoActive) {
+      var autoNextId = autoSubjectFrom(save, subjectId, false);
+      autoNextLabel = autoNextId && autoNextId !== subjectId
+        ? "Door naar " + getSubject(autoNextId).label + " →"
+        : "Ga verder →";
+    }
     return (
       <PracticeScreen
+        key={subjectId + "-" + autoKey}
         subjectId={subjectId}
         level={practiceLevel}
         skillStats={practiceSkillStats}
-        onBack={function() { setScreen("subject"); }}
-        onFinish={handleFinish}
+        onBack={function() { setAutoActive(false); setScreen("subject"); }}
+        onFinish={handlePracticeFinish}
+        autoNextLabel={autoNextLabel}
+        onAutoNext={autoActive ? handleAutoNext : null}
       />
     );
   }
@@ -286,6 +396,7 @@ export default function App() {
         save={save}
         uid={uid}
         onSubject={function(id) { setSubjectId(id); setScreen("subject"); }}
+        onAuto={autoSubjectFrom(save, "optellen", true) ? startAuto : null}
         onSettings={function() { setScreen("settings"); }}
       />
 

@@ -7,7 +7,9 @@ import { getTitel, calcXp } from "../core/save.js";
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 
-export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish }) {
+// autoNextLabel / onAutoNext (optioneel, alleen in Auto-modus): na een behaald level sluit
+// "Ga verder" de sessie eenmalig af en geeft het resultaat aan onAutoNext in plaats van onFinish.
+export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish, autoNextLabel, onAutoNext }) {
   var skillOrder = getSkillOrder(subjectId);
 
   // ── Initialisatie helpers ─────────────────────────────────────
@@ -76,6 +78,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var nextSkillIdRef             = useRef(startSkillId);
   var timeRef                    = useRef(Date.now());
   var advanceTimerRef            = useRef(null);
+  var autoNextDoneRef            = useRef(false);
 
   // Initialiseer sessionSkillStats voor alle skills
   useEffect(function() {
@@ -132,6 +135,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   // ── Stop-functie ──────────────────────────────────────────────
   function handleStop() {
+    onFinish(buildResult());
+  }
+
+  function buildResult() {
     var ss    = sessionSkillStatsRef.current;
     var total = 0;
     var cor   = 0;
@@ -144,7 +151,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     if (rr.length > 0) {
       avgTime = Math.round(rr.reduce(function(s, r) { return s + r.timeMs; }, 0) / rr.length);
     }
-    onFinish({
+    return {
       subjectId:         subjectId,
       level:             level,
       totalCorrect:      cor,
@@ -155,11 +162,18 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       sessionSkillStats: ss,
       dominantSkillId:   activeSkillIdRef.current,
       promotionSnapshots: promotionSnapRef.current,
-    });
+    };
   }
 
   // ── Level-up overlay doorgaan ──────────────────────────────────
   function handleLevelUpContinue() {
+    if (autoNextLabel && onAutoNext) {
+      // Auto: precies één wissel per behaald level, ook bij dubbel tikken
+      if (autoNextDoneRef.current) return;
+      autoNextDoneRef.current = true;
+      onAutoNext(buildResult());
+      return;
+    }
     setShowLevelUp(false);
     advanceToNext(activeSkillIdRef.current);
   }
@@ -694,7 +708,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 WebkitTapHighlightColor: "transparent",
               }}
             >
-              {"Ga verder →"}
+              {autoNextLabel && onAutoNext ? autoNextLabel : "Ga verder →"}
             </button>
           </div>
         </div>

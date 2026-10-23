@@ -6,7 +6,8 @@ import { getSkillOrder } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-export default function HomeScreen({ save, uid, onSubject, onSettings }) {
+// onAuto: start de Auto-modus; null als geen enkele modus nog een level kan opleveren
+export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto }) {
   var optData       = save.subjects && save.subjects.optellen ? save.subjects.optellen : {};
   var acc           = getAccuracy(optData);
   var totalMastered = optData.totalSkillsMastered || 0;
@@ -194,10 +195,44 @@ export default function HomeScreen({ save, uid, onSubject, onSettings }) {
           </div>
         </div>
 
-        {/* Onderdelen */}
-        <div>
-          <div style={{ fontSize: T.xs, fontWeight: 800, color: A.textSoft, letterSpacing: 0.8, marginBottom: 12 }}>
-            {"ONDERDELEN"}
+        {/* Vak Rekenen: de vier rekenmodi + Auto */}
+        <div style={{
+          background: A.bgCardHigh,
+          border: "1.5px solid " + A.border,
+          borderRadius: A.r20,
+          padding: "14px 12px 12px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "0 4px 12px" }}>
+            <div>
+              <div style={{ fontSize: T.xl, fontWeight: 900, color: A.text, lineHeight: 1.1 }}>
+                {"Rekenen"}
+              </div>
+              <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 2 }}>
+                {onAuto ? "Auto wisselt van modus na elk behaald level" : "Alle modi beheerst"}
+              </div>
+            </div>
+            <button
+              onClick={onAuto || undefined}
+              disabled={!onAuto}
+              aria-label={"Auto: oefen alle rekenmodi om de beurt"}
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: A.r999,
+                background: onAuto ? A.primary : A.border,
+                color: onAuto ? "#ffffff" : A.textSoft,
+                border: "none",
+                fontSize: T.sm,
+                fontWeight: 900,
+                letterSpacing: 0.3,
+                flexShrink: 0,
+                cursor: onAuto ? "pointer" : "default",
+                boxShadow: onAuto ? A.shadowMd : "none",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              {"Auto"}
+            </button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {SUBJECTS.map(function(subject) {
