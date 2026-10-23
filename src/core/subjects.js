@@ -4,6 +4,7 @@
 import { OPTELLEN_SKILLS, OPTELLEN_ORDER } from "./skills/optellen.js";
 import { AFTREK_SKILLS, AFTREK_ORDER } from "./skills/aftrekken.js";
 import { MAAL_SKILLS, MAAL_ORDER } from "./skills/vermenigvuldigen.js";
+import { DEEL_SKILLS, DEEL_ORDER } from "./skills/delen.js";
 
 export var SUBJECTS = [
   {
@@ -64,6 +65,7 @@ export var SUBJECT_SKILLS = {
   optellen: { skills: OPTELLEN_SKILLS, order: OPTELLEN_ORDER },
   aftrekken: { skills: AFTREK_SKILLS, order: AFTREK_ORDER },
   vermenigvuldigen: { skills: MAAL_SKILLS, order: MAAL_ORDER },
+  delen: { skills: DEEL_SKILLS, order: DEEL_ORDER },
 };
 
 function getSubjectSkills(subjectId) {
