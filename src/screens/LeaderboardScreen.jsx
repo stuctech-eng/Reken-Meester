@@ -11,11 +11,14 @@ var MEDAL_SILVER = "🥈";
 var MEDAL_BRONZE = "🥉";
 var STAR_GLOW    = "⭐";
 
+// Modus-tabbladen tonen het teken van de kaart op Home (vijf namen passen niet op een iPhone);
+// de volledige naam staat in aria-label.
 var TABS = [
-  { id: "global",   label: "Globaal" },
-  { id: "optellen", label: "Optellen" },
-  { id: "aftrekken", label: "Aftrekken" },
-  { id: "vermenigvuldigen", label: "Vermenigvuldigen" },
+  { id: "global",           label: "Globaal",  name: "Globaal" },
+  { id: "optellen",         label: "+",        name: "Optellen",         sign: true },
+  { id: "aftrekken",        label: "−",        name: "Aftrekken",        sign: true },
+  { id: "vermenigvuldigen", label: "×",        name: "Vermenigvuldigen", sign: true },
+  { id: "delen",            label: "÷",        name: "Delen",            sign: true },
 ];
 
 export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
@@ -111,6 +114,7 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
             <button
               key={t.id}
               onClick={function() { setTab(t.id); }}
+              aria-label={t.name}
               style={{
                 flex: 1,
                 padding: "14px 8px",
@@ -119,7 +123,8 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
                 borderBottom: "3px solid " + (isActive ? A.primary : "transparent"),
                 color: isActive ? A.primary : A.textSoft,
                 fontWeight: isActive ? 800 : 600,
-                fontSize: T.sm,
+                fontSize: t.sign ? T.xxl : T.sm,
+                lineHeight: 1,
                 cursor: "pointer",
                 transition: "all 0.15s",
                 WebkitTapHighlightColor: "transparent",

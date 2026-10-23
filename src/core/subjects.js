@@ -43,8 +43,8 @@ export var SUBJECTS = [
     icon: "÷",
     color: "#d97706",
     lightColor: "#fffbeb",
-    description: "Getallen delen",
-    available: false,
+    description: "Delen en verdelen",
+    available: true,
     levels: 10,
   },
 ];

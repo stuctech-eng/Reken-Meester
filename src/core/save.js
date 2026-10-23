@@ -57,6 +57,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "v01_groepjes",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Delen: zelfde structuur, eigen voortgang
+    delen: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "d01_eerlijk_verdelen",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 
