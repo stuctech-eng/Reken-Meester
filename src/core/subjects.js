@@ -70,6 +70,16 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
   },
+  {
+    id: "kommagetallen",
+    label: "Kommagetallen",
+    icon: "0,1",
+    color: "#7c3aed",
+    lightColor: "#f5f3ff",
+    description: "Tienden, honderdsten en rekenen",
+    available: true,
+    levels: 10,
+  },
 ];
 
 export function getSubject(id) {
@@ -91,7 +101,6 @@ export var SUBJECT_SKILLS = {
   delen: { skills: DEEL_SKILLS, order: DEEL_ORDER },
   breuken: { skills: BREUK_SKILLS, order: BREUK_ORDER },
   geld: { skills: GELD_SKILLS, order: GELD_ORDER },
-  // Kommagetallen: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3)
   kommagetallen: { skills: KOMMA_SKILLS, order: KOMMA_ORDER },
 };
 
