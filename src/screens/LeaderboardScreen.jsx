@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Screen, TopBar, Loader, Empty } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { fetchGlobalTop10, fetchSubjectTop10, fetchMyRankGlobal } from "../services/leaderboard.js";
-import { getSkillOrder } from "../core/subjects.js";
+import { getSkillOrder, SUBJECTS } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -11,15 +11,12 @@ var MEDAL_SILVER = "🥈";
 var MEDAL_BRONZE = "🥉";
 var STAR_GLOW    = "⭐";
 
-// Modus-tabbladen tonen het teken van de kaart op Home (vijf namen passen niet op een iPhone);
-// de volledige naam staat in aria-label.
-var TABS = [
-  { id: "global",           label: "Globaal",  name: "Globaal" },
-  { id: "optellen",         label: "+",        name: "Optellen",         sign: true },
-  { id: "aftrekken",        label: "−",        name: "Aftrekken",        sign: true },
-  { id: "vermenigvuldigen", label: "×",        name: "Vermenigvuldigen", sign: true },
-  { id: "delen",            label: "÷",        name: "Delen",            sign: true },
-];
+// Tabbalk: links "Globaal", rechts één keuzeknop met alle modi uit SUBJECTS (de standaard
+// keuzelijst van iOS). Een nieuwe modus komt er zo vanzelf bij; zes tabs naast elkaar passen
+// niet op een smalle iPhone.
+function modeSubjects() {
+  return SUBJECTS.filter(function(s) { return s.available; });
+}
 
 export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
   var tabState   = useState("global");
@@ -101,39 +98,83 @@ export default function LeaderboardScreen({ uid, save, onBack, embedded }) {
         {"Scores worden binnenkort vernieuwd"}
       </div>
 
-      {/* Tabs */}
+      {/* Tabs: Globaal + keuzeknop voor de modi */}
       <div style={{
         display: "flex",
-        padding: embedded ? "0 20px" : "0 20px",
+        alignItems: "stretch",
+        gap: 8,
+        padding: "0 20px",
         background: A.bgCard,
         borderBottom: "1.5px solid " + A.border,
       }}>
-        {TABS.map(function(t) {
-          var isActive = tab === t.id;
+        <button
+          onClick={function() { setTab("global"); }}
+          aria-pressed={tab === "global"}
+          style={{
+            flex: 1,
+            minHeight: 48,
+            padding: "14px 8px",
+            background: "none",
+            border: "none",
+            borderBottom: "3px solid " + (tab === "global" ? A.primary : "transparent"),
+            color: tab === "global" ? A.primary : A.textSoft,
+            fontWeight: tab === "global" ? 800 : 600,
+            fontSize: T.sm,
+            lineHeight: 1,
+            cursor: "pointer",
+            transition: "all 0.15s",
+            WebkitTapHighlightColor: "transparent",
+          }}
+        >
+          {"Globaal"}
+        </button>
+        {(function() {
+          var modes  = modeSubjects();
+          var chosen = modes.filter(function(m) { return m.id === tab; })[0] || null;
+          var active = chosen !== null;
           return (
-            <button
-              key={t.id}
-              onClick={function() { setTab(t.id); }}
-              aria-label={t.name}
-              style={{
-                flex: 1,
-                padding: "14px 8px",
-                background: "none",
-                border: "none",
-                borderBottom: "3px solid " + (isActive ? A.primary : "transparent"),
-                color: isActive ? A.primary : A.textSoft,
-                fontWeight: isActive ? 800 : 600,
-                fontSize: t.sign ? T.xxl : T.sm,
-                lineHeight: 1,
-                cursor: "pointer",
-                transition: "all 0.15s",
-                WebkitTapHighlightColor: "transparent",
-              }}
-            >
-              {t.label}
-            </button>
+            <label style={{
+              flex: 1.4,
+              position: "relative",
+              minHeight: 48,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              borderBottom: "3px solid " + (active ? A.primary : "transparent"),
+              color: active ? A.primary : A.textSoft,
+              fontWeight: active ? 800 : 600,
+              fontSize: T.sm,
+              cursor: "pointer",
+              WebkitTapHighlightColor: "transparent",
+            }}>
+              {active && <span aria-hidden="true" style={{ fontSize: T.lg, lineHeight: 1 }}>{chosen.icon}</span>}
+              <span>{active ? chosen.label : "Modus"}</span>
+              <span aria-hidden="true" style={{ fontSize: T.xs }}>{"▾"}</span>
+              {/* Onzichtbare native keuzelijst over de hele knop; lettergrootte 16 voorkomt inzoomen op iOS */}
+              <select
+                aria-label={"Kies een modus"}
+                value={active ? chosen.id : ""}
+                onChange={function(e) { if (e.target.value) setTab(e.target.value); }}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  opacity: 0,
+                  fontSize: 16,
+                  cursor: "pointer",
+                  border: "none",
+                }}
+              >
+                <option value="" disabled>{"Kies een modus"}</option>
+                {modes.map(function(m) {
+                  return <option key={m.id} value={m.id}>{m.icon + "  " + m.label}</option>;
+                })}
+              </select>
+            </label>
           );
-        })}
+        })()}
       </div>
 
       <div style={{
