@@ -59,6 +59,16 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
   },
+  {
+    id: "geld",
+    label: "Geld",
+    icon: "€",
+    color: "#e11d48",
+    lightColor: "#fff1f2",
+    description: "Rekenen met euro's en centen",
+    available: true,
+    levels: 10,
+  },
 ];
 
 export function getSubject(id) {
@@ -79,7 +89,6 @@ export var SUBJECT_SKILLS = {
   vermenigvuldigen: { skills: MAAL_SKILLS, order: MAAL_ORDER },
   delen: { skills: DEEL_SKILLS, order: DEEL_ORDER },
   breuken: { skills: BREUK_SKILLS, order: BREUK_ORDER },
-  // Geld: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3)
   geld: { skills: GELD_SKILLS, order: GELD_ORDER },
 };
 
