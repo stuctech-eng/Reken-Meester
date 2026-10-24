@@ -24,14 +24,19 @@ export async function loadFromFirestore(uid) {
   }
 }
 
+// Geeft true terug als de Firestore-schrijfactie (setDoc) is geslaagd, anders false.
+// De bestaande afhandeling (localStorage na succes, localStorage als terugval) is ongewijzigd.
 export async function saveToFirestore(uid, data) {
+  var ok = false;
   try {
     const ref = doc(db, "users", uid);
     await setDoc(ref, data, { merge: true });
+    ok = true;
     localStorage.setItem(LS_KEY, JSON.stringify(data));
   } catch {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(data));
     } catch {}
   }
+  return ok;
 }

@@ -11,6 +11,9 @@ import { getTitel, calcXp } from "../core/save.js";
 var SESSION_MIN = 4;
 var SESSION_ACC = 0.70;
 
+// Uniek kenmerk per oefensessie (voor de concept-sessie in App); geen Math.random
+var CONCEPT_COUNTER = 0;
+
 // Kleinste aantal goede sommen dat nog nodig is om aan de sessievoorwaarden te voldoen
 function goodNeeded(sessionCorrect, sessionTotal) {
   for (var k = 0; k <= 100; k++) {
@@ -22,7 +25,8 @@ function goodNeeded(sessionCorrect, sessionTotal) {
 
 // autoNextLabel / onAutoNext (optioneel, alleen in Auto-modus): na een behaald level sluit
 // "Ga verder" de sessie eenmalig af en geeft het resultaat aan onAutoNext in plaats van onFinish.
-export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish, autoNextLabel, onAutoNext }) {
+// onProgress (optioneel): na elk antwoord het actuele sessieresultaat, voor de concept-sessie.
+export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish, autoNextLabel, onAutoNext, onProgress }) {
   var skillOrder = getSkillOrder(subjectId);
 
   // ── Initialisatie helpers ─────────────────────────────────────
@@ -92,6 +96,16 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var timeRef                    = useRef(Date.now());
   var advanceTimerRef            = useRef(null);
   var autoNextDoneRef            = useRef(false);
+  var conceptIdRef               = useRef(null);
+  if (conceptIdRef.current === null) {
+    CONCEPT_COUNTER++;
+    conceptIdRef.current = "c" + Date.now() + "-" + CONCEPT_COUNTER;
+  }
+
+  // Concept-sessie: na elk antwoord het actuele resultaat doorgeven (vangnet bij afsluiten)
+  useEffect(function() {
+    if (results.length > 0 && onProgress) onProgress(buildResult());
+  }, [results]);
 
   // Initialiseer sessionSkillStats voor alle skills
   useEffect(function() {
@@ -180,6 +194,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       sessionSkillStats: ss,
       dominantSkillId:   activeSkillIdRef.current,
       promotionSnapshots: promotionSnapRef.current,
+      conceptId:          conceptIdRef.current,
     };
   }
 

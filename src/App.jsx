@@ -20,6 +20,40 @@ var SHEET_TABS = [
   { id: "more",        label: "Meer",   icon: "⋯"       },
 ];
 
+// ── Concept-sessie (vangnet bij afsluiten van de app) ───────────────
+// Open concept: de lopende sessie, na elk antwoord bijgewerkt (nooit verstuurd).
+// Wachtrij: verstuurde sessies waarvan nog niet bevestigd is dat de opslag is geslaagd;
+// elk item bewaart het blok van de modus vóór en na de opslag (zoals handleFinish het verstuurde).
+// Bij het opstarten wordt de wachtrij op volgorde afgehandeld: blok = na → al bewaard,
+// blok = vóór → opnieuw opslaan, anders (conflict) → niet toepassen.
+var CONCEPT_KEY     = "rekenmeester_concept";
+var QUEUE_KEY       = "rekenmeester_wachtrij";
+var CONCEPT_VERSION = 1;
+
+function readLS(key) {
+  try { var s = localStorage.getItem(key); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+}
+function writeLS(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+function removeLS(key) {
+  try { localStorage.removeItem(key); } catch(e) {}
+}
+function readQueue() {
+  var q = readLS(QUEUE_KEY);
+  return Array.isArray(q) ? q : [];
+}
+function writeQueue(q) {
+  if (q.length > 0) writeLS(QUEUE_KEY, q); else removeLS(QUEUE_KEY);
+}
+
+// JSON met gesorteerde sleutels: de volgorde van velden uit Firestore is niet gegarandeerd
+function stableStr(v) {
+  if (v === null || typeof v !== "object") return JSON.stringify(v);
+  if (Array.isArray(v)) return "[" + v.map(stableStr).join(",") + "]";
+  return "{" + Object.keys(v).sort().map(function(k) { return JSON.stringify(k) + ":" + stableStr(v[k]); }).join(",") + "}";
+}
+
 // ── Auto-modus ──────────────────────────────────────────────────────
 // Vaste volgorde; na een behaald level gaat Auto naar de volgende modus die nog een level
 // kan opleveren. Volledig beheerste (of niet-beschikbare) modi worden overgeslagen.
@@ -93,6 +127,14 @@ export default function App() {
   var setAutoKey      = autoKeyState[1];
 
   var autoCountedRef  = useRef(false);
+
+  // Concept-sessie: herstel één keer na het laden; melding na een herstel
+  var restoredRef     = useRef(false);
+  // Herstelde sessies die nog bevestigd moeten worden: { ids: {id: true}, done: {id: true}, shown }
+  var restoreWaitRef  = useRef(null);
+  var noticeState     = useState(false);
+  var restoreNotice   = noticeState[0];
+  var setRestoreNotice = noticeState[1];
 
   // Vak Rekenen op Home: open of dicht, alleen in het geheugen (na herstart weer ingeklapt)
   var rekenenState    = useState(false);
@@ -204,10 +246,14 @@ export default function App() {
         next.bestStreak = Math.max(next.bestStreak || 0, next.streak);
       }
 
-      if (uid) saveToFirestore(uid, next);
+      var sendPromise;
+      if (uid) sendPromise = saveToFirestore(uid, next);
       else {
-        try { localStorage.setItem("cumlaude_save", JSON.stringify(next)); } catch(e) {}
+        var lsOk = false;
+        try { localStorage.setItem("cumlaude_save", JSON.stringify(next)); lsOk = true; } catch(e) {}
+        sendPromise = Promise.resolve(lsOk);
       }
+      noteSend(result, prev, next, sendPromise);
 
       if (uid && next.displayName) {
         var titelNu = getTitel(next.subjects.optellen ? (next.subjects.optellen.totalSkillsMastered || 0) : 0);
@@ -225,6 +271,95 @@ export default function App() {
     setLastResult(result);
     setScreen("result");
   }
+
+  // ── Concept-sessie ────────────────────────────────────────────────
+  // Na elk antwoord: het open concept bijwerken (synchroon in localStorage)
+  function handleProgress(result) {
+    if (!result || !(result.totalQuestions > 0) || !result.conceptId) return;
+    var r = JSON.parse(JSON.stringify(result));
+    r.sameSession = autoActive ? autoCountedRef.current : false;
+    writeLS(CONCEPT_KEY, { v: CONCEPT_VERSION, id: r.conceptId, uid: uid, result: r });
+  }
+
+  // Elke opslag via handleFinish: in de wachtrij (vóór/na-blok), open concept weg; pas bij
+  // een geslaagde opslag dit item én alle oudere wissen (elke opslag schrijft het hele document)
+  function noteSend(result, prev, next, sendPromise) {
+    var sid = result.subjectId;
+    var id  = result.conceptId || ("s" + Date.now());
+    var q   = readQueue().filter(function(e) { return e && e.id !== id; });
+    var seq = 1;
+    q.forEach(function(e) { if (e.seq >= seq) seq = e.seq + 1; });
+    q.push({
+      v: CONCEPT_VERSION, id: id, seq: seq, uid: uid, subjectId: sid,
+      pre:  stableStr((prev.subjects && prev.subjects[sid]) || null),
+      post: stableStr(next.subjects[sid]),
+      result: JSON.parse(JSON.stringify(result)),
+    });
+    writeQueue(q);
+    var c = readLS(CONCEPT_KEY);
+    if (c && c.id === id) removeLS(CONCEPT_KEY);
+    sendPromise.then(function(ok) {
+      if (!ok) return;
+      // Herstelmelding pas als ALLE herstelde sessies van deze start bevestigd zijn
+      var w = restoreWaitRef.current;
+      if (w && !w.shown && w.ids[id]) {
+        w.done[id] = true;
+        if (Object.keys(w.ids).every(function(k) { return w.done[k]; })) {
+          w.shown = true;
+          setRestoreNotice(true);
+        }
+      }
+      writeQueue(readQueue().filter(function(e) { return !(e && e.seq <= seq); }));
+    });
+  }
+
+  // Na het laden: wachtrij op volgorde afhandelen, daarna een open concept; ongeldig → wissen
+  function restorePending() {
+    var apply  = [];
+    var keep   = [];
+    var blocks = {};
+    function curBlock(sid) {
+      if (Object.prototype.hasOwnProperty.call(blocks, sid)) return blocks[sid];
+      return stableStr((save.subjects && save.subjects[sid]) || null);
+    }
+    readQueue().slice().sort(function(a, b) { return ((a && a.seq) || 0) - ((b && b.seq) || 0); }).forEach(function(e) {
+      if (!e || e.v !== CONCEPT_VERSION || e.uid !== uid || !e.result || !e.subjectId) return;
+      var b = curBlock(e.subjectId);
+      if (b === e.post) return;
+      if (b === e.pre) {
+        var r = e.result;
+        r.conceptId = e.id;
+        apply.push(r);
+        keep.push(e);
+        blocks[e.subjectId] = e.post;
+      }
+    });
+    writeQueue(keep);
+    var c = readLS(CONCEPT_KEY);
+    if (c && c.v === CONCEPT_VERSION && c.uid === uid && c.result && c.result.totalQuestions > 0 && c.result.conceptId === c.id) {
+      apply.push(c.result);
+    } else if (c) {
+      removeLS(CONCEPT_KEY);
+    }
+    if (apply.length === 0) return;
+    var wait = { ids: {}, done: {}, shown: false };
+    apply.forEach(function(r) { wait.ids[r.conceptId] = true; });
+    restoreWaitRef.current = wait;
+    apply.forEach(function(r) { handleFinish(r); });
+    setScreen("home");
+  }
+
+  useEffect(function() {
+    if (loading || needsName || restoredRef.current) return;
+    restoredRef.current = true;
+    restorePending();
+  }, [loading, needsName]);
+
+  useEffect(function() {
+    if (!restoreNotice) return;
+    var t = setTimeout(function() { setRestoreNotice(false); }, 5000);
+    return function() { clearTimeout(t); };
+  }, [restoreNotice]);
 
   // ── Auto-modus ────────────────────────────────────────────────────
   function openPractice(saveObj, sId) {
@@ -294,6 +429,8 @@ export default function App() {
   function handleReset() {
     if (!window.confirm("Weet je zeker dat je alles wilt wissen?")) return;
     var fresh = dClone(DEFAULT_SAVE);
+    removeLS(CONCEPT_KEY);
+    removeLS(QUEUE_KEY);
     setSave(fresh);
     if (uid) saveToFirestore(uid, fresh);
     else {
@@ -375,6 +512,7 @@ export default function App() {
         onFinish={handlePracticeFinish}
         autoNextLabel={autoNextLabel}
         onAutoNext={autoActive ? handleAutoNext : null}
+        onProgress={handleProgress}
       />
     );
   }
@@ -408,6 +546,31 @@ export default function App() {
   // ── Home + bottom sheet ───────────────────────────────────────────
   return (
     <div style={{ position: "relative", minHeight: "100dvh", background: T.bg }}>
+      {restoreNotice && (
+        <div
+          role="status"
+          onClick={function() { setRestoreNotice(false); }}
+          style={{
+            position: "fixed",
+            top: "calc(env(safe-area-inset-top, 0px) + 12px)",
+            left: 16,
+            right: 16,
+            zIndex: 200,
+            background: "#ecfdf5",
+            border: "1.5px solid #6ee7b7",
+            color: "#065f46",
+            borderRadius: 14,
+            padding: "12px 16px",
+            fontSize: 14,
+            fontWeight: 800,
+            textAlign: "center",
+            boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
+            cursor: "pointer",
+          }}
+        >
+          {"Je vorige oefensessie is bewaard."}
+        </div>
+      )}
       <HomeScreen
         save={save}
         uid={uid}
