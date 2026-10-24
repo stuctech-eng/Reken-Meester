@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { Screen, ProgressBar } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { getSkill, getNextSkill, getSubject, getSkillOrder } from "../core/subjects.js";
@@ -15,6 +15,9 @@ var SESSION_ACC = 0.70;
 var CONCEPT_COUNTER = 0;
 
 // Kleinste aantal goede sommen dat nog nodig is om aan de sessievoorwaarden te voldoen
+// Kleinste lettergrootte voor de vraagtekst wanneer die niet in de kaart past (zie vraaggrootte)
+var Q_FONT_MIN = 28;
+
 function goodNeeded(sessionCorrect, sessionTotal) {
   for (var k = 0; k <= 100; k++) {
     var t = sessionTotal + k;
@@ -371,6 +374,43 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   var isMultiLineQuestion = String(currentQuestion.question).indexOf("\n") !== -1;
 
+  // Vraaggrootte: past de vraag niet in de kaart (een lang woord of een brede regel), dan
+  // wordt alleen dan de letter kleiner, tot hoogstens Q_FONT_MIN. Past hij wel, dan blijft
+  // alles precies zoals het was (60 px, of 44 px voor vragen met regeleinden).
+  // Gemeten vóór het eerste beeld (useLayoutEffect), opnieuw als de letters geladen zijn
+  // (document.fonts.ready) en bij een andere schermbreedte. qFont staat niet in de
+  // afhankelijkheden, dus het meten veroorzaakt geen lus.
+  var qRef       = useRef(null);
+  var qFontState = useState(null);
+  var qFont      = qFontState[0];
+  var setQFont   = qFontState[1];
+  var qBase      = isMultiLineQuestion ? 44 : 60;
+
+  useLayoutEffect(function() {
+    var el = qRef.current;
+    if (!el) return undefined;
+    var active = true;
+    function needWidth() { return Math.max(el.scrollWidth, el.getBoundingClientRect().width); }
+    function fit() {
+      if (!active || !el.parentElement) return;
+      var parent = el.parentElement;
+      var cs     = window.getComputedStyle(parent);
+      var avail  = parent.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      el.style.fontSize = qBase + "px";
+      var f = qBase;
+      if (needWidth() > avail + 0.5) {
+        f = Math.max(Q_FONT_MIN, Math.floor(qBase * avail / needWidth()));
+        el.style.fontSize = f + "px";
+        while (f > Q_FONT_MIN && needWidth() > avail + 0.5) { f -= 1; el.style.fontSize = f + "px"; }
+      }
+      setQFont(f === qBase ? null : f);
+    }
+    fit();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    window.addEventListener("resize", fit);
+    return function() { active = false; window.removeEventListener("resize", fit); };
+  }, [currentQuestion.question, qBase]);
+
   // ── Render ────────────────────────────────────────────────────
   return (
     <Screen bg={A.bg} style={{ fontFamily: "'Nunito', 'Inter', system-ui, sans-serif" }}>
@@ -508,9 +548,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
           {/* De som — een vraag met regeleinden is een kolomsom: regels rechts uitgelijnd,
               cijfers even breed, streep onder de laatste regel. Zonder regeleinde: ongewijzigd. */}
-          <div style={isMultiLineQuestion ? {
+          <div ref={qRef} style={isMultiLineQuestion ? {
             display: "inline-block",
-            fontSize: 44,
+            fontSize: qFont || 44,
             fontWeight: 900,
             color: A.text,
             lineHeight: 1.15,
@@ -520,7 +560,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             borderBottom: "3px solid " + A.text,
             paddingBottom: 4,
           } : {
-            fontSize: 60,
+            fontSize: qFont || 60,
             fontWeight: 900,
             color: A.text,
             letterSpacing: -1.5,
