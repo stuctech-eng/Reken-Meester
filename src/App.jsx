@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { DEFAULT_SAVE, dClone, dMerge, calcXp, getTitel } from "./core/save.js";
 import { checkLevelUnlock, updateSkillStats, getNextSkill, getSkillOrder, getSubject } from "./core/subjects.js";
 import { initAuth } from "./services/firebase.js";
@@ -127,6 +127,26 @@ export default function App() {
   var setAutoKey      = autoKeyState[1];
 
   var autoCountedRef  = useRef(false);
+
+  // Scrollpositie bij schermwissel: de hele pagina scrolt, dus zonder dit opent een scherm
+  // op de scrollpositie van het vorige scherm. Elk scherm begint bovenaan; Home krijgt bij
+  // terugkeer zijn eigen laatste positie terug. Alleen in het geheugen, geen opslag.
+  var screenRef       = useRef(screen);
+  var homeScrollRef   = useRef(0);
+  screenRef.current   = screen;
+
+  useEffect(function() {
+    function onScroll() {
+      // Na een schermwissel kan de browser de positie bijstellen; dat telt niet als Home-positie
+      if (screenRef.current === "home") homeScrollRef.current = window.scrollY;
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return function() { window.removeEventListener("scroll", onScroll); };
+  }, []);
+
+  useLayoutEffect(function() {
+    window.scrollTo(0, screen === "home" ? homeScrollRef.current : 0);
+  }, [screen]);
 
   // Concept-sessie: herstel één keer na het laden; melding na een herstel
   var restoredRef     = useRef(false);
