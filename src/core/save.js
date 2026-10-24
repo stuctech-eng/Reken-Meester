@@ -87,6 +87,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "b01_strook",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Geld: zelfde structuur, eigen voortgang (modus nog onzichtbaar tot fase B3)
+    geld: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "g01_munt_waarde",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 

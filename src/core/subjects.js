@@ -6,6 +6,7 @@ import { AFTREK_SKILLS, AFTREK_ORDER } from "./skills/aftrekken.js";
 import { MAAL_SKILLS, MAAL_ORDER } from "./skills/vermenigvuldigen.js";
 import { DEEL_SKILLS, DEEL_ORDER } from "./skills/delen.js";
 import { BREUK_SKILLS, BREUK_ORDER } from "./skills/breuken.js";
+import { GELD_SKILLS, GELD_ORDER } from "./skills/geld.js";
 
 export var SUBJECTS = [
   {
@@ -78,6 +79,8 @@ export var SUBJECT_SKILLS = {
   vermenigvuldigen: { skills: MAAL_SKILLS, order: MAAL_ORDER },
   delen: { skills: DEEL_SKILLS, order: DEEL_ORDER },
   breuken: { skills: BREUK_SKILLS, order: BREUK_ORDER },
+  // Geld: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3)
+  geld: { skills: GELD_SKILLS, order: GELD_ORDER },
 };
 
 function getSubjectSkills(subjectId) {

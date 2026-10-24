@@ -579,7 +579,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                   border: "2.5px solid " + border,
                   background: bg,
                   color: color,
-                  fontSize: 38,
+                  // Muntrijen (Geld g10, g11, g24) hebben smallChoices: kleinere letter; anders ongewijzigd 38
+                  fontSize: currentQuestion.smallChoices ? 24 : 38,
                   fontWeight: 900,
                   boxShadow: shadow,
                   transition: "background 0.15s, border-color 0.15s, transform 0.1s",
