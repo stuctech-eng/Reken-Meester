@@ -102,6 +102,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "g01_munt_waarde",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Kommagetallen: zelfde structuur, eigen voortgang (modus nog onzichtbaar tot fase B3)
+    kommagetallen: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "k01_tienden_strook",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 
