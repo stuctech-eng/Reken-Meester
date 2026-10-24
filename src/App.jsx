@@ -266,6 +266,17 @@ export default function App() {
     }
   }
 
+  // ‹ in het oefenscherm: zelfde opslag als ✕ (als er sommen gemaakt zijn), daarna het
+  // modusscherm in plaats van het resultaatscherm
+  function handlePracticeBack(result) {
+    if (result && result.totalQuestions > 0) {
+      handlePracticeFinish(result);
+    } else {
+      setAutoActive(false);
+    }
+    setScreen("subject");
+  }
+
   useEffect(function() {
     if (pendingAuto === null) return;
     var fromId = pendingAuto;
@@ -360,7 +371,7 @@ export default function App() {
         subjectId={subjectId}
         level={practiceLevel}
         skillStats={practiceSkillStats}
-        onBack={function() { setAutoActive(false); setScreen("subject"); }}
+        onBack={handlePracticeBack}
         onFinish={handlePracticeFinish}
         autoNextLabel={autoNextLabel}
         onAutoNext={autoActive ? handleAutoNext : null}

@@ -138,6 +138,11 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     onFinish(buildResult());
   }
 
+  // ‹ geeft hetzelfde sessieresultaat mee als ✕; App bepaalt of er wordt opgeslagen
+  function handleBack() {
+    onBack(buildResult());
+  }
+
   function buildResult() {
     var ss    = sessionSkillStatsRef.current;
     var total = 0;
@@ -341,7 +346,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         }}>
           {/* Terug / Sluiten knop */}
           <button
-            onClick={onBack}
+            onClick={handleBack}
             style={{
               background: A.bgCard,
               border: "1.5px solid " + A.border,
