@@ -6,6 +6,19 @@ import { getTitel, calcXp } from "../core/save.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
+// Sessievoorwaarden voor een level (zelfde regel als meetsMastery in subjects.js):
+// minstens SESSION_MIN sommen van deze skill in de sessie en minstens SESSION_ACC goed.
+var SESSION_MIN = 4;
+var SESSION_ACC = 0.70;
+
+// Kleinste aantal goede sommen dat nog nodig is om aan de sessievoorwaarden te voldoen
+function goodNeeded(sessionCorrect, sessionTotal) {
+  for (var k = 0; k <= 100; k++) {
+    var t = sessionTotal + k;
+    if (t >= SESSION_MIN && (sessionCorrect + k) / t >= SESSION_ACC) return k;
+  }
+  return 0;
+}
 
 // autoNextLabel / onAutoNext (optioneel, alleen in Auto-modus): na een behaald level sluit
 // "Ga verder" de sessie eenmalig af en geeft het resultaat aan onAutoNext in plaats van onFinish.
@@ -277,7 +290,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         var checkSkill      = getSkill(subjectId, answerSkillId);
         var minC            = checkSkill ? (checkSkill.minCorrect || 8) : 8;
 
-        if (cumulativeC >= minC && sessionTotal >= 4 && sessionAcc >= 0.70) {
+        if (cumulativeC >= minC && sessionTotal >= SESSION_MIN && sessionAcc >= SESSION_ACC) {
           promotedThisSession.current.add(answerSkillId);
           promotionSnapRef.current[answerSkillId] = { correct: sessionCorrect, total: sessionTotal };
 
@@ -321,6 +334,23 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     : 0;
   var skillTarget   = currentSkill ? (currentSkill.minCorrect || 8) : 8;
   var skillProgress = Math.min(storedCorrectForSkill + sessionCorrectForSkill, skillTarget);
+
+  // Voortgangsregel onder de kop: opgeslagen + deze sessie, alleen weergave
+  var sessionTotalForSkill = sessionSkillStatsRef.current[currentQuestion.skillId]
+    ? sessionSkillStatsRef.current[currentQuestion.skillId].total
+    : 0;
+  var skillMastered = !!(skillStats && skillStats[currentQuestion.skillId] && skillStats[currentQuestion.skillId].mastered)
+    || promotedThisSession.current.has(currentQuestion.skillId);
+  var stillNeeded = goodNeeded(sessionCorrectForSkill, sessionTotalForSkill);
+  var progressText;
+  if (skillMastered) {
+    progressText = "Beheerst ✓";
+  } else if (storedCorrectForSkill + sessionCorrectForSkill >= skillTarget && stillNeeded > 0) {
+    progressText = skillTarget + " van " + skillTarget + " goed · nog " + stillNeeded + (stillNeeded === 1 ? " goede som deze keer" : " goede sommen deze keer");
+  } else {
+    progressText = "Opgeslagen voortgang: " + skillProgress + " van " + skillTarget + " goed";
+  }
+  var progressPct = skillMastered ? 100 : Math.round(skillProgress / skillTarget * 100);
 
   var showUitlegBlock = feedback === "wrong" && fbLevel > 0 && currentSkill && uitlegVisible;
 
@@ -402,11 +432,19 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           </button>
         </div>
 
-        {/* Sessieteller — aantal goed deze sessie */}
+        {/* Voortgang van deze vaardigheid (opgeslagen + nu) en sessieteller (alleen deze keer) */}
         <div style={{ padding: "0 20px 12px" }}>
-          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-            <span style={{ fontSize: T.xs, color: A.primary, fontWeight: 800 }}>
-              {results.filter(function(r) { return r.correct; }).length + " goed"}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: T.xs, color: A.textMid, fontWeight: 700, lineHeight: 1.3 }}>
+                {progressText}
+              </div>
+              <div style={{ height: 4, background: A.border, borderRadius: A.r999, overflow: "hidden", marginTop: 4 }}>
+                <div style={{ height: "100%", width: progressPct + "%", background: A.primary, borderRadius: A.r999, transition: "width 0.3s" }} />
+              </div>
+            </div>
+            <span style={{ fontSize: T.xs, color: A.primary, fontWeight: 800, flexShrink: 0, whiteSpace: "nowrap" }}>
+              {results.filter(function(r) { return r.correct; }).length + " goed deze keer"}
             </span>
           </div>
         </div>
