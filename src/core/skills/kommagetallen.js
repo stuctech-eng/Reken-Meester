@@ -219,18 +219,20 @@ var RAW_SKILLS = [
     id: "k01_tienden_strook",
     label: "Tienden op een strook",
     group: G1,
-    desc: "■■■□□□□□□□ = 0,3",
+    desc: "■■■□□ □□□□□ = 0,3",
     strategy: "tellen",
-    tip: function(t) { return "De strook heeft 10 vakjes. Elk vakje is 0,1. " + t[1] + " vakjes is " + fmt(t[1] * T) + "."; },
-    uitleg: "Verdeel een geheel in 10 gelijke stukken. Eén stuk is een tiende: 0,1. Drie stukken is 0,3. Het cijfer achter de komma telt de tienden.",
-    voorbeeld: "■■■■■■■□□□\n7 van de 10 vakjes.\nAntwoord: 0,7.",
+    tip: function(t) { return "2 rijen van 5 = 10 vakjes. Elk vakje is 0,1. " + t[1] + " vakjes is " + fmt(t[1] * T) + "."; },
+    uitleg: "Verdeel een geheel in 10 gelijke stukken: hier 2 rijen van 5 = 10 vakjes. Eén vakje is een tiende: 0,1. Drie vakjes is 0,3. Het cijfer achter de komma telt de tienden.",
+    voorbeeld: "■■■■■\n■■□□□\n7 van de 10 vakjes.\nAntwoord: 0,7.",
     minCorrect: 8,
     deck: true,
     make: function() {
       var it = deckPick("k01_tienden_strook", ITEMS_STROOK);
       var n = it[1];
       if (it[0] === 0) {
-        var q = FULL.repeat(n) + EMPTY.repeat(10 - n) + "\nWelk deel?";
+        // 2 rijen van 5: één rij van 10 vakjes past niet in de vraagkaart (kolomweergave, 44 px)
+        var cells = FULL.repeat(n) + EMPTY.repeat(10 - n);
+        var q = cells.slice(0, 5) + "\n" + cells.slice(5) + "\nWelk deel?";
         return numQ(q, n * T, [(10 - n) * T, n * H, n * ONE, (n + 1) * T], it);
       }
       return numQ(fmt(n * T) + " = hoeveel tienden?", n * ONE, [n * 10 * ONE, (10 - n) * ONE, (n + 1) * ONE, (n - 1) * ONE], it);
