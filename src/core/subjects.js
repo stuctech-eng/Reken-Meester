@@ -88,6 +88,17 @@ export var SUBJECTS = [
     levels: 10,
     group: "rekenen",
   },
+  {
+    id: "meten",
+    label: "Meten",
+    icon: "m",
+    color: "#0d9488",
+    lightColor: "#f0fdfa",
+    description: "Lengte, gewicht en inhoud",
+    available: true,
+    levels: 10,
+    group: "praktisch",
+  },
 ];
 
 export function getSubject(id) {
@@ -110,9 +121,7 @@ export var SUBJECT_SKILLS = {
   breuken: { skills: BREUK_SKILLS, order: BREUK_ORDER },
   geld: { skills: GELD_SKILLS, order: GELD_ORDER },
   kommagetallen: { skills: KOMMA_SKILLS, order: KOMMA_ORDER },
-  // Meten: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3).
-  // B3: groep "praktisch", icoon "m", teal #0d9488 / #f0fdfa, niet in Auto.
-  meten: { skills: METEN_SKILLS, order: METEN_ORDER },
+  meten:{ skills: METEN_SKILLS, order: METEN_ORDER },
 };
 
 function getSubjectSkills(subjectId) {
