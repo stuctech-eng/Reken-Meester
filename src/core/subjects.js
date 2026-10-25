@@ -76,7 +76,7 @@ export var SUBJECTS = [
     icon: "0,1",
     color: "#7c3aed",
     lightColor: "#f5f3ff",
-    description: "Tienden, honderdsten en rekenen",
+    description: "Tienden en honderdsten",
     available: true,
     levels: 10,
   },

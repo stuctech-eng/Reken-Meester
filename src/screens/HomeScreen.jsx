@@ -230,10 +230,21 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, r
               <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 2 }}>
                 {rekenenOpen
                   ? (onAuto ? "Auto wisselt tussen + − × ÷ na elk behaald level" : "Auto: + − × ÷ beheerst")
-                  : SUBJECTS.filter(function(s) { return s.available; }).map(function(s) {
+                  : SUBJECTS.filter(function(s) { return s.available; }).map(function(s, i) {
+                      // Elk onderdeel breekt niet af (teken en aantal blijven samen); het teken
+                      // in de kleur van de modus, zodat "0,1 0" leest als teken + aantal.
+                      // De tekst zelf is ongewijzigd: "+ 2  ·  − 3  ·  ..."
                       var sd = (save.subjects && save.subjects[s.id]) ? save.subjects[s.id] : {};
-                      return s.icon + " " + (sd.totalSkillsMastered || 0);
-                    }).join("  ·  ")}
+                      return (
+                        <span key={s.id}>
+                          {i > 0 ? "  ·  " : ""}
+                          <span style={{ whiteSpace: "nowrap" }}>
+                            <span style={{ color: s.color, fontWeight: 800 }}>{s.icon}</span>
+                            {" " + (sd.totalSkillsMastered || 0)}
+                          </span>
+                        </span>
+                      );
+                    })}
               </div>
             </button>
             <button
