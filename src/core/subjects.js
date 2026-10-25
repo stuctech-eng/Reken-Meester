@@ -100,6 +100,17 @@ export var SUBJECTS = [
     levels: 10,
     group: "praktisch",
   },
+  {
+    id: "tijd",
+    label: "Tijd",
+    icon: "u",
+    color: "#2563eb",
+    lightColor: "#eff6ff",
+    description: "Klok, duur en kalender",
+    available: true,
+    levels: 10,
+    group: "praktisch",
+  },
 ];
 
 export function getSubject(id) {
@@ -123,8 +134,6 @@ export var SUBJECT_SKILLS = {
   geld: { skills: GELD_SKILLS, order: GELD_ORDER },
   kommagetallen: { skills: KOMMA_SKILLS, order: KOMMA_ORDER },
   meten: { skills: METEN_SKILLS, order: METEN_ORDER },
-  // Tijd en kalender: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3).
-  // B3: groep "praktisch", icoon "u", blauw #2563eb / #eff6ff, niet in Auto.
   tijd: { skills: TIJD_SKILLS, order: TIJD_ORDER },
 };
 
