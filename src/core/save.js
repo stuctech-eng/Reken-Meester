@@ -132,6 +132,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "m01_eenheid_kiezen",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Tijd en kalender (Praktisch rekenen): zelfde structuur, eigen voortgang (modus nog onzichtbaar tot fase B3)
+    tijd: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "t01_half_heel",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 
