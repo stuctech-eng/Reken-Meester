@@ -196,10 +196,14 @@ export default function App() {
   var restoreNotice   = noticeState[0];
   var setRestoreNotice = noticeState[1];
 
-  // Vak Rekenen op Home: open of dicht, alleen in het geheugen (na herstart weer ingeklapt)
-  var rekenenState    = useState(false);
-  var rekenenOpen     = rekenenState[0];
-  var setRekenenOpen  = rekenenState[1];
+  // Vakken op Home: open of dicht per vak, alleen in het geheugen (na herstart weer ingeklapt)
+  var openBoxesState  = useState({});
+  var openBoxes       = openBoxesState[0];
+  var setOpenBoxes    = openBoxesState[1];
+
+  function toggleBox(id) {
+    setOpenBoxes(function(prev) { var next = Object.assign({}, prev); next[id] = !prev[id]; return next; });
+  }
 
   var sheetTabState = useState("leaderboard");
   var sheetTab      = sheetTabState[0];
@@ -639,8 +643,8 @@ export default function App() {
         onSubject={function(id) { setSubjectId(id); setScreen("subject"); }}
         onAuto={autoSubjectFrom(save, "optellen", true) ? startAuto : null}
         autoAll={autoBasisOk(save)}
-        rekenenOpen={rekenenOpen}
-        onToggleRekenen={function() { setRekenenOpen(!rekenenOpen); }}
+        openBoxes={openBoxes}
+        onToggleBox={toggleBox}
         onSettings={function() { setScreen("settings"); }}
       />
 

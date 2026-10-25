@@ -19,6 +19,7 @@ export var SUBJECTS = [
     description: "Getallen bij elkaar optellen",
     available: true,
     levels: 10,
+    group: "rekenen",
   },
   {
     id: "aftrekken",
@@ -29,6 +30,7 @@ export var SUBJECTS = [
     description: "Getallen van elkaar aftrekken",
     available: true,
     levels: 10,
+    group: "rekenen",
   },
   {
     id: "vermenigvuldigen",
@@ -39,6 +41,7 @@ export var SUBJECTS = [
     description: "Tafels en vermenigvuldigen",
     available: true,
     levels: 10,
+    group: "rekenen",
   },
   {
     id: "delen",
@@ -49,6 +52,7 @@ export var SUBJECTS = [
     description: "Delen en verdelen",
     available: true,
     levels: 10,
+    group: "rekenen",
   },
   {
     id: "breuken",
@@ -59,6 +63,7 @@ export var SUBJECTS = [
     description: "Breuken begrijpen en rekenen",
     available: true,
     levels: 10,
+    group: "rekenen",
   },
   {
     id: "geld",
@@ -69,6 +74,7 @@ export var SUBJECTS = [
     description: "Rekenen met euro's en centen",
     available: true,
     levels: 10,
+    group: "rekenen",
   },
   {
     id: "kommagetallen",
@@ -79,6 +85,7 @@ export var SUBJECTS = [
     description: "Tienden en honderdsten",
     available: true,
     levels: 10,
+    group: "rekenen",
   },
 ];
 
