@@ -1,17 +1,39 @@
 import { Screen, Card, Btn, ProgressBar, Badge, Heading } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { SUBJECTS } from "../core/subjects.js";
-import { getAccuracy, getTitel, getNextTitel } from "../core/save.js";
+import { getTitel, getNextTitel } from "../core/save.js";
 import { getSkillOrder } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
+// Totalen voor een vak: beheerste skills, alle skills, goed en gemaakt over de gegeven modi
+function boxTotals(save, subjects) {
+  var t = { mastered: 0, max: 0, correct: 0, questions: 0 };
+  subjects.forEach(function(s) {
+    var d = (save.subjects && save.subjects[s.id]) || {};
+    t.mastered  += d.totalSkillsMastered || 0;
+    t.max       += getSkillOrder(s.id).length;
+    t.correct   += d.totalCorrect || 0;
+    t.questions += d.totalQuestions || 0;
+  });
+  t.pct = t.max > 0 ? Math.round(t.mastered / t.max * 100) : 0;
+  return t;
+}
+
 // onAuto: start de Auto-modus; null als geen enkele modus nog een level kan opleveren
 // rekenenOpen / onToggleRekenen: open of dicht van het vak Rekenen (stand bewaard in App)
 export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, autoAll, rekenenOpen, onToggleRekenen }) {
-  var optData       = save.subjects && save.subjects.optellen ? save.subjects.optellen : {};
-  var acc           = getAccuracy(optData);
+  // Bovenste kaart: de laatst geoefende modus (lastSubjectId); zonder die waarde de eerste modus
+  var availSubjects = SUBJECTS.filter(function(s) { return s.available; });
+  var heroSubject   = availSubjects.filter(function(s) { return s.id === save.lastSubjectId; })[0] || availSubjects[0];
+  var optData       = save.subjects && save.subjects[heroSubject.id] ? save.subjects[heroSubject.id] : {};
   var totalMastered = optData.totalSkillsMastered || 0;
+  var heroMax       = getSkillOrder(heroSubject.id).length;
+  // Nauwkeurigheid over alle zichtbare modi samen
+  var accAll        = boxTotals(save, availSubjects);
+  var acc           = accAll.questions > 0 ? Math.round(accAll.correct / accAll.questions * 100) : 0;
+  // Totaalbalk per vak (nu: het vak Rekenen = alle zichtbare modi)
+  var rekenenTotals = boxTotals(save, availSubjects);
   var titelObj      = getTitel(totalMastered);
   var nextTitelObj  = getNextTitel(totalMastered);
 
@@ -80,8 +102,14 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
       }}>
 
         {/* Progressie hero card */}
-        <div style={{
-          background: A.primary,
+        <div
+          role="button"
+          aria-label={"Verder met " + heroSubject.label}
+          onClick={function() { onSubject(heroSubject.id); }}
+          style={{
+          background: heroSubject.color,
+          cursor: "pointer",
+          WebkitTapHighlightColor: "transparent",
           borderRadius: A.r20,
           padding: "22px 20px 18px",
           boxShadow: A.shadowLg,
@@ -113,7 +141,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, position: "relative" }}>
             <div>
               <div style={{ fontSize: T.xs, color: "rgba(255,255,255,0.70)", fontWeight: 700, letterSpacing: 0.8, marginBottom: 4 }}>
-                {"OPTELLEN \u00b7 JOUW TITEL"}
+                {heroSubject.icon + "  " + heroSubject.label.toUpperCase() + " \u00b7 JOUW TITEL"}
               </div>
               <div style={{ fontSize: T.xxl, fontWeight: 900, color: "#ffffff", lineHeight: 1.1 }}>
                 {titelObj.label}
@@ -130,7 +158,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
                 {totalMastered}
               </div>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.70)", fontWeight: 700, marginTop: 1 }}>
-                {"/ " + getSkillOrder("optellen").length + " skills"}
+                {"/ " + heroMax + " skills"}
               </div>
             </div>
           </div>
@@ -145,7 +173,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
           }}>
             <div style={{
               height: "100%",
-              width: Math.round((totalMastered / getSkillOrder("optellen").length) * 100) + "%",
+              width: Math.round((totalMastered / heroMax) * 100) + "%",
               background: "#ffffff",
               borderRadius: A.r999,
               transition: "width 0.5s ease",
@@ -157,6 +185,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
               ? ((nextTitelObj.minSkills - totalMastered) + ((nextTitelObj.minSkills - totalMastered) === 1 ? " skill voor " : " skills voor ") + nextTitelObj.label)
               : ("Alle skills beheerst! \U0001F393")
             }
+            {"  \u00b7  Tik om verder te gaan \u203a"}
           </div>
         </div>
 
@@ -227,26 +256,21 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
               <div style={{ fontSize: T.xl, fontWeight: 900, color: A.text, lineHeight: 1.1 }}>
                 {(rekenenOpen ? "▾ " : "▸ ") + "Rekenen"}
               </div>
-              <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 2 }}>
-                {rekenenOpen
-                  ? (autoAll
+              {/* Groene totaalbalk van dit vak, altijd zichtbaar; opengeklapt ook de Auto-tekst */}
+              <div style={{ marginTop: 8 }}>
+                <div style={{ height: 8, background: A.border, borderRadius: A.r999, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: rekenenTotals.pct + "%", background: A.success, borderRadius: A.r999, transition: "width 0.5s ease" }} />
+                </div>
+                <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 700, marginTop: 5 }}>
+                  {rekenenTotals.mastered + " van " + rekenenTotals.max + " skills \u00b7 " + rekenenTotals.pct + "%"}
+                </div>
+                {rekenenOpen && (
+                  <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 2 }}>
+                    {autoAll
                       ? (onAuto ? "Auto wisselt tussen alle modi na elk behaald level" : "Auto: alle modi beheerst")
-                      : (onAuto ? "Auto wisselt tussen + − × ÷ na elk behaald level" : "Auto: + − × ÷ beheerst"))
-                  : SUBJECTS.filter(function(s) { return s.available; }).map(function(s, i) {
-                      // Elk onderdeel breekt niet af (teken en aantal blijven samen); het teken
-                      // in de kleur van de modus, zodat "0,1 0" leest als teken + aantal.
-                      // De tekst zelf is ongewijzigd: "+ 2  ·  − 3  ·  ..."
-                      var sd = (save.subjects && save.subjects[s.id]) ? save.subjects[s.id] : {};
-                      return (
-                        <span key={s.id}>
-                          {i > 0 ? "  ·  " : ""}
-                          <span style={{ whiteSpace: "nowrap" }}>
-                            <span style={{ color: s.color, fontWeight: 800 }}>{s.icon}</span>
-                            {" " + (sd.totalSkillsMastered || 0)}
-                          </span>
-                        </span>
-                      );
-                    })}
+                      : (onAuto ? "Auto wisselt tussen + − × ÷ na elk behaald level" : "Auto: + − × ÷ beheerst")}
+                  </div>
+                )}
               </div>
             </button>
             <button

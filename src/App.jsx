@@ -255,6 +255,9 @@ export default function App() {
       subj.xp              = (subj.xp || 0) + result.totalXp;
 
       // ── Skill stats bijwerken ────────────────────────────────────
+      // Laatst geoefende modus (voor de bovenste kaart op Home)
+      next.lastSubjectId = result.subjectId;
+
       var currentSkillStats = mergeSessionSkills(result.subjectId, subj.skillStats || {}, result);
       subj.skillStats = currentSkillStats;
 
