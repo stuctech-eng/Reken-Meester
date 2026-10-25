@@ -807,7 +807,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 WebkitTapHighlightColor: "transparent",
               }}
             >
-              {autoNextLabel && onAutoNext ? autoNextLabel : "Ga verder →"}
+              {autoNextLabel && onAutoNext ? (typeof autoNextLabel === "function" ? autoNextLabel(buildResult()) : autoNextLabel) : "Ga verder →"}
             </button>
           </div>
         </div>

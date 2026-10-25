@@ -57,7 +57,46 @@ function stableStr(v) {
 // ── Auto-modus ──────────────────────────────────────────────────────
 // Vaste volgorde; na een behaald level gaat Auto naar de volgende modus die nog een level
 // kan opleveren. Volledig beheerste (of niet-beschikbare) modi worden overgeslagen.
-var AUTO_ORDER = ["optellen", "aftrekken", "vermenigvuldigen", "delen"];
+// Breuken, Geld en Kommagetallen doen pas mee als de basis er is: in vermenigvuldigen
+// én delen zijn de eerste AUTO_BASIS_SKILLS skills (alle tafels) beheerst.
+var AUTO_ORDER        = ["optellen", "aftrekken", "vermenigvuldigen", "delen"];
+var AUTO_EXTRA        = ["breuken", "geld", "kommagetallen"];
+var AUTO_BASIS_SKILLS = 18;
+
+function autoBasisOk(saveObj) {
+  return ["vermenigvuldigen", "delen"].every(function(id) {
+    var stats = (saveObj.subjects && saveObj.subjects[id] && saveObj.subjects[id].skillStats) || {};
+    return getSkillOrder(id).slice(0, AUTO_BASIS_SKILLS).every(function(sid) {
+      return !!(stats[sid] && stats[sid].mastered);
+    });
+  });
+}
+
+function autoOrder(saveObj) {
+  return autoBasisOk(saveObj) ? AUTO_ORDER.concat(AUTO_EXTRA) : AUTO_ORDER;
+}
+
+// Sessie-uitkomsten verwerken in skillStats (gedeeld door handleFinish en de voorlopige
+// stand voor de Auto-knoptekst, zodat beide exact dezelfde regel gebruiken)
+function mergeSessionSkills(subjectId, stats, result) {
+  var out = stats;
+  var sessionSkills = result.sessionSkillStats || {};
+  for (var skillId in sessionSkills) {
+    var ss = sessionSkills[skillId];
+    out = updateSkillStats(subjectId, out, skillId, ss.correct, ss.total, (result.promotionSnapshots || {})[skillId]);
+  }
+  return out;
+}
+
+// Voorlopige stand: huidige opslag + de skills van deze sessie (niet opgeslagen)
+function previewSave(saveObj, result) {
+  var next = dClone(saveObj);
+  next.subjects = next.subjects || {};
+  var subj = next.subjects[result.subjectId] || {};
+  subj.skillStats = mergeSessionSkills(result.subjectId, subj.skillStats || {}, result);
+  next.subjects[result.subjectId] = subj;
+  return next;
+}
 
 function canLevel(saveObj, id) {
   var subject = getSubject(id);
@@ -69,12 +108,13 @@ function canLevel(saveObj, id) {
 // includeFrom: fromId zelf eerst proberen (start). Anders eerst de volgende modi en als
 // laatste fromId zelf (als alle andere modi volledig beheerst zijn).
 function autoSubjectFrom(saveObj, fromId, includeFrom) {
-  var start = AUTO_ORDER.indexOf(fromId);
+  var order = autoOrder(saveObj);
+  var start = order.indexOf(fromId);
   if (start === -1) start = 0;
   var first = includeFrom ? 0 : 1;
-  var last  = includeFrom ? AUTO_ORDER.length - 1 : AUTO_ORDER.length;
+  var last  = includeFrom ? order.length - 1 : order.length;
   for (var k = first; k <= last; k++) {
-    var id = AUTO_ORDER[(start + k) % AUTO_ORDER.length];
+    var id = order[(start + k) % order.length];
     if (canLevel(saveObj, id)) return id;
   }
   return null;
@@ -215,13 +255,7 @@ export default function App() {
       subj.xp              = (subj.xp || 0) + result.totalXp;
 
       // ── Skill stats bijwerken ────────────────────────────────────
-      var currentSkillStats = subj.skillStats || {};
-      var sessionSkills     = result.sessionSkillStats || {};
-      var skillId;
-      for (skillId in sessionSkills) {
-        var ss = sessionSkills[skillId];
-        currentSkillStats = updateSkillStats(result.subjectId, currentSkillStats, skillId, ss.correct, ss.total, (result.promotionSnapshots || {})[skillId]);
-      }
+      var currentSkillStats = mergeSessionSkills(result.subjectId, subj.skillStats || {}, result);
       subj.skillStats = currentSkillStats;
 
       // Bereken volgende skill
@@ -515,12 +549,17 @@ export default function App() {
   if (screen === "practice") {
     var practiceSubjData = (save.subjects && save.subjects[subjectId]) || {};
     var practiceSkillStats = practiceSubjData.skillStats || {};
+    // Knoptekst na een behaald level: berekend met de voorlopige stand (opslag + deze sessie),
+    // dus dezelfde modus die handleAutoNext daarna opent — ook op het moment dat de basis
+    // net gehaald wordt
     var autoNextLabel = null;
     if (autoActive) {
-      var autoNextId = autoSubjectFrom(save, subjectId, false);
-      autoNextLabel = autoNextId && autoNextId !== subjectId
-        ? "Door naar " + getSubject(autoNextId).label + " →"
-        : "Ga verder →";
+      autoNextLabel = function(result) {
+        var autoNextId = autoSubjectFrom(previewSave(save, result), subjectId, false);
+        return autoNextId && autoNextId !== subjectId
+          ? "Door naar " + getSubject(autoNextId).label + " →"
+          : "Ga verder →";
+      };
     }
     return (
       <PracticeScreen
@@ -596,6 +635,7 @@ export default function App() {
         uid={uid}
         onSubject={function(id) { setSubjectId(id); setScreen("subject"); }}
         onAuto={autoSubjectFrom(save, "optellen", true) ? startAuto : null}
+        autoAll={autoBasisOk(save)}
         rekenenOpen={rekenenOpen}
         onToggleRekenen={function() { setRekenenOpen(!rekenenOpen); }}
         onSettings={function() { setScreen("settings"); }}

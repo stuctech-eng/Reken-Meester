@@ -8,7 +8,7 @@ import { getSkillOrder } from "../core/subjects.js";
 
 // onAuto: start de Auto-modus; null als geen enkele modus nog een level kan opleveren
 // rekenenOpen / onToggleRekenen: open of dicht van het vak Rekenen (stand bewaard in App)
-export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, rekenenOpen, onToggleRekenen }) {
+export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, autoAll, rekenenOpen, onToggleRekenen }) {
   var optData       = save.subjects && save.subjects.optellen ? save.subjects.optellen : {};
   var acc           = getAccuracy(optData);
   var totalMastered = optData.totalSkillsMastered || 0;
@@ -229,7 +229,9 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, r
               </div>
               <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 2 }}>
                 {rekenenOpen
-                  ? (onAuto ? "Auto wisselt tussen + − × ÷ na elk behaald level" : "Auto: + − × ÷ beheerst")
+                  ? (autoAll
+                      ? (onAuto ? "Auto wisselt tussen alle modi na elk behaald level" : "Auto: alle modi beheerst")
+                      : (onAuto ? "Auto wisselt tussen + − × ÷ na elk behaald level" : "Auto: + − × ÷ beheerst"))
                   : SUBJECTS.filter(function(s) { return s.available; }).map(function(s, i) {
                       // Elk onderdeel breekt niet af (teken en aantal blijven samen); het teken
                       // in de kleur van de modus, zodat "0,1 0" leest als teken + aantal.
