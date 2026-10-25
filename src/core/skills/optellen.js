@@ -13,6 +13,7 @@ import {
   shuffle,
   wrongChoices,
 } from "./helpers.js";
+import { round10, estimateChoices, randomWith, fairEstimate } from "./flow.js";
 
 // ─────────────────────────────────────────────────────────────────
 // FOUT-SPOTTER (makeErrorQ)
@@ -759,20 +760,20 @@ export var OPTELLEN_SKILLS = [
     group: "Afronden en schatten",
     desc: "48 + 31 ≈ 50 + 30 = 80 (geschat)",
     strategy: "schatten",
-    tip: "Rond beide getallen af op tientallen, tel die op voor een snelle schatting.",
-    uitleg: "Schatten = afronden en snel optellen. 48 + 31: afrond naar 50 en 30, som is 80. De echte uitkomst is 79 — dicht in de buurt! Handig om snel te controleren of een antwoord klopt.",
+    tip: function(t) { var a = round10(t[0]), b = round10(t[1]); return "Rond af op tientallen: " + t[0] + " wordt " + a + " en " + t[1] + " wordt " + b + ". " + a + " + " + b + " = " + (a + b) + "."; },
+    uitleg: "Schatten = eerst afronden, dan snel optellen. Kijk naar de eenheden: 1 tot en met 4 naar beneden, 6 tot en met 9 naar boven. 48 + 31: 50 + 30 = 80. De echte uitkomst is 79 — dicht in de buurt! Handig om snel te controleren of een antwoord klopt.",
     voorbeeld: "Schat: 67 + 24 ≈ ?\n70 + 20 = 90. (Echt antwoord: 91.)",
     minCorrect: 8,
     generate: function() {
-      var a = rnd(11, 89);
-      var b = rnd(11, 89);
-      var aR = Math.round(a / 10) * 10;
-      var bR = Math.round(b / 10) * 10;
-      var answer = aR + bR;
-      var ws = [answer - 20, answer + 20, answer - 10].filter(function(v){ return v >= 0; });
-      while (ws.length < 3) ws.push(answer + (ws.length + 1) * 10);
-      var choices = shuffle([answer].concat(ws.slice(0, 3)));
-      return { question: "Schat: " + a + " + " + b + " ≈ ?", answer: answer, choices: choices };
+      return randomWith(function() {
+        var a = rnd(11, 89);
+        var b = rnd(11, 89);
+        // Geen grensgeval (eenheid 5) en de schatting moet ook de dichtstbijzijnde keuze zijn
+        if (a % 10 === 5 || b % 10 === 5) return null;
+        var answer = round10(a) + round10(b);
+        if (!fairEstimate(a + b, answer, 10)) return null;
+        return { terms: [a, b], question: "Schat: " + a + " + " + b + " ≈ ?", answer: answer, choices: estimateChoices(answer, 10) };
+      });
     },
   },
 

@@ -117,6 +117,13 @@ export function estimateChoices(answer, step) {
   return shuffle([answer].concat(shuffle(opts).slice(0, 3)));
 }
 
+// Schatvraag eenduidig: de schatting (eerst afronden, dan rekenen) ligt STRIKT dichter dan een
+// halve stap bij de echte uitkomst. Dan ligt geen enkele andere keuze (veelvouden van de stap)
+// dichter bij de echte uitkomst dan het goede antwoord.
+export function fairEstimate(exact, estimate, step) {
+  return Math.abs(exact - estimate) * 2 < step;
+}
+
 export function randomWith(fn) {
   for (var i = 0; i < 500; i++) {
     var r = fn();

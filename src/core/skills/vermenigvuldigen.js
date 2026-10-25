@@ -7,7 +7,7 @@
 
 import { rnd, shuffle } from "./helpers.js";
 import {
-  makeChoices, digitsOf, round10, estimateChoices, randomWith,
+  makeChoices, digitsOf, round10, estimateChoices, randomWith, fairEstimate,
   registerSkillId, createSkills, createMixer, deckPick,
 } from "./flow.js";
 
@@ -791,6 +791,8 @@ var RAW_SKILLS = [
         var b = sub === 0 ? rnd(3, 9) : rnd(21, 99);
         if (a % 10 === 0) return null;
         if (sub === 1 && b % 10 === 0) return null;
+        // Geen grensgeval (eenheid 5)
+        if (a % 10 === 5 || (sub === 1 && b % 10 === 5)) return null;
         var ra = round10(a);
         var rb = sub === 0 ? b : round10(b);
         var est = ra * rb;
@@ -798,6 +800,8 @@ var RAW_SKILLS = [
         var exact = a * b;
         // Ondubbelzinnig: de exacte uitkomst is nooit gelijk aan of een veelvoud zoals de keuzes
         if (exact === est || exact % step === 0) return null;
+        // De schatting moet ook de dichtstbijzijnde keuze bij de echte uitkomst zijn
+        if (!fairEstimate(exact, est, step)) return null;
         return { terms: [a, b], question: "Schat: " + a + SP_TIMES + b + " " + APPROX + " ?", answer: est, choices: estimateChoices(est, step) };
       });
     },

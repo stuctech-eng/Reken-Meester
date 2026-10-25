@@ -6,7 +6,7 @@
 
 import { rnd, shuffle } from "./helpers.js";
 import {
-  makeChoices, digitsOf, hasZeroDigit, round10, round100, estimateChoices, randomWith,
+  makeChoices, digitsOf, hasZeroDigit, round10, round100, estimateChoices, randomWith, fairEstimate,
   registerSkillId, createSkills, createMixer,
 } from "./flow.js";
 
@@ -750,8 +750,10 @@ var RAW_SKILLS = [
         var a = rnd(21, 99);
         var b = rnd(11, a - 1);
         if (a % 10 === 0 || b % 10 === 0 || a % 10 === b % 10) return null;
+        // Geen grensgeval (eenheid 5) en de schatting moet ook de dichtstbijzijnde keuze zijn
+        if (a % 10 === 5 || b % 10 === 5) return null;
         var est = round10(a) - round10(b);
-        if (est <= 0) return null;
+        if (est <= 0 || !fairEstimate(a - b, est, 10)) return null;
         return { terms: [a, b], question: "Schat: " + a + SP_MIN + b + " " + APPROX + " ?", answer: est, choices: estimateChoices(est, 10) };
       });
     },
@@ -772,8 +774,10 @@ var RAW_SKILLS = [
         var a = rnd(201, 999);
         var b = rnd(101, a - 1);
         if (a % 100 === 0 || b % 100 === 0 || a % 100 === b % 100) return null;
+        // Geen grensgeval (…50) en de schatting moet ook de dichtstbijzijnde keuze zijn
+        if (a % 100 === 50 || b % 100 === 50) return null;
         var est = round100(a) - round100(b);
-        if (est <= 0) return null;
+        if (est <= 0 || !fairEstimate(a - b, est, 100)) return null;
         return { terms: [a, b], question: "Schat: " + a + SP_MIN + b + " " + APPROX + " ?", answer: est, choices: estimateChoices(est, 100) };
       });
     },
