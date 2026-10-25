@@ -8,6 +8,7 @@ import { DEEL_SKILLS, DEEL_ORDER } from "./skills/delen.js";
 import { BREUK_SKILLS, BREUK_ORDER } from "./skills/breuken.js";
 import { GELD_SKILLS, GELD_ORDER } from "./skills/geld.js";
 import { KOMMA_SKILLS, KOMMA_ORDER } from "./skills/kommagetallen.js";
+import { METEN_SKILLS, METEN_ORDER } from "./skills/meten.js";
 
 export var SUBJECTS = [
   {
@@ -109,6 +110,9 @@ export var SUBJECT_SKILLS = {
   breuken: { skills: BREUK_SKILLS, order: BREUK_ORDER },
   geld: { skills: GELD_SKILLS, order: GELD_ORDER },
   kommagetallen: { skills: KOMMA_SKILLS, order: KOMMA_ORDER },
+  // Meten: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3).
+  // B3: groep "praktisch", icoon "m", teal #0d9488 / #f0fdfa, niet in Auto.
+  meten: { skills: METEN_SKILLS, order: METEN_ORDER },
 };
 
 function getSubjectSkills(subjectId) {
