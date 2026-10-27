@@ -124,6 +124,17 @@ export var SUBJECTS = [
     levels: 10,
     group: "praktisch",
   },
+  {
+    id: "reizen",
+    label: "Reizen",
+    icon: "km",
+    color: "#65a30d",
+    lightColor: "#f7fee7",
+    description: "Afstand, reistijd en kosten",
+    available: true,
+    levels: 10,
+    group: "praktisch",
+  },
 ];
 
 export function getSubject(id) {
@@ -149,8 +160,6 @@ export var SUBJECT_SKILLS = {
   meten: { skills: METEN_SKILLS, order: METEN_ORDER },
   tijd: { skills: TIJD_SKILLS, order: TIJD_ORDER },
   procenten: { skills: PROCENT_SKILLS, order: PROCENT_ORDER },
-  // Reizen: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3).
-  // B3: groep "praktisch", icoon "km", lime #65a30d / #f7fee7, niet in Auto.
   reizen: { skills: REIS_SKILLS, order: REIS_ORDER },
 };
 
