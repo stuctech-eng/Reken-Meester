@@ -20,6 +20,12 @@ var Q_FONT_MIN = 28;
 // Kleinste letter voor antwoordknoppen (gewoon en smallChoices)
 var CH_FONT_MIN  = 22;
 var CH_SMALL_MIN = 16;
+// Onder deze schermhoogte (px) gaat de oefenpagina in de compacte stand (zie Compacte stand)
+var COMPACT_MAX_H = 740;
+
+function isCompactHeight() {
+  return typeof window !== "undefined" && window.innerHeight < COMPACT_MAX_H;
+}
 
 function goodNeeded(sessionCorrect, sessionTotal) {
   for (var k = 0; k <= 100; k++) {
@@ -34,6 +40,26 @@ function goodNeeded(sessionCorrect, sessionTotal) {
 // onProgress (optioneel): na elk antwoord het actuele sessieresultaat, voor de concept-sessie.
 export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish, autoNextLabel, onAutoNext, onProgress }) {
   var skillOrder = getSkillOrder(subjectId);
+
+  // ── Compacte stand ────────────────────────────────────────────
+  // Op een laag scherm (iPhone SE/8, of Safari met adresbalk) worden witruimte, knoppen en
+  // de startgrootte van de vraag kleiner, zodat de antwoordknoppen in beeld blijven.
+  // Op een hoger scherm verandert er niets. Opnieuw bepaald bij draaien en bij het
+  // in- en uitklappen van de adresbalk (resize).
+  var compactState = useState(isCompactHeight);
+  var compact      = compactState[0];
+  var setCompact   = compactState[1];
+
+  useEffect(function() {
+    function check() { setCompact(isCompactHeight()); }
+    check();
+    window.addEventListener("resize", check);
+    window.addEventListener("orientationchange", check);
+    return function() {
+      window.removeEventListener("resize", check);
+      window.removeEventListener("orientationchange", check);
+    };
+  }, []);
 
   // ── Initialisatie helpers ─────────────────────────────────────
   function initSkillId() {
@@ -379,7 +405,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   // Vraaggrootte: past de vraag niet in de kaart (een lang woord of een brede regel), dan
   // wordt alleen dan de letter kleiner, tot hoogstens Q_FONT_MIN. Past hij wel, dan blijft
-  // alles precies zoals het was (60 px, of 44 px voor vragen met regeleinden).
+  // alles precies zoals het was (60 px, of 44 px voor vragen met regeleinden; in de compacte
+  // stand 48 px en 36 px).
   // Gemeten vóór het eerste beeld (useLayoutEffect), opnieuw als de letters geladen zijn
   // (document.fonts.ready) en bij een andere schermbreedte. qFont staat niet in de
   // afhankelijkheden, dus het meten veroorzaakt geen lus.
@@ -387,7 +414,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var qFontState = useState(null);
   var qFont      = qFontState[0];
   var setQFont   = qFontState[1];
-  var qBase      = isMultiLineQuestion ? 44 : 60;
+  var qBase      = isMultiLineQuestion ? (compact ? 36 : 44) : (compact ? 48 : 60);
 
   useLayoutEffect(function() {
     var el = qRef.current;
@@ -477,7 +504,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "12px 20px",
+          padding: compact ? "8px 16px" : "12px 20px",
         }}>
           {/* Terug / Sluiten knop */}
           <button
@@ -538,7 +565,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         </div>
 
         {/* Voortgang van deze vaardigheid (opgeslagen + nu) en sessieteller (alleen deze keer) */}
-        <div style={{ padding: "0 20px 12px" }}>
+        <div style={{ padding: compact ? "0 16px 8px" : "0 20px 12px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: T.xs, color: A.textMid, fontWeight: 700, lineHeight: 1.3 }}>
@@ -560,8 +587,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        padding: "20px 20px 32px",
-        gap: 16,
+        padding: compact ? "12px 16px 20px" : "20px 20px 32px",
+        gap: compact ? 10 : 16,
         overflowY: "auto",
         WebkitOverflowScrolling: "touch",
       }}>
@@ -570,7 +597,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         <div style={{
           background: A.bgCard,
           borderRadius: A.r20,
-          padding: "36px 24px 28px",
+          padding: compact ? "20px 16px 18px" : "36px 24px 28px",
           textAlign: "center",
           boxShadow: A.shadowMd,
           border: "2px solid " + (
@@ -589,7 +616,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
               color: A.primary,
               letterSpacing: 1.2,
               textTransform: "uppercase",
-              marginBottom: 14,
+              marginBottom: compact ? 8 : 14,
               opacity: 0.7,
             }}>
               {currentSkill.strategy}
@@ -641,7 +668,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           display: "grid",
           // minmax(0, 1fr): een brede keuze maakt de kolom nooit breder dan de helft
           gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-          gap: 12,
+          gap: compact ? 10 : 12,
         }}>
           {currentQuestion.choices.map(function(choice) {
             var isSelected   = selected === choice;
@@ -665,7 +692,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 onClick={function() { handleChoice(choice); }}
                 disabled={selected !== null}
                 style={{
-                  padding: "20px 12px",
+                  padding: compact ? "12px 10px" : "20px 12px",
                   borderRadius: A.r16,
                   border: "2.5px solid " + border,
                   background: bg,
@@ -679,7 +706,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                   transition: "background 0.15s, border-color 0.15s, transform 0.1s",
                   cursor: selected !== null ? "default" : "pointer",
                   WebkitTapHighlightColor: "transparent",
-                  minHeight: 80,
+                  minHeight: compact ? 64 : 80,
                   transform: "scale(1)",
                   letterSpacing: -0.5,
                 }}
