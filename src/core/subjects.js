@@ -10,6 +10,7 @@ import { GELD_SKILLS, GELD_ORDER } from "./skills/geld.js";
 import { KOMMA_SKILLS, KOMMA_ORDER } from "./skills/kommagetallen.js";
 import { METEN_SKILLS, METEN_ORDER } from "./skills/meten.js";
 import { TIJD_SKILLS, TIJD_ORDER } from "./skills/tijd.js";
+import { PROCENT_SKILLS, PROCENT_ORDER } from "./skills/procenten.js";
 
 export var SUBJECTS = [
   {
@@ -135,6 +136,9 @@ export var SUBJECT_SKILLS = {
   kommagetallen: { skills: KOMMA_SKILLS, order: KOMMA_ORDER },
   meten: { skills: METEN_SKILLS, order: METEN_ORDER },
   tijd: { skills: TIJD_SKILLS, order: TIJD_ORDER },
+  // Procenten en verhoudingen: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3).
+  // B3: groep "praktisch", icoon "%", oranje #ea580c / #fff7ed, niet in Auto.
+  procenten: { skills: PROCENT_SKILLS, order: PROCENT_ORDER },
 };
 
 function getSubjectSkills(subjectId) {
