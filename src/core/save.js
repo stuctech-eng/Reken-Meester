@@ -162,6 +162,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "p01_van_de_100",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Reizen (Praktisch rekenen): zelfde structuur, eigen voortgang (modus nog onzichtbaar tot fase B3)
+    reizen: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "r01_route_optellen",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 

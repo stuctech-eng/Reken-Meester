@@ -11,6 +11,7 @@ import { KOMMA_SKILLS, KOMMA_ORDER } from "./skills/kommagetallen.js";
 import { METEN_SKILLS, METEN_ORDER } from "./skills/meten.js";
 import { TIJD_SKILLS, TIJD_ORDER } from "./skills/tijd.js";
 import { PROCENT_SKILLS, PROCENT_ORDER } from "./skills/procenten.js";
+import { REIS_SKILLS, REIS_ORDER } from "./skills/reizen.js";
 
 export var SUBJECTS = [
   {
@@ -148,6 +149,9 @@ export var SUBJECT_SKILLS = {
   meten: { skills: METEN_SKILLS, order: METEN_ORDER },
   tijd: { skills: TIJD_SKILLS, order: TIJD_ORDER },
   procenten: { skills: PROCENT_SKILLS, order: PROCENT_ORDER },
+  // Reizen: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3).
+  // B3: groep "praktisch", icoon "km", lime #65a30d / #f7fee7, niet in Auto.
+  reizen: { skills: REIS_SKILLS, order: REIS_ORDER },
 };
 
 function getSubjectSkills(subjectId) {
