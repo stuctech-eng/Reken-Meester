@@ -238,7 +238,7 @@ function kmhs(a, c, st) { return pickV(a, c, function(x) { return x % 1 === 0 ? 
   [80, 36, 50, 60, 120, 18, 90, 140].forEach(function(v, i) {
     var c = CUR[i], e = v / c[1];
     if (e % 1 !== 0) return;
-    put("r25", "€ 1 = " + c[1] + " " + c[0] + ". " + v + " " + c[0] + " = € ?", eurQ(e * 100), euros(e * 100, [v * c[1] * 100, (v - c[1]) * 100, (v + c[1]) * 100], 100),
+    put("r25", "€ 1 = " + c[1] + " " + c[0] + ". " + v + " " + c[0] + " = €" + NB + "?", eurQ(e * 100), euros(e * 100, [v * c[1] * 100, (v - c[1]) * 100, (v + c[1]) * 100], 100),
       c[1] + " " + c[0] + " is € 1. " + v + " : " + c[1] + " = € " + e + ".");
   });
   // r26: goedkoopste van drie prijzen in verschillende munten; verschil steeds minstens € 0,20
