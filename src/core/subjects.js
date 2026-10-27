@@ -112,6 +112,17 @@ export var SUBJECTS = [
     levels: 10,
     group: "praktisch",
   },
+  {
+    id: "procenten",
+    label: "Procenten",
+    icon: "%",
+    color: "#ea580c",
+    lightColor: "#fff7ed",
+    description: "Procent, verhouding en schaal",
+    available: true,
+    levels: 10,
+    group: "praktisch",
+  },
 ];
 
 export function getSubject(id) {
@@ -136,8 +147,6 @@ export var SUBJECT_SKILLS = {
   kommagetallen: { skills: KOMMA_SKILLS, order: KOMMA_ORDER },
   meten: { skills: METEN_SKILLS, order: METEN_ORDER },
   tijd: { skills: TIJD_SKILLS, order: TIJD_ORDER },
-  // Procenten en verhoudingen: geregistreerd maar nog niet in SUBJECTS (onzichtbaar tot fase B3).
-  // B3: groep "praktisch", icoon "%", oranje #ea580c / #fff7ed, niet in Auto.
   procenten: { skills: PROCENT_SKILLS, order: PROCENT_ORDER },
 };
 
