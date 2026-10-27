@@ -17,6 +17,9 @@ var CONCEPT_COUNTER = 0;
 // Kleinste aantal goede sommen dat nog nodig is om aan de sessievoorwaarden te voldoen
 // Kleinste lettergrootte voor de vraagtekst wanneer die niet in de kaart past (zie vraaggrootte)
 var Q_FONT_MIN = 28;
+// Kleinste letter voor antwoordknoppen (gewoon en smallChoices)
+var CH_FONT_MIN  = 22;
+var CH_SMALL_MIN = 16;
 
 function goodNeeded(sessionCorrect, sessionTotal) {
   for (var k = 0; k <= 100; k++) {
@@ -411,6 +414,53 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     return function() { active = false; window.removeEventListener("resize", fit); };
   }, [currentQuestion.question, qBase]);
 
+  // Knopgrootte: de twee kolommen zijn altijd precies half zo breed (minmax(0, 1fr)), ook als een
+  // keuze niet kan afbreken ("3050 mm", "€ 27,30", "september"). Past een keuzetekst niet in zijn
+  // knop, dan worden alle vier de knoppen samen kleiner (zelfde letter, dus geen hint), tot
+  // hoogstens CH_FONT_MIN of CH_SMALL_MIN. Past alles, dan blijft het 38 px (of 24 px bij
+  // smallChoices). Gemeten vóór het eerste beeld, opnieuw na het laden van de letters en bij een
+  // andere schermbreedte; chFont staat niet in de afhankelijkheden, dus het meten geeft geen lus.
+  var chRef       = useRef(null);
+  var chFontState = useState(null);
+  var chFont      = chFontState[0];
+  var setChFont   = chFontState[1];
+  var chBase      = currentQuestion.smallChoices ? 24 : 38;
+  var chMin       = currentQuestion.smallChoices ? CH_SMALL_MIN : CH_FONT_MIN;
+  var chKey       = String(currentQuestion.question) + "|" + currentQuestion.choices.join("|");
+
+  useLayoutEffect(function() {
+    var grid = chRef.current;
+    if (!grid) return undefined;
+    var active = true;
+    function buttons() { return Array.prototype.slice.call(grid.querySelectorAll("button")); }
+    function setAll(f) { buttons().forEach(function(b) { b.style.fontSize = f + "px"; }); }
+    // Te breed: de tekst steekt uit de knop, of komt in de binnenmarge (padding) van de knop
+    function tooWide() {
+      return buttons().some(function(b) {
+        if (b.scrollWidth > b.clientWidth + 0.5) return true;
+        if (!document.createRange) return false;
+        var cs    = window.getComputedStyle(b);
+        var avail = b.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        var range = document.createRange();
+        range.selectNodeContents(b);
+        var rects = range.getClientRects ? range.getClientRects() : [];
+        for (var i = 0; i < rects.length; i++) { if (rects[i].width > avail + 0.5) return true; }
+        return false;
+      });
+    }
+    function fit() {
+      if (!active || !grid.isConnected) return;
+      setAll(chBase);
+      var f = chBase;
+      while (f > chMin && tooWide()) { f -= 1; setAll(f); }
+      setChFont(f === chBase ? null : f);
+    }
+    fit();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    window.addEventListener("resize", fit);
+    return function() { active = false; window.removeEventListener("resize", fit); };
+  }, [chKey, chBase, chMin]);
+
   // ── Render ────────────────────────────────────────────────────
   return (
     <Screen bg={A.bg} style={{ fontFamily: "'Nunito', 'Inter', system-ui, sans-serif" }}>
@@ -587,9 +637,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         </div>
 
         {/* Antwoordgrid */}
-        <div style={{
+        <div ref={chRef} style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          // minmax(0, 1fr): een brede keuze maakt de kolom nooit breder dan de helft
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
           gap: 12,
         }}>
           {currentQuestion.choices.map(function(choice) {
@@ -619,8 +670,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                   border: "2.5px solid " + border,
                   background: bg,
                   color: color,
-                  // Muntrijen (Geld g10, g11, g24) hebben smallChoices: kleinere letter; anders ongewijzigd 38
-                  fontSize: currentQuestion.smallChoices ? 24 : 38,
+                  // smallChoices (muntrijen, woorden, fout spotten): 24; anders 38. Kleiner alleen als
+                  // een keuze niet past (zie Knopgrootte); alle vier de knoppen krijgen dan dezelfde letter
+                  fontSize: chFont || chBase,
+                  minWidth: 0,
                   fontWeight: 900,
                   boxShadow: shadow,
                   transition: "background 0.15s, border-color 0.15s, transform 0.1s",
