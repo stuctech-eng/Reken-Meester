@@ -445,14 +445,15 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // keuze niet kan afbreken ("3050 mm", "€ 27,30", "september"). Past een keuzetekst niet in zijn
   // knop, dan worden alle vier de knoppen samen kleiner (zelfde letter, dus geen hint), tot
   // hoogstens CH_FONT_MIN of CH_SMALL_MIN. Past alles, dan blijft het 38 px (of 24 px bij
-  // smallChoices). Gemeten vóór het eerste beeld, opnieuw na het laden van de letters en bij een
-  // andere schermbreedte; chFont staat niet in de afhankelijkheden, dus het meten geeft geen lus.
+  // smallChoices en bij fout-spotters: vier hele sommen als keuze, isErrorSpotter). Gemeten vóór
+  // het eerste beeld, opnieuw na het laden van de letters en bij een andere schermbreedte; chFont staat niet in de afhankelijkheden, dus het meten geeft geen lus.
   var chRef       = useRef(null);
   var chFontState = useState(null);
   var chFont      = chFontState[0];
   var setChFont   = chFontState[1];
-  var chBase      = currentQuestion.smallChoices ? 24 : 38;
-  var chMin       = currentQuestion.smallChoices ? CH_SMALL_MIN : CH_FONT_MIN;
+  var chSmall     = !!(currentQuestion.smallChoices || currentQuestion.isErrorSpotter);
+  var chBase      = chSmall ? 24 : 38;
+  var chMin       = chSmall ? CH_SMALL_MIN : CH_FONT_MIN;
   var chKey       = String(currentQuestion.question) + "|" + currentQuestion.choices.join("|");
 
   useLayoutEffect(function() {
@@ -697,7 +698,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                   border: "2.5px solid " + border,
                   background: bg,
                   color: color,
-                  // smallChoices (muntrijen, woorden, fout spotten): 24; anders 38. Kleiner alleen als
+                  // smallChoices en fout-spotters (muntrijen, woorden, hele sommen): 24; anders 38. Kleiner alleen als
                   // een keuze niet past (zie Knopgrootte); alle vier de knoppen krijgen dan dezelfde letter
                   fontSize: chFont || chBase,
                   minWidth: 0,
