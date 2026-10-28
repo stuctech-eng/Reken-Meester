@@ -20,6 +20,8 @@ var Q_FONT_MIN = 28;
 // Kleinste letter voor antwoordknoppen (gewoon en smallChoices)
 var CH_FONT_MIN  = 22;
 var CH_SMALL_MIN = 16;
+// Regel van een kolomsom: alleen een getal, eventueel met een rekenteken ervoor ("828", "− 194")
+var COLUMN_LINE_RE = /^[\u2212\u00d7+:-]?\s?[\d.,]+$/;
 // Onder deze schermhoogtes (px) gaat de oefenpagina in de compacte en de extra compacte
 // stand (zie Compacte stand)
 var COMPACT_MAX_H = 740;
@@ -413,6 +415,11 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var showUitlegBlock = feedback === "wrong" && fbLevel > 0 && currentSkill && uitlegVisible;
 
   var isMultiLineQuestion = String(currentQuestion.question).indexOf("\n") !== -1;
+  // Kolomsom: een vraag met regeleinden waarvan elke regel een getal is. Andere vragen met
+  // regeleinden (stippen, stroken, hokjes met tekst) staan gecentreerd en zonder streep.
+  var isColumnSum = isMultiLineQuestion && String(currentQuestion.question).split("\n").every(function(line) {
+    return COLUMN_LINE_RE.test(line.trim());
+  });
 
   // Vraaggrootte: past de vraag niet in de kaart (een lang woord of een brede regel), dan
   // wordt alleen dan de letter kleiner, tot hoogstens Q_FONT_MIN. Past hij wel, dan blijft
@@ -635,9 +642,17 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             </div>
           )}
 
-          {/* De som — een vraag met regeleinden is een kolomsom: regels rechts uitgelijnd,
-              cijfers even breed, streep onder de laatste regel. Zonder regeleinde: ongewijzigd. */}
-          <div ref={qRef} style={isMultiLineQuestion ? {
+          {/* De som — een kolomsom (regels met alleen getallen): regels rechts uitgelijnd, cijfers
+              even breed, streep onder de laatste regel. Andere vragen met regeleinden (plaatje +
+              vraag): gecentreerd, zonder streep. Zonder regeleinde: ongewijzigd. */}
+          <div ref={qRef} style={isMultiLineQuestion && !isColumnSum ? {
+            fontSize: qFont || 44,
+            fontWeight: 900,
+            color: A.text,
+            lineHeight: 1.15,
+            whiteSpace: "pre-line",
+            textAlign: "center",
+          } : isMultiLineQuestion ? {
             display: "inline-block",
             fontSize: qFont || 44,
             fontWeight: 900,
