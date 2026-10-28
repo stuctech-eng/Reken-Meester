@@ -20,11 +20,17 @@ var Q_FONT_MIN = 28;
 // Kleinste letter voor antwoordknoppen (gewoon en smallChoices)
 var CH_FONT_MIN  = 22;
 var CH_SMALL_MIN = 16;
-// Onder deze schermhoogte (px) gaat de oefenpagina in de compacte stand (zie Compacte stand)
+// Onder deze schermhoogtes (px) gaat de oefenpagina in de compacte en de extra compacte
+// stand (zie Compacte stand)
 var COMPACT_MAX_H = 740;
+var TINY_MAX_H    = 600;
 
 function isCompactHeight() {
   return typeof window !== "undefined" && window.innerHeight < COMPACT_MAX_H;
+}
+
+function isTinyHeight() {
+  return typeof window !== "undefined" && window.innerHeight < TINY_MAX_H;
 }
 
 function goodNeeded(sessionCorrect, sessionTotal) {
@@ -46,12 +52,17 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // de startgrootte van de vraag kleiner, zodat de antwoordknoppen in beeld blijven.
   // Op een hoger scherm verandert er niets. Opnieuw bepaald bij draaien en bij het
   // in- en uitklappen van de adresbalk (resize).
+  // Extra compact (onder TINY_MAX_H: iPhone SE in Safari met adresbalk, of met weergavezoom):
+  // nog iets kleiner, zodat ook lange vragen met de knoppen in beeld passen.
   var compactState = useState(isCompactHeight);
   var compact      = compactState[0];
   var setCompact   = compactState[1];
+  var tinyState    = useState(isTinyHeight);
+  var tiny         = tinyState[0];
+  var setTiny      = tinyState[1];
 
   useEffect(function() {
-    function check() { setCompact(isCompactHeight()); }
+    function check() { setCompact(isCompactHeight()); setTiny(isTinyHeight()); }
     check();
     window.addEventListener("resize", check);
     window.addEventListener("orientationchange", check);
@@ -406,7 +417,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // Vraaggrootte: past de vraag niet in de kaart (een lang woord of een brede regel), dan
   // wordt alleen dan de letter kleiner, tot hoogstens Q_FONT_MIN. Past hij wel, dan blijft
   // alles precies zoals het was (60 px, of 44 px voor vragen met regeleinden; in de compacte
-  // stand 48 px en 36 px).
+  // stand 48 px en 36 px, in de extra compacte stand 40 px en 32 px).
   // Gemeten vóór het eerste beeld (useLayoutEffect), opnieuw als de letters geladen zijn
   // (document.fonts.ready) en bij een andere schermbreedte. qFont staat niet in de
   // afhankelijkheden, dus het meten veroorzaakt geen lus.
@@ -414,7 +425,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var qFontState = useState(null);
   var qFont      = qFontState[0];
   var setQFont   = qFontState[1];
-  var qBase      = isMultiLineQuestion ? (compact ? 36 : 44) : (compact ? 48 : 60);
+  var qBase      = isMultiLineQuestion ? (tiny ? 32 : compact ? 36 : 44) : (tiny ? 40 : compact ? 48 : 60);
 
   useLayoutEffect(function() {
     var el = qRef.current;
@@ -588,8 +599,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        padding: compact ? "12px 16px 20px" : "20px 20px 32px",
-        gap: compact ? 10 : 16,
+        padding: tiny ? "8px 12px 16px" : compact ? "12px 16px 20px" : "20px 20px 32px",
+        gap: tiny ? 8 : compact ? 10 : 16,
         overflowY: "auto",
         WebkitOverflowScrolling: "touch",
       }}>
@@ -598,7 +609,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         <div style={{
           background: A.bgCard,
           borderRadius: A.r20,
-          padding: compact ? "20px 16px 18px" : "36px 24px 28px",
+          padding: tiny ? "14px 12px 12px" : compact ? "20px 16px 18px" : "36px 24px 28px",
           textAlign: "center",
           boxShadow: A.shadowMd,
           border: "2px solid " + (
@@ -617,7 +628,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
               color: A.primary,
               letterSpacing: 1.2,
               textTransform: "uppercase",
-              marginBottom: compact ? 8 : 14,
+              marginBottom: tiny ? 4 : compact ? 8 : 14,
               opacity: 0.7,
             }}>
               {currentSkill.strategy}
@@ -669,7 +680,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           display: "grid",
           // minmax(0, 1fr): een brede keuze maakt de kolom nooit breder dan de helft
           gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-          gap: compact ? 10 : 12,
+          gap: tiny ? 8 : compact ? 10 : 12,
         }}>
           {currentQuestion.choices.map(function(choice) {
             var isSelected   = selected === choice;
@@ -693,7 +704,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 onClick={function() { handleChoice(choice); }}
                 disabled={selected !== null}
                 style={{
-                  padding: compact ? "12px 10px" : "20px 12px",
+                  padding: tiny ? "10px 8px" : compact ? "12px 10px" : "20px 12px",
                   borderRadius: A.r16,
                   border: "2.5px solid " + border,
                   background: bg,
@@ -707,7 +718,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                   transition: "background 0.15s, border-color 0.15s, transform 0.1s",
                   cursor: selected !== null ? "default" : "pointer",
                   WebkitTapHighlightColor: "transparent",
-                  minHeight: compact ? 64 : 80,
+                  minHeight: tiny ? 56 : compact ? 64 : 80,
                   transform: "scale(1)",
                   letterSpacing: -0.5,
                 }}
