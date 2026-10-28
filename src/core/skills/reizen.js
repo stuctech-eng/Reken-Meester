@@ -229,20 +229,24 @@ function kmhs(a, c, st) { return pickV(a, c, function(x) { return x % 1 === 0 ? 
 
 // ── Blok 6: valuta (koers altijd in de vraag) ─────────────────────
 (function() {
-  var CUR = [["kronen", 10], ["dirham", 4], ["lev", 2], ["kuna", 5], ["zloty", 4], ["kronen", 10], ["lev", 2], ["dirham", 4]];
+  // Munten die bestaan, met een afgeronde koers (lei ongeveer 5,3; lira ongeveer 55 in 2026)
+  var CUR = [["kronen", 10], ["dirham", 4], ["lira", 50], ["lei", 5], ["zloty", 4], ["kronen", 10], ["lira", 50], ["dirham", 4]];
   [15, 8, 25, 12, 30, 20, 45, 7].forEach(function(e, i) {
     var c = CUR[i], v = e * c[1];
     put("r24", "€ 1 = " + c[1] + " " + c[0] + ". € " + e + " = ? " + c[0], String(v), nums(v, [e / c[1] % 1 === 0 ? e / c[1] : null, e + c[1], v * 10], 1),
       "Elke euro is " + c[1] + " " + c[0] + ". " + e + TIMES + c[1] + " = " + v + " " + c[0] + ".");
   });
-  [80, 36, 50, 60, 120, 18, 90, 140].forEach(function(v, i) {
+  [80, 36, 1500, 60, 120, 18, 2500, 140].forEach(function(v, i) {
     var c = CUR[i], e = v / c[1];
     if (e % 1 !== 0) return;
-    put("r25", "€ 1 = " + c[1] + " " + c[0] + ". " + v + " " + c[0] + " = €" + NB + "?", eurQ(e * 100), euros(e * 100, [v * c[1] * 100, (v - c[1]) * 100, (v + c[1]) * 100], 100),
-      c[1] + " " + c[0] + " is € 1. " + v + " : " + c[1] + " = € " + e + ".");
+    // Bij een hoge koers (lira) zijn "keer de koers" en "koers erbij/eraf" onzinbedragen; dan de
+    // echte vergissingen: een nul te veel of te weinig, of gedeeld door 100 in plaats van 50
+    var wrong = c[1] >= 50 ? [e * 1000, e * 10, v] : [v * c[1] * 100, (v - c[1]) * 100, (v + c[1]) * 100];
+    put("r25", "€ 1 = " + c[1] + " " + c[0] + ". " + v + " " + c[0] + " = €" + NB + "?", eurQ(e * 100), euros(e * 100, wrong, 100),
+      c[1] + " " + c[0] + " is " + eurQ(100) + ". " + v + " : " + c[1] + " = " + eurQ(e * 100) + ".");
   });
   // r26: goedkoopste van drie prijzen in verschillende munten; verschil steeds minstens € 0,20
-  [["kronen", 10, 45, 500, 52], ["dirham", 4, 18, 400, 22], ["lev", 2, 9, 500, 11], ["kuna", 5, 30, 550, 26], ["zloty", 4, 22, 500, 18], ["kronen", 10, 65, 600, 72]].forEach(function(p) {
+  [["kronen", 10, 45, 500, 52], ["dirham", 4, 18, 400, 22], ["lira", 50, 225, 500, 275], ["lei", 5, 30, 550, 26], ["zloty", 4, 22, 500, 18], ["kronen", 10, 65, 600, 72]].forEach(function(p) {
     var a = p[2] * 100 / p[1], b = p[3], c = p[4] * 100 / p[1];
     var opts = [p[2] + " " + p[0], eurQ(b), p[4] + " " + p[0]], vals = [a, b, c], mn = Math.min.apply(null, vals);
     put("r26", "€ 1 = " + p[1] + " " + p[0] + ". Wat is goedkoopst?", opts[vals.indexOf(mn)], opts.concat(["even duur"]),
@@ -354,7 +358,7 @@ function kmhs(a, c, st) { return pickV(a, c, function(x) { return x % 1 === 0 ? 
 })();
 
 // Niet-afbrekende spatie tussen getal en eenheid en na "€" in vragen en (niet fout-spot) keuzes
-var UNIT_RE = /(\d) (km\/u|km|min|uur|u|l|cm|m|kronen|dirham|lev|kuna|zloty|dagen|personen)(?=[\s:.?,\/]|$)/g;
+var UNIT_RE = /(\d) (km\/u|km|min|uur|u|l|cm|m|kronen|dirham|lira|lei|zloty|dagen|personen)(?=[\s:.?,\/]|$)/g;
 var EUR_RE = /€ (\d)/g;
 Object.keys(P).forEach(function(id) { P[id].forEach(function(it) {
   it.question = it.question.replace(UNIT_RE, "$1" + NB + "$2").replace(EUR_RE, "€" + NB + "$1");
@@ -468,7 +472,7 @@ var DEFS = [
     "€ 1 = 4 dirham. € 12 = ? dirham\n12 × 4.\nAntwoord: 48.", 8],
   ["r25_naar_euro", "Terug naar euro", G6, "80 kronen = € 8", "delen door de koers",
     "Andersom deel je door de koers: hoeveel keer zit 10 kronen in 80 kronen? 80 : 10 = € 8.",
-    "€ 1 = 2 lev. 30 lev = € ?\n30 : 2.\nAntwoord: € 15.", 8],
+    "€ 1 = 4 zloty. 60 zloty = € ?\n60 : 4.\nAntwoord: € 15.", 8],
   ["r26_goedkoopst_valuta", "Goedkoopst in euro", G6, "45 kronen = € 4,50 < € 5", "zelfde munt",
     "Reken alle prijzen om naar euro's en vergelijk dan. 45 kronen bij € 1 = 10 kronen is € 4,50: goedkoper dan € 5.",
     "€ 1 = 10 kronen. 60 kronen of € 5?\n60 kronen = € 6.\nAntwoord: € 5.", 8],

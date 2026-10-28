@@ -49,11 +49,13 @@ function four(answer, cands, reserve) {
   return out;
 }
 // Getalkeuzes (gehele of kommagetallen als waarde * 100 / 100), > 0, uniek in waarde
-function nums(ans, cands, step, fmtFn) {
+// maxLen (optioneel): langste keuzetekst die nog mag (standaard 7 tekens)
+function nums(ans, cands, step, fmtFn, maxLen) {
   var f = fmtFn || function(x) { return kg(x, 1); };
+  var ml = maxLen || 7;
   var out = [f(ans)], seen = {};
   seen[ans] = true;
-  function add(c) { if (out.length >= 4 || typeof c !== "number" || c <= 0 || seen[c]) return; var s = f(c); if (s === null || s.length > 7) return; seen[c] = true; out.push(s); }
+  function add(c) { if (out.length >= 4 || typeof c !== "number" || c <= 0 || seen[c]) return; var s = f(c); if (s === null || s.length > ml) return; seen[c] = true; out.push(s); }
   cands.forEach(add);
   var st = step || 1;
   for (var k = 1; k < 60 && out.length < 4; k++) { add(ans + k * st); add(ans - k * st); }
@@ -293,12 +295,12 @@ var KNOWN = [[50, 1, 2], [25, 1, 4], [75, 3, 4], [10, 1, 10], [20, 1, 5], [40, 2
   });
   [[120, 2], [180, 3], [100, 4], [90, 3], [240, 4], [150, 2], [60, 4], [200, 5]].forEach(function(p) {
     var v = p[0] / p[1];
-    put("p32", p[0] + " km in " + p[1] + " uur. Per uur?", v + NB + "km", nums(v, [p[0] * p[1], p[0] - p[1], p[0]], 5, function(x) { return x % 1 === 0 ? x + NB + "km" : null; }),
+    put("p32", p[0] + " km in " + p[1] + " uur. Per uur?", v + NB + "km/u", nums(v, [p[0] * p[1], p[0] - p[1], p[0]], 5, function(x) { return x % 1 === 0 ? x + NB + "km/u" : null; }, 9),
       p[0] + " : " + p[1] + " = " + v + " km per uur.");
   });
   [[15, 30], [10, 30], [20, 30], [5, 15], [8, 30], [12, 15]].forEach(function(p) {
     var v = p[0] * 60 / p[1];
-    put("p32", "In " + p[1] + " min " + p[0] + " km. Per uur?", v + NB + "km", nums(v, [p[0], p[0] + p[1], v * 2], 5, function(x) { return x % 1 === 0 ? x + NB + "km" : null; }),
+    put("p32", "In " + p[1] + " min " + p[0] + " km. Per uur?", v + NB + "km/u", nums(v, [p[0], p[0] + p[1], v * 2], 5, function(x) { return x % 1 === 0 ? x + NB + "km/u" : null; }, 9),
       "1 uur = " + 60 / p[1] + TIMES + p[1] + " min. " + p[0] + TIMES + 60 / p[1] + " = " + v + " km per uur.");
   });
   // p33: drie aanbiedingen, één is per kg het goedkoopst (verschil per kg steeds minstens € 0,50)
