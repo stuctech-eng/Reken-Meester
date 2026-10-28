@@ -145,6 +145,11 @@ export default function App() {
   var subjectId    = subjState[0];
   var setSubjectId = subjState[1];
 
+  // Los oefenen: id van de ene vaardigheid (null = gewone leerlijn). Telt nergens mee.
+  var fixedSkillState   = useState(null);
+  var fixedSkillId      = fixedSkillState[0];
+  var setFixedSkillId   = fixedSkillState[1];
+
   var lvlState     = useState(1);
   var practiceLevel = lvlState[0];
   var setPracticeLevel = lvlState[1];
@@ -425,6 +430,7 @@ export default function App() {
   // ── Auto-modus ────────────────────────────────────────────────────
   function openPractice(saveObj, sId) {
     var d = (saveObj.subjects && saveObj.subjects[sId]) || {};
+    setFixedSkillId(null);
     setSubjectId(sId);
     setPracticeLevel(d.currentLevel || 1);
     setAutoKey(function(k) { return k + 1; });
@@ -545,10 +551,35 @@ export default function App() {
         save={save}
         onBack={function() { setScreen("home"); }}
         onStartLevel={function(sId, lvl) {
+          setFixedSkillId(null);
           setSubjectId(sId);
           setPracticeLevel(lvl);
           setScreen("practice");
         }}
+        onPracticeSkill={function(sId, skillId) {
+          setAutoActive(false);
+          setSubjectId(sId);
+          setFixedSkillId(skillId);
+          setScreen("practice");
+        }}
+      />
+    );
+  }
+
+  // Los oefenen: zelfde oefenscherm, maar zonder opslag, concept of Auto; stoppen = terug
+  // naar het modusscherm
+  if (screen === "practice" && fixedSkillId) {
+    var fixedSubjData = (save.subjects && save.subjects[subjectId]) || {};
+    var leaveFixed    = function() { setFixedSkillId(null); setScreen("subject"); };
+    return (
+      <PracticeScreen
+        key={subjectId + "-los-" + fixedSkillId}
+        subjectId={subjectId}
+        level={practiceLevel}
+        skillStats={fixedSubjData.skillStats || {}}
+        fixedSkillId={fixedSkillId}
+        onBack={leaveFixed}
+        onFinish={leaveFixed}
       />
     );
   }

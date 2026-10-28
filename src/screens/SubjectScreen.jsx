@@ -6,7 +6,9 @@ import { getAccuracy } from "../core/save.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-export default function SubjectScreen({ subjectId, save, onBack, onStartLevel }) {
+// onPracticeSkill (optioneel): tik op een vaardigheid = die ene vaardigheid los oefenen
+// (telt nergens mee). Ook vaardigheden die in de leerlijn nog op slot staan.
+export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, onPracticeSkill }) {
   var subject    = getSubject(subjectId);
   var skillList  = getSkillList(subjectId);
   var skillOrder = getSkillOrder(subjectId);
@@ -153,6 +155,11 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
           <div style={{ fontSize: T.xs, fontWeight: 800, color: A.textSoft, letterSpacing: 0.8, marginBottom: 12 }}>
             {"VAARDIGHEDEN"}
           </div>
+          {onPracticeSkill && (
+            <div style={{ fontSize: 11, color: A.textSoft, fontWeight: 600, marginTop: -6, marginBottom: 12 }}>
+              {"Tik op een vaardigheid om die los te oefenen (telt niet mee)."}
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
 
             {canCollapse && (
@@ -210,7 +217,12 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel })
               return (
                 <div
                   key={skill.id}
+                  role={onPracticeSkill ? "button" : undefined}
+                  tabIndex={onPracticeSkill ? 0 : undefined}
+                  onClick={onPracticeSkill ? function() { onPracticeSkill(subjectId, skill.id); } : undefined}
                   style={{
+                    cursor: onPracticeSkill ? "pointer" : undefined,
+                    WebkitTapHighlightColor: onPracticeSkill ? "transparent" : undefined,
                     background: cardBg,
                     border: "1.5px solid " + cardBorder,
                     borderRadius: A.r16,

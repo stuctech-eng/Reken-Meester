@@ -46,7 +46,9 @@ function goodNeeded(sessionCorrect, sessionTotal) {
 // autoNextLabel / onAutoNext (optioneel, alleen in Auto-modus): na een behaald level sluit
 // "Ga verder" de sessie eenmalig af en geeft het resultaat aan onAutoNext in plaats van onFinish.
 // onProgress (optioneel): na elk antwoord het actuele sessieresultaat, voor de concept-sessie.
-export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish, autoNextLabel, onAutoNext, onProgress }) {
+// fixedSkillId (optioneel): los oefenen. Alleen deze vaardigheid, geen promotie en geen
+// terugval; App slaat het resultaat niet op.
+export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish, autoNextLabel, onAutoNext, onProgress, fixedSkillId }) {
   var skillOrder = getSkillOrder(subjectId);
 
   // ── Compacte stand ────────────────────────────────────────────
@@ -76,6 +78,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   // ── Initialisatie helpers ─────────────────────────────────────
   function initSkillId() {
+    if (fixedSkillId) return fixedSkillId;
     var res = getNextSkill(subjectId, skillStats || {});
     return res ? res.skillId : skillOrder[0];
   }
@@ -310,8 +313,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     // Next activeSkillId bepalen
     var nextSkillId = activeSkillIdRef.current;
 
-    // Terugval-check
-    if (!fallbackActiveRef.current) {
+    // Terugval-check (niet bij los oefenen)
+    if (!fixedSkillId && !fallbackActiveRef.current) {
       var window5 = recentList.slice(-5);
       var foutInWindow = window5.filter(function(c) { return !c; }).length;
       if (foutInWindow >= 3) {
@@ -338,8 +341,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       }
     }
 
-    // Promotie-check
-    if (!fallbackActiveRef.current && isCorrect && !promotedThisSession.current.has(answerSkillId)) {
+    // Promotie-check (niet bij los oefenen)
+    if (!fixedSkillId && !fallbackActiveRef.current && isCorrect && !promotedThisSession.current.has(answerSkillId)) {
       var storedSkill     = (skillStats && skillStats[answerSkillId]) || {};
       if (!storedSkill.mastered) {
         var storedCorrect   = storedSkill.correct || 0;
@@ -403,14 +406,16 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     || promotedThisSession.current.has(currentQuestion.skillId);
   var stillNeeded = goodNeeded(sessionCorrectForSkill, sessionTotalForSkill);
   var progressText;
-  if (skillMastered) {
+  if (fixedSkillId) {
+    progressText = "Los oefenen · telt niet mee";
+  } else if (skillMastered) {
     progressText = "Beheerst ✓";
   } else if (storedCorrectForSkill + sessionCorrectForSkill >= skillTarget && stillNeeded > 0) {
     progressText = skillTarget + " van " + skillTarget + " goed · nog " + stillNeeded + (stillNeeded === 1 ? " goede som deze keer" : " goede sommen deze keer");
   } else {
     progressText = "Opgeslagen voortgang: " + skillProgress + " van " + skillTarget + " goed";
   }
-  var progressPct = skillMastered ? 100 : Math.round(skillProgress / skillTarget * 100);
+  var progressPct = fixedSkillId ? 0 : skillMastered ? 100 : Math.round(skillProgress / skillTarget * 100);
 
   var showUitlegBlock = feedback === "wrong" && fbLevel > 0 && currentSkill && uitlegVisible;
 
