@@ -13,6 +13,7 @@ import { TIJD_SKILLS, TIJD_ORDER } from "./skills/tijd.js";
 import { PROCENT_SKILLS, PROCENT_ORDER } from "./skills/procenten.js";
 import { REIS_SKILLS, REIS_ORDER } from "./skills/reizen.js";
 import { WISK_GETALLEN_SKILLS, WISK_GETALLEN_ORDER } from "./skills/wiskunde-getallen.js";
+import { WISK_ALGEBRA_SKILLS, WISK_ALGEBRA_ORDER } from "./skills/wiskunde-algebra.js";
 
 export var SUBJECTS = [
   {
@@ -147,6 +148,17 @@ export var SUBJECTS = [
     levels: 10,
     group: "wiskunde",
   },
+  {
+    id: "wiskunde_algebra",
+    label: "Algebra",
+    icon: "x=",
+    color: "#334155",
+    lightColor: "#f1f5f9",
+    description: "Uitdrukkingen, haakjes en vergelijkingen. Aanbevolen: eerst Getallen en rekenregels",
+    available: true,
+    levels: 10,
+    group: "wiskunde",
+  },
 ];
 
 export function getSubject(id) {
@@ -174,6 +186,7 @@ export var SUBJECT_SKILLS = {
   procenten: { skills: PROCENT_SKILLS, order: PROCENT_ORDER },
   reizen: { skills: REIS_SKILLS, order: REIS_ORDER },
   wiskunde_getallen: { skills: WISK_GETALLEN_SKILLS, order: WISK_GETALLEN_ORDER },
+  wiskunde_algebra: { skills: WISK_ALGEBRA_SKILLS, order: WISK_ALGEBRA_ORDER },
 };
 
 function getSubjectSkills(subjectId) {

@@ -192,6 +192,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "wg01_vergelijken",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Wiskunde, domein Algebra (volwassenen): eigen voortgang
+    wiskunde_algebra: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "al01_woorden",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 
