@@ -125,6 +125,12 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var showLevelUp   = showLUState[0];
   var setShowLevelUp = showLUState[1];
 
+  // helpOpen: uitlegvenster via de 💡-knop. Vóór het antwoorden: uitleg + voorbeeld (de werkwijze,
+  // zonder het antwoord van deze som). Na het antwoorden ook de tip met de getallen van deze som.
+  var helpState   = useState(false);
+  var helpOpen    = helpState[0];
+  var setHelpOpen = helpState[1];
+
   var luDataState   = useState(null);
   var levelUpData   = luDataState[0];
   var setLevelUpData = luDataState[1];
@@ -199,6 +205,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   }
 
   function advanceToNext(nextSkillId) {
+    setHelpOpen(false);
     var nextQ = generateNext(nextSkillId);
     setCurrentQuestion(nextQ);
     setSelected(null);
@@ -564,6 +571,29 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             )}
           </div>
 
+          {/* Uitleg knop */}
+          <button
+            onClick={function() { setHelpOpen(true); }}
+            aria-label={"Hoe doe ik dit?"}
+            style={{
+              background: A.bgCard,
+              border: "1.5px solid " + A.border,
+              borderRadius: A.r999,
+              width: 36,
+              height: 36,
+              marginRight: 8,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 17,
+              cursor: "pointer",
+              boxShadow: A.shadow,
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            {"💡"}
+          </button>
+
           {/* Stop knop */}
           <button
             onClick={handleStop}
@@ -851,6 +881,117 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           </div>
         )}
       </div>
+
+      {/* Uitlegvenster (💡) — over het scherm heen, verandert de opmaak eronder niet */}
+      {helpOpen && currentSkill && !showLevelUp && (
+        <div
+          onClick={function() { setHelpOpen(false); }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(26,29,58,0.45)",
+            zIndex: 90,
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            animation: "acFadeIn 0.15s ease",
+          }}
+        >
+          <div
+            onClick={function(e) { e.stopPropagation(); }}
+            role="dialog"
+            aria-label={"Hoe doe ik dit?"}
+            style={{
+              background: A.bgCard,
+              width: "100%",
+              maxWidth: 520,
+              maxHeight: "85dvh",
+              overflowY: "auto",
+              WebkitOverflowScrolling: "touch",
+              borderRadius: A.r20 + "px " + A.r20 + "px 0 0",
+              padding: "20px 20px calc(20px + env(safe-area-inset-bottom))",
+              boxShadow: A.shadowMd,
+              animation: "acSlideUp 0.22s ease",
+            }}
+          >
+            <div style={{ fontSize: T.lg, fontWeight: 900, color: A.text, marginBottom: 2 }}>
+              {"💡 Hoe doe ik dit?"}
+            </div>
+            <div style={{ fontSize: T.xs, fontWeight: 800, color: A.primary, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>
+              {currentSkill.label + (currentSkill.strategy ? " · " + currentSkill.strategy : "")}
+            </div>
+
+            {/* Tip met de getallen van deze som: pas na het antwoorden (verklapt anders het antwoord) */}
+            {feedback && (
+              <div style={{
+                borderRadius: A.r12,
+                border: "1.5px solid " + A.tipBorder,
+                background: A.tipBg,
+                padding: "10px 12px",
+                marginBottom: 10,
+              }}>
+                <div style={{ fontSize: T.xs, fontWeight: 800, color: A.tipTxt, letterSpacing: 0.8, marginBottom: 4 }}>
+                  {"BIJ DEZE SOM"}
+                </div>
+                <div style={{ fontSize: T.sm, color: A.tipTxt, lineHeight: 1.55, fontWeight: 600 }}>
+                  {typeof currentSkill.tip === "function" ? currentSkill.tip(currentQuestion.terms, currentQuestion.answer) : currentSkill.tip}
+                </div>
+              </div>
+            )}
+
+            <div style={{
+              borderRadius: A.r12,
+              border: "1.5px solid " + A.uitlegBorder,
+              background: A.uitlegBg,
+              padding: "10px 12px",
+              marginBottom: 10,
+            }}>
+              <div style={{ fontSize: T.xs, fontWeight: 800, color: A.uitlegTxt, letterSpacing: 0.8, marginBottom: 4 }}>
+                {"UITLEG"}
+              </div>
+              <div style={{ fontSize: T.sm, color: A.uitlegTxt, lineHeight: 1.55 }}>
+                {currentSkill.uitleg}
+              </div>
+            </div>
+
+            {currentSkill.voorbeeld && (
+              <div style={{
+                borderRadius: A.r12,
+                border: "1.5px solid " + A.voorbeeldBorder,
+                background: A.voorbeeldBg,
+                padding: "10px 12px",
+              }}>
+                <div style={{ fontSize: T.xs, fontWeight: 800, color: A.voorbeeldTxt, letterSpacing: 0.8, marginBottom: 4 }}>
+                  {"VOORBEELD"}
+                </div>
+                <div style={{ fontSize: T.sm, color: A.voorbeeldTxt, lineHeight: 1.55, whiteSpace: "pre-line" }}>
+                  {currentSkill.voorbeeld}
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={function() { setHelpOpen(false); }}
+              style={{
+                marginTop: 14,
+                width: "100%",
+                minHeight: 48,
+                padding: "14px 20px",
+                background: A.primary,
+                color: "#ffffff",
+                border: "none",
+                borderRadius: A.r16,
+                fontSize: T.md,
+                fontWeight: 800,
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              {"Ik snap het"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Level-up overlay */}
       {showLevelUp && levelUpData && (
