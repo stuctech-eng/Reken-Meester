@@ -23,11 +23,14 @@ function boxTotals(save, subjects) {
 // onAuto: start de Auto-modus; null als geen enkele modus nog een level kan opleveren
 // openBoxes / onToggleBox: open of dicht per vak ({ rekenen: true, ... }), stand bewaard in App
 // Vakken op Home. Elke modus hoort bij één vak via subject.group. Alleen Rekenen heeft Auto.
-// Een vak zonder zichtbare modus wordt niet getoond.
+// Een vak zonder zichtbare modus wordt niet getoond. Wiskunde (volwassenen) telt niet mee in
+// de nauwkeurigheid bovenaan (alleen de rekenvakken, zoals vóór Wiskunde).
 var BOXES = [
   { id: "rekenen",   title: "Rekenen",           auto: true  },
   { id: "praktisch", title: "Praktisch rekenen", auto: false },
+  { id: "wiskunde",  title: "Wiskunde",          auto: false },
 ];
+var ACC_GROUPS = ["rekenen", "praktisch"];
 
 export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, autoAll, openBoxes, onToggleBox }) {
   // Bovenste kaart: de laatst geoefende modus (lastSubjectId); zonder die waarde de eerste modus
@@ -37,11 +40,11 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
   var totalMastered = optData.totalSkillsMastered || 0;
   var heroMax       = getSkillOrder(heroSubject.id).length;
   // Nauwkeurigheid over alle zichtbare modi samen
-  var accAll        = boxTotals(save, availSubjects);
+  var accAll        = boxTotals(save, availSubjects.filter(function(s) { return ACC_GROUPS.indexOf(s.group) !== -1; }));
   var acc           = accAll.questions > 0 ? Math.round(accAll.correct / accAll.questions * 100) : 0;
 
-  var titelObj      = getTitel(totalMastered);
-  var nextTitelObj  = getNextTitel(totalMastered);
+  var titelObj      = getTitel(totalMastered, heroMax);
+  var nextTitelObj  = getNextTitel(totalMastered, heroMax);
 
   var displayName = save.displayName || "Leerling";
   var initials    = displayName.slice(0, 2).toUpperCase();
@@ -374,7 +377,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
                           </div>
                           {isAvail && (
                             <div style={{ fontSize: T.xs, color: subject.color, fontWeight: 700, marginTop: 3 }}>
-                              {"Titel: " + getTitel(mastered).label}
+                              {"Titel: " + getTitel(mastered, getSkillOrder(subject.id).length).label}
                             </div>
                           )}
                           {isAvail && data.totalQuestions > 0 && (

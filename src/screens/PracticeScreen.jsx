@@ -371,7 +371,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           nextSkillIdRef.current   = nextSkillId;
 
           var liveTotal   = getLiveTotal();
-          var newTitelObj = getTitel(liveTotal);
+          var newTitelObj = getTitel(liveTotal, skillOrder.length);
           setLevelUpData({
             skillLabel: checkSkill ? checkSkill.label : answerSkillId,
             newTitel:   newTitelObj.label,

@@ -177,6 +177,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "r01_route_optellen",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Wiskunde, domein Getallen en rekenregels (volwassenen): eigen voortgang
+    wiskunde_getallen: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "wg01_vergelijken",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 
@@ -248,20 +263,31 @@ export var TITEL_MILESTONES = [
   { minSkills: 37, label: "Groot Meester" },
 ];
 
-export function getTitel(totalMastered) {
-  var titel = TITEL_MILESTONES[0];
-  for (var i = 0; i < TITEL_MILESTONES.length; i++) {
-    if (totalMastered >= TITEL_MILESTONES[i].minSkills) {
-      titel = TITEL_MILESTONES[i];
+// total (optioneel): aantal vaardigheden van de modus. Zonder total (of bij 37) precies de
+// grenzen hierboven; bij een ander aantal dezelfde titels naar verhouding (laatste = alles).
+function milestonesFor(total) {
+  if (!total || total === 37) return TITEL_MILESTONES;
+  return TITEL_MILESTONES.map(function(m) {
+    return { minSkills: m.minSkills === 37 ? total : Math.min(total, Math.round(m.minSkills * total / 37)), label: m.label };
+  });
+}
+
+export function getTitel(totalMastered, total) {
+  var ms    = milestonesFor(total);
+  var titel = ms[0];
+  for (var i = 0; i < ms.length; i++) {
+    if (totalMastered >= ms[i].minSkills) {
+      titel = ms[i];
     }
   }
   return titel;
 }
 
-export function getNextTitel(totalMastered) {
-  for (var i = 0; i < TITEL_MILESTONES.length; i++) {
-    if (TITEL_MILESTONES[i].minSkills > totalMastered) {
-      return TITEL_MILESTONES[i];
+export function getNextTitel(totalMastered, total) {
+  var ms = milestonesFor(total);
+  for (var i = 0; i < ms.length; i++) {
+    if (ms[i].minSkills > totalMastered) {
+      return ms[i];
     }
   }
   return null;

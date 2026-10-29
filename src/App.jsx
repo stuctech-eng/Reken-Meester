@@ -328,7 +328,7 @@ export default function App() {
         var subAcc   = subjData.totalQuestions > 0
           ? Math.round(subjData.totalCorrect / subjData.totalQuestions * 100) : 0;
         var subSkills = subjData.totalSkillsMastered || 0;
-        updateSubjectLeaderboard(uid, next.displayName, result.subjectId, subjData.currentLevel || 1, subAcc, subSkills, getTitel(subSkills).label);
+        updateSubjectLeaderboard(uid, next.displayName, result.subjectId, subjData.currentLevel || 1, subAcc, subSkills, getTitel(subSkills, getSkillOrder(result.subjectId).length).label);
       }
 
       return next;

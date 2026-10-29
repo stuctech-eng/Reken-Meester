@@ -73,7 +73,7 @@ export default function SettingsScreen({ save, onBack, onReset }) {
               <Fragment key={subject.id}>
                 <StatRow
                   label={"Titel " + subject.label.toLowerCase()}
-                  value={getTitel(subjData(subject.id).totalSkillsMastered || 0).label}
+                  value={getTitel(subjData(subject.id).totalSkillsMastered || 0, getSkillOrder(subject.id).length).label}
                 />
                 <Divider style={{ margin: "12px 0" }} />
               </Fragment>

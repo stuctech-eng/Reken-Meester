@@ -12,6 +12,7 @@ import { METEN_SKILLS, METEN_ORDER } from "./skills/meten.js";
 import { TIJD_SKILLS, TIJD_ORDER } from "./skills/tijd.js";
 import { PROCENT_SKILLS, PROCENT_ORDER } from "./skills/procenten.js";
 import { REIS_SKILLS, REIS_ORDER } from "./skills/reizen.js";
+import { WISK_GETALLEN_SKILLS, WISK_GETALLEN_ORDER } from "./skills/wiskunde-getallen.js";
 
 export var SUBJECTS = [
   {
@@ -135,6 +136,17 @@ export var SUBJECTS = [
     levels: 10,
     group: "praktisch",
   },
+  {
+    id: "wiskunde_getallen",
+    label: "Getallen en rekenregels",
+    icon: "x²",
+    color: "#475569",
+    lightColor: "#f1f5f9",
+    description: "Negatief, volgorde, breuken, machten en wortels",
+    available: true,
+    levels: 10,
+    group: "wiskunde",
+  },
 ];
 
 export function getSubject(id) {
@@ -161,6 +173,7 @@ export var SUBJECT_SKILLS = {
   tijd: { skills: TIJD_SKILLS, order: TIJD_ORDER },
   procenten: { skills: PROCENT_SKILLS, order: PROCENT_ORDER },
   reizen: { skills: REIS_SKILLS, order: REIS_ORDER },
+  wiskunde_getallen: { skills: WISK_GETALLEN_SKILLS, order: WISK_GETALLEN_ORDER },
 };
 
 function getSubjectSkills(subjectId) {
