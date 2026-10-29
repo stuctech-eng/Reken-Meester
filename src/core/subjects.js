@@ -14,6 +14,7 @@ import { PROCENT_SKILLS, PROCENT_ORDER } from "./skills/procenten.js";
 import { REIS_SKILLS, REIS_ORDER } from "./skills/reizen.js";
 import { WISK_GETALLEN_SKILLS, WISK_GETALLEN_ORDER } from "./skills/wiskunde-getallen.js";
 import { WISK_ALGEBRA_SKILLS, WISK_ALGEBRA_ORDER } from "./skills/wiskunde-algebra.js";
+import { WISK_ALGEBRA2_SKILLS, WISK_ALGEBRA2_ORDER } from "./skills/wiskunde-algebra2.js";
 
 export var SUBJECTS = [
   {
@@ -159,6 +160,17 @@ export var SUBJECTS = [
     levels: 10,
     group: "wiskunde",
   },
+  {
+    id: "wiskunde_algebra2",
+    label: "Algebra 2",
+    icon: "ax²",
+    color: "#1e293b",
+    lightColor: "#f1f5f9",
+    description: "Haakjes keer haakjes, kwadratisch en stelsels. Aanbevolen: eerst Algebra",
+    available: true,
+    levels: 10,
+    group: "wiskunde",
+  },
 ];
 
 export function getSubject(id) {
@@ -187,6 +199,7 @@ export var SUBJECT_SKILLS = {
   reizen: { skills: REIS_SKILLS, order: REIS_ORDER },
   wiskunde_getallen: { skills: WISK_GETALLEN_SKILLS, order: WISK_GETALLEN_ORDER },
   wiskunde_algebra: { skills: WISK_ALGEBRA_SKILLS, order: WISK_ALGEBRA_ORDER },
+  wiskunde_algebra2: { skills: WISK_ALGEBRA2_SKILLS, order: WISK_ALGEBRA2_ORDER },
 };
 
 function getSubjectSkills(subjectId) {
