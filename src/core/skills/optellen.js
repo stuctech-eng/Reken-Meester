@@ -241,8 +241,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Optellen tot 10",
     strategy: "tellen",
     tip: function(t) { var a = t[0]; var b = t[1]; return "Tel op je vingers of in je hoofd: " + a + " + " + b + " → " + a + ", dan " + b + " verder tellen."; },
-    uitleg: "Begin met sommen waarbij beide getallen klein zijn (1 t/m 5). Je kan ze gewoon natellen. Probeer ze uiteindelijk uit je hoofd te leren — dat gaat later sneller!",
-    voorbeeld: "2 + 3 = ?\nTel verder: 2 → 3, 4, 5. Antwoord: 5.",
+    uitleg: "Begin bij het grootste getal en tel het kleine getal erbij. Bij 2 + 4 begin je dus bij 4 en tel je verder: 5, 6. Oefen deze kleine sommen totdat je ze steeds vaker direct uit je hoofd weet.",
+    voorbeeld: "2 + 4 = ?\nBegin bij 4 en tel 2 verder: 5, 6\nAntwoord: 6",
     minCorrect: 8,
     generate: function() {
       var a = rnd(1, 5);
@@ -258,8 +258,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Enkelvoudige cijfers, grotere sommen",
     strategy: "splitsen",
     tip: function(t) { var a = t[0]; var b = t[1]; var x = (10 - a > 0 && 10 - a < b) ? (10 - a) : (10 - b > 0 && 10 - b < a ? (10 - b) : Math.ceil(b / 5) * 5 - b || 1); var y = b - x; if (y <= 0) { x = 1; y = b - 1; } return "Maak van één getal een rond getal: " + a + " + " + b + " → " + a + " + " + x + " + " + y + " = " + (a + b); },
-    uitleg: "Bij grotere cijfersommen loont het om te splitsen. Maak 8 + 6: splits de 6 in 2 + 4. Dan 8 + 2 = 10, en 10 + 4 = 14. Dit heet ‘aanvullen tot tien’.",
-    voorbeeld: "8 + 7 = ?\nSplits 7 in 2 + 5. Dan: 8 + 2 = 10, en 10 + 5 = 15.",
+    uitleg: "Gaat de som over de 10? Maak dan eerst 10. Bij 8 + 6 heeft 8 nog 2 nodig tot 10. Splits de 6 in 2 en 4: 8 + 2 = 10, en 10 + 4 = 14. Blijft de som onder de 10, dan weet je hem vaak al uit je hoofd.",
+    voorbeeld: "8 + 7 = ?\nSplits 7 in 2 en 5\n8 + 2 = 10\n10 + 5 = 15",
     minCorrect: 10,
     generate: function() {
       // minstens één getal >= 5 voor echte oefening
@@ -276,8 +276,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Getal + 10, 20, 30…",
     strategy: "patroon",
     tip: "Als je een tiental optelt verandert alleen het tientallen-cijfer: 34 + 20 = 54.",
-    uitleg: "Tientallen optellen is makkelijk: alleen het getal vóór de nul verandert. 47 + 30: de 4 wordt een 7, de eenheden blijven 7. Dus: 77.",
-    voorbeeld: "56 + 30 = ?\nTientallen: 5 + 3 = 8. Eenheden blijven 6. Antwoord: 86.",
+    uitleg: "Tel je een rond tiental erbij, dan verandert alleen het tientallen-cijfer. De eenheden blijven staan. 47 + 30: de 4 tientallen worden 4 + 3 = 7 tientallen, de 7 eenheden blijven. Dus 77.",
+    voorbeeld: "56 + 30 = ?\nTientallen: 5 + 3 = 8\nEenheden blijven 6\nAntwoord: 86",
     minCorrect: 8,
     generate: function() {
       var a = rnd(10, 69);
@@ -294,8 +294,8 @@ export var OPTELLEN_SKILLS = [
     desc: "10+20, 30+40, tientallen optellen",
     strategy: "patroon",
     tip: "Ronde getallen: 20 + 50 is hetzelfde als 2 + 5, maar dan ×10.",
-    uitleg: "Bij ronde tientallen doe je eigenlijk de enkelvoudige som en zet je een nul achter het antwoord. 30 + 40: 3 + 4 = 7, dus 70.",
-    voorbeeld: "60 + 20 = ?\n6 + 2 = 8, dus het antwoord is 80.",
+    uitleg: "Laat de nullen even weg en reken met de kleine getallen. 30 + 40 wordt 3 + 4 = 7. Zet de nul er weer achter: 70. Je telt eigenlijk tientallen: 3 tientallen en 4 tientallen zijn samen 7 tientallen.",
+    voorbeeld: "60 + 20 = ?\nZonder nul: 6 + 2 = 8\nNul erachter: 80",
     minCorrect: 8,
     generate: function() {
       var a = rnd(1, 8) * 10;
@@ -312,8 +312,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Optellen zonder door het tiental te gaan",
     strategy: "splitsen",
     tip: "Kijk of de eenheden samen minder dan 10 zijn: dan is er geen overstap nodig.",
-    uitleg: "Als de eenheden samen minder dan 10 zijn, tel je de tientallen en eenheden apart op. 13 + 5: tientallen 1, eenheden 3 + 5 = 8, antwoord 18.",
-    voorbeeld: "14 + 3 = ?\nEenheden: 4 + 3 = 7. Tientallen: 1. Antwoord: 17.",
+    uitleg: "De eenheden samen blijven onder de 10, dus het aantal tientallen verandert niet. Tel alleen de eenheden op. 13 + 5: 3 + 5 = 8, dus 18.",
+    voorbeeld: "14 + 3 = ?\nEenheden: 4 + 3 = 7\nDe 10 blijft staan\nAntwoord: 17",
     minCorrect: 8,
     generate: function() {
       var a = rnd(11, 17);
@@ -332,8 +332,8 @@ export var OPTELLEN_SKILLS = [
     desc: "8+5, 9+4 — door het tiental heen",
     strategy: "aanvullen",
     tip: function(t) { var a = t[0]; var b = t[1]; var x = 10 - a; var y = b - x; return "Vul eerst aan tot 10, tel dan de rest op: " + a + " + " + b + " → " + a + " + " + x + " + " + y + " = " + (a + b); },
-    uitleg: "Dit is een cruciale vaardigheid! Splits het tweede getal zodat je eerst naar 10 springt. Dan tel je de rest erbij. 7 + 8: splits 8 in 3 + 5. Dan 7 + 3 = 10, en 10 + 5 = 15.",
-    voorbeeld: "9 + 6 = ?\nSplits 6 in 1 + 5. Dan: 9 + 1 = 10, en 10 + 5 = 15.",
+    uitleg: "Spring eerst naar 10 en tel daarna de rest erbij. Vraag jezelf: hoeveel heeft het eerste getal nog nodig tot 10? Bij 7 + 8 is dat 3. Van de 8 blijft dan 5 over: 10 + 5 = 15.",
+    voorbeeld: "9 + 6 = ?\n9 heeft 1 nodig tot 10\n9 + 1 = 10, van de 6 blijft 5 over\n10 + 5 = 15",
     minCorrect: 12,
     generate: function() {
       // a + b > 10, both single digit
@@ -350,8 +350,8 @@ export var OPTELLEN_SKILLS = [
     desc: "34 + 25, 41 + 38 — zonder overstap",
     strategy: "splitsen",
     tip: function(t) { var a = t[0]; var b = t[1]; var aT = Math.floor(a / 10) * 10; var aE = a % 10; var bT = Math.floor(b / 10) * 10; var bE = b % 10; return "Tel tientallen en eenheden apart op: " + a + " + " + b + " → " + aT + "+" + bT + "=" + (aT + bT) + ", " + aE + "+" + bE + "=" + (aE + bE) + ", samen " + (a + b); },
-    uitleg: "Splits beide getallen in tientallen en eenheden. Reken die apart op, zet ze dan samen. 46 + 32: 40+30=70, 6+2=8, antwoord: 78. Let op: dit werkt alleen zonder overstap!",
-    voorbeeld: "52 + 35 = ?\n50+30=80, 2+5=7. Antwoord: 87.",
+    uitleg: "Houd het eerste getal heel en tel het tweede er in twee stappen bij: eerst de tientallen, dan de eenheden. Zo hoef je maar één tussenstand te onthouden. 46 + 32: 46 + 30 = 76, en 76 + 2 = 78.",
+    voorbeeld: "52 + 35 = ?\n52 + 30 = 82\n82 + 5 = 87",
     minCorrect: 10,
     generate: function() {
       var aT = rnd(1, 5) * 10;
@@ -373,8 +373,8 @@ export var OPTELLEN_SKILLS = [
     desc: "47 + 36, 58 + 28 — met overstap",
     strategy: "compenseren",
     tip: function(t) { var a = t[0]; var b = t[1]; var bRound = Math.ceil(b / 10) * 10; var diff = bRound - b; return "Rond af en compenseer: " + a + " + " + b + " → " + a + " + " + bRound + " − " + diff + " = " + (a + b) + ". Of: splits in tientallen + eenheden."; },
-    uitleg: "Er zijn twee manieren: (1) Compenseren: maak van 36 een 40, tel op, trek 4 af. 47+40=87, 87-4=83. (2) Splitsen: 47+36 = 47+30+6 = 77+6 = 83.",
-    voorbeeld: "55 + 28 = ?\nManier 1: 55 + 30 − 2 = 83.\nManier 2: 55 + 20 + 8 = 75 + 8 = 83.",
+    uitleg: "Twee manieren uit je hoofd. Rijgen: tel eerst de tientallen erbij en dan de eenheden, 47 + 30 + 6 = 77 + 6 = 83. Compenseren: maak er een rond getal van en haal het verschil er weer af, 47 + 40 − 4 = 87 − 4 = 83.",
+    voorbeeld: "55 + 28 = ?\nRijgen: 55 + 20 = 75\n75 + 8 = 83\nCompenseren: 55 + 30 = 85\n85 − 2 = 83",
     minCorrect: 12,
     generate: function() {
       var a = rnd(24, 68);
@@ -395,8 +395,8 @@ export var OPTELLEN_SKILLS = [
     desc: "3 + 4 + 5, 12 + 8 + 7",
     strategy: "hergroeperen",
     tip: "Zoek makkelijke paren: bij 3+7+8 eerst 3+7=10, dan 10+8=18.",
-    uitleg: "Je mag de volgorde veranderen! Zoek paren die samen 10 of 20 maken. 4+6+9: 4+6=10, 10+9=19. Dit heet hergroeperen en maakt rekenen veel sneller.",
-    voorbeeld: "8 + 5 + 2 = ?\nHergroepeer: 8 + 2 = 10, dan 10 + 5 = 15.",
+    uitleg: "Je mag de volgorde veranderen. Zoek eerst twee getallen die samen 10 of 20 maken en tel het derde getal daarna erbij. Bij 4 + 9 + 6: eerst 4 + 6 = 10, dan 10 + 9 = 19.",
+    voorbeeld: "8 + 5 + 2 = ?\n8 + 2 = 10\n10 + 5 = 15",
     minCorrect: 10,
     generate: function() {
       var t = rnd(1, 3);
@@ -422,8 +422,8 @@ export var OPTELLEN_SKILLS = [
     desc: "200+300, 150+250",
     strategy: "patroon",
     tip: "Honderdtallen optellen: 200+500 is hetzelfde als 2+5, maar dan ×100.",
-    uitleg: "Net als bij tientallen: kijk alleen naar het getal voor de honderd. 300 + 400: 3 + 4 = 7, dus 700. Met een getal erbij: 300 + 45 = 345.",
-    voorbeeld: "400 + 300 = ?\n4 + 3 = 7, dus 700.",
+    uitleg: "Begin bij de honderden en werk naar klein. 300 + 400: 3 + 4 = 7, dus 700. Bij 313 + 141 tel je eerst de honderden erbij (413), dan de tientallen (453) en dan de eenheden (454).",
+    voorbeeld: "246 + 152 = ?\n246 + 100 = 346\n346 + 50 = 396\n396 + 2 = 398",
     minCorrect: 8,
     generate: function() {
       var t = rnd(1, 3);
@@ -450,8 +450,8 @@ export var OPTELLEN_SKILLS = [
     desc: "134+52, 267+31, gevarieerd tot 999",
     strategy: "splitsen",
     tip: function(t) { var a = t[0]; var b = t[1]; var bT = Math.floor(b / 10) * 10; var bE = b % 10; if (bE === 0) { return "Splits in stappen: " + a + " + " + b + " → direct " + (a + b) + "."; } return "Splits in stappen: " + a + " + " + b + " → " + a + " + " + bT + " = " + (a + bT) + ", en + " + bE + " = " + (a + b); },
-    uitleg: "Reken grote sommen stap voor stap. Eerst de tientallen erbij, dan de eenheden. 156 + 43: 156 + 40 = 196, 196 + 3 = 199. Geen paniek bij grote getallen!",
-    voorbeeld: "245 + 53 = ?\n245 + 50 = 295, 295 + 3 = 298.",
+    uitleg: "Houd het eerste getal heel en tel het tweede er in stukken bij: eerst de honderden, dan de tientallen, dan de eenheden. 156 + 43: 156 + 40 = 196, en 196 + 3 = 199.",
+    voorbeeld: "372 + 54 = ?\n372 + 50 = 422\n422 + 4 = 426",
     minCorrect: 10,
     generate: function() {
       var t = rnd(1, 4);
@@ -480,8 +480,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Vier getallen optellen, tien-paren zoeken",
     strategy: "hergroeperen",
     tip: "Zoek altijd eerst paren die 10 maken — die kun je als steen in de schoorsteen leggen.",
-    uitleg: "Met vier termen zoek je slimme combinaties. 3+7+4+6: 3+7=10 en 4+6=10, dus 10+10=20. Groepeer slim!",
-    voorbeeld: "5 + 8 + 5 + 2 = ?\n5+5=10 en 8+2=10. Dan 10+10=20.",
+    uitleg: "Zoek paren die samen 10 maken en tel die eerst op. Wat overblijft tel je er daarna bij. Vind je geen paar van 10, zoek dan een dubbel, zoals 8 + 8 = 16.",
+    voorbeeld: "5 + 8 + 5 + 2 = ?\n5 + 5 = 10\n8 + 2 = 10\n10 + 10 = 20",
     minCorrect: 10,
     generate: function() {
       var t = rnd(1, 3);
@@ -511,10 +511,10 @@ export var OPTELLEN_SKILLS = [
     label: "Optellen tot 1000",
     group: "Grotere getallen",
     desc: "456 + 237, met overstap naar honderdtal",
-    strategy: "kolomsgewijs",
+    strategy: "rijgen",
     tip: "Reken in stappen: eerst tientallen erbij, dan eenheden. Of gebruik de kolomsmethode.",
-    uitleg: "Bij getallen tot 1000 werkt dezelfde splitsingstechniek. 456 + 237: 456 + 200 = 656, 656 + 30 = 686, 686 + 7 = 693. Stap voor stap gaat het goed!",
-    voorbeeld: "348 + 275 = ?\n348 + 200 = 548, 548 + 70 = 618, 618 + 5 = 623.",
+    uitleg: "Rijgen werkt ook bij grotere getallen: houd het eerste getal heel en tel het tweede er in stukken bij. 456 + 237: 456 + 200 = 656, 656 + 30 = 686, 686 + 7 = 693. Zit een getal vlak onder een rond getal, dan is compenseren sneller.",
+    voorbeeld: "348 + 275 = ?\n348 + 200 = 548\n548 + 70 = 618\n618 + 5 = 623",
     minCorrect: 10,
     generate: function() {
       var a = rnd(100, 700);
@@ -532,8 +532,8 @@ export var OPTELLEN_SKILLS = [
     desc: "1000+2000, 3500+1500",
     strategy: "patroon",
     tip: "Net als honderdtallen: 2000 + 5000 is 2+5 keer duizend = 7000.",
-    uitleg: "Duizendtallen werken net als tientallen en honderdtallen. 3000 + 4000: 3+4=7, dus 7000. Met een rest: 2500 + 1500 = 4000 (500+500=1000, draag over).",
-    voorbeeld: "4000 + 3000 = ?\n4 + 3 = 7, dus 7000.",
+    uitleg: "Werk van groot naar klein. 4000 + 254 = 4254: je hebt 4 duizend en daar tel je 254 bij op. Bij 3422 + 3762 tel je eerst de duizenden erbij (6422), dan de honderden (7122), de tientallen (7182) en de eenheden (7184).",
+    voorbeeld: "3000 + 4000: 3 + 4 = 7, dus 7000\n2500 + 1500 = ?\n2500 + 1000 = 3500\n3500 + 500 = 4000",
     minCorrect: 8,
     generate: function() {
       var t = rnd(1, 3);
@@ -562,8 +562,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Vijf termen optellen, slim hergroeperen",
     strategy: "hergroeperen",
     tip: "Zoek meerdere paren die 10 of 100 maken — die zijn snel klaar.",
-    uitleg: "Met vijf termen zoek je meerdere makkelijke combinaties tegelijk. 2+8+3+7+5: (2+8)+(3+7)+5 = 10+10+5 = 25. Groepeer zo slim mogelijk!",
-    voorbeeld: "4 + 6 + 3 + 7 + 5 = ?\n4+6=10, 3+7=10. Dan 10+10+5=25.",
+    uitleg: "Zoek zoveel mogelijk paren van 10 en tel die eerst op. De losse getallen tel je aan het eind erbij. Streep in je hoofd elk getal weg dat je al gebruikt hebt, dan tel je niets dubbel.",
+    voorbeeld: "4 + 6 + 3 + 7 + 5 = ?\n4 + 6 = 10\n3 + 7 = 10\n10 + 10 + 5 = 25",
     minCorrect: 10,
     generate: function() {
       var t = rnd(1, 3);
@@ -590,8 +590,8 @@ export var OPTELLEN_SKILLS = [
     desc: "37 + ? = 100, aanvullen met twee stappen",
     strategy: "aanvullen",
     tip: function(t) { var a = t[0]; var b = t[1]; var aTiental = Math.ceil(a / 10) * 10; if (aTiental === a) aTiental = a + 10; var stap1 = aTiental - a; var stap2 = 100 - aTiental; return "Eerst aanvullen tot het volgende tiental, dan naar 100: " + a + " → " + aTiental + " (" + stap1 + " erbij) → 100 (" + stap2 + " erbij), samen " + b; },
-    uitleg: "Om het aanvullende getal te vinden: hoeveel moet erbij tot het tiental? Dan hoeveel tot 100? 46: 46→50 is 4, 50→100 is 50. Totaal: 54. Dus 46 + 54 = 100.",
-    voorbeeld: "73 + ? = 100\n73→80 is 7, 80→100 is 20. Samen: 27. Dus 73 + 27 = 100.",
+    uitleg: "Van een getal naar 100 spring je in twee stappen: eerst naar het volgende tiental, dan naar 100. 46 → 50 is 4, 50 → 100 is 50, samen 54. Bij twee getallen die samen 100 zijn, maken de eenheden meestal samen 10. Zijn beide getallen ronde tientallen, dan zijn de eenheden samen 0.",
+    voorbeeld: "73 + ? = 100\n73 → 80 is 7\n80 → 100 is 20\nSamen 27, dus 73 + 27 = 100",
     minCorrect: 10,
     generate: function() {
       var a = rnd(11, 89);
@@ -607,8 +607,8 @@ export var OPTELLEN_SKILLS = [
     desc: "75 + 45 = 120 — door 100 heen",
     strategy: "aanvullen",
     tip: function(t) { var a = t[0]; var b = t[1]; var x = 100 - a; var y = b - x; return "Vul eerst aan tot 100, tel dan de rest op: " + a + " + " + b + " → " + a + " + " + x + " + " + y + " = " + (a + b); },
-    uitleg: "Als de som door 100 gaat: vul aan tot 100 en tel de rest daarna op. 68 + 47: 68 + 32 = 100, en nog 15 over, dus 115.",
-    voorbeeld: "83 + 38 = ?\n83 + 17 = 100, nog 21 over. 100 + 21 = 121.",
+    uitleg: "Vul eerst aan tot 100 en tel daarna de rest erbij. 68 + 47: 68 heeft 32 nodig tot 100. Van de 47 blijft dan 15 over: 100 + 15 = 115.",
+    voorbeeld: "83 + 38 = ?\n83 + 17 = 100\n38 − 17 = 21 blijft over\n100 + 21 = 121",
     minCorrect: 10,
     generate: function() {
       var a = rnd(51, 89);
@@ -625,8 +625,8 @@ export var OPTELLEN_SKILLS = [
     desc: "6+7 = 6+6+1, 8+9 = 8+8+1",
     strategy: "verdubbelen",
     tip: function(t) { var a = t[0]; var b = t[1]; var small = Math.min(a, b); var diff = Math.abs(a - b); return "Als twee getallen bijna gelijk zijn, verdubbel het kleinste en tel het verschil erbij: " + a + "+" + b + " = " + small + "+" + small + "+" + diff + " = " + (a + b); },
-    uitleg: "Verdubbelen kun je snel: 6+6=12 kennen de meesten. Als het 6+7 is: 6+6+1=13. Of 9+8: 8+8+1=17. Gebruik wat je al weet!",
-    voorbeeld: "7 + 8 = ?\nVerdubbel 7: 7+7=14, plus 1 = 15.",
+    uitleg: "Dubbelen weet je vaak al: 6 + 6 = 12. Liggen de getallen dicht bij elkaar, neem dan het dubbele van het kleinste getal en tel het verschil erbij. 6 + 7 = 6 + 6 + 1 = 13. En 8 + 10 = 8 + 8 + 2 = 18.",
+    voorbeeld: "7 + 8 = ?\nDubbel: 7 + 7 = 14\n8 is 1 meer dan 7\n14 + 1 = 15",
     minCorrect: 10,
     generate: function() {
       var base = rnd(3, 12);
@@ -644,8 +644,8 @@ export var OPTELLEN_SKILLS = [
     desc: "29+47 → 30+47−1, slim afronden",
     strategy: "compenseren",
     tip: function(t) { var a = t[0]; var b = t[1]; var aRound = Math.round(a / 10) * 10; var diff = aRound - a; return "Maak een getal rond, tel op, en compenseer het verschil: " + a + "+" + b + " = " + aRound + "+" + b + (diff > 0 ? "−" + diff : "+" + Math.abs(diff)) + " = " + (a + b); },
-    uitleg: "Als een getal vlak onder een tiental of honderdtal zit, maak het dan eerst rond. 38+54: 38 is bijna 40, dus 40+54=94, trek 2 af: 92. Veel sneller dan klassiek optellen!",
-    voorbeeld: "59 + 36 = ?\n60 + 36 = 96, min 1 = 95.",
+    uitleg: "Zit een getal net onder een tiental, maak het dan rond. Tel het ronde getal erbij en haal er daarna weer af wat je te veel deed. 38 + 54: 40 + 54 = 94. Je deed er 2 te veel bij, dus 94 − 2 = 92.",
+    voorbeeld: "59 + 36 = ?\n59 is 1 minder dan 60\n60 + 36 = 96\n1 te veel, dus 96 − 1 = 95",
     minCorrect: 10,
     generate: function() {
       var nearRound = rnd(1, 5);
@@ -715,8 +715,8 @@ export var OPTELLEN_SKILLS = [
     desc: "47 → 50, 23 → 20",
     strategy: "afronden",
     tip: "Kijk naar het eenheden-cijfer: 5 of meer → rond omhoog; 4 of minder → rond omlaag.",
-    uitleg: "Afronden op tientallen: kijk naar het eenheden-cijfer. Is dat 5, 6, 7, 8 of 9? Dan wordt het volgende tiental. Is het 0, 1, 2, 3 of 4? Dan blijft het huidige tiental. 47 → het eenheden-cijfer is 7 (≥5) → 50.",
-    voorbeeld: "Rond 63 af op tientallen.\nEenheden-cijfer: 3 (< 5) → afronden naar beneden: 60.",
+    uitleg: "Kijk alleen naar het eenheden-cijfer. Is dat 5, 6, 7, 8 of 9, ga dan omhoog naar het volgende tiental. Is het 0, 1, 2, 3 of 4, ga dan omlaag. 47 wordt 50, want 7 is 5 of meer.",
+    voorbeeld: "Rond 63 af op tientallen.\nEenheden-cijfer: 3, dat is minder dan 5\nOmlaag: 60",
     minCorrect: 10,
     generate: function() {
       var a = rnd(11, 99);
@@ -737,8 +737,8 @@ export var OPTELLEN_SKILLS = [
     desc: "347 → 300, 752 → 800",
     strategy: "afronden",
     tip: "Kijk naar het tiental-cijfer: 5 of meer → rond omhoog; minder dan 5 → rond omlaag.",
-    uitleg: "Afronden op honderdtallen: kijk naar het tientalcijfer. 347: tientalcijfer is 4 (< 5) → 300. 752: tientalcijfer is 5 (≥5) → 800.",
-    voorbeeld: "Rond 463 af op honderdtallen.\nTientalcijfer: 6 (≥5) → 500.",
+    uitleg: "Kijk alleen naar het tientallen-cijfer. Is dat 5 of meer, ga dan omhoog naar het volgende honderdtal. Is het 4 of minder, ga dan omlaag. 347 wordt 300, want 4 is minder dan 5. 752 wordt 800.",
+    voorbeeld: "Rond 463 af op honderdtallen.\nTientallen-cijfer: 6, dat is 5 of meer\nOmhoog: 500",
     minCorrect: 10,
     generate: function() {
       var a = rnd(101, 999);
@@ -761,8 +761,8 @@ export var OPTELLEN_SKILLS = [
     desc: "48 + 31 ≈ 50 + 30 = 80 (geschat)",
     strategy: "schatten",
     tip: function(t) { var a = round10(t[0]), b = round10(t[1]); return "Rond af op tientallen: " + t[0] + " wordt " + a + " en " + t[1] + " wordt " + b + ". " + a + " + " + b + " = " + (a + b) + "."; },
-    uitleg: "Schatten = eerst afronden, dan snel optellen. Kijk naar de eenheden: 1 tot en met 4 naar beneden, 6 tot en met 9 naar boven. 48 + 31: 50 + 30 = 80. De echte uitkomst is 79 — dicht in de buurt! Handig om snel te controleren of een antwoord klopt.",
-    voorbeeld: "Schat: 67 + 24 ≈ ?\n70 + 20 = 90. (Echt antwoord: 91.)",
+    uitleg: "Schatten is eerst afronden en dan rekenen. Rond elk getal af op tientallen (eenheden 5 of meer omhoog, 4 of minder omlaag) en tel de ronde getallen op. 48 + 31 wordt 50 + 30 = 80. Het echte antwoord, 79, ligt er dichtbij.",
+    voorbeeld: "Schat: 67 + 24 ≈ ?\n67 wordt 70, 24 wordt 20\n70 + 20 = 90\nEcht antwoord: 91, dat ligt er dichtbij",
     minCorrect: 8,
     generate: function() {
       return randomWith(function() {
@@ -799,11 +799,11 @@ export var OPTELLEN_SKILLS = [
     id: "s27_bridge_ten_adv",
     label: "Aanvullen tot tiental (gevorderd)",
     group: "Strategieën",
-    desc: "86 + ? = 90, welke eenheden ontbreken?",
+    desc: "87 + 14, 86 + 7 — tientallen en eenheden erbij, soms over het tiental",
     strategy: "aanvullen",
     tip: "Hoeveel moet erbij om het volgende tiental te bereiken? Kijk naar de eenheden.",
-    uitleg: "Als je weet dat 86 + 4 = 90, kun je grotere sommen ook aanpakken. 86 + 7: 86 + 4 = 90, dan 90 + 3 = 93. Aanvullen tot een tiental is een bouwsteen voor veel rekentechnieken.",
-    voorbeeld: "87 + 8 = ?\n87 + 3 = 90, dan 90 + 5 = 95.",
+    uitleg: "Gaat de som over een tiental? Vul dan eerst aan tot dat tiental en tel daarna de rest erbij. 86 + 7: 86 heeft 4 nodig tot 90, van de 7 blijft 3 over: 90 + 3 = 93. Is het tweede getal groter dan 10, tel dan eerst de tientallen erbij.",
+    voorbeeld: "87 + 14 = ?\nSplits 14 in 10 en 4\n87 + 10 = 97\nVan de 4 gebruik je 3: 97 + 3 = 100\nEr blijft 1 over: 100 + 1 = 101",
     minCorrect: 10,
     generate: function() {
       var roundTo = rnd(2, 9) * 10;
@@ -878,8 +878,8 @@ export var OPTELLEN_SKILLS = [
     desc: "? + 5 = 12 of 8 + ? = 15",
     strategy: "terug-rekenen",
     tip: "Trek het bekende getal af van de uitkomst om de missende term te vinden.",
-    uitleg: "Als je weet dat ? + 5 = 12, dan is ? = 12 - 5 = 7. Optellen en aftrekken zijn elkaars tegengestelde. Je kunt optellen dus 'omdraaien'!",
-    voorbeeld: "? + 6 = 14\n14 - 6 = 8. De missende term is 8.",
+    uitleg: "Vraag jezelf: hoeveel moet er bij het bekende getal om bij de uitkomst te komen? Bij ? + 5 = 12 spring je van 5 naar 10 (dat is 5) en van 10 naar 12 (dat is 2): samen 7. Terugrekenen mag ook: 12 − 5 = 7.",
+    voorbeeld: "? + 6 = 14\n6 → 10 is 4\n10 → 14 is 4\nSamen 8. Controle: 8 + 6 = 14",
     minCorrect: 10,
     generate: function() {
       var b = rnd(2, 9);
@@ -897,8 +897,8 @@ export var OPTELLEN_SKILLS = [
     desc: "? + 30 = 75 of 45 + ? = 80",
     strategy: "terug-rekenen",
     tip: "Trek het bekende getal af van de uitkomst om de missende term te vinden.",
-    uitleg: "Grotere missende termen: gebruik aftrekken. 45 + ? = 80: 80 - 45 = 35. Je kunt ook aanvullen: van 45 naar 80, dat is eerst 5 naar 50, dan 30 naar 80, samen 35.",
-    voorbeeld: "? + 40 = 90\n90 - 40 = 50.",
+    uitleg: "Trek het bekende tiental van de uitkomst af. De eenheden blijven daarbij gelijk. ? + 40 = 81: 81 − 40 = 41. Controleer door op te tellen: 41 + 40 = 81.",
+    voorbeeld: "? + 30 = 73\n73 − 30 = 43\nControle: 43 + 30 = 73",
     minCorrect: 10,
     generate: function() {
       var b = rnd(1, 7) * 10;
@@ -916,8 +916,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Grotere sommen — welke klopt niet?",
     strategy: "controleren",
     tip: "Reken elke som snel na — let op de overstap!",
-    uitleg: "Bij grotere sommen is het lastiger om de fout te spotten. Controleer de eenheden als eerste: kloppen die? Dan de tientallen. Eén som klopt niet!",
-    voorbeeld: "Welk antwoord is FOUT?\n24+18=42 → FOUT (moet 42 zijn... wacht, is het 42?)\nReken goed na!",
+    uitleg: "Reken elke som snel na in je hoofd. Let vooral op sommen over de 10: vul eerst aan tot 10 en tel de rest erbij. Komt jouw uitkomst niet overeen met het antwoord in de som, dan heb je de foute som gevonden.",
+    voorbeeld: "Welke som is FOUT?\n8 + 6 = 14: 8 + 2 = 10, nog 4 erbij is 14. Klopt.\n7 + 9 = 17: 7 + 3 = 10, nog 6 erbij is 16. Klopt niet!\nDus 7 + 9 = 17 is fout. Goed is 16.",
     minCorrect: 10,
     generate: makeErrorQ,
   },
@@ -1836,8 +1836,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Rond 347 af op tientallen: 350",
     strategy: "afronden",
     tip: "Kijk naar het getal op de eenhedenpositie: < 5 → naar beneden, >= 5 → naar boven.",
-    uitleg: "Afronden op tientallen: kijk naar de eenheden. 347 → eenheden = 7 >= 5 → afronden naar boven → 350.",
-    voorbeeld: "263 → eenheden = 3 < 5 → afronden naar beneden → 260.",
+    uitleg: "Kijk naar het eenheden-cijfer: 5 of meer betekent omhoog, 4 of minder omlaag. De honderden blijven gewoon staan. 347 wordt 350. Let op bij 96: omhoog wordt dat 100.",
+    voorbeeld: "263 ≈ ?\nEenheden-cijfer: 3, dat is minder dan 5\nOmlaag: 260",
     minCorrect: 8,
     generate: function() {
       var a = rnd(11, 899);
@@ -1855,8 +1855,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Rond 347 af op honderdtallen: 300",
     strategy: "afronden",
     tip: "Kijk naar het tientalcijfer: < 5 → naar beneden, >= 5 → naar boven.",
-    uitleg: "Afronden op honderdtallen: kijk naar de tientallen. 347 → tientallen = 4 < 5 → afronden naar beneden → 300.",
-    voorbeeld: "650 → tientallen = 5 >= 5 → afronden naar boven → 700.",
+    uitleg: "Kijk naar het tientallen-cijfer: 5 of meer betekent omhoog, 4 of minder omlaag. Alles rechts ervan wordt 0. 347 wordt 300. Let op bij 1196: omhoog wordt dat 1200.",
+    voorbeeld: "650 ≈ ?\nTientallen-cijfer: 5, dat is 5 of meer\nOmhoog: 700",
     minCorrect: 8,
     generate: function() {
       var a = rnd(101, 1899);
@@ -1874,8 +1874,8 @@ export var OPTELLEN_SKILLS = [
     desc: "237 + 456 door splitsen: 200+400, 30+50, 7+6",
     strategy: "splitsen",
     tip: "Splits elk getal in honderden, tientallen en eenheden. Tel elk deel apart op.",
-    uitleg: "Splitsen bij grote getallen: 237 + 456. Honderden: 200 + 400 = 600. Tientallen: 30 + 50 = 80. Eenheden: 7 + 6 = 13. Totaal: 600 + 80 + 13 = 693.",
-    voorbeeld: "345 + 278 = 300+200 + 40+70 + 5+8 = 500 + 110 + 13 = 623.",
+    uitleg: "Splits allebei de getallen in honderden, tientallen en eenheden. Tel elk deel apart op en zet de stukken daarna samen. Begin bij de honderden, dan weet je meteen ongeveer hoe groot het antwoord wordt.",
+    voorbeeld: "345 + 278 = ?\n300 + 200 = 500\n40 + 70 = 110\n5 + 8 = 13\n500 + 110 + 13 = 623",
     minCorrect: 10,
     generate: function() {
       var a = rnd(100, 600);
@@ -1985,8 +1985,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Welk antwoord klopt niet? (grotere getallen)",
     strategy: "controleren",
     tip: "Reken elke som snel na; je zoekt de som die fout is.",
-    uitleg: "In dit type vraag staan vier sommen. Drie zijn correct, één klopt niet. Controleer elke som en zoek de fout.",
-    voorbeeld: "35 + 47 = 82 ✓, 64 + 29 = 93 ✓, 58 + 34 = 91 FOUT (= 92), 71 + 18 = 89 ✓.",
+    uitleg: "Controleer eerst de eenheden. Het laatste cijfer van hun som moet overeenkomen met het laatste cijfer van het antwoord. Houd bij een som van 10 of meer ook rekening met de overdracht naar de tientallen. Controleer daarna de tientallen. Tel bij de tientallen ook de overdracht van de eenheden op.",
+    voorbeeld: "Welke som is FOUT?\n25 + 40 = 65: 5 + 0 = 5, en 65 eindigt op 5. Klopt.\n45 + 40 = 84: 5 + 0 = 5, maar 84 eindigt op 4. Klopt niet!\nDus 45 + 40 = 84 is fout. Goed is 85.",
     minCorrect: 10,
     generate: function() {
       var allPairs = [];
@@ -2138,8 +2138,8 @@ export var OPTELLEN_SKILLS = [
     desc: "245 + ? = 600",
     strategy: "aanvullen",
     tip: "Trek het bekende getal af van de uitkomst om de missende term te vinden.",
-    uitleg: "Missende term vinden: de uitkomst min het bekende getal geeft de missende term. 245 + ? = 600 → 600 - 245 = 355.",
-    voorbeeld: "? + 138 = 400 → 400 - 138 = 262.",
+    uitleg: "Reken niet terug, maar spring vooruit vanaf het bekende getal: eerst naar het volgende tiental, dan naar het volgende honderdtal, dan naar de uitkomst. Tel de sprongen daarna bij elkaar op.",
+    voorbeeld: "245 + ? = 600\n245 → 250 is 5\n250 → 300 is 50\n300 → 600 is 300\nSamen: 5 + 50 + 300 = 355",
     minCorrect: 10,
     generate: function() {
       var total = rnd(3, 9) * 100;
@@ -2276,8 +2276,8 @@ export var OPTELLEN_SKILLS = [
     desc: "  47\n+ 38\n----",
     strategy: "kolomsgewijs",
     tip: "Begin rechts: eenheden optellen, dan tientallen. Draag over als > 9.",
-    uitleg: "Kolomoptelling: schrijf getallen onder elkaar (eenheden onder eenheden). Begin rechts, draag over als de som > 9.",
-    voorbeeld: "  47\n+ 38: eenheden: 7+8=15 (schrijf 5, draag 1). Tientallen: 4+3+1=8. Antwoord: 85.",
+    uitleg: "Kolomoptelling: zet de getallen onder elkaar, eenheden onder eenheden. Begin rechts. Is een kolom samen 10 of meer, schrijf dan alleen het laatste cijfer op en onthoud 1 voor de kolom links ervan.",
+    voorbeeld: "47 + 38 = ?\nEenheden: 7 + 8 = 15, schrijf 5, onthoud 1\nTientallen: 4 + 3 + 1 = 8\nAntwoord: 85\nIn je hoofd kan het ook: 47 + 40 − 2 = 85",
     minCorrect: 10,
     generate: function() {
       var a = rnd(10, 89); var b = rnd(10, 89);
@@ -2293,8 +2293,8 @@ export var OPTELLEN_SKILLS = [
     desc: "  145\n+  67\n----",
     strategy: "kolomsgewijs",
     tip: "Schrijf de getallen netjes onder elkaar en begin rechts.",
-    uitleg: "Drie- en twee-cijferige getallen kolomsgewijs optellen: zet ze netjes onder elkaar en begin rechts. Draag over bij elk getal > 9.",
-    voorbeeld: "  145\n+  67: 5+7=12 (2, draag 1); 4+6+1=11 (1, draag 1); 1+0+1=2. Antwoord: 212.",
+    uitleg: "Zet de getallen onder elkaar met de eenheden recht onder elkaar; het kleine getal schuift dus naar rechts. Begin rechts. Is een kolom 10 of meer, schrijf het laatste cijfer op en onthoud 1 voor de volgende kolom.",
+    voorbeeld: "145 + 67 = ?\nEenheden: 5 + 7 = 12, schrijf 2, onthoud 1\nTientallen: 4 + 6 + 1 = 11, schrijf 1, onthoud 1\nHonderden: 1 + 1 = 2. Antwoord: 212\nIn je hoofd kan het ook: 145 + 70 − 3 = 212",
     minCorrect: 10,
     generate: function() {
       var a = rnd(100, 499); var b = rnd(10, 99);
@@ -2310,8 +2310,8 @@ export var OPTELLEN_SKILLS = [
     desc: "  1456\n+  378\n-----",
     strategy: "kolomsgewijs",
     tip: "Vier kolommen: begin rechts bij de eenheden.",
-    uitleg: "Vier-cijferige kolomoptelling: werk van rechts naar links. Schrijf het ciffer op en draag over als de kolom > 9.",
-    voorbeeld: "  1456\n+  378: 6+8=14 (4,+1); 5+7+1=13 (3,+1); 4+3+1=8; 1+0=1. Antwoord: 1834.",
+    uitleg: "Vier kolommen: duizenden, honderden, tientallen en eenheden. Begin rechts bij de eenheden. Is een kolom 10 of meer, schrijf het laatste cijfer op en onthoud 1 voor de kolom links ervan.",
+    voorbeeld: "1456 + 378 = ?\nEenheden: 6 + 8 = 14, schrijf 4, onthoud 1\nTientallen: 5 + 7 + 1 = 13, schrijf 3, onthoud 1\nHonderden: 4 + 3 + 1 = 8. Duizenden: 1. Antwoord: 1834\nIn je hoofd kan het ook: 1456 + 400 − 22 = 1834",
     minCorrect: 10,
     generate: function() {
       var a = rnd(1000, 4999); var b = rnd(100, 999);
@@ -2476,10 +2476,10 @@ export var OPTELLEN_SKILLS = [
     label: "Grote getallen",
     group: "Gevorderd",
     desc: "3456 + 2789 = ?",
-    strategy: "kolomsgewijs",
-    tip: "Gebruik kolomoptelling voor grote getallen.",
-    uitleg: "Grote getallen optellen: gebruik kolomoptelling of breek ze op in duizenden, honderden, tientallen en eenheden.",
-    voorbeeld: "3456 + 2789 = (3000+2000) + (400+700) + (50+80) + (6+9) = 5000+1100+130+15 = 6245.",
+    strategy: "rijgen",
+    tip: "Tel van groot naar klein erbij: eerst de duizenden, dan de honderden, tientallen en eenheden.",
+    uitleg: "Houd het eerste getal heel en tel het tweede er stuk voor stuk bij, van groot naar klein. Zit het tweede getal vlak onder een rond getal? Tel dan het ronde getal erbij en haal er daarna af wat je te veel deed.",
+    voorbeeld: "3456 + 2789 = ?\n3456 + 2000 = 5456\n5456 + 700 = 6156\n6156 + 80 = 6236\n6236 + 9 = 6245\nSneller: 2789 is 11 minder dan 2800. 3456 + 2800 = 6256, je deed 11 te veel, dus 6256 − 11 = 6245",
     minCorrect: 10,
     generate: function() {
       var a = rnd(1000, 7999); var b = rnd(1000, 7999);
@@ -2493,10 +2493,10 @@ export var OPTELLEN_SKILLS = [
     label: "Grote getallen in context",
     group: "Gevorderd",
     desc: "Een stad heeft 12.450 + 8.320 inwoners. Totaal?",
-    strategy: "kolomsgewijs",
-    tip: "Stel de som op en gebruik kolomoptelling.",
-    uitleg: "Contextsommen met grote getallen: haal de getallen uit de tekst en tel op.",
-    voorbeeld: "Bibliotheek A: 5680 boeken, B: 3470 boeken. Samen: 5680 + 3470 = 9150.",
+    strategy: "rijgen",
+    tip: "Haal de getallen uit de tekst en tel van groot naar klein erbij: duizenden, honderden, tientallen, eenheden.",
+    uitleg: "Haal de twee getallen uit de tekst. Schat eerst: rond allebei af op duizenden en tel op. Reken daarna precies, van groot naar klein: duizenden, honderden, tientallen, eenheden. Je antwoord moet dicht bij je schatting liggen.",
+    voorbeeld: "5680 boeken + 3470 boeken\nSchatting: 6000 + 3000 = 9000\n5680 + 3000 = 8680\n8680 + 400 = 9080\n9080 + 70 = 9150",
     minCorrect: 10,
     generate: function() {
       var a = rnd(1000, 9000);
@@ -2785,8 +2785,8 @@ export var OPTELLEN_SKILLS = [
     desc: "Zo snel mogelijk: gevarieerde gehele getallen",
     strategy: "snel",
     tip: "Probeer de sommen zo snel mogelijk uit je hoofd te rekenen.",
-    uitleg: "Snelheidsronde: grote variatie in getallen en moeilijkheden. Oefen tot je ze automatisch weet.",
-    voorbeeld: "47 + 85, 234 + 567, 1234 + 4321, etc.",
+    uitleg: "Kies per som de snelste truc. Vlak onder een rond getal? Compenseren. Over een tiental of honderdtal? Eerst aanvullen. Grote getallen? Van groot naar klein erbij tellen. Kijk tot slot of het laatste cijfer klopt.",
+    voorbeeld: "27 + 93: 93 is 7 minder dan 100\n27 + 100 = 127, en 127 − 7 = 120\n4582 + 1051: 4582 + 1000 = 5582\n5582 + 51 = 5633",
     minCorrect: 15,
     generate: function() {
       var level = rnd(0, 2);
