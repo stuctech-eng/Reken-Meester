@@ -45,16 +45,16 @@ var TYPE_CONFIG = {
   delen: {
     kind: "geheel",
     alleenKiezen: [
-      "d04_rooster",              // voorlopig: hoge vraag (tot 6 regels), past nog niet met cijferblok
       "d27_rest_tafel",           // antwoord met rest ("10 rest 4"): twee getallen
       "d28_rest_groot",           // antwoord met rest ("10 rest 4"): twee getallen
       "d34_schatten",             // schatten: het goede antwoord is de schatting
       "d35_fout_spotten",         // fout-spotter: kies de foute som
     ],
-    // Snelheidsronde d37 mengt vragen uit alle blokken; de schatvragen daarin ("Schat: ...") en
-    // de roostervragen uit d04 (stippen "●") blijven kiezen. Fout-spotters en restvragen
-    // (antwoord is geen geheel getal) vangt het vangnet hieronder al.
-    alleenKiezenVraag: /^Schat:|●/,
+    // Snelheidsronde d37 mengt vragen uit alle blokken; de schatvragen daarin ("Schat: ...")
+    // blijven kiezen. Fout-spotters en restvragen (antwoord is geen geheel getal) vangt het
+    // vangnet hieronder al. Een vraag die met het cijferblok niet op het scherm past (zoals een
+    // hoog rooster op een kleine telefoon), toont het oefenscherm zelf met keuzes.
+    alleenKiezenVraag: /^Schat:/,
   },
 };
 

@@ -9,18 +9,28 @@ import { A } from "../styles/tokens.js";
 //   7 8 9
 //   ⌫ 0 ✓
 // ✓ = Controleer (alleen actief als er iets is ingetypt). Knoppen minstens 44 px hoog.
+// keyH en gap (optioneel): kleinere toetsen en tussenruimte als de vraag hoog is (zie het
+// oefenscherm, "Passend cijferblok"); zonder deze waarden de vaste maten per schermgrootte.
 var ROWS = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"], ["del", "0", "ok"]];
 
-export default function Keypad({ onDigit, onBackspace, onSubmit, canSubmit, disabled, size }) {
+// Vaste maten per schermgrootte (toets, tussenruimte, antwoordvak) en de kleinste maten
+export var KEYPAD_SIZES = {
+  normal:  { keyH: 60, gap: 10, vakH: 68 },
+  compact: { keyH: 52, gap: 8,  vakH: 58 },
+  tiny:    { keyH: 46, gap: 6,  vakH: 52 },
+};
+export var KEYPAD_MIN = { keyH: 44, gap: 4, vakH: 44 };
+
+export default function Keypad({ onDigit, onBackspace, onSubmit, canSubmit, disabled, size, keyH, gap }) {
   var tiny    = size === "tiny";
   var compact = size === "compact";
-  var keyH    = tiny ? 46 : compact ? 52 : 60;
-  var gap     = tiny ? 6 : compact ? 8 : 10;
+  var keyHgt  = keyH || KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"].keyH;
+  var keyGap  = gap  || KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"].gap;
 
   function keyStyle(kind, off) {
     var isOk = kind === "ok";
     return {
-      height: keyH,
+      height: keyHgt,
       minHeight: 44,
       borderRadius: A.r16,
       border: "2px solid " + (isOk ? (off ? A.border : A.primary) : A.border),
@@ -46,7 +56,7 @@ export default function Keypad({ onDigit, onBackspace, onSubmit, canSubmit, disa
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-        gap: gap,
+        gap: keyGap,
       }}
     >
       {ROWS.map(function(row) {

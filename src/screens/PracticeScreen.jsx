@@ -3,7 +3,7 @@ import { Screen, ProgressBar } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { getSkill, getNextSkill, getSubject, getSkillOrder } from "../core/subjects.js";
 import { getTitel, calcXp } from "../core/save.js";
-import Keypad from "../components/Keypad.jsx";
+import Keypad, { KEYPAD_SIZES, KEYPAD_MIN } from "../components/Keypad.jsx";
 import { canTypeQuestion, parseTypedInteger, formatTypedDigits, TYPE_MAX_DIGITS } from "../core/answerCheck.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
@@ -112,6 +112,12 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var typed       = typedState[0];
   var setTyped    = typedState[1];
 
+  // Passend cijferblok (zie hieronder): null = vaste maten; { keyH, gap, vakH } = kleiner;
+  // "kiezen" = past ook dan niet, deze vraag toont de keuzes. Per vraag opnieuw bepaald.
+  var fitState    = useState(null);
+  var typeFit     = fitState[0];
+  var setTypeFit  = fitState[1];
+
   var fbState     = useState(null);
   var feedback    = fbState[0];
   var setFeedback = fbState[1];
@@ -219,6 +225,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setCurrentQuestion(nextQ);
     setSelected(null);
     setTyped("");
+    setTypeFit(null);
     setFeedback(null);
     setFbLevel(0);
     setUitlegVisible(false);
@@ -456,8 +463,12 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   var showUitlegBlock = feedback === "wrong" && fbLevel > 0 && currentSkill && uitlegVisible;
 
-  // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes)
-  var typeMode = answerMode === "typen" && canTypeQuestion(subjectId, currentQuestion.skillId, currentQuestion);
+  // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes).
+  // Past het cijferblok niet op het scherm, dan toont deze vraag toch de keuzes (typeFit).
+  var typeAllowed = answerMode === "typen" && canTypeQuestion(subjectId, currentQuestion.skillId, currentQuestion);
+  var typeMode    = typeAllowed && typeFit !== "kiezen";
+  var kpBase      = KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"];
+  var kpSize      = (typeFit && typeFit !== "kiezen") ? typeFit : kpBase;
 
   var isMultiLineQuestion = String(currentQuestion.question).indexOf("\n") !== -1;
   // Kolomsom: een vraag met regeleinden waarvan elke regel een getal is. Andere vragen met
@@ -550,7 +561,41 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
     window.addEventListener("resize", fit);
     return function() { active = false; window.removeEventListener("resize", fit); };
-  }, [chKey, chBase, chMin]);
+  }, [chKey, chBase, chMin, typeMode]);
+
+  // Passend cijferblok: bij Typen moet ✓ (Controleer) zonder scrollen in beeld staan. Gemeten
+  // vóór het eerste beeld: de onderkant van ✓ vanaf de bovenkant van de pagina, tegen de echte
+  // schermhoogte. Past het niet, dan eerst kleinere tussenruimte, dan een lager antwoordvak, dan
+  // lagere toetsen (nooit onder KEYPAD_MIN, toetsen minstens 44 px). Past het dan nog niet, dan
+  // toont deze vraag de keuzes; die gaan door dezelfde verwerking (handleChoice). Alleen bij
+  // Typen; Kiezen meet hier niets. De opgeslagen keuze Typen blijft ongewijzigd.
+  var kpWrapRef = useRef(null);
+  useLayoutEffect(function() {
+    if (!typeAllowed || feedback || typeFit === "kiezen") return undefined;
+    var wrap = kpWrapRef.current;
+    if (!wrap) return undefined;
+    var ok = wrap.querySelector("[aria-label='Controleer']");
+    if (!ok) return undefined;
+    var over = ok.getBoundingClientRect().bottom + window.scrollY - window.innerHeight;
+    if (over <= 0.5) return undefined;
+    if (typeFit) { setTypeFit("kiezen"); return undefined; }
+    var need = Math.ceil(over);
+    var room = 4 * (kpBase.keyH - KEYPAD_MIN.keyH) + 3 * (kpBase.gap - KEYPAD_MIN.gap) + (kpBase.vakH - KEYPAD_MIN.vakH);
+    if (need > room) { setTypeFit("kiezen"); return undefined; }
+    var gap = kpBase.gap, vakH = kpBase.vakH, keyH = kpBase.keyH;
+    while (need > 0 && gap > KEYPAD_MIN.gap) { gap -= 1; need -= 3; }
+    if (need > 0) { var v = Math.min(need, vakH - KEYPAD_MIN.vakH); vakH -= v; need -= v; }
+    if (need > 0) { keyH = Math.max(KEYPAD_MIN.keyH, keyH - Math.ceil(need / 4)); }
+    setTypeFit({ keyH: keyH, gap: gap, vakH: vakH });
+    return undefined;
+  }, [currentQuestion, qFont, typeFit, typeAllowed, feedback, tiny, compact]);
+
+  // Andere schermgrootte (draaien, venster): opnieuw bepalen
+  useEffect(function() {
+    function reset() { setTypeFit(null); }
+    window.addEventListener("resize", reset);
+    return function() { window.removeEventListener("resize", reset); };
+  }, []);
 
   // ── Render ────────────────────────────────────────────────────
   return (
@@ -760,11 +805,11 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
         {/* Antwoord typen: ingetypt getal + cijferblok (alleen als deze vraag getypt mag worden) */}
         {typeMode ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: tiny ? 8 : compact ? 10 : 12 }}>
+          <div ref={kpWrapRef} style={{ display: "flex", flexDirection: "column", gap: tiny ? 8 : compact ? 10 : 12 }}>
             <div
               aria-label="Jouw antwoord"
               style={{
-                minHeight: tiny ? 52 : compact ? 58 : 68,
+                minHeight: kpSize.vakH,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -796,6 +841,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 canSubmit={typed !== ""}
                 disabled={selected !== null}
                 size={tiny ? "tiny" : compact ? "compact" : "normal"}
+                keyH={kpSize.keyH}
+                gap={kpSize.gap}
               />
             )}
           </div>
