@@ -4,7 +4,9 @@ import { A, T } from "../styles/tokens.js";
 import { getSkill, getNextSkill, getSubject, getSkillOrder } from "../core/subjects.js";
 import { getTitel, calcXp } from "../core/save.js";
 import Keypad, { KEYPAD_SIZES, KEYPAD_MIN } from "../components/Keypad.jsx";
-import { canTypeQuestion, parseTypedInteger, formatTypedDigits, TYPE_MAX_DIGITS } from "../core/answerCheck.js";
+import { formatTypedDigits, TYPE_MAX_DIGITS } from "../core/answerCheck.js";
+import { resolveInput } from "../core/inputResolve.js";
+import { gradeTyped } from "../core/grading.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -298,9 +300,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setTyped(function(prev) { return prev.slice(0, -1); });
   }
   function handleTypedSubmit() {
-    var value = parseTypedInteger(typed);
-    if (value === null) return;
-    handleChoice(value);
+    var res = gradeTyped(inputInfo.gradingRule, typed, currentQuestion);
+    if (!res.geldig) return;
+    handleChoice(res.goed ? currentQuestion.answer : res.waarde);
   }
 
   // ── "Volgende vraag" knop (na fout) ───────────────────────────
@@ -465,7 +467,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes).
   // Past het cijferblok niet op het scherm, dan toont deze vraag toch de keuzes (typeFit).
-  var typeAllowed = answerMode === "typen" && canTypeQuestion(subjectId, currentQuestion.skillId, currentQuestion);
+  var inputInfo   = resolveInput(subjectId, currentQuestion.skillId, currentQuestion);
+  var typeAllowed = answerMode === "typen" && inputInfo.inputType === "number";
   var typeMode    = typeAllowed && typeFit !== "kiezen";
   var kpBase      = KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"];
   var kpSize      = (typeFit && typeFit !== "kiezen") ? typeFit : kpBase;

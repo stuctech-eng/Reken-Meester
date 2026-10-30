@@ -165,6 +165,11 @@ export function createSkills(owner, rawSkills) {
       // Skills met een eigen stapel (deck) regelen hun volgorde zelf; de rest via noRepeat
       generate:   s.deck ? s.make : noRepeat(s.id, s.make, s.subtypes),
     };
+    // Invoer-standaard van de vaardigheid (optioneel; zie inputResolve.js). Alleen overnemen als
+    // de vaardigheid ze zelf heeft, zodat bestaande vaardigheden precies gelijk blijven.
+    if (s.inputType !== undefined)   skill.inputType   = s.inputType;
+    if (s.gradingRule !== undefined) skill.gradingRule = s.gradingRule;
+    if (s.inputConfig !== undefined) skill.inputConfig = s.inputConfig;
     byId[s.id] = skill;
     return skill;
   });
@@ -249,7 +254,11 @@ export function createMixer(rawSkills, blockGroups, skillsById) {
       state.block   = nextBlock();
       state.skillId = nextSkillInBlock(state.block);
     }
-    return skillsById[state.skillId].generate();
+    var q = skillsById[state.skillId].generate();
+    // Herkomst: de vaardigheid die deze vraag maakte (voor de invoer-standaard in inputResolve.js).
+    // q.skillId blijft (via het oefenscherm) de gemengde ronde zelf, voor voortgang en statistiek.
+    q.bronSkillId = state.skillId;
+    return q;
   }
 
   return { generate: generate, state: state };
