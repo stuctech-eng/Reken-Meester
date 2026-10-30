@@ -6,8 +6,10 @@
 // aangetikte keuze (goed/fout, hulp, voortgang).
 //
 // Per modus staat hier expliciet:
-//   kind          welk soort antwoord getypt wordt (nu alleen "geheel": 0, 1, 2, ...)
-//   alleenKiezen  vaardigheden waarbij typen niet past; die tonen bij Typen gewoon de keuzes
+//   kind               welk soort antwoord getypt wordt (nu alleen "geheel": 0, 1, 2, ...)
+//   alleenKiezen       vaardigheden waarbij typen niet past; die tonen bij Typen gewoon de keuzes
+//   alleenKiezenVraag  (optioneel) vraagtekst-patroon voor losse vragen die kiezen blijven,
+//                      voor gemengde vaardigheden zoals een snelheidsronde
 // Een modus die hier niet staat, heeft geen Typen (de schakelaar verschijnt dan niet).
 
 var TYPE_CONFIG = {
@@ -19,9 +21,20 @@ var TYPE_CONFIG = {
       "s69_error_int",            // fout-spotter: kies de foute som
     ],
   },
+  aftrekken: {
+    kind: "geheel",
+    alleenKiezen: [
+      "a31_schatten_100",         // schatten: het goede antwoord is de schatting
+      "a32_schatten_1000",        // schatten: het goede antwoord is de schatting
+      "a36_fout_spotten",         // fout-spotter: kies de foute som
+    ],
+    // Snelheidsronde a37 mengt vragen uit alle blokken; de schatvragen daarin ("Schat: ...")
+    // blijven kiezen. Fout-spotters vangt het vangnet hieronder al (isErrorSpotter).
+    alleenKiezenVraag: /^Schat:/,
+  },
 };
 
-// Langste invoer in cijfers (Optellen: hoogstens 5 cijfers; ruim genomen)
+// Langste invoer in cijfers (Optellen en Aftrekken: hoogstens 5 cijfers; ruim genomen)
 export var TYPE_MAX_DIGITS = 7;
 
 export function typingAvailable(subjectId) {
@@ -36,6 +49,7 @@ export function canTypeQuestion(subjectId, skillId, question) {
   var cfg = TYPE_CONFIG[subjectId];
   if (cfg.alleenKiezen.indexOf(skillId) !== -1) return false;
   if (!question || question.isErrorSpotter) return false;
+  if (cfg.alleenKiezenVraag && cfg.alleenKiezenVraag.test(String(question.question))) return false;
   if (cfg.kind === "geheel") {
     var a = question.answer;
     return typeof a === "number" && isFinite(a) && Math.floor(a) === a && a >= 0;
