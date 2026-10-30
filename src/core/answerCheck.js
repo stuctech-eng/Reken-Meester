@@ -32,9 +32,19 @@ var TYPE_CONFIG = {
     // blijven kiezen. Fout-spotters vangt het vangnet hieronder al (isErrorSpotter).
     alleenKiezenVraag: /^Schat:/,
   },
+  vermenigvuldigen: {
+    kind: "geheel",
+    alleenKiezen: [
+      "v34_schatten",             // schatten: het goede antwoord is de schatting
+      "v35_fout_spotten",         // fout-spotter: kies de foute som
+    ],
+    // Snelheidsronde v37 mengt vragen uit alle blokken; de schatvragen daarin ("Schat: ...")
+    // blijven kiezen. Fout-spotters vangt het vangnet hieronder al (isErrorSpotter).
+    alleenKiezenVraag: /^Schat:/,
+  },
 };
 
-// Langste invoer in cijfers (Optellen en Aftrekken: hoogstens 5 cijfers; ruim genomen)
+// Langste invoer in cijfers (Optellen, Aftrekken en Vermenigvuldigen: hoogstens 5 cijfers; ruim genomen)
 export var TYPE_MAX_DIGITS = 7;
 
 export function typingAvailable(subjectId) {
