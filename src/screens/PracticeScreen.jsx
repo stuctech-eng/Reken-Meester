@@ -3,6 +3,8 @@ import { Screen, ProgressBar } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { getSkill, getNextSkill, getSubject, getSkillOrder } from "../core/subjects.js";
 import { getTitel, calcXp } from "../core/save.js";
+import Keypad from "../components/Keypad.jsx";
+import { canTypeQuestion, parseTypedInteger, formatTypedDigits, TYPE_MAX_DIGITS } from "../core/answerCheck.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -48,7 +50,9 @@ function goodNeeded(sessionCorrect, sessionTotal) {
 // onProgress (optioneel): na elk antwoord het actuele sessieresultaat, voor de concept-sessie.
 // fixedSkillId (optioneel): los oefenen. Alleen deze vaardigheid, geen promotie en geen
 // terugval; App slaat het resultaat niet op.
-export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish, autoNextLabel, onAutoNext, onProgress, fixedSkillId }) {
+// answerMode (optioneel): "typen" = antwoord intypen met het cijferblok, waar dat kan (zie
+// answerCheck.js); anders (ook zonder waarde) de vier keuzes zoals altijd.
+export default function PracticeScreen({ subjectId, level, skillStats, onBack, onFinish, autoNextLabel, onAutoNext, onProgress, fixedSkillId, answerMode }) {
   var skillOrder = getSkillOrder(subjectId);
 
   // ── Compacte stand ────────────────────────────────────────────
@@ -102,6 +106,11 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var selState    = useState(null);
   var selected    = selState[0];
   var setSelected = selState[1];
+
+  // Antwoord typen: de ingetypte cijfers van de huidige vraag (alleen in het geheugen)
+  var typedState  = useState("");
+  var typed       = typedState[0];
+  var setTyped    = typedState[1];
 
   var fbState     = useState(null);
   var feedback    = fbState[0];
@@ -209,6 +218,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     var nextQ = generateNext(nextSkillId);
     setCurrentQuestion(nextQ);
     setSelected(null);
+    setTyped("");
     setFeedback(null);
     setFbLevel(0);
     setUitlegVisible(false);
@@ -264,6 +274,26 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     }
     setShowLevelUp(false);
     advanceToNext(activeSkillIdRef.current);
+  }
+
+  // ── Antwoord typen ─────────────────────────────────────────────
+  // Het getypte getal gaat door dezelfde verwerking als een aangetikte keuze (handleChoice):
+  // goed als het gelijk is aan het antwoord, anders fout, met dezelfde hulp en voortgang.
+  function handleTypedDigit(d) {
+    if (selected !== null) return;
+    setTyped(function(prev) {
+      if (prev.length >= TYPE_MAX_DIGITS) return prev;
+      return prev === "0" ? d : prev + d;
+    });
+  }
+  function handleTypedBackspace() {
+    if (selected !== null) return;
+    setTyped(function(prev) { return prev.slice(0, -1); });
+  }
+  function handleTypedSubmit() {
+    var value = parseTypedInteger(typed);
+    if (value === null) return;
+    handleChoice(value);
   }
 
   // ── "Volgende vraag" knop (na fout) ───────────────────────────
@@ -425,6 +455,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var progressPct = fixedSkillId ? 0 : skillMastered ? 100 : Math.round(skillProgress / skillTarget * 100);
 
   var showUitlegBlock = feedback === "wrong" && fbLevel > 0 && currentSkill && uitlegVisible;
+
+  // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes)
+  var typeMode = answerMode === "typen" && canTypeQuestion(subjectId, currentQuestion.skillId, currentQuestion);
 
   var isMultiLineQuestion = String(currentQuestion.question).indexOf("\n") !== -1;
   // Kolomsom: een vraag met regeleinden waarvan elke regel een getal is. Andere vragen met
@@ -725,7 +758,48 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           )}
         </div>
 
-        {/* Antwoordgrid */}
+        {/* Antwoord typen: ingetypt getal + cijferblok (alleen als deze vraag getypt mag worden) */}
+        {typeMode ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: tiny ? 8 : compact ? 10 : 12 }}>
+            <div
+              aria-label="Jouw antwoord"
+              style={{
+                minHeight: tiny ? 52 : compact ? 58 : 68,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: A.r16,
+                border: "2.5px solid " + (
+                  feedback === "correct" ? A.successBorder
+                  : feedback === "wrong" ? A.errorBorder
+                  : A.primary
+                ),
+                background: feedback === "correct" ? A.successBg : feedback === "wrong" ? A.errorBg : A.bgCard,
+                color: feedback === "correct" ? A.successTxt : feedback === "wrong" ? A.errorTxt : A.text,
+                fontSize: tiny ? 32 : compact ? 36 : 42,
+                fontWeight: 900,
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: -0.5,
+                whiteSpace: "nowrap",
+                boxShadow: feedback ? "none" : A.shadow,
+              }}
+            >
+              {typed === ""
+                ? <span style={{ color: A.textSoft, fontSize: tiny ? 16 : 18, fontWeight: 700, letterSpacing: 0 }}>{"Typ je antwoord"}</span>
+                : formatTypedDigits(typed)}
+            </div>
+            {!feedback && (
+              <Keypad
+                onDigit={handleTypedDigit}
+                onBackspace={handleTypedBackspace}
+                onSubmit={handleTypedSubmit}
+                canSubmit={typed !== ""}
+                disabled={selected !== null}
+                size={tiny ? "tiny" : compact ? "compact" : "normal"}
+              />
+            )}
+          </div>
+        ) : (
         <div ref={chRef} style={{
           display: "grid",
           // minmax(0, 1fr): een brede keuze maakt de kolom nooit breder dan de helft
@@ -778,6 +852,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             );
           })}
         </div>
+        )}
 
         {/* Uitlegkaart — verschijnt na fout, blijft tot "Volgende vraag" */}
         {showUitlegBlock && (

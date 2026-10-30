@@ -245,6 +245,17 @@ export default function App() {
     });
   }
 
+  // ── Antwoord geven: Kiezen | Typen per modus ──────────────────────
+  // Standaard (en voor bestaande spelers) "kiezen"; de keuze wordt bewaard in save.answerModes
+  function answerModeFor(sId) {
+    return (save.answerModes && save.answerModes[sId] === "typen") ? "typen" : "kiezen";
+  }
+  function handleAnswerMode(sId, mode) {
+    var patch = { answerModes: {} };
+    patch.answerModes[sId] = mode === "typen" ? "typen" : "kiezen";
+    upSave(patch);
+  }
+
   // ── Username ──────────────────────────────────────────────────────
   function handleUsernameDone(name) {
     var slug = name.toLowerCase().replace(/\s+/g, "_");
@@ -562,6 +573,7 @@ export default function App() {
           setFixedSkillId(skillId);
           setScreen("practice");
         }}
+        onAnswerMode={handleAnswerMode}
       />
     );
   }
@@ -578,6 +590,7 @@ export default function App() {
         level={practiceLevel}
         skillStats={fixedSubjData.skillStats || {}}
         fixedSkillId={fixedSkillId}
+        answerMode={answerModeFor(subjectId)}
         onBack={leaveFixed}
         onFinish={leaveFixed}
       />
@@ -610,6 +623,7 @@ export default function App() {
         autoNextLabel={autoNextLabel}
         onAutoNext={autoActive ? handleAutoNext : null}
         onProgress={handleProgress}
+        answerMode={answerModeFor(subjectId)}
       />
     );
   }

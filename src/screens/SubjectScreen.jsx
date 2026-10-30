@@ -3,12 +3,15 @@ import { Screen, TopBar, Card, Btn, ProgressBar, Badge } from "../components/UI.
 import { A, T } from "../styles/tokens.js";
 import { getSubject, getSkillList, getSkillOrder, getNextSkill } from "../core/subjects.js";
 import { getAccuracy } from "../core/save.js";
+import { typingAvailable } from "../core/answerCheck.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 // onPracticeSkill (optioneel): tik op een vaardigheid = die ene vaardigheid los oefenen
 // (telt nergens mee). Ook vaardigheden die in de leerlijn nog op slot staan.
-export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, onPracticeSkill }) {
+// onAnswerMode (optioneel): schakelaar Kiezen | Typen voor deze modus. Alleen zichtbaar als de
+// modus Typen ondersteunt (answerCheck.js); de keuze staat in save.answerModes.
+export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, onPracticeSkill, onAnswerMode }) {
   var subject    = getSubject(subjectId);
   var skillList  = getSkillList(subjectId);
   var skillOrder = getSkillOrder(subjectId);
@@ -19,6 +22,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
   };
 
   var skillStats    = data.skillStats || {};
+  var answerMode    = (save.answerModes && save.answerModes[subjectId] === "typen") ? "typen" : "kiezen";
   var totalMastered = data.totalSkillsMastered || 0;
   var acc           = getAccuracy(data);
 
@@ -149,6 +153,55 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
         >
           {startLabel + " →"}
         </button>
+
+        {/* Antwoord: Kiezen | Typen (alleen bij modi die Typen ondersteunen) */}
+        {onAnswerMode && typingAvailable(subjectId) && (
+          <div>
+            <div style={{ fontSize: T.xs, fontWeight: 800, color: A.textSoft, letterSpacing: 0.8, marginBottom: 8 }}>
+              {"ANTWOORD"}
+            </div>
+            <div role="radiogroup" aria-label="Antwoord geven" style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 4,
+              padding: 4,
+              background: A.border,
+              borderRadius: A.r16,
+            }}>
+              {[["kiezen", "Kiezen"], ["typen", "Typen"]].map(function(opt) {
+                var on = answerMode === opt[0];
+                return (
+                  <button
+                    key={opt[0]}
+                    role="radio"
+                    aria-checked={on}
+                    onClick={function() { if (!on) onAnswerMode(subjectId, opt[0]); }}
+                    style={{
+                      minHeight: 44,
+                      padding: "10px 12px",
+                      border: "none",
+                      borderRadius: A.r12,
+                      background: on ? A.bgCard : "transparent",
+                      color: on ? subject.color : A.textSoft,
+                      fontSize: T.md,
+                      fontWeight: 800,
+                      boxShadow: on ? A.shadow : "none",
+                      cursor: on ? "default" : "pointer",
+                      WebkitTapHighlightColor: "transparent",
+                    }}
+                  >
+                    {opt[1]}
+                  </button>
+                );
+              })}
+            </div>
+            {answerMode === "typen" && (
+              <div style={{ fontSize: 11, color: A.textSoft, fontWeight: 600, marginTop: 6 }}>
+                {"Je typt het antwoord met het cijferblok. Schatten en fout spotten blijven kiezen."}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Vaardigheden lijst */}
         <div>

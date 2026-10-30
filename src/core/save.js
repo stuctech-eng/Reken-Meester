@@ -234,6 +234,9 @@ export var DEFAULT_SAVE = {
 
   // Settings
   sound: true,
+
+  // Antwoord geven per modus: "typen" of "kiezen" (standaard; ook als een modus hier niet staat)
+  answerModes: {},
 };
 
 export function dClone(obj) {
