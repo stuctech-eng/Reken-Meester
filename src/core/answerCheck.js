@@ -42,9 +42,23 @@ var TYPE_CONFIG = {
     // blijven kiezen. Fout-spotters vangt het vangnet hieronder al (isErrorSpotter).
     alleenKiezenVraag: /^Schat:/,
   },
+  delen: {
+    kind: "geheel",
+    alleenKiezen: [
+      "d04_rooster",              // voorlopig: hoge vraag (tot 6 regels), past nog niet met cijferblok
+      "d27_rest_tafel",           // antwoord met rest ("10 rest 4"): twee getallen
+      "d28_rest_groot",           // antwoord met rest ("10 rest 4"): twee getallen
+      "d34_schatten",             // schatten: het goede antwoord is de schatting
+      "d35_fout_spotten",         // fout-spotter: kies de foute som
+    ],
+    // Snelheidsronde d37 mengt vragen uit alle blokken; de schatvragen daarin ("Schat: ...") en
+    // de roostervragen uit d04 (stippen "●") blijven kiezen. Fout-spotters en restvragen
+    // (antwoord is geen geheel getal) vangt het vangnet hieronder al.
+    alleenKiezenVraag: /^Schat:|●/,
+  },
 };
 
-// Langste invoer in cijfers (Optellen, Aftrekken en Vermenigvuldigen: hoogstens 5 cijfers; ruim genomen)
+// Langste invoer in cijfers (Optellen, Aftrekken, Vermenigvuldigen en Delen: hoogstens 5 cijfers; ruim genomen)
 export var TYPE_MAX_DIGITS = 7;
 
 export function typingAvailable(subjectId) {
