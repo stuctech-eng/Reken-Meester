@@ -3,8 +3,9 @@ import { Screen, ProgressBar } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { getSkill, getNextSkill, getSubject, getSkillOrder } from "../core/subjects.js";
 import { getTitel, calcXp } from "../core/save.js";
-import Keypad, { KEYPAD_SIZES, KEYPAD_MIN } from "../components/Keypad.jsx";
-import { formatTypedDigits, TYPE_MAX_DIGITS } from "../core/answerCheck.js";
+import { KEYPAD_SIZES, KEYPAD_MIN } from "../components/Keypad.jsx";
+import AnswerArea from "../components/answer/AnswerArea.jsx";
+import { TYPE_MAX_DIGITS } from "../core/answerCheck.js";
 import { resolveInput } from "../core/inputResolve.js";
 import { gradeTyped } from "../core/grading.js";
 
@@ -21,9 +22,6 @@ var CONCEPT_COUNTER = 0;
 // Kleinste aantal goede sommen dat nog nodig is om aan de sessievoorwaarden te voldoen
 // Kleinste lettergrootte voor de vraagtekst wanneer die niet in de kaart past (zie vraaggrootte)
 var Q_FONT_MIN = 28;
-// Kleinste letter voor antwoordknoppen (gewoon en smallChoices)
-var CH_FONT_MIN  = 22;
-var CH_SMALL_MIN = 16;
 // Regel van een kolomsom: alleen een getal, eventueel met een rekenteken ervoor ("828", "− 194")
 var COLUMN_LINE_RE = /^[\u2212\u00d7+:-]?\s?[\d.,]+$/;
 // Onder deze schermhoogtes (px) gaat de oefenpagina in de compacte en de extra compacte
@@ -518,54 +516,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     return function() { active = false; window.removeEventListener("resize", fit); };
   }, [currentQuestion.question, qBase]);
 
-  // Knopgrootte: de twee kolommen zijn altijd precies half zo breed (minmax(0, 1fr)), ook als een
-  // keuze niet kan afbreken ("3050 mm", "€ 27,30", "september"). Past een keuzetekst niet in zijn
-  // knop, dan worden alle vier de knoppen samen kleiner (zelfde letter, dus geen hint), tot
-  // hoogstens CH_FONT_MIN of CH_SMALL_MIN. Past alles, dan blijft het 38 px (of 24 px bij
-  // smallChoices en bij fout-spotters: vier hele sommen als keuze, isErrorSpotter). Gemeten vóór
-  // het eerste beeld, opnieuw na het laden van de letters en bij een andere schermbreedte; chFont staat niet in de afhankelijkheden, dus het meten geeft geen lus.
-  var chRef       = useRef(null);
-  var chFontState = useState(null);
-  var chFont      = chFontState[0];
-  var setChFont   = chFontState[1];
-  var chSmall     = !!(currentQuestion.smallChoices || currentQuestion.isErrorSpotter);
-  var chBase      = chSmall ? 24 : 38;
-  var chMin       = chSmall ? CH_SMALL_MIN : CH_FONT_MIN;
-  var chKey       = String(currentQuestion.question) + "|" + currentQuestion.choices.join("|");
-
-  useLayoutEffect(function() {
-    var grid = chRef.current;
-    if (!grid) return undefined;
-    var active = true;
-    function buttons() { return Array.prototype.slice.call(grid.querySelectorAll("button")); }
-    function setAll(f) { buttons().forEach(function(b) { b.style.fontSize = f + "px"; }); }
-    // Te breed: de tekst steekt uit de knop, of komt in de binnenmarge (padding) van de knop
-    function tooWide() {
-      return buttons().some(function(b) {
-        if (b.scrollWidth > b.clientWidth + 0.5) return true;
-        if (!document.createRange) return false;
-        var cs    = window.getComputedStyle(b);
-        var avail = b.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-        var range = document.createRange();
-        range.selectNodeContents(b);
-        var rects = range.getClientRects ? range.getClientRects() : [];
-        for (var i = 0; i < rects.length; i++) { if (rects[i].width > avail + 0.5) return true; }
-        return false;
-      });
-    }
-    function fit() {
-      if (!active || !grid.isConnected) return;
-      setAll(chBase);
-      var f = chBase;
-      while (f > chMin && tooWide()) { f -= 1; setAll(f); }
-      setChFont(f === chBase ? null : f);
-    }
-    fit();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
-    window.addEventListener("resize", fit);
-    return function() { active = false; window.removeEventListener("resize", fit); };
-  }, [chKey, chBase, chMin, typeMode]);
-
   // Passend cijferblok: bij Typen moet ✓ (Controleer) zonder scrollen in beeld staan. Gemeten
   // vóór het eerste beeld: de onderkant van ✓ vanaf de bovenkant van de pagina, tegen de echte
   // schermhoogte. Past het niet, dan eerst kleinere tussenruimte, dan een lager antwoordvak, dan
@@ -806,103 +756,23 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           )}
         </div>
 
-        {/* Antwoord typen: ingetypt getal + cijferblok (alleen als deze vraag getypt mag worden) */}
-        {typeMode ? (
-          <div ref={kpWrapRef} style={{ display: "flex", flexDirection: "column", gap: tiny ? 8 : compact ? 10 : 12 }}>
-            <div
-              aria-label="Jouw antwoord"
-              style={{
-                minHeight: kpSize.vakH,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: A.r16,
-                border: "2.5px solid " + (
-                  feedback === "correct" ? A.successBorder
-                  : feedback === "wrong" ? A.errorBorder
-                  : A.primary
-                ),
-                background: feedback === "correct" ? A.successBg : feedback === "wrong" ? A.errorBg : A.bgCard,
-                color: feedback === "correct" ? A.successTxt : feedback === "wrong" ? A.errorTxt : A.text,
-                fontSize: tiny ? 32 : compact ? 36 : 42,
-                fontWeight: 900,
-                fontVariantNumeric: "tabular-nums",
-                letterSpacing: -0.5,
-                whiteSpace: "nowrap",
-                boxShadow: feedback ? "none" : A.shadow,
-              }}
-            >
-              {typed === ""
-                ? <span style={{ color: A.textSoft, fontSize: tiny ? 16 : 18, fontWeight: 700, letterSpacing: 0 }}>{"Typ je antwoord"}</span>
-                : formatTypedDigits(typed)}
-            </div>
-            {!feedback && (
-              <Keypad
-                onDigit={handleTypedDigit}
-                onBackspace={handleTypedBackspace}
-                onSubmit={handleTypedSubmit}
-                canSubmit={typed !== ""}
-                disabled={selected !== null}
-                size={tiny ? "tiny" : compact ? "compact" : "normal"}
-                keyH={kpSize.keyH}
-                gap={kpSize.gap}
-              />
-            )}
-          </div>
-        ) : (
-        <div ref={chRef} style={{
-          display: "grid",
-          // minmax(0, 1fr): een brede keuze maakt de kolom nooit breder dan de helft
-          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-          gap: tiny ? 8 : compact ? 10 : 12,
-        }}>
-          {currentQuestion.choices.map(function(choice) {
-            var isSelected   = selected === choice;
-            var isCorrectAns = choice === currentQuestion.answer;
-            var bg     = A.bgCard;
-            var border = A.border;
-            var color  = A.text;
-            var shadow = A.shadow;
-
-            if (feedback) {
-              if (isCorrectAns) {
-                bg = A.successBg; border = A.successBorder; color = A.successTxt; shadow = "none";
-              } else if (isSelected) {
-                bg = A.errorBg; border = A.errorBorder; color = A.errorTxt; shadow = "none";
-              }
-            }
-
-            return (
-              <button
-                key={choice}
-                onClick={function() { handleChoice(choice); }}
-                disabled={selected !== null}
-                style={{
-                  padding: tiny ? "10px 8px" : compact ? "12px 10px" : "20px 12px",
-                  borderRadius: A.r16,
-                  border: "2.5px solid " + border,
-                  background: bg,
-                  color: color,
-                  // smallChoices en fout-spotters (muntrijen, woorden, hele sommen): 24; anders 38. Kleiner alleen als
-                  // een keuze niet past (zie Knopgrootte); alle vier de knoppen krijgen dan dezelfde letter
-                  fontSize: chFont || chBase,
-                  minWidth: 0,
-                  fontWeight: 900,
-                  boxShadow: shadow,
-                  transition: "background 0.15s, border-color 0.15s, transform 0.1s",
-                  cursor: selected !== null ? "default" : "pointer",
-                  WebkitTapHighlightColor: "transparent",
-                  minHeight: tiny ? 56 : compact ? 64 : 80,
-                  transform: "scale(1)",
-                  letterSpacing: -0.5,
-                }}
-              >
-                {choice}
-              </button>
-            );
-          })}
-        </div>
-        )}
+        {/* Antwoordgebied: cijferblok als deze vraag getypt wordt, anders de vier keuzes */}
+        <AnswerArea
+          ref={kpWrapRef}
+          inputType={typeMode ? inputInfo.inputType : "choice"}
+          vraag={currentQuestion}
+          size={tiny ? "tiny" : compact ? "compact" : "normal"}
+          fit={kpSize}
+          feedback={feedback}
+          selected={selected}
+          disabled={selected !== null}
+          typed={typed}
+          onDigit={handleTypedDigit}
+          onBackspace={handleTypedBackspace}
+          onSubmit={handleTypedSubmit}
+          canSubmit={typed !== ""}
+          onChoice={handleChoice}
+        />
 
         {/* Uitlegkaart — verschijnt na fout, blijft tot "Volgende vraag" */}
         {showUitlegBlock && (
