@@ -489,7 +489,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes).
   // Past het cijferblok niet op het scherm, dan toont deze vraag toch de keuzes (typeFit).
   var inputInfo   = resolveInput(subjectId, currentQuestion.skillId, currentQuestion);
-  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money");
+  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent");
   var typeMode    = typeAllowed && typeFit !== "kiezen";
   var kpBase      = KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"];
   var kpSize      = (typeFit && typeFit !== "kiezen") ? typeFit : kpBase;

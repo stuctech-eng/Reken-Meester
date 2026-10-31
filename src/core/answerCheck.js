@@ -215,9 +215,26 @@ export function writeAnswerMoney(d, answer, zelfdeDecimalen) {
   return "\u20ac\u00a0" + heel;
 }
 
+// ── Procenten ──────────────────────────────────────────────────────────────────
+// Een procent is tekst: een heel getal direct gevolgd door "%" ("40%"). Niet: "40 %", "40,5%", "40",
+// voorloopnullen ("040%") of een getal als antwoord.
+var ANSWER_PERCENT_RE = /^(0|[1-9]\d*)%$/;
+
+export function readAnswerPercent(answer) {
+  if (typeof answer !== "string") return null;
+  var r = ANSWER_PERCENT_RE.exec(answer);
+  return r ? Number(r[1]) : null;
+}
+
+// Canonieke notatie: het getal zonder voorloopnullen, direct gevolgd door "%"
+export function writeAnswerPercent(value) {
+  return String(value) + "%";
+}
+
 // Uitleg onder de schakelaar Kiezen | Typen (per modus; anders de standaardtekst)
 var TYPE_HINT = {
   geld:              "Je typt het bedrag met het cijferblok; met , typ je de centen. Munten, schatten en fout spotten blijven kiezen.",
+  procenten:         "Je typt het antwoord met het cijferblok: procenten, getallen en bedragen. Breuken, verhoudingen, eenheden, vergelijken, schatten en fout spotten blijven kiezen.",
   kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal. Vergelijken, schatten, breuken en fout spotten blijven kiezen.",
   wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Breuken, kommagetallen en keuzevragen blijven kiezen.",
   wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij invullen; vergelijkingen en vereenvoudigen blijven kiezen.",

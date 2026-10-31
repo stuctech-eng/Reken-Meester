@@ -14,13 +14,14 @@ import { formatTypedDigits } from "../../core/answerCheck.js";
 // (onSign). typed heeft dan eventueel "-" vooraan; getoond als echt minteken (U+2212).
 // komma (inputType "decimal"): een toets "," rechts in het antwoordvak (onComma); typed bevat dan
 // eventueel een ",". euro (inputType "money"): "\u20ac" voor het getal zodra er iets is getypt.
-// Zonder allowNegative, komma en euro is het vak precies zoals voorheen.
+// procent (inputType "percent"): "%" achter het getal zodra er iets is getypt; alleen weergave, het
+// teken zit niet in typed. Zonder allowNegative, komma, euro en procent is het vak precies zoals voorheen.
 
 // Kleinste hoogte van het antwoordvak met tekentoets: toets 44 px plus de rand (2 x 2,5 px)
 export var VAK_MIN_TEKEN = 49;
 var TEKEN_W = 52;
 
-var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disabled, typed, onDigit, onBackspace, onSubmit, canSubmit, onSign, inputConfig, komma, onComma, euro }, ref) {
+var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disabled, typed, onDigit, onBackspace, onSubmit, canSubmit, onSign, inputConfig, komma, onComma, euro, procent }, ref) {
   var tiny    = size === "tiny";
   var compact = size === "compact";
   var teken   = !!(inputConfig && inputConfig.allowNegative);
@@ -96,7 +97,7 @@ var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disab
         )}
         {typed === ""
           ? <span style={{ color: A.textSoft, fontSize: tiny ? 16 : 18, fontWeight: 700, letterSpacing: 0 }}>{"Typ je antwoord"}</span>
-          : (extra ? tekst : formatTypedDigits(typed))}
+          : (extra ? tekst : formatTypedDigits(typed) + (procent ? "%" : ""))}
         {komma && (
           <button
             type="button"

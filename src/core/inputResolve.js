@@ -11,7 +11,7 @@
 // als iets anders behandeld: dan is het Kiezen.
 
 import { getSkillList } from "./subjects.js";
-import { typingAvailable, canTypeQuestion, readAnswerInteger, writeAnswerInteger, readAnswerDecimal, writeAnswerDecimal, readAnswerMoney, writeAnswerMoney, TYPE_MAX_DIGITS } from "./answerCheck.js";
+import { typingAvailable, canTypeQuestion, readAnswerInteger, writeAnswerInteger, readAnswerDecimal, writeAnswerDecimal, readAnswerMoney, writeAnswerMoney, readAnswerPercent, writeAnswerPercent, TYPE_MAX_DIGITS } from "./answerCheck.js";
 
 // Wat het oefenscherm nu kan: typen met het cijferblok (number) en de vier keuzes (choice),
 // elk met de nakijkregel die erbij hoort. Een andere combinatie kan niet worden nagekeken.
@@ -19,9 +19,10 @@ var PASSEND = {
   number:  { numeric_equal: true },
   decimal: { decimal_value_equal: true, decimal_exact_decimals: true },
   money:   { money_value_equal: true, money_exact_notation: true },
+  percent: { percent_value_equal: true },
   choice:  { choice_exact: true },
 };
-var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", money: "money_value_equal", choice: "choice_exact" };
+var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", money: "money_value_equal", percent: "percent_value_equal", choice: "choice_exact" };
 
 var KIEZEN = { inputType: "choice", gradingRule: "choice_exact", inputConfig: {} };
 
@@ -92,14 +93,20 @@ export function resolveInput(subjectId, skillId, question) {
     if ((String(Number(mny.heel)) + mny.dec).length > TYPE_MAX_DIGITS) return metBron(KIEZEN, "terugval");
     if (mny.dec.length > (r.inputConfig.maxDecimals === undefined ? 2 : r.inputConfig.maxDecimals)) return metBron(KIEZEN, "terugval");
   }
+  // Procent: het antwoord is precies "<getal>%" (canoniek), met hoogstens TYPE_MAX_DIGITS cijfers
+  if (r.inputType === "percent") {
+    var pct = readAnswerPercent(question.answer);
+    if (pct === null || writeAnswerPercent(pct) !== question.answer) return metBron(KIEZEN, "terugval");
+    if (String(pct).length > TYPE_MAX_DIGITS) return metBron(KIEZEN, "terugval");
+  }
   return metBron(r, bron);
 }
 
 // Heeft deze modus Typen (de schakelaar Kiezen | Typen)? Ja als de modus in de vaste regels
-// staat (answerCheck.js), of als minstens één vaardigheid getypt wordt (inputType "number", "decimal" of "money").
+// staat (answerCheck.js), of als minstens één vaardigheid getypt wordt (inputType "number", "decimal", "money" of "percent").
 export function typingAvailableFor(subjectId) {
   if (typingAvailable(subjectId)) return true;
   var lijst = getSkillList(subjectId) || [];
-  for (var i = 0; i < lijst.length; i++) { if (lijst[i].inputType === "number" || lijst[i].inputType === "decimal" || lijst[i].inputType === "money") return true; }
+  for (var i = 0; i < lijst.length; i++) { if (lijst[i].inputType === "number" || lijst[i].inputType === "decimal" || lijst[i].inputType === "money" || lijst[i].inputType === "percent") return true; }
   return false;
 }

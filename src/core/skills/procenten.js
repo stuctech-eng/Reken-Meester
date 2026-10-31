@@ -526,6 +526,27 @@ var RAW_SKILLS = DEFS.map(function(d) {
 // SKILLS MET VRAAGVERLOOP + p37 SNELHEIDSRONDE
 // ─────────────────────────────────────────────────────────────────
 
+// Typen (Kiezen | Typen): per vaardigheid het type van het antwoord. Vragen met een andere vorm dan het
+// type (p02: breuk; p03: procent; p35: procent) blijven per vraag vanzelf kiezen (resolveInput).
+// Blijven kiezen: p05, p19, p33 (kiesvragen), p20, p23 (verhouding), p21 (breuk), p27-p30 en p32
+// (eenheid), p34 (schatten), p36 (fout spotten). p37 typt per vraag volgens zijn bron. Vragen veranderen niet.
+var TYPEN = {
+  p01_van_de_100: "percent", p02_bekende_breuk: "percent", p04_aanvullen_100: "percent", p13_hoeveel_procent: "percent",
+  p14_totaal_naar_100: "percent", p18_procent_korting: "percent",
+  p03_kommagetal: "decimal",
+  p06_helft: "number", p07_kwart: "number", p08_tiende: "number", p09_honderdste: "number", p10_via_tien: "number",
+  p11_vijftien: "number", p22_gelijkwaardig: "number", p35_kort_verhaal: "number",
+  p12_geld: "money", p15_korting: "money", p16_nieuwe_prijs: "money", p17_verhoging: "money", p24_tabel_keer: "money",
+  p25_tabel_via_1: "money", p26_tabel_delen: "money", p31_per_kilo: "money",
+};
+RAW_SKILLS.forEach(function(s) {
+  var t = TYPEN[s.id];
+  if (!t) return;
+  s.inputType = t;
+  if (t === "decimal") s.inputConfig = { maxDecimals: 3 };
+  if (t === "money") s.inputConfig = { maxDecimals: 2 };
+});
+
 var SKILLS = createSkills("procenten", RAW_SKILLS);
 var MIXER  = createMixer(RAW_SKILLS, BLOCK_GROUPS, SKILLS.byId);
 

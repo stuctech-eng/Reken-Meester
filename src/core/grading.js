@@ -9,7 +9,7 @@
 //           alleen typen toelaat als answer precies zo terug te schrijven is, geldt: goed <=> waarde === answer.
 // De verwerking daarna (feedback, voortgang) blijft in het oefenscherm (handleChoice).
 
-import { parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney } from "./answerCheck.js";
+import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent } from "./answerCheck.js";
 
 export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
   if (gradingRule === "numeric_equal") {
@@ -33,6 +33,14 @@ export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
     if (md === null) return { geldig: false, goed: false, waarde: null };
     var mw = writeAnswerMoney(md, vraag.answer, gradingRule === "money_exact_notation");
     return { geldig: true, goed: mw === vraag.answer, waarde: mw };
+  }
+  // Procent: de getypte cijfers als heel getal; waarde altijd in de canonieke vorm "<getal>%"
+  // ("040" -> "40%", "0" -> "0%"). Leeg is geen antwoord (dus nooit "0%").
+  if (gradingRule === "percent_value_equal") {
+    var pv = parseTypedInteger(invoer);
+    if (pv === null) return { geldig: false, goed: false, waarde: null };
+    var pw = writeAnswerPercent(pv);
+    return { geldig: true, goed: pw === vraag.answer, waarde: pw };
   }
   // Onbekende regel: nooit goed rekenen; resolveInput laat zo'n vraag niet typen
   return { geldig: false, goed: false, waarde: null };
