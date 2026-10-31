@@ -153,6 +153,8 @@ export function writeAnswerInteger(value, answer) {
 // Uitleg onder de schakelaar Kiezen | Typen (per modus; anders de standaardtekst)
 var TYPE_HINT = {
   wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Breuken, kommagetallen en keuzevragen blijven kiezen.",
+  wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij invullen; vergelijkingen en vereenvoudigen blijven kiezen.",
+  wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij de discriminant en een verhaal; de rest blijft kiezen.",
 };
 var TYPE_HINT_STANDAARD = "Je typt het antwoord met het cijferblok. Schatten en fout spotten blijven kiezen.";
 

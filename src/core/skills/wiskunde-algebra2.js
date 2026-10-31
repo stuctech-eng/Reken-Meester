@@ -417,13 +417,21 @@ var DEFS = [
 
 function tipOf(terms) { return terms && terms[0] ? terms[0] : ""; }
 
+// Typen (Kiezen | Typen): vaardigheden waarvan het antwoord altijd één geheel getal is, ook
+// negatief. aq20 (welke x past) blijft kiezen: een kwadratische vergelijking heeft vaak twee oplossingen,
+// terwijl de keuzes er één tonen. De invoer en het nakijken staan in inputResolve.js en grading.js;
+// de vragen zelf veranderen niet. Alle andere vaardigheden blijven kiezen.
+var TYPEN = { aq17_discriminant: true, aq26_kwadratisch_verhaal: true };
+
 var RAW_SKILLS = DEFS.map(function(d) {
   var key = d[0].slice(0, 4), gen = GEN[key], subs = d[8];
-  return {
+  var skill = {
     id: d[0], label: d[1], group: d[2], desc: d[3], strategy: d[4], tip: tipOf,
     uitleg: d[5], voorbeeld: d[6], minCorrect: d[7], subtypes: subs || undefined,
     make: function(s) { return retry(function() { return gen(s || 0); }); },
   };
+  if (TYPEN[d[0]]) { skill.inputType = "number"; skill.inputConfig = { allowNegative: true }; }
+  return skill;
 });
 
 var SKILLS = createSkills("wiskunde_algebra2", RAW_SKILLS);
