@@ -12,22 +12,25 @@ import { formatTypedDigits } from "../../core/answerCheck.js";
 // fit: { keyH, gap, vakH } = de maten na de meting (of de vaste maten per schermgrootte).
 // inputConfig.allowNegative: een toets "\u2212/+" links in het antwoordvak draait het teken om
 // (onSign). typed heeft dan eventueel "-" vooraan; getoond als echt minteken (U+2212).
-// Zonder allowNegative is het vak precies zoals voorheen.
+// komma (inputType "decimal"): een toets "," rechts in het antwoordvak (onComma); typed bevat dan
+// eventueel een ",". Zonder allowNegative en zonder komma is het vak precies zoals voorheen.
 
 // Kleinste hoogte van het antwoordvak met tekentoets: toets 44 px plus de rand (2 x 2,5 px)
 export var VAK_MIN_TEKEN = 49;
 var TEKEN_W = 52;
 
-var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disabled, typed, onDigit, onBackspace, onSubmit, canSubmit, onSign, inputConfig }, ref) {
+var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disabled, typed, onDigit, onBackspace, onSubmit, canSubmit, onSign, inputConfig, komma, onComma }, ref) {
   var tiny    = size === "tiny";
   var compact = size === "compact";
   var teken   = !!(inputConfig && inputConfig.allowNegative);
   var neg     = teken && typed.charAt(0) === "-";
   var cijfers = neg ? typed.slice(1) : typed;
-  var tekst   = (neg ? "\u2212" : "") + formatTypedDigits(cijfers);
+  var kpos    = cijfers.indexOf(",");
+  var tekst   = (neg ? "\u2212" : "") + (kpos < 0 ? formatTypedDigits(cijfers) : formatTypedDigits(cijfers.slice(0, kpos)) + cijfers.slice(kpos));
+  var extra   = teken || !!komma;
   var basis   = tiny ? 32 : compact ? 36 : 42;
-  // Met tekentoets is er minder breedte: lange getallen ("\u22129 999 999") krijgen een kleinere letter
-  var letter  = teken && tekst.length > 6 ? Math.max(22, Math.floor(basis * 6 / tekst.length)) : basis;
+  // Met teken- of kommatoets is er minder breedte: lange getallen ("\u22129 999 999") krijgen een kleinere letter
+  var letter  = extra && tekst.length > 6 ? Math.max(22, Math.floor(basis * 6 / tekst.length)) : basis;
   var vakStijl = {
     minHeight: fit.vakH,
     display: "flex",
@@ -48,7 +51,7 @@ var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disab
     whiteSpace: "nowrap",
     boxShadow: feedback ? "none" : A.shadow,
   };
-  if (teken) {
+  if (extra) {
     vakStijl.position     = "relative";
     vakStijl.fontSize     = letter;
     vakStijl.paddingLeft  = TEKEN_W;
@@ -92,7 +95,39 @@ var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disab
         )}
         {typed === ""
           ? <span style={{ color: A.textSoft, fontSize: tiny ? 16 : 18, fontWeight: 700, letterSpacing: 0 }}>{"Typ je antwoord"}</span>
-          : (teken ? tekst : formatTypedDigits(typed))}
+          : (extra ? tekst : formatTypedDigits(typed))}
+        {komma && (
+          <button
+            type="button"
+            aria-label="Komma"
+            disabled={disabled || !!feedback || kpos >= 0}
+            onClick={function() { if (!disabled && !feedback) onComma(); }}
+            style={{
+              position: "absolute",
+              right: 0,
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: 44,
+              height: 44,
+              marginRight: 4,
+              borderRadius: A.r12,
+              border: "2px solid " + A.border,
+              background: A.bgCard,
+              color: A.text,
+              fontSize: 26,
+              fontWeight: 900,
+              letterSpacing: 0,
+              cursor: (disabled || feedback || kpos >= 0) ? "default" : "pointer",
+              opacity: (feedback || kpos >= 0) ? 0.5 : 1,
+              WebkitTapHighlightColor: "transparent",
+              touchAction: "manipulation",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+            }}
+          >
+            {","}
+          </button>
+        )}
       </div>
       {!feedback && (
         <Keypad

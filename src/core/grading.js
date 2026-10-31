@@ -9,7 +9,7 @@
 //           alleen typen toelaat als answer precies zo terug te schrijven is, geldt: goed <=> waarde === answer.
 // De verwerking daarna (feedback, voortgang) blijft in het oefenscherm (handleChoice).
 
-import { parseTypedSigned, writeAnswerInteger } from "./answerCheck.js";
+import { parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal } from "./answerCheck.js";
 
 export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
   if (gradingRule === "numeric_equal") {
@@ -17,6 +17,14 @@ export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
     if (getal === null) return { geldig: false, goed: false, waarde: null };
     var waarde = writeAnswerInteger(getal, vraag.answer);
     return { geldig: true, goed: waarde === vraag.answer, waarde: waarde };
+  }
+  // Kommagetal: exact (geheel getal met schaal). Waarde gelijk ("0,50" = "0,5"), of bij afronden ook
+  // precies evenveel decimalen als het antwoord ("8,0": "8" en "8,00" zijn fout).
+  if (gradingRule === "decimal_value_equal" || gradingRule === "decimal_exact_decimals") {
+    var d = parseTypedDecimal(invoer, inputConfig && inputConfig.maxDecimals);
+    if (d === null) return { geldig: false, goed: false, waarde: null };
+    var w = writeAnswerDecimal(d, vraag.answer, gradingRule === "decimal_exact_decimals");
+    return { geldig: true, goed: w === vraag.answer, waarde: w };
   }
   // Onbekende regel: nooit goed rekenen; resolveInput laat zo'n vraag niet typen
   return { geldig: false, goed: false, waarde: null };

@@ -5,7 +5,8 @@ import NumberAnswer from "./NumberAnswer.jsx";
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 // Antwoordgebied: kiest de invoercomponent bij inputType. Alleen "number" heeft een eigen
-// component (cijferblok); al het andere, ook een onbekend type, toont de vier keuzes.
+// component (cijferblok); "decimal" is hetzelfde cijferblok met een kommatoets. Al het andere,
+// ook een onbekend type, toont de vier keuzes.
 // Of een vraag getypt wordt (voorkeur, resolveInput, past het op het scherm) beslist het
 // oefenscherm; dat geeft hier het type door dat getoond moet worden.
 //
@@ -16,7 +17,7 @@ import NumberAnswer from "./NumberAnswer.jsx";
 //   - props: vraag, size (normal / compact / tiny), fit, feedback, selected, disabled,
 //     inputConfig (bijvoorbeeld allowNegative: tekentoets in het antwoordvak).
 var AnswerArea = forwardRef(function AnswerArea(props, ref) {
-  if (props.inputType === "number") {
+  if (props.inputType === "number" || props.inputType === "decimal") {
     return (
       <NumberAnswer
         ref={ref}
@@ -29,6 +30,8 @@ var AnswerArea = forwardRef(function AnswerArea(props, ref) {
         onBackspace={props.onBackspace}
         onSubmit={props.onSubmit}
         onSign={props.onSign}
+        komma={props.inputType === "decimal"}
+        onComma={props.onComma}
         inputConfig={props.inputConfig}
         canSubmit={props.canSubmit}
       />

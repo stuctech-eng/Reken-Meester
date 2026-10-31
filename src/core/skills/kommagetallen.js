@@ -975,6 +975,26 @@ var RAW_SKILLS = [
 // SKILLS MET VRAAGVERLOOP + k37 SNELHEIDSRONDE
 // ─────────────────────────────────────────────────────────────────
 
+// Typen (Kiezen | Typen): vaardigheden waarvan het antwoord altijd een kommagetal of een geheel
+// getal is. Afronden (k14, k15) vraagt ook precies het aantal decimalen. Blijven kiezen: k08/k09
+// (breuken), k10/k12 (kiesvragen), k11 (meer antwoorden goed), k31 (schatten), k34/k35 (fout
+// spotten). k37 typt alleen vragen uit deze vaardigheden (bronSkillId). Vragen veranderen niet.
+var TYPEN = {
+  k01_tienden_strook: "decimal_value_equal", k02_plaats_cijfer: "decimal_value_equal", k03_waarde_cijfer: "decimal_value_equal",
+  k04_samenstellen: "decimal_value_equal", k05_getallenlijn: "decimal_value_equal", k06_tienden_breuk: "decimal_value_equal",
+  k07_honderdsten: "decimal_value_equal", k13_afronden_heel: "decimal_value_equal", k14_afronden_tienden: "decimal_exact_decimals",
+  k15_afronden_overgang: "decimal_exact_decimals", k16_keer_10: "decimal_value_equal", k17_keer_100_1000: "decimal_value_equal",
+  k18_delen_10: "decimal_value_equal", k19_delen_100_1000: "decimal_value_equal", k20_plus_tienden: "decimal_value_equal",
+  k21_plus_overgang: "decimal_value_equal", k22_plus_ongelijk: "decimal_value_equal", k23_min_tienden: "decimal_value_equal",
+  k24_min_ongelijk: "decimal_value_equal", k25_aanvullen: "decimal_value_equal", k26_heel_x_tienden: "decimal_value_equal",
+  k27_heel_x_honderdsten: "decimal_value_equal", k28_komma_delen: "decimal_value_equal", k29_tienden_x_tienden: "decimal_value_equal",
+  k30_missend: "decimal_value_equal", k32_helft_dubbel: "decimal_value_equal", k33_kort_toepassen: "decimal_value_equal",
+  k36_over_de_grens: "decimal_value_equal",
+};
+RAW_SKILLS.forEach(function(s) {
+  if (TYPEN[s.id]) { s.inputType = "decimal"; s.gradingRule = TYPEN[s.id]; s.inputConfig = { maxDecimals: 3 }; }
+});
+
 var SKILLS = createSkills("kommagetallen", RAW_SKILLS);
 var MIXER  = createMixer(RAW_SKILLS, BLOCK_GROUPS, SKILLS.byId);
 

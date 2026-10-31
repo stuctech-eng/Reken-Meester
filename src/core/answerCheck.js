@@ -150,8 +150,50 @@ export function writeAnswerInteger(value, answer) {
   return (value < 0 ? "\u2212" : "") + s;
 }
 
+// ── Kommagetallen (exact: een geheel getal met een schaal, nooit een JavaScript-kommagetal) ──
+// Een decimaal getal is { m, s }: m = alle cijfers als geheel getal, s = aantal decimalen.
+// "0,55" -> { m: 55, s: 2 }; "8,0" -> { m: 80, s: 1 }; "7" -> { m: 7, s: 0 }.
+var TYPED_DEC_RE  = /^(\d+)(?:,(\d+))?$/;
+var ANSWER_DEC_RE = /^(\d+)(?:,(\d+))?$/;
+
+function decUit(heel, dec) {
+  return { m: Number(heel + (dec || "")), s: (dec || "").length, heel: heel, dec: dec || "" };
+}
+
+// Typinvoer lezen: cijfers, eventueel een komma met minstens één cijfer erna ("0," en "," zijn
+// geen antwoord). Hoogstens TYPE_MAX_DIGITS cijfers in totaal en hoogstens maxDecimals decimalen.
+export function parseTypedDecimal(text, maxDecimals) {
+  if (typeof text !== "string") return null;
+  var r = TYPED_DEC_RE.exec(text);
+  if (!r) return null;
+  var dec = r[2] || "";
+  if ((r[1] + dec).length > TYPE_MAX_DIGITS) return null;
+  if (dec.length > (maxDecimals === undefined ? 3 : maxDecimals)) return null;
+  return decUit(r[1], dec);
+}
+
+// Het verwachte antwoord lezen als kommagetal (tekst "0,55" of "7", of een geheel getal)
+export function readAnswerDecimal(answer) {
+  if (typeof answer === "number") return (isFinite(answer) && Math.floor(answer) === answer && answer >= 0) ? decUit(String(answer), "") : null;
+  if (typeof answer !== "string") return null;
+  var r = ANSWER_DEC_RE.exec(answer);
+  return r ? decUit(r[1], r[2] || "") : null;
+}
+
+// Schrijven in de vorm van het antwoord: zonder voorloopnullen; zelfdeDecimalen = true houdt het
+// aantal decimalen zoals gegeven (afronden), anders zonder eindnullen ("0,50" -> "0,5", "7,0" -> "7").
+// Bij een getal als antwoord: een getal (alleen als de waarde geheel is), anders tekst.
+export function writeAnswerDecimal(d, answer, zelfdeDecimalen) {
+  var heel = String(Number(d.heel));
+  var dec  = d.dec;
+  if (!zelfdeDecimalen) dec = dec.replace(/0+$/, "");
+  if (typeof answer === "number" && dec === "") return Number(heel);
+  return dec === "" ? heel : heel + "," + dec;
+}
+
 // Uitleg onder de schakelaar Kiezen | Typen (per modus; anders de standaardtekst)
 var TYPE_HINT = {
+  kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal. Vergelijken, schatten, breuken en fout spotten blijven kiezen.",
   wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Breuken, kommagetallen en keuzevragen blijven kiezen.",
   wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij invullen; vergelijkingen en vereenvoudigen blijven kiezen.",
   wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij de discriminant en een verhaal; de rest blijft kiezen.",
