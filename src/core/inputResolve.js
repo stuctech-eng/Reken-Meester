@@ -11,7 +11,7 @@
 // als iets anders behandeld: dan is het Kiezen.
 
 import { getSkillList } from "./subjects.js";
-import { canTypeQuestion, parseTypedInteger } from "./answerCheck.js";
+import { typingAvailable, canTypeQuestion, readAnswerInteger, writeAnswerInteger, TYPE_MAX_DIGITS } from "./answerCheck.js";
 
 // Wat het oefenscherm nu kan: typen met het cijferblok (number) en de vier keuzes (choice),
 // elk met de nakijkregel die erbij hoort. Een andere combinatie kan niet worden nagekeken.
@@ -65,7 +65,23 @@ export function resolveInput(subjectId, skillId, question) {
 
   // Alleen wat gebouwd is; anders veilig Kiezen
   if (!PASSEND[r.inputType] || !PASSEND[r.inputType][r.gradingRule]) return metBron(KIEZEN, "terugval");
-  // Getypt antwoord moet ook nagekeken kunnen worden: het verwachte antwoord moet leesbaar zijn
-  if (r.inputType === "number" && parseTypedInteger(String(question.answer)) !== question.answer) return metBron(KIEZEN, "terugval");
+  // Getypt antwoord moet ook nagekeken kunnen worden: het verwachte antwoord is een geheel getal
+  // dat precies zo terug te schrijven is (dan is een goed getypt antwoord letterlijk gelijk aan
+  // answer), met hoogstens TYPE_MAX_DIGITS cijfers, en negatief alleen met allowNegative
+  if (r.inputType === "number") {
+    var w = readAnswerInteger(question.answer);
+    if (w === null || writeAnswerInteger(w, question.answer) !== question.answer) return metBron(KIEZEN, "terugval");
+    if (String(Math.abs(w)).length > TYPE_MAX_DIGITS) return metBron(KIEZEN, "terugval");
+    if (w < 0 && !r.inputConfig.allowNegative) return metBron(KIEZEN, "terugval");
+  }
   return metBron(r, bron);
+}
+
+// Heeft deze modus Typen (de schakelaar Kiezen | Typen)? Ja als de modus in de vaste regels
+// staat (answerCheck.js), of als minstens één vaardigheid getypt wordt (inputType "number").
+export function typingAvailableFor(subjectId) {
+  if (typingAvailable(subjectId)) return true;
+  var lijst = getSkillList(subjectId) || [];
+  for (var i = 0; i < lijst.length; i++) { if (lijst[i].inputType === "number") return true; }
+  return false;
 }

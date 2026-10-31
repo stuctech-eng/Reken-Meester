@@ -13,7 +13,8 @@ import NumberAnswer from "./NumberAnswer.jsx";
 //   - kijkt zelf niet na en verwerkt niets; geeft de ruwe invoer door (onSubmit / onChoice);
 //   - een component met eigen invoer heeft een knop met aria-label "Controleer" (daarop meet
 //     het oefenscherm of het antwoordgebied op het scherm past);
-//   - props: vraag, size (normal / compact / tiny), fit, feedback, selected, disabled.
+//   - props: vraag, size (normal / compact / tiny), fit, feedback, selected, disabled,
+//     inputConfig (bijvoorbeeld allowNegative: tekentoets in het antwoordvak).
 var AnswerArea = forwardRef(function AnswerArea(props, ref) {
   if (props.inputType === "number") {
     return (
@@ -27,6 +28,8 @@ var AnswerArea = forwardRef(function AnswerArea(props, ref) {
         onDigit={props.onDigit}
         onBackspace={props.onBackspace}
         onSubmit={props.onSubmit}
+        onSign={props.onSign}
+        inputConfig={props.inputConfig}
         canSubmit={props.canSubmit}
       />
     );

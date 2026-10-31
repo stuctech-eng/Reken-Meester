@@ -4,6 +4,7 @@ import { A, T } from "../styles/tokens.js";
 import { getSkill, getNextSkill, getSubject, getSkillOrder } from "../core/subjects.js";
 import { getTitel, calcXp } from "../core/save.js";
 import { KEYPAD_SIZES, KEYPAD_MIN } from "../components/Keypad.jsx";
+import { VAK_MIN_TEKEN } from "../components/answer/NumberAnswer.jsx";
 import AnswerArea from "../components/answer/AnswerArea.jsx";
 import { TYPE_MAX_DIGITS } from "../core/answerCheck.js";
 import { resolveInput } from "../core/inputResolve.js";
@@ -286,19 +287,27 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // ── Antwoord typen ─────────────────────────────────────────────
   // Het getypte getal gaat door dezelfde verwerking als een aangetikte keuze (handleChoice):
   // goed als het gelijk is aan het antwoord, anders fout, met dezelfde hulp en voortgang.
+  // typed: de ingetypte cijfers, met "-" vooraan als de leerling het teken heeft omgedraaid
+  // (alleen bij inputConfig.allowNegative). Het maximum telt alleen de cijfers.
   function handleTypedDigit(d) {
     if (selected !== null) return;
     setTyped(function(prev) {
-      if (prev.length >= TYPE_MAX_DIGITS) return prev;
-      return prev === "0" ? d : prev + d;
+      var teken   = prev.charAt(0) === "-" ? "-" : "";
+      var cijfers = teken ? prev.slice(1) : prev;
+      if (cijfers.length >= TYPE_MAX_DIGITS) return prev;
+      return teken + (cijfers === "0" ? d : cijfers + d);
     });
+  }
+  function handleTypedSign() {
+    if (selected !== null || !inputInfo.inputConfig.allowNegative) return;
+    setTyped(function(prev) { return prev.charAt(0) === "-" ? prev.slice(1) : "-" + prev; });
   }
   function handleTypedBackspace() {
     if (selected !== null) return;
     setTyped(function(prev) { return prev.slice(0, -1); });
   }
   function handleTypedSubmit() {
-    var res = gradeTyped(inputInfo.gradingRule, typed, currentQuestion);
+    var res = gradeTyped(inputInfo.gradingRule, typed, currentQuestion, inputInfo.inputConfig);
     if (!res.geldig) return;
     handleChoice(res.goed ? currentQuestion.answer : res.waarde);
   }
@@ -533,11 +542,13 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     if (over <= 0.5) return undefined;
     if (typeFit) { setTypeFit("kiezen"); return undefined; }
     var need = Math.ceil(over);
-    var room = 4 * (kpBase.keyH - KEYPAD_MIN.keyH) + 3 * (kpBase.gap - KEYPAD_MIN.gap) + (kpBase.vakH - KEYPAD_MIN.vakH);
+    // Met tekentoets in het antwoordvak blijft het vak hoog genoeg voor een toets van 44 px (plus de rand)
+    var vakMin = inputInfo.inputConfig.allowNegative ? VAK_MIN_TEKEN : KEYPAD_MIN.vakH;
+    var room = 4 * (kpBase.keyH - KEYPAD_MIN.keyH) + 3 * (kpBase.gap - KEYPAD_MIN.gap) + (kpBase.vakH - vakMin);
     if (need > room) { setTypeFit("kiezen"); return undefined; }
     var gap = kpBase.gap, vakH = kpBase.vakH, keyH = kpBase.keyH;
     while (need > 0 && gap > KEYPAD_MIN.gap) { gap -= 1; need -= 3; }
-    if (need > 0) { var v = Math.min(need, vakH - KEYPAD_MIN.vakH); vakH -= v; need -= v; }
+    if (need > 0) { var v = Math.min(need, vakH - vakMin); vakH -= v; need -= v; }
     if (need > 0) { keyH = Math.max(KEYPAD_MIN.keyH, keyH - Math.ceil(need / 4)); }
     setTypeFit({ keyH: keyH, gap: gap, vakH: vakH });
     return undefined;
@@ -770,7 +781,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           onDigit={handleTypedDigit}
           onBackspace={handleTypedBackspace}
           onSubmit={handleTypedSubmit}
-          canSubmit={typed !== ""}
+          onSign={handleTypedSign}
+          inputConfig={inputInfo.inputConfig}
+          canSubmit={/\d/.test(typed)}
           onChoice={handleChoice}
         />
 

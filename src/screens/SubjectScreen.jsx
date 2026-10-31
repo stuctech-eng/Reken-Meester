@@ -3,7 +3,8 @@ import { Screen, TopBar, Card, Btn, ProgressBar, Badge } from "../components/UI.
 import { A, T } from "../styles/tokens.js";
 import { getSubject, getSkillList, getSkillOrder, getNextSkill } from "../core/subjects.js";
 import { getAccuracy } from "../core/save.js";
-import { typingAvailable } from "../core/answerCheck.js";
+import { typeHint } from "../core/answerCheck.js";
+import { typingAvailableFor } from "../core/inputResolve.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -155,7 +156,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
         </button>
 
         {/* Antwoord: Kiezen | Typen (alleen bij modi die Typen ondersteunen) */}
-        {onAnswerMode && typingAvailable(subjectId) && (
+        {onAnswerMode && typingAvailableFor(subjectId) && (
           <div>
             <div style={{ fontSize: T.xs, fontWeight: 800, color: A.textSoft, letterSpacing: 0.8, marginBottom: 8 }}>
               {"ANTWOORD"}
@@ -197,7 +198,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
             </div>
             {answerMode === "typen" && (
               <div style={{ fontSize: 11, color: A.textSoft, fontWeight: 600, marginTop: 6 }}>
-                {"Je typt het antwoord met het cijferblok. Schatten en fout spotten blijven kiezen."}
+                {typeHint(subjectId)}
               </div>
             )}
           </div>

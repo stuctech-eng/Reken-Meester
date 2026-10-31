@@ -110,3 +110,52 @@ export function formatTypedDigits(digits) {
   }
   return out;
 }
+
+// ── Gehele getallen met teken (Wiskunde) ─────────────────────────────────────────────
+// Typinvoer: optioneel "-" vooraan, daarna cijfers zoals bij parseTypedInteger. Alleen "-" of
+// leeg is geen antwoord. Zonder allowNegative is een teken geen antwoord. "-0" is 0.
+export function parseTypedSigned(text, allowNegative) {
+  if (typeof text !== "string") return null;
+  var s = text, neg = false;
+  if (s.charAt(0) === "-") {
+    if (!allowNegative) return null;
+    neg = true;
+    s = s.slice(1);
+  }
+  var v = parseTypedInteger(s);
+  if (v === null) return null;
+  return (neg && v !== 0) ? -v : v;
+}
+
+// Het verwachte antwoord als geheel getal lezen. Een getal blijft zichzelf (alleen hele getallen).
+// Een tekst mag een minteken hebben (U+2212 of "-") en groepjes van drie met een (vaste) spatie:
+// "\u221219", "10\u00a0000". Al het andere geeft null.
+var ANSWER_INT_RE = /^[\u2212-]?(?:\d+|\d{1,3}(?:[ \u00a0]\d{3})+)$/;
+
+export function readAnswerInteger(answer) {
+  if (typeof answer === "number") return (isFinite(answer) && Math.floor(answer) === answer) ? answer : null;
+  if (typeof answer !== "string" || !ANSWER_INT_RE.test(answer)) return null;
+  var neg = answer.charAt(0) === "\u2212" || answer.charAt(0) === "-";
+  var v = Number(answer.replace(/[^\d]/g, ""));
+  return (neg && v !== 0) ? -v : v;
+}
+
+// Een waarde schrijven in dezelfde vorm als het verwachte antwoord: bij een getal als getal,
+// bij tekst in de notatie van Wiskunde (minteken U+2212, groepjes van drie met een vaste spatie
+// vanaf 10 000, zoals int() in wiskunde-getallen.js).
+export function writeAnswerInteger(value, answer) {
+  if (typeof answer === "number") return value;
+  var s = String(Math.abs(value));
+  if (s.length > 4) s = s.replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
+  return (value < 0 ? "\u2212" : "") + s;
+}
+
+// Uitleg onder de schakelaar Kiezen | Typen (per modus; anders de standaardtekst)
+var TYPE_HINT = {
+  wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Breuken, kommagetallen en keuzevragen blijven kiezen.",
+};
+var TYPE_HINT_STANDAARD = "Je typt het antwoord met het cijferblok. Schatten en fout spotten blijven kiezen.";
+
+export function typeHint(subjectId) {
+  return Object.prototype.hasOwnProperty.call(TYPE_HINT, subjectId) ? TYPE_HINT[subjectId] : TYPE_HINT_STANDAARD;
+}
