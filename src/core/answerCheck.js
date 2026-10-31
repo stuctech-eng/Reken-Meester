@@ -191,8 +191,33 @@ export function writeAnswerDecimal(d, answer, zelfdeDecimalen) {
   return dec === "" ? heel : heel + "," + dec;
 }
 
+// ── Geldbedragen (exact in centen) ───────────────────────────────────────────────
+// Een bedrag is tekst: "\u20ac", een vaste spatie, het getal: "\u20ac\u00a08,15" of in hele euro's "\u20ac\u00a06".
+// Alleen tekst is een bedrag; een getal als antwoord (zoals 800 cent) is geen bedrag.
+var ANSWER_MONEY_RE = /^\u20ac\u00a0(\d+)(?:,(\d\d))?$/;
+
+export function readAnswerMoney(answer) {
+  if (typeof answer !== "string") return null;
+  var r = ANSWER_MONEY_RE.exec(answer);
+  return r ? { heel: r[1], dec: r[2] || "", metCenten: !!r[2] } : null;
+}
+
+// Een getypt bedrag (uit parseTypedDecimal) schrijven in de notatie van het antwoord.
+// zelfdeDecimalen = true (bedrag schrijven, g03): de getypte decimalen blijven ("11,7" -> "\u20ac 11,7").
+// Anders in centen: bij een antwoord met centen altijd twee decimalen ("8,5" -> "\u20ac 8,50"),
+// bij hele euro's zonder centen als het bedrag rond is ("6,00" -> "\u20ac 6").
+export function writeAnswerMoney(d, answer, zelfdeDecimalen) {
+  var heel = String(Number(d.heel));
+  if (zelfdeDecimalen) return "\u20ac\u00a0" + heel + (d.dec === "" ? "" : "," + d.dec);
+  var a = readAnswerMoney(answer);
+  var centen = (d.dec + "00").slice(0, 2);
+  if ((a && a.metCenten) || centen !== "00") return "\u20ac\u00a0" + heel + "," + centen;
+  return "\u20ac\u00a0" + heel;
+}
+
 // Uitleg onder de schakelaar Kiezen | Typen (per modus; anders de standaardtekst)
 var TYPE_HINT = {
+  geld:              "Je typt het bedrag met het cijferblok; met , typ je de centen. Munten, schatten en fout spotten blijven kiezen.",
   kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal. Vergelijken, schatten, breuken en fout spotten blijven kiezen.",
   wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Breuken, kommagetallen en keuzevragen blijven kiezen.",
   wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij invullen; vergelijkingen en vereenvoudigen blijven kiezen.",

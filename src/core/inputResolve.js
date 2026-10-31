@@ -11,16 +11,17 @@
 // als iets anders behandeld: dan is het Kiezen.
 
 import { getSkillList } from "./subjects.js";
-import { typingAvailable, canTypeQuestion, readAnswerInteger, writeAnswerInteger, readAnswerDecimal, writeAnswerDecimal, TYPE_MAX_DIGITS } from "./answerCheck.js";
+import { typingAvailable, canTypeQuestion, readAnswerInteger, writeAnswerInteger, readAnswerDecimal, writeAnswerDecimal, readAnswerMoney, writeAnswerMoney, TYPE_MAX_DIGITS } from "./answerCheck.js";
 
 // Wat het oefenscherm nu kan: typen met het cijferblok (number) en de vier keuzes (choice),
 // elk met de nakijkregel die erbij hoort. Een andere combinatie kan niet worden nagekeken.
 var PASSEND = {
   number:  { numeric_equal: true },
   decimal: { decimal_value_equal: true, decimal_exact_decimals: true },
+  money:   { money_value_equal: true, money_exact_notation: true },
   choice:  { choice_exact: true },
 };
-var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", choice: "choice_exact" };
+var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", money: "money_value_equal", choice: "choice_exact" };
 
 var KIEZEN = { inputType: "choice", gradingRule: "choice_exact", inputConfig: {} };
 
@@ -83,14 +84,22 @@ export function resolveInput(subjectId, skillId, question) {
     if ((String(Number(d.heel)) + d.dec).length > TYPE_MAX_DIGITS) return metBron(KIEZEN, "terugval");
     if (d.dec.length > (r.inputConfig.maxDecimals === undefined ? 3 : r.inputConfig.maxDecimals)) return metBron(KIEZEN, "terugval");
   }
+  // Geldbedrag: het antwoord is een bedrag in tekst ("\u20ac 8,15"; een getal zoals 800 cent is dat niet),
+  // exact zo terug te schrijven, met hoogstens TYPE_MAX_DIGITS cijfers en maxDecimals decimalen
+  if (r.inputType === "money") {
+    var mny = readAnswerMoney(question.answer);
+    if (mny === null || writeAnswerMoney(mny, question.answer, r.gradingRule === "money_exact_notation") !== question.answer) return metBron(KIEZEN, "terugval");
+    if ((String(Number(mny.heel)) + mny.dec).length > TYPE_MAX_DIGITS) return metBron(KIEZEN, "terugval");
+    if (mny.dec.length > (r.inputConfig.maxDecimals === undefined ? 2 : r.inputConfig.maxDecimals)) return metBron(KIEZEN, "terugval");
+  }
   return metBron(r, bron);
 }
 
 // Heeft deze modus Typen (de schakelaar Kiezen | Typen)? Ja als de modus in de vaste regels
-// staat (answerCheck.js), of als minstens één vaardigheid getypt wordt (inputType "number" of "decimal").
+// staat (answerCheck.js), of als minstens één vaardigheid getypt wordt (inputType "number", "decimal" of "money").
 export function typingAvailableFor(subjectId) {
   if (typingAvailable(subjectId)) return true;
   var lijst = getSkillList(subjectId) || [];
-  for (var i = 0; i < lijst.length; i++) { if (lijst[i].inputType === "number" || lijst[i].inputType === "decimal") return true; }
+  for (var i = 0; i < lijst.length; i++) { if (lijst[i].inputType === "number" || lijst[i].inputType === "decimal" || lijst[i].inputType === "money") return true; }
   return false;
 }

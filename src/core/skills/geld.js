@@ -1083,6 +1083,29 @@ var RAW_SKILLS = [
 // SKILLS MET VRAAGVERLOOP + g37 SNELHEIDSRONDE
 // ─────────────────────────────────────────────────────────────────
 
+// Typen (Kiezen | Typen): vaardigheden waarvan het antwoord een bedrag ("\u20ac 8,15" of "\u20ac 6") of een
+// geheel getal is. g03 (bedrag schrijven) vraagt precies de notatie. g02 heeft ook vragen met een
+// getal als antwoord (800 cent); die zijn geen bedrag en blijven daardoor vanzelf kiezen.
+// Blijven kiezen: munten en briefjes (g01, g04, g10, g11, g12, g24), g13 (kiesvraag), g33 (schatten),
+// g35 (fout spotten). g37 typt alleen vragen uit deze vaardigheden (bronSkillId). Vragen veranderen niet.
+var TYPEN_GELD = {
+  g02_euro_cent: 1, g03_bedrag_schrijven: 1, g06_euromunten_tellen: 1, g07_euro_en_centen: 1, g08_briefjes_tellen: 1,
+  g09_veel_munten: 1, g14_afronden_euro: 1, g15_afronden_contant: 1, g16_plus_hele_euros: 1, g17_plus_zonder: 1,
+  g18_plus_met: 1, g19_drie_prijzen: 1, g20_aanvullen_euro: 1, g21_wisselgeld_5: 1, g22_wisselgeld_10_20: 1,
+  g23_wisselgeld_50: 1, g25_tekort_of_over: 1, g26_keer_hele_euros: 1, g27_keer_centen: 1, g28_eerlijk_verdelen: 1,
+  g29_prijs_per_stuk: 1, g30_prijsverschil: 1, g31_halve_prijs: 1, g34_missend_bedrag: 1, g36_kort_toepassen: 1,
+};
+var TYPEN_GETAL = { g05_centen_tellen: 1, g32_hoeveel_kopen: 1 };
+RAW_SKILLS.forEach(function(s) {
+  if (TYPEN_GELD[s.id]) {
+    s.inputType   = "money";
+    s.gradingRule = s.id === "g03_bedrag_schrijven" ? "money_exact_notation" : "money_value_equal";
+    s.inputConfig = { maxDecimals: 2 };
+  } else if (TYPEN_GETAL[s.id]) {
+    s.inputType = "number";
+  }
+});
+
 var SKILLS = createSkills("geld", RAW_SKILLS);
 var MIXER  = createMixer(RAW_SKILLS, BLOCK_GROUPS, SKILLS.byId);
 

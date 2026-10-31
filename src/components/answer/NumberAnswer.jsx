@@ -13,20 +13,21 @@ import { formatTypedDigits } from "../../core/answerCheck.js";
 // inputConfig.allowNegative: een toets "\u2212/+" links in het antwoordvak draait het teken om
 // (onSign). typed heeft dan eventueel "-" vooraan; getoond als echt minteken (U+2212).
 // komma (inputType "decimal"): een toets "," rechts in het antwoordvak (onComma); typed bevat dan
-// eventueel een ",". Zonder allowNegative en zonder komma is het vak precies zoals voorheen.
+// eventueel een ",". euro (inputType "money"): "\u20ac" voor het getal zodra er iets is getypt.
+// Zonder allowNegative, komma en euro is het vak precies zoals voorheen.
 
 // Kleinste hoogte van het antwoordvak met tekentoets: toets 44 px plus de rand (2 x 2,5 px)
 export var VAK_MIN_TEKEN = 49;
 var TEKEN_W = 52;
 
-var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disabled, typed, onDigit, onBackspace, onSubmit, canSubmit, onSign, inputConfig, komma, onComma }, ref) {
+var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disabled, typed, onDigit, onBackspace, onSubmit, canSubmit, onSign, inputConfig, komma, onComma, euro }, ref) {
   var tiny    = size === "tiny";
   var compact = size === "compact";
   var teken   = !!(inputConfig && inputConfig.allowNegative);
   var neg     = teken && typed.charAt(0) === "-";
   var cijfers = neg ? typed.slice(1) : typed;
   var kpos    = cijfers.indexOf(",");
-  var tekst   = (neg ? "\u2212" : "") + (kpos < 0 ? formatTypedDigits(cijfers) : formatTypedDigits(cijfers.slice(0, kpos)) + cijfers.slice(kpos));
+  var tekst   = (euro ? "\u20ac\u00a0" : "") + (neg ? "\u2212" : "") + (kpos < 0 ? formatTypedDigits(cijfers) : formatTypedDigits(cijfers.slice(0, kpos)) + cijfers.slice(kpos));
   var extra   = teken || !!komma;
   var basis   = tiny ? 32 : compact ? 36 : 42;
   // Met teken- of kommatoets is er minder breedte: lange getallen ("\u22129 999 999") krijgen een kleinere letter

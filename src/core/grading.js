@@ -9,7 +9,7 @@
 //           alleen typen toelaat als answer precies zo terug te schrijven is, geldt: goed <=> waarde === answer.
 // De verwerking daarna (feedback, voortgang) blijft in het oefenscherm (handleChoice).
 
-import { parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal } from "./answerCheck.js";
+import { parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney } from "./answerCheck.js";
 
 export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
   if (gradingRule === "numeric_equal") {
@@ -25,6 +25,14 @@ export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
     if (d === null) return { geldig: false, goed: false, waarde: null };
     var w = writeAnswerDecimal(d, vraag.answer, gradingRule === "decimal_exact_decimals");
     return { geldig: true, goed: w === vraag.answer, waarde: w };
+  }
+  // Geldbedrag: exact in centen. Waarde gelijk ("8,5" = "\u20ac 8,50"), of bij bedrag schrijven (g03)
+  // precies de notatie van het antwoord; dan blijven de getypte decimalen in waarde ("11,7" -> "\u20ac 11,7").
+  if (gradingRule === "money_value_equal" || gradingRule === "money_exact_notation") {
+    var md = parseTypedDecimal(invoer, (inputConfig && inputConfig.maxDecimals !== undefined) ? inputConfig.maxDecimals : 2);
+    if (md === null) return { geldig: false, goed: false, waarde: null };
+    var mw = writeAnswerMoney(md, vraag.answer, gradingRule === "money_exact_notation");
+    return { geldig: true, goed: mw === vraag.answer, waarde: mw };
   }
   // Onbekende regel: nooit goed rekenen; resolveInput laat zo'n vraag niet typen
   return { geldig: false, goed: false, waarde: null };

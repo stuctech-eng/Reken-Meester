@@ -301,10 +301,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       return teken + (cijfers === "0" ? d : cijfers + d);
     });
   }
-  function maxDecimalen() { return inputInfo.inputConfig.maxDecimals === undefined ? 3 : inputInfo.inputConfig.maxDecimals; }
+  function maxDecimalen() { return inputInfo.inputConfig.maxDecimals === undefined ? (inputInfo.inputType === "money" ? 2 : 3) : inputInfo.inputConfig.maxDecimals; }
   // Komma: hoogstens één; vooraan wordt het "0,"
   function handleTypedComma() {
-    if (selected !== null || inputInfo.inputType !== "decimal") return;
+    if (selected !== null || (inputInfo.inputType !== "decimal" && inputInfo.inputType !== "money")) return;
     setTyped(function(prev) {
       if (prev.indexOf(",") >= 0) return prev;
       var teken   = prev.charAt(0) === "-" ? "-" : "";
@@ -489,7 +489,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes).
   // Past het cijferblok niet op het scherm, dan toont deze vraag toch de keuzes (typeFit).
   var inputInfo   = resolveInput(subjectId, currentQuestion.skillId, currentQuestion);
-  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal");
+  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money");
   var typeMode    = typeAllowed && typeFit !== "kiezen";
   var kpBase      = KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"];
   var kpSize      = (typeFit && typeFit !== "kiezen") ? typeFit : kpBase;
@@ -557,7 +557,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     if (typeFit) { setTypeFit("kiezen"); return undefined; }
     var need = Math.ceil(over);
     // Met tekentoets in het antwoordvak blijft het vak hoog genoeg voor een toets van 44 px (plus de rand)
-    var vakMin = (inputInfo.inputConfig.allowNegative || inputInfo.inputType === "decimal") ? VAK_MIN_TEKEN : KEYPAD_MIN.vakH;
+    var vakMin = (inputInfo.inputConfig.allowNegative || inputInfo.inputType === "decimal" || inputInfo.inputType === "money") ? VAK_MIN_TEKEN : KEYPAD_MIN.vakH;
     var room = 4 * (kpBase.keyH - KEYPAD_MIN.keyH) + 3 * (kpBase.gap - KEYPAD_MIN.gap) + (kpBase.vakH - vakMin);
     if (need > room) { setTypeFit("kiezen"); return undefined; }
     var gap = kpBase.gap, vakH = kpBase.vakH, keyH = kpBase.keyH;
