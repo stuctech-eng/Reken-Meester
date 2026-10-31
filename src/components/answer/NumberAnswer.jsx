@@ -16,6 +16,10 @@ import { formatTypedDigits } from "../../core/answerCheck.js";
 // eventueel een ",". euro (inputType "money"): "\u20ac" voor het getal zodra er iets is getypt.
 // procent (inputType "percent"): "%" achter het getal zodra er iets is getypt; alleen weergave, het
 // teken zit niet in typed. Zonder allowNegative, komma, euro en procent is het vak precies zoals voorheen.
+// De teken- en kommatoets staan verticaal in het midden via top/bottom 0 en margin auto, niet via
+// transform: de algemene stijl "button:active { transform: scale(0.97) !important }" zou een
+// transform bij het indrukken vervangen, waardoor de toets verspringt en een tik op de bovenkant
+// niet aankomt.
 
 // Kleinste hoogte van het antwoordvak met tekentoets: toets 44 px plus de rand (2 x 2,5 px)
 export var VAK_MIN_TEKEN = 49;
@@ -72,11 +76,11 @@ var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disab
             style={{
               position: "absolute",
               left: 0,
-              top: "50%",
-              transform: "translateY(-50%)",
+              top: 0,
+              bottom: 0,
               width: 44,
               height: 44,
-              marginLeft: 4,
+              margin: "auto 0 auto 4px",
               borderRadius: A.r12,
               border: "2px solid " + A.border,
               background: neg ? A.primary : A.bgCard,
@@ -107,11 +111,11 @@ var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disab
             style={{
               position: "absolute",
               right: 0,
-              top: "50%",
-              transform: "translateY(-50%)",
+              top: 0,
+              bottom: 0,
               width: 44,
               height: 44,
-              marginRight: 4,
+              margin: "auto 4px auto 0",
               borderRadius: A.r12,
               border: "2px solid " + A.border,
               background: A.bgCard,
