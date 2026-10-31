@@ -530,6 +530,31 @@ var RAW_SKILLS = DEFS.map(function(d) {
 // SKILLS MET VRAAGVERLOOP + r37 SNELHEIDSRONDE
 // ─────────────────────────────────────────────────────────────────
 
+// Typen (Kiezen | Typen): per vaardigheid het type van het antwoord. Afstand, snelheid, liters en minuten
+// ("70 km", "80 km/u") zijn "quantity", met kommatoets alleen bij r30 (MET_KOMMA); r10 en r24 zijn
+// "number"; bedragen zijn "money". Per vraag blijft kiezen: tijden in r08 ("1u30") en vragen met
+// verschillende eenheden in de keuzes (deel van r14). Blijven kiezen: r07, r11-r13, r15-r18, r27-r29
+// (tijden), r26 en r36 (vergelijken), r33 (schatten), r35 (fout spotten). r37 typt per vraag volgens zijn
+// bron. Vragen veranderen niet.
+var TYPEN = {
+  r01_route_optellen: "quantity", r02_heen_en_terug: "quantity", r03_per_dag: "quantity", r04_nog_te_gaan: "quantity",
+  r05_kortste_route: "quantity", r06_afstand: "quantity", r08_halve_uren: "quantity", r09_kmu_uit_minuten: "quantity",
+  r14_overstaptijd: "quantity", r21_liters: "quantity", r30_fietskaart: "quantity", r31_snelheid_zonder_pauze: "quantity",
+  r32_afstand_met_pauze: "quantity",
+  r10_keer_zo_snel: "number", r24_naar_munt: "number",
+  r19_kaartjes: "money", r20_per_km: "money", r22_brandstofkosten: "money", r23_kosten_delen: "money",
+  r25_naar_euro: "money", r34_twee_stappen: "money",
+};
+var MET_KOMMA = { r30_fietskaart: true };
+RAW_SKILLS.forEach(function(s) {
+  var t = TYPEN[s.id];
+  if (!t) return;
+  s.inputType = t;
+  if (t === "decimal") s.inputConfig = { maxDecimals: 3 };
+  if (t === "money") s.inputConfig = { maxDecimals: 2 };
+  if (t === "quantity") s.inputConfig = MET_KOMMA[s.id] ? { allowDecimal: true, maxDecimals: 2 } : {};
+});
+
 var SKILLS = createSkills("reizen", RAW_SKILLS);
 var MIXER  = createMixer(RAW_SKILLS, BLOCK_GROUPS, SKILLS.byId);
 

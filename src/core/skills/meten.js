@@ -632,6 +632,33 @@ var RAW_SKILLS = DEFS.map(function(d) {
 // SKILLS MET VRAAGVERLOOP + m37 SNELHEIDSRONDE
 // ─────────────────────────────────────────────────────────────────
 
+// Typen (Kiezen | Typen): per vaardigheid het type van het antwoord. Een getal zonder eenheid ("595") is
+// "number" of "decimal"; een getal met eenheid ("44 cm", "7,5 kg") is "quantity", met kommatoets alleen
+// bij m33 (MET_KOMMA). Per vraag blijft kiezen: antwoorden vanaf 10 000 bij m07, m10, m13 (zonder
+// scheidingsteken, niet exact terug te schrijven) en vragen met verschillende eenheden in de keuzes.
+// Blijven kiezen: m01-m04 (eenheid kiezen, schatten), m16-m18 (vergelijken), m30 (omtrek of oppervlakte),
+// m31 (eenheid kiezen), m32 (schatten), m35 (fout spotten). m37 typt per vraag volgens zijn bron.
+// Vragen veranderen niet.
+var TYPEN = {
+  m05_m_cm: "number", m06_cm_mm: "number", m07_km_m: "number", m09_decimeter: "number", m10_kg_g: "number",
+  m11_kg_komma: "number", m13_l_ml: "number", m14_l_dl_cl: "number", m19_lengtes_optellen: "number",
+  m20_lengte_verschil: "number", m21_gewichten_rekenen: "number", m22_inhoud_verdelen: "number",
+  m08_lengte_komma: "decimal", m12_g_naar_kg: "decimal", m15_inhoud_komma: "decimal", m23_maten_keer: "decimal",
+  m36_inhoud_doos: "decimal",
+  m24_omtrek_rechthoek: "quantity", m25_omtrek_vierkant: "quantity", m26_zijde_uit_omtrek: "quantity",
+  m27_hokjes_tellen: "quantity", m28_opp_rechthoek: "quantity", m29_opp_vierkant: "quantity",
+  m33_kort_verhaal: "quantity", m34_missende_maat: "quantity",
+};
+var MET_KOMMA = { m33_kort_verhaal: true };
+RAW_SKILLS.forEach(function(s) {
+  var t = TYPEN[s.id];
+  if (!t) return;
+  s.inputType = t;
+  if (t === "decimal") s.inputConfig = { maxDecimals: 3 };
+  if (t === "money") s.inputConfig = { maxDecimals: 2 };
+  if (t === "quantity") s.inputConfig = MET_KOMMA[s.id] ? { allowDecimal: true, maxDecimals: 2 } : {};
+});
+
 var SKILLS = createSkills("meten", RAW_SKILLS);
 var MIXER  = createMixer(RAW_SKILLS, BLOCK_GROUPS, SKILLS.byId);
 

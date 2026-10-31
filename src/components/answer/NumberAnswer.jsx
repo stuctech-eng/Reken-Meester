@@ -15,7 +15,9 @@ import { formatTypedDigits } from "../../core/answerCheck.js";
 // komma (inputType "decimal"): een toets "," rechts in het antwoordvak (onComma); typed bevat dan
 // eventueel een ",". euro (inputType "money"): "\u20ac" voor het getal zodra er iets is getypt.
 // procent (inputType "percent"): "%" achter het getal zodra er iets is getypt; alleen weergave, het
-// teken zit niet in typed. Zonder allowNegative, komma, euro en procent is het vak precies zoals voorheen.
+// teken zit niet in typed. eenheid (inputType "quantity"): de eenheid achter het getal, met een vaste spatie
+// ("45 cm"), zodra er iets is getypt; ook alleen weergave. Lange invoer met eenheid krijgt een kleinere
+// letter. Zonder allowNegative, komma, euro, procent en eenheid is het vak precies zoals voorheen.
 // De teken- en kommatoets staan verticaal in het midden via top/bottom 0 en margin auto, niet via
 // transform: de algemene stijl "button:active { transform: scale(0.97) !important }" zou een
 // transform bij het indrukken vervangen, waardoor de toets verspringt en een tik op de bovenkant
@@ -25,18 +27,21 @@ import { formatTypedDigits } from "../../core/answerCheck.js";
 export var VAK_MIN_TEKEN = 49;
 var TEKEN_W = 52;
 
-var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disabled, typed, onDigit, onBackspace, onSubmit, canSubmit, onSign, inputConfig, komma, onComma, euro, procent }, ref) {
+var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disabled, typed, onDigit, onBackspace, onSubmit, canSubmit, onSign, inputConfig, komma, onComma, euro, procent, eenheid }, ref) {
   var tiny    = size === "tiny";
   var compact = size === "compact";
   var teken   = !!(inputConfig && inputConfig.allowNegative);
   var neg     = teken && typed.charAt(0) === "-";
   var cijfers = neg ? typed.slice(1) : typed;
   var kpos    = cijfers.indexOf(",");
-  var tekst   = (euro ? "\u20ac\u00a0" : "") + (neg ? "\u2212" : "") + (kpos < 0 ? formatTypedDigits(cijfers) : formatTypedDigits(cijfers.slice(0, kpos)) + cijfers.slice(kpos));
+  var achter  = eenheid ? "\u00a0" + eenheid : "";
+  var tekst   = (euro ? "\u20ac\u00a0" : "") + (neg ? "\u2212" : "") + (kpos < 0 ? formatTypedDigits(cijfers) : formatTypedDigits(cijfers.slice(0, kpos)) + cijfers.slice(kpos)) + achter;
   var extra   = teken || !!komma;
   var basis   = tiny ? 32 : compact ? 36 : 42;
   // Met teken- of kommatoets is er minder breedte: lange getallen ("\u22129 999 999") krijgen een kleinere letter
   var letter  = extra && tekst.length > 6 ? Math.max(22, Math.floor(basis * 6 / tekst.length)) : basis;
+  // Met eenheid maar zonder toetsen in het vak is er meer breedte: kleiner vanaf 10 tekens ("9 999 999 km/u")
+  if (!extra && eenheid && tekst.length > 9) letter = Math.max(22, Math.floor(basis * 9 / tekst.length));
   var vakStijl = {
     minHeight: fit.vakH,
     display: "flex",
@@ -63,6 +68,7 @@ var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disab
     vakStijl.paddingLeft  = TEKEN_W;
     vakStijl.paddingRight = TEKEN_W;
   }
+  if (!extra && eenheid) vakStijl.fontSize = letter;
   return (
     <div ref={ref} style={{ display: "flex", flexDirection: "column", gap: tiny ? 8 : compact ? 10 : 12 }}>
       <div aria-label="Jouw antwoord" style={vakStijl}>
@@ -101,7 +107,7 @@ var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disab
         )}
         {typed === ""
           ? <span style={{ color: A.textSoft, fontSize: tiny ? 16 : 18, fontWeight: 700, letterSpacing: 0 }}>{"Typ je antwoord"}</span>
-          : (extra ? tekst : formatTypedDigits(typed) + (procent ? "%" : ""))}
+          : (extra || eenheid ? tekst : formatTypedDigits(typed) + (procent ? "%" : ""))}
         {komma && (
           <button
             type="button"

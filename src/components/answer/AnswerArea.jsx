@@ -1,12 +1,14 @@
 import { forwardRef } from "react";
 import ChoiceGrid from "./ChoiceGrid.jsx";
 import NumberAnswer from "./NumberAnswer.jsx";
+import { readAnswerQuantity, quantityMaxDecimals } from "../../core/answerCheck.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 // Antwoordgebied: kiest de invoercomponent bij inputType. Alleen "number" heeft een eigen
 // component (cijferblok); "decimal" is hetzelfde cijferblok met een kommatoets, "money" ook, met
-// "\u20ac" voor het getal; "percent" is het gewone cijferblok met "%" achter het getal. Al het andere,
+// "\u20ac" voor het getal; "percent" is het gewone cijferblok met "%" achter het getal; "quantity" is het
+// cijferblok met de eenheid van het antwoord achter het getal (kommatoets alleen met allowDecimal). Al het andere,
 // ook een onbekend type, toont de vier keuzes.
 // Of een vraag getypt wordt (voorkeur, resolveInput, past het op het scherm) beslist het
 // oefenscherm; dat geeft hier het type door dat getoond moet worden.
@@ -18,7 +20,8 @@ import NumberAnswer from "./NumberAnswer.jsx";
 //   - props: vraag, size (normal / compact / tiny), fit, feedback, selected, disabled,
 //     inputConfig (bijvoorbeeld allowNegative: tekentoets in het antwoordvak).
 var AnswerArea = forwardRef(function AnswerArea(props, ref) {
-  if (props.inputType === "number" || props.inputType === "decimal" || props.inputType === "money" || props.inputType === "percent") {
+  if (props.inputType === "number" || props.inputType === "decimal" || props.inputType === "money" || props.inputType === "percent" || props.inputType === "quantity") {
+    var hv = props.inputType === "quantity" ? readAnswerQuantity(props.vraag && props.vraag.answer) : null;
     return (
       <NumberAnswer
         ref={ref}
@@ -31,9 +34,10 @@ var AnswerArea = forwardRef(function AnswerArea(props, ref) {
         onBackspace={props.onBackspace}
         onSubmit={props.onSubmit}
         onSign={props.onSign}
-        komma={props.inputType === "decimal" || props.inputType === "money"}
+        komma={props.inputType === "decimal" || props.inputType === "money" || (props.inputType === "quantity" && quantityMaxDecimals(props.inputConfig) > 0)}
         euro={props.inputType === "money"}
         procent={props.inputType === "percent"}
+        eenheid={hv ? hv.eenheid : null}
         onComma={props.onComma}
         inputConfig={props.inputConfig}
         canSubmit={props.canSubmit}

@@ -9,7 +9,7 @@
 //           alleen typen toelaat als answer precies zo terug te schrijven is, geldt: goed <=> waarde === answer.
 // De verwerking daarna (feedback, voortgang) blijft in het oefenscherm (handleChoice).
 
-import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent } from "./answerCheck.js";
+import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals } from "./answerCheck.js";
 
 export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
   if (gradingRule === "numeric_equal") {
@@ -41,6 +41,15 @@ export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
     if (pv === null) return { geldig: false, goed: false, waarde: null };
     var pw = writeAnswerPercent(pv);
     return { geldig: true, goed: pw === vraag.answer, waarde: pw };
+  }
+  // Getal met eenheid: dezelfde waarde ("7,50" = "7,5\u00a0kg"); de eenheid komt altijd uit het antwoord.
+  // Decimalen alleen met allowDecimal; waarde in de canonieke vorm ("8" -> "8\u00a0kg").
+  if (gradingRule === "quantity_value_equal") {
+    var qa = readAnswerQuantity(vraag.answer);
+    var qd = qa === null ? null : parseTypedDecimal(invoer, quantityMaxDecimals(inputConfig));
+    if (qd === null) return { geldig: false, goed: false, waarde: null };
+    var qw = writeAnswerQuantity(qd, qa.eenheid);
+    return { geldig: true, goed: qw === vraag.answer, waarde: qw };
   }
   // Onbekende regel: nooit goed rekenen; resolveInput laat zo'n vraag niet typen
   return { geldig: false, goed: false, waarde: null };

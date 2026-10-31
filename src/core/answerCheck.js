@@ -231,10 +231,41 @@ export function writeAnswerPercent(value) {
   return String(value) + "%";
 }
 
+// ── Getal met eenheid ───────────────────────────────────────────────────────────────────
+// Een hoeveelheid is tekst: het getal, een vaste spatie en een eenheid uit de vaste lijst:
+// "45\u00a0cm", "7,5\u00a0kg", "60\u00a0km/u". Canoniek: zonder voorloopnullen, zonder eindnullen na
+// de komma en zonder scheidingsteken voor duizendtallen. Een gewone spatie of een andere eenheid is
+// geen hoeveelheid. De eenheid komt bij het nakijken altijd uit het antwoord, nooit uit de invoer.
+var EENHEDEN = ["mm", "cm", "m", "km", "g", "kg", "ml", "l", "cm\u00b2", "m\u00b2", "km/u", "min"];
+var ANSWER_QUANTITY_RE = /^(0|[1-9]\d*)(?:,(\d+))?\u00a0(\S+)$/;
+
+export function readAnswerQuantity(answer) {
+  if (typeof answer !== "string") return null;
+  var r = ANSWER_QUANTITY_RE.exec(answer);
+  if (!r || EENHEDEN.indexOf(r[3]) < 0) return null;
+  return { heel: r[1], dec: r[2] || "", eenheid: r[3] };
+}
+
+// Een getypt getal (uit parseTypedDecimal) schrijven met de eenheid van het antwoord:
+// zonder voorloopnullen en zonder eindnullen ("7,50" -> "7,5\u00a0kg", "7,0" -> "7\u00a0kg")
+export function writeAnswerQuantity(d, eenheid) {
+  var heel = String(Number(d.heel));
+  var dec  = d.dec.replace(/0+$/, "");
+  return heel + (dec === "" ? "" : "," + dec) + "\u00a0" + eenheid;
+}
+
+// Hoeveel decimalen mag een getal met eenheid hebben? Zonder allowDecimal geen (en geen kommatoets).
+export function quantityMaxDecimals(inputConfig) {
+  if (!inputConfig || !inputConfig.allowDecimal) return 0;
+  return inputConfig.maxDecimals === undefined ? 2 : inputConfig.maxDecimals;
+}
+
 // Uitleg onder de schakelaar Kiezen | Typen (per modus; anders de standaardtekst)
 var TYPE_HINT = {
   geld:              "Je typt het bedrag met het cijferblok; met , typ je de centen. Munten, schatten en fout spotten blijven kiezen.",
-  procenten:         "Je typt het antwoord met het cijferblok: procenten, getallen en bedragen. Breuken, verhoudingen, eenheden, vergelijken, schatten en fout spotten blijven kiezen.",
+  procenten:         "Je typt het antwoord met het cijferblok: procenten, getallen, bedragen en maten. Breuken, verhoudingen, vergelijken, schatten en fout spotten blijven kiezen.",
+  meten:             "Je typt het antwoord met het cijferblok: getallen, kommagetallen en maten. Eenheden kiezen, vergelijken, schatten en fout spotten blijven kiezen.",
+  reizen:            "Je typt afstanden, snelheden, liters en bedragen met het cijferblok. Tijden, schatten en fout spotten blijven kiezen.",
   kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal. Vergelijken, schatten, breuken en fout spotten blijven kiezen.",
   wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Breuken, kommagetallen en keuzevragen blijven kiezen.",
   wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij invullen; vergelijkingen en vereenvoudigen blijven kiezen.",
