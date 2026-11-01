@@ -519,6 +519,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var qFontState = useState(null);
   var qFont      = qFontState[0];
   var setQFont   = qFontState[1];
+  // Een vraag zonder gewone spatie is één geheel: de generator koppelt de delen met vaste spaties
+  // ("(5x\u00a0+\u00a03)(x\u00a0+\u00a05)\u00a0="). Zo'n vraag breekt niet af (ook niet tussen ")" en "("); past hij
+  // niet, dan maakt de meting hieronder de letter kleiner. Vragen met gewone spaties breken af zoals altijd.
+  var isOneUnit  = !isMultiLineQuestion && String(currentQuestion.question).indexOf(" ") < 0;
   var qBase      = isMultiLineQuestion ? (tiny ? 32 : compact ? 36 : 44) : (tiny ? 40 : compact ? 48 : 60);
 
   useLayoutEffect(function() {
@@ -767,6 +771,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             color: A.text,
             letterSpacing: -1.5,
             lineHeight: 1.05,
+            whiteSpace: isOneUnit ? "nowrap" : undefined,
           }}>
             {currentQuestion.question}
           </div>
