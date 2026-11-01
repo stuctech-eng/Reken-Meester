@@ -18,7 +18,8 @@ import { readAnswerQuantity, quantityMaxDecimals } from "../../core/answerCheck.
 //   - een component met eigen invoer heeft een knop met aria-label "Controleer" (daarop meet
 //     het oefenscherm of het antwoordgebied op het scherm past);
 //   - props: vraag, size (normal / compact / tiny), fit, feedback, selected, disabled,
-//     inputConfig (bijvoorbeeld allowNegative: tekentoets in het antwoordvak).
+//     inputConfig (bijvoorbeeld allowNegative: tekentoets in het antwoordvak),
+//     formuleEenRegel (keuzes: formules op één regel als dat past; alleen Algebra en Algebra 2).
 var AnswerArea = forwardRef(function AnswerArea(props, ref) {
   if (props.inputType === "number" || props.inputType === "decimal" || props.inputType === "money" || props.inputType === "percent" || props.inputType === "quantity") {
     var hv = props.inputType === "quantity" ? readAnswerQuantity(props.vraag && props.vraag.answer) : null;
@@ -51,6 +52,7 @@ var AnswerArea = forwardRef(function AnswerArea(props, ref) {
       feedback={props.feedback}
       selected={props.selected}
       onChoice={props.onChoice}
+      formuleEenRegel={props.formuleEenRegel}
     />
   );
 });

@@ -812,6 +812,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           inputConfig={inputInfo.inputConfig}
           canSubmit={/^-?\d+(,\d+)?$/.test(typed)}
           onChoice={handleChoice}
+          formuleEenRegel={subjectId === "wiskunde_algebra" || subjectId === "wiskunde_algebra2"}
         />
 
         {/* Uitlegkaart — verschijnt na fout, blijft tot "Volgende vraag" */}
