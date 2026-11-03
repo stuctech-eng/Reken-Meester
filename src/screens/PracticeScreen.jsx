@@ -23,6 +23,15 @@ var CONCEPT_COUNTER = 0;
 // Kleinste aantal goede sommen dat nog nodig is om aan de sessievoorwaarden te voldoen
 // Kleinste lettergrootte voor de vraagtekst wanneer die niet in de kaart past (zie vraaggrootte)
 var Q_FONT_MIN = 28;
+
+// Weergave van de vraag: een gemengd getal ("3 3/7": een getal, een spatie en een breuk, niet direct
+// na een cijfer of "/") krijgt een vaste spatie, zodat het niet over twee regels breekt. Alleen voor
+// het beeld: de vraag zelf, het antwoord en het nakijken houden de gewone spatie.
+var GEMENGD_RE = /(^|[^\d\/])(\d+) (\d+\/\d+)/g;
+function toonVraag(vraag) {
+  return String(vraag).replace(GEMENGD_RE, "$1$2\u00a0$3");
+}
+
 // Regel van een kolomsom: alleen een getal, eventueel met een rekenteken ervoor ("828", "− 194")
 var COLUMN_LINE_RE = /^[\u2212\u00d7+:-]?\s?[\d.,]+$/;
 // Onder deze schermhoogtes (px) gaat de oefenpagina in de compacte en de extra compacte
@@ -788,7 +797,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             lineHeight: 1.05,
             whiteSpace: isOneUnit ? "nowrap" : undefined,
           }}>
-            {currentQuestion.question}
+            {toonVraag(currentQuestion.question)}
           </div>
 
           {/* Feedback na antwoord */}
