@@ -1075,6 +1075,30 @@ function simpleRange(lo, hi) {
 // SKILLS MET VRAAGVERLOOP + b37 SNELHEIDSRONDE
 // ─────────────────────────────────────────────────────────────────
 
+// Typen (Kiezen | Typen): per vaardigheid het type van het antwoord. Een geheel getal (b02: 11) is
+// "number"; een breuk ("5/7") is "fraction"; met een geheel deel ("7 2/3", of "1") "fraction" met
+// gemengd (het breukvak heeft dan ook een geheel-vak). Blijven kiezen: b03, b06, b09-b14 (vergelijken,
+// herkennen, groter dan), b35 (fout spotten), b36 (schatten). b37 typt per vraag volgens zijn bron.
+// Vragen veranderen niet.
+var TYPEN = {
+  b02_teller_noemer: "number", b04_geheel: "number", b05_gelijkwaardig_maken: "number", b15_deling: "number",
+  b17_gemengd_onecht: "number", b30_stambreuk_van: "number", b31_breuk_van: "number", b32_terugrekenen: "number",
+  b34_ontbrekende_teller: "number",
+  b01_strook: "fraction", b07_vereenvoudigen: "fraction", b08_eenvoudigst: "fraction", b18_plus_gelijk: "fraction",
+  b19_min_gelijk: "fraction", b21_aanvullen: "fraction", b22_plus_veelvoud: "fraction", b23_min_veelvoud: "fraction",
+  b24_plus_algemeen: "fraction", b25_min_algemeen: "fraction",
+  b16_onecht_gemengd: "fraction", b20_plus_vereenvoudigen: "fraction", b26_plus_over_1: "fraction",
+  b27_gemengd_zonder: "fraction", b28_gemengd_met: "fraction", b29_gemengd_lenen: "fraction", b33_keer_breuk: "fraction",
+};
+var GEMENGD = { b16_onecht_gemengd: true, b20_plus_vereenvoudigen: true, b26_plus_over_1: true, b27_gemengd_zonder: true,
+  b28_gemengd_met: true, b29_gemengd_lenen: true, b33_keer_breuk: true };
+RAW_SKILLS.forEach(function(s) {
+  var t = TYPEN[s.id];
+  if (!t) return;
+  s.inputType = t;
+  if (t === "fraction") s.inputConfig = GEMENGD[s.id] ? { gemengd: true } : {};
+});
+
 var SKILLS = createSkills("breuken", RAW_SKILLS);
 var MIXER  = createMixer(RAW_SKILLS, BLOCK_GROUPS, SKILLS.byId);
 

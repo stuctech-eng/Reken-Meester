@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import ChoiceGrid from "./ChoiceGrid.jsx";
 import NumberAnswer from "./NumberAnswer.jsx";
+import FractionAnswer from "./FractionAnswer.jsx";
 import { readAnswerQuantity, quantityMaxDecimals } from "../../core/answerCheck.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
@@ -8,7 +9,8 @@ import { readAnswerQuantity, quantityMaxDecimals } from "../../core/answerCheck.
 // Antwoordgebied: kiest de invoercomponent bij inputType. Alleen "number" heeft een eigen
 // component (cijferblok); "decimal" is hetzelfde cijferblok met een kommatoets, "money" ook, met
 // "\u20ac" voor het getal; "percent" is het gewone cijferblok met "%" achter het getal; "quantity" is het
-// cijferblok met de eenheid van het antwoord achter het getal (kommatoets alleen met allowDecimal). Al het andere,
+// cijferblok met de eenheid van het antwoord achter het getal (kommatoets alleen met allowDecimal); "fraction"
+// is het breukvak (FractionAnswer: teller, noemer en bij inputConfig.gemengd een geheel). Al het andere,
 // ook een onbekend type, toont de vier keuzes.
 // Of een vraag getypt wordt (voorkeur, resolveInput, past het op het scherm) beslist het
 // oefenscherm; dat geeft hier het type door dat getoond moet worden.
@@ -21,6 +23,21 @@ import { readAnswerQuantity, quantityMaxDecimals } from "../../core/answerCheck.
 //     inputConfig (bijvoorbeeld allowNegative: tekentoets in het antwoordvak),
 //     formuleEenRegel (keuzes: formules op één regel als dat past; alleen Algebra en Algebra 2).
 var AnswerArea = forwardRef(function AnswerArea(props, ref) {
+  if (props.inputType === "fraction") {
+    // breukKey: per getoonde vraag nieuw, zodat het breukvak bij elke vraag leeg begint
+    return (
+      <FractionAnswer
+        key={props.breukKey}
+        ref={ref}
+        size={props.size}
+        fit={props.fit}
+        feedback={props.feedback}
+        disabled={props.disabled}
+        gemengd={!!(props.inputConfig && props.inputConfig.gemengd)}
+        onSubmit={props.onSubmitBreuk}
+      />
+    );
+  }
   if (props.inputType === "number" || props.inputType === "decimal" || props.inputType === "money" || props.inputType === "percent" || props.inputType === "quantity") {
     var hv = props.inputType === "quantity" ? readAnswerQuantity(props.vraag && props.vraag.answer) : null;
     return (

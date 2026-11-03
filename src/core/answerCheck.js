@@ -254,6 +254,47 @@ export function writeAnswerQuantity(d, eenheid) {
   return heel + (dec === "" ? "" : "," + dec) + "\u00a0" + eenheid;
 }
 
+// ── Breuken ─────────────────────────────────────────────────────────────────────────
+// Een breuk is tekst: "5/7", een gemengd getal "7 2/3" (gewone spatie) of, bij een vaardigheid met een
+// geheel deel, een geheel getal "1". Canoniek: zonder voorloopnullen. Elk deel (geheel, teller, noemer)
+// hoogstens FRACTION_MAX_DIGITS cijfers; de noemer is nooit 0.
+export var FRACTION_MAX_DIGITS = 3;
+var ANSWER_FRACTION_RE = /^(?:([1-9]\d*) )?(0|[1-9]\d*)\/([1-9]\d*)$/;
+var ANSWER_WHOLE_RE    = /^(0|[1-9]\d*)$/;
+var TYPED_FRACTION_RE  = /^(?:(\d+) )?(\d+)\/(\d+)$/;
+var TYPED_WHOLE_RE     = /^(\d+)$/;
+
+// Het verwachte antwoord lezen (alleen tekst in de canonieke vorm): { geheel, teller, noemer } (lege tekst = geen)
+export function readAnswerFraction(answer) {
+  if (typeof answer !== "string") return null;
+  var r = ANSWER_FRACTION_RE.exec(answer);
+  if (r) return { geheel: r[1] || "", teller: r[2], noemer: r[3] };
+  r = ANSWER_WHOLE_RE.exec(answer);
+  return r ? { geheel: r[1], teller: "", noemer: "" } : null;
+}
+
+// De ruwe invoer uit het breukvak lezen ("g t/n", "t/n" of "g", precies zoals getypt): elk deel
+// 1..FRACTION_MAX_DIGITS cijfers, noemer niet 0. Een geheel deel alleen als gemengd. Anders null.
+export function parseTypedFraction(text, gemengd) {
+  if (typeof text !== "string") return null;
+  var r = TYPED_FRACTION_RE.exec(text);
+  var f = r ? { geheel: r[1] || "", teller: r[2], noemer: r[3] } : null;
+  if (!f) { r = TYPED_WHOLE_RE.exec(text); f = r ? { geheel: r[1], teller: "", noemer: "" } : null; }
+  if (!f) return null;
+  if (f.geheel.length > FRACTION_MAX_DIGITS || f.teller.length > FRACTION_MAX_DIGITS || f.noemer.length > FRACTION_MAX_DIGITS) return null;
+  if (f.noemer !== "" && Number(f.noemer) === 0) return null;
+  if (f.geheel !== "" && !gemengd) return null;
+  return f;
+}
+
+// Canonieke vorm (zonder voorloopnullen): "t/n", "g t/n" of "g"
+export function writeAnswerFraction(f) {
+  var g = f.geheel === "" ? "" : String(Number(f.geheel));
+  if (f.teller === "") return g;
+  var b = String(Number(f.teller)) + "/" + String(Number(f.noemer));
+  return g === "" ? b : g + " " + b;
+}
+
 // Hoeveel decimalen mag een getal met eenheid hebben? Zonder allowDecimal geen (en geen kommatoets).
 export function quantityMaxDecimals(inputConfig) {
   if (!inputConfig || !inputConfig.allowDecimal) return 0;
@@ -264,6 +305,7 @@ export function quantityMaxDecimals(inputConfig) {
 var TYPE_HINT = {
   geld:              "Je typt het bedrag met het cijferblok; met , typ je de centen. Munten, schatten en fout spotten blijven kiezen.",
   procenten:         "Je typt het antwoord met het cijferblok: procenten, getallen, bedragen en maten. Breuken, verhoudingen, vergelijken, schatten en fout spotten blijven kiezen.",
+  breuken:           "Je typt het antwoord in het breukvak: tik op teller, noemer of geheel en typ met het cijferblok. Vergelijken, herkennen, schatten en fout spotten blijven kiezen.",
   meten:             "Je typt het antwoord met het cijferblok: getallen, kommagetallen en maten. Eenheden kiezen, vergelijken, schatten en fout spotten blijven kiezen.",
   reizen:            "Je typt afstanden, snelheden, liters en bedragen met het cijferblok. Tijden, schatten en fout spotten blijven kiezen.",
   kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal. Vergelijken, schatten, breuken en fout spotten blijven kiezen.",

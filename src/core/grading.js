@@ -9,7 +9,7 @@
 //           alleen typen toelaat als answer precies zo terug te schrijven is, geldt: goed <=> waarde === answer.
 // De verwerking daarna (feedback, voortgang) blijft in het oefenscherm (handleChoice).
 
-import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals } from "./answerCheck.js";
+import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, parseTypedFraction, writeAnswerFraction } from "./answerCheck.js";
 
 export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
   if (gradingRule === "numeric_equal") {
@@ -50,6 +50,16 @@ export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
     if (qd === null) return { geldig: false, goed: false, waarde: null };
     var qw = writeAnswerQuantity(qd, qa.eenheid);
     return { geldig: true, goed: qw === vraag.answer, waarde: qw };
+  }
+  // Breuk, exact: goed alleen als de ruwe invoer letterlijk het antwoord is ("01/02" en "2/4" zijn fout bij
+  // "1/2"). waarde: bij goed de invoer (= answer); bij fout de canonieke vorm, behalve als die gelijk is aan
+  // het antwoord (dan de ruwe invoer), zodat goed <=> waarde === answer blijft gelden.
+  if (gradingRule === "fraction_exact") {
+    var fi = parseTypedFraction(invoer, !!(inputConfig && inputConfig.gemengd));
+    if (fi === null) return { geldig: false, goed: false, waarde: null };
+    var fgoed = invoer === vraag.answer;
+    var fcan  = writeAnswerFraction(fi);
+    return { geldig: true, goed: fgoed, waarde: (fgoed || fcan === vraag.answer) ? invoer : fcan };
   }
   // Onbekende regel: nooit goed rekenen; resolveInput laat zo'n vraag niet typen
   return { geldig: false, goed: false, waarde: null };

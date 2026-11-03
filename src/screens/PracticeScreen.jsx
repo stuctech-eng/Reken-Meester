@@ -113,6 +113,12 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var typed       = typedState[0];
   var setTyped    = typedState[1];
 
+  // Vraagnummer: telt elke getoonde vraag (ook als dezelfde vraag terugkomt); het breukvak krijgt
+  // dit als key en begint daardoor bij elke vraag leeg
+  var vraagNrState = useState(0);
+  var vraagNr      = vraagNrState[0];
+  var setVraagNr   = vraagNrState[1];
+
   // Passend cijferblok (zie hieronder): null = vaste maten; { keyH, gap, vakH } = kleiner;
   // "kiezen" = past ook dan niet, deze vraag toont de keuzes. Per vraag opnieuw bepaald.
   var fitState    = useState(null);
@@ -224,6 +230,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setHelpOpen(false);
     var nextQ = generateNext(nextSkillId);
     setCurrentQuestion(nextQ);
+    setVraagNr(function(n) { return n + 1; });
     setSelected(null);
     setTyped("");
     setTypeFit(null);
@@ -326,6 +333,13 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   function handleTypedBackspace() {
     if (selected !== null) return;
     setTyped(function(prev) { return prev.slice(0, -1); });
+  }
+  // Breuk: het breukvak geeft de ruwe invoer ("g t/n", "t/n" of "g"); zelfde verwerking als hieronder
+  function handleBreukSubmit(ruw) {
+    if (selected !== null) return;
+    var res = gradeTyped(inputInfo.gradingRule, ruw, currentQuestion, inputInfo.inputConfig);
+    if (!res.geldig) return;
+    handleChoice(res.goed ? currentQuestion.answer : res.waarde);
   }
   function handleTypedSubmit() {
     var res = gradeTyped(inputInfo.gradingRule, typed, currentQuestion, inputInfo.inputConfig);
@@ -496,7 +510,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes).
   // Past het cijferblok niet op het scherm, dan toont deze vraag toch de keuzes (typeFit).
   var inputInfo   = resolveInput(subjectId, currentQuestion.skillId, currentQuestion);
-  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent" || inputInfo.inputType === "quantity");
+  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent" || inputInfo.inputType === "quantity" || inputInfo.inputType === "fraction");
   var typeMode    = typeAllowed && typeFit !== "kiezen";
   var kpBase      = KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"];
   var kpSize      = (typeFit && typeFit !== "kiezen") ? typeFit : kpBase;
@@ -568,7 +582,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     if (typeFit) { setTypeFit("kiezen"); return undefined; }
     var need = Math.ceil(over);
     // Met tekentoets in het antwoordvak blijft het vak hoog genoeg voor een toets van 44 px (plus de rand)
-    var vakMin = (inputInfo.inputConfig.allowNegative || kommaToegestaan()) ? VAK_MIN_TEKEN : KEYPAD_MIN.vakH;
+    // Het breukvak heeft een vaste hoogte (twee vakken van minstens 44 px): daar valt niets te winnen
+    var vakMin = inputInfo.inputType === "fraction" ? kpBase.vakH : (inputInfo.inputConfig.allowNegative || kommaToegestaan()) ? VAK_MIN_TEKEN : KEYPAD_MIN.vakH;
     var room = 4 * (kpBase.keyH - KEYPAD_MIN.keyH) + 3 * (kpBase.gap - KEYPAD_MIN.gap) + (kpBase.vakH - vakMin);
     if (need > room) { setTypeFit("kiezen"); return undefined; }
     var gap = kpBase.gap, vakH = kpBase.vakH, keyH = kpBase.keyH;
@@ -812,6 +827,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           inputConfig={inputInfo.inputConfig}
           canSubmit={/^-?\d+(,\d+)?$/.test(typed)}
           onChoice={handleChoice}
+          onSubmitBreuk={handleBreukSubmit}
+          breukKey={"vraag-" + vraagNr}
           formuleEenRegel={subjectId === "wiskunde_algebra" || subjectId === "wiskunde_algebra2"}
         />
 

@@ -11,7 +11,7 @@
 // als iets anders behandeld: dan is het Kiezen.
 
 import { getSkillList } from "./subjects.js";
-import { typingAvailable, canTypeQuestion, readAnswerInteger, writeAnswerInteger, readAnswerDecimal, writeAnswerDecimal, readAnswerMoney, writeAnswerMoney, readAnswerPercent, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, TYPE_MAX_DIGITS } from "./answerCheck.js";
+import { typingAvailable, canTypeQuestion, readAnswerInteger, writeAnswerInteger, readAnswerDecimal, writeAnswerDecimal, readAnswerMoney, writeAnswerMoney, readAnswerPercent, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, readAnswerFraction, writeAnswerFraction, FRACTION_MAX_DIGITS, TYPE_MAX_DIGITS } from "./answerCheck.js";
 
 // Wat het oefenscherm nu kan: typen met het cijferblok (number) en de vier keuzes (choice),
 // elk met de nakijkregel die erbij hoort. Een andere combinatie kan niet worden nagekeken.
@@ -21,9 +21,10 @@ var PASSEND = {
   money:   { money_value_equal: true, money_exact_notation: true },
   percent: { percent_value_equal: true },
   quantity: { quantity_value_equal: true },
+  fraction: { fraction_exact: true },
   choice:  { choice_exact: true },
 };
-var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", money: "money_value_equal", percent: "percent_value_equal", quantity: "quantity_value_equal", choice: "choice_exact" };
+var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", money: "money_value_equal", percent: "percent_value_equal", quantity: "quantity_value_equal", fraction: "fraction_exact", choice: "choice_exact" };
 
 var KIEZEN = { inputType: "choice", gradingRule: "choice_exact", inputConfig: {} };
 
@@ -115,14 +116,22 @@ export function resolveInput(subjectId, skillId, question) {
       if (qk === null || qk.eenheid !== qa.eenheid) return metBron(KIEZEN, "terugval");
     }
   }
+  // Breuk: het antwoord is tekst in de canonieke vorm ("5/7", "7 2/3", of "1" bij gemengd), elk deel
+  // hoogstens FRACTION_MAX_DIGITS cijfers; een geheel deel (ook een geheel getal) alleen met gemengd
+  if (r.inputType === "fraction") {
+    var fr = readAnswerFraction(question.answer);
+    if (fr === null || writeAnswerFraction(fr) !== question.answer) return metBron(KIEZEN, "terugval");
+    if (fr.geheel.length > FRACTION_MAX_DIGITS || fr.teller.length > FRACTION_MAX_DIGITS || fr.noemer.length > FRACTION_MAX_DIGITS) return metBron(KIEZEN, "terugval");
+    if (fr.geheel !== "" && !r.inputConfig.gemengd) return metBron(KIEZEN, "terugval");
+  }
   return metBron(r, bron);
 }
 
 // Heeft deze modus Typen (de schakelaar Kiezen | Typen)? Ja als de modus in de vaste regels
-// staat (answerCheck.js), of als minstens één vaardigheid getypt wordt (inputType "number", "decimal", "money", "percent" of "quantity").
+// staat (answerCheck.js), of als minstens één vaardigheid getypt wordt (inputType "number", "decimal", "money", "percent", "quantity" of "fraction").
 export function typingAvailableFor(subjectId) {
   if (typingAvailable(subjectId)) return true;
   var lijst = getSkillList(subjectId) || [];
-  for (var i = 0; i < lijst.length; i++) { if (lijst[i].inputType === "number" || lijst[i].inputType === "decimal" || lijst[i].inputType === "money" || lijst[i].inputType === "percent" || lijst[i].inputType === "quantity") return true; }
+  for (var i = 0; i < lijst.length; i++) { if (lijst[i].inputType === "number" || lijst[i].inputType === "decimal" || lijst[i].inputType === "money" || lijst[i].inputType === "percent" || lijst[i].inputType === "quantity" || lijst[i].inputType === "fraction") return true; }
   return false;
 }
