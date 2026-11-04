@@ -304,12 +304,12 @@ export function quantityMaxDecimals(inputConfig) {
 // Uitleg onder de schakelaar Kiezen | Typen (per modus; anders de standaardtekst)
 var TYPE_HINT = {
   geld:              "Je typt het bedrag met het cijferblok; met , typ je de centen. Munten, schatten en fout spotten blijven kiezen.",
-  procenten:         "Je typt het antwoord met het cijferblok: procenten, getallen, bedragen en maten. Breuken, verhoudingen, vergelijken, schatten en fout spotten blijven kiezen.",
+  procenten:         "Je typt het antwoord met het cijferblok: procenten, getallen, bedragen, maten en het deel van een geheel (breukvak). Verhoudingen, vergelijken, schatten en fout spotten blijven kiezen.",
   breuken:           "Je typt het antwoord in het breukvak: tik op teller, noemer of geheel en typ met het cijferblok. Vergelijken, herkennen, schatten en fout spotten blijven kiezen.",
   meten:             "Je typt het antwoord met het cijferblok: getallen, kommagetallen en maten. Eenheden kiezen, vergelijken, schatten en fout spotten blijven kiezen.",
   reizen:            "Je typt afstanden, snelheden, liters en bedragen met het cijferblok. Tijden, schatten en fout spotten blijven kiezen.",
-  kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal. Vergelijken, schatten, breuken en fout spotten blijven kiezen.",
-  wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Breuken, kommagetallen en keuzevragen blijven kiezen.",
+  kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal en een breuk typ je in het breukvak. Vergelijken, schatten en fout spotten blijven kiezen.",
+  wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief en een breuk typ je in het breukvak. Kommagetallen, procenten en keuzevragen blijven kiezen.",
   wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij invullen; vergelijkingen en vereenvoudigen blijven kiezen.",
   wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij de discriminant en een verhaal; de rest blijft kiezen.",
 };

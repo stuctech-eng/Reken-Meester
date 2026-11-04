@@ -976,9 +976,10 @@ var RAW_SKILLS = [
 // ─────────────────────────────────────────────────────────────────
 
 // Typen (Kiezen | Typen): vaardigheden waarvan het antwoord altijd een kommagetal of een geheel
-// getal is. Afronden (k14, k15) vraagt ook precies het aantal decimalen. Blijven kiezen: k08/k09
-// (breuken), k10/k12 (kiesvragen), k11 (meer antwoorden goed), k31 (schatten), k34/k35 (fout
-// spotten). k37 typt alleen vragen uit deze vaardigheden (bronSkillId). Vragen veranderen niet.
+// getal is. Afronden (k14, k15) vraagt ook precies het aantal decimalen. k08 en k09 typen een breuk
+// in het breukvak ("fraction"); bij k08 blijven de vragen met een kommagetal als antwoord per vraag
+// kiezen. Blijven kiezen: k10/k12 (kiesvragen), k11 (meer antwoorden goed), k31 (schatten), k34/k35
+// (fout spotten). k37 typt per vraag volgens zijn bron (bronSkillId). Vragen veranderen niet.
 var TYPEN = {
   k01_tienden_strook: "decimal_value_equal", k02_plaats_cijfer: "decimal_value_equal", k03_waarde_cijfer: "decimal_value_equal",
   k04_samenstellen: "decimal_value_equal", k05_getallenlijn: "decimal_value_equal", k06_tienden_breuk: "decimal_value_equal",
@@ -991,8 +992,10 @@ var TYPEN = {
   k30_missend: "decimal_value_equal", k32_helft_dubbel: "decimal_value_equal", k33_kort_toepassen: "decimal_value_equal",
   k36_over_de_grens: "decimal_value_equal",
 };
+var BREUK = { k08_bekende_breuken: true, k09_komma_naar_breuk: true };
 RAW_SKILLS.forEach(function(s) {
   if (TYPEN[s.id]) { s.inputType = "decimal"; s.gradingRule = TYPEN[s.id]; s.inputConfig = { maxDecimals: 3 }; }
+  if (BREUK[s.id]) { s.inputType = "fraction"; s.inputConfig = {}; }
 });
 
 var SKILLS = createSkills("kommagetallen", RAW_SKILLS);

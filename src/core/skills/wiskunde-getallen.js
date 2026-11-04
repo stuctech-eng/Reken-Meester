@@ -595,12 +595,19 @@ function tipOf(terms) { return terms && terms[0] ? terms[0] : ""; }
 
 // Typen (Kiezen | Typen): vaardigheden waarvan het antwoord altijd een geheel getal is, ook
 // negatief. De invoer en het nakijken staan in inputResolve.js en grading.js; de vragen zelf
-// veranderen niet. Alle andere vaardigheden blijven kiezen.
+// veranderen niet. Breuken (BREUK) typen in het breukvak ("fraction"): wg12, wg14, wg15, wg16 en wg17;
+// wg24 met geheel-vak (gemengd: 6^0 = 1 in het geheel-vak, 7^-3 = 1/343 in teller en noemer). Per vraag
+// blijven kiezen: een geheel getal bij wg16 en een kommagetal of procent bij wg17. wg13 (welke breuk is
+// het kleinst/grootst) is een kiesvraag en blijft kiezen. Alle andere vaardigheden blijven kiezen.
 var TYPEN = {
   wg02_optellen: true, wg03_aftrekken: true, wg04_keer_delen: true, wg05_keer_voor_plus: true,
   wg06_links_rechts: true, wg07_haakjes: true, wg08_volgorde_negatief: true, wg09_wisselen_groeperen: true,
   wg11_buiten_haakjes: true, wg18_procent_van: true, wg20_verhoudingstabel: true, wg22_kwadraat: true,
   wg23_machten_10: true, wg26_min_en_macht: true, wg27_wortel: true, wg29_volgorde_machten: true,
+};
+var BREUK = {
+  wg12_vereenvoudigen: {}, wg14_breuken_plus_min: {}, wg15_breuken_keer: {}, wg16_breuken_delen: {},
+  wg17_omrekenen: {}, wg24_exponent_0_negatief: { gemengd: true },
 };
 
 var RAW_SKILLS = DEFS.map(function(d) {
@@ -611,6 +618,7 @@ var RAW_SKILLS = DEFS.map(function(d) {
     make: function(s) { return retry(function() { return gen(s || 0); }); },
   };
   if (TYPEN[d[0]]) { skill.inputType = "number"; skill.inputConfig = { allowNegative: true }; }
+  if (BREUK[d[0]]) { skill.inputType = "fraction"; skill.inputConfig = BREUK[d[0]]; }
   return skill;
 });
 
