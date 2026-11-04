@@ -9,7 +9,7 @@
 //           alleen typen toelaat als answer precies zo terug te schrijven is, geldt: goed <=> waarde === answer.
 // De verwerking daarna (feedback, voortgang) blijft in het oefenscherm (handleChoice).
 
-import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, parseTypedFraction, writeAnswerFraction } from "./answerCheck.js";
+import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, parseTypedFraction, writeAnswerFraction, parseTypedPair, writeAnswerPair } from "./answerCheck.js";
 
 export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
   if (gradingRule === "numeric_equal") {
@@ -60,6 +60,15 @@ export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
     var fgoed = invoer === vraag.answer;
     var fcan  = writeAnswerFraction(fi);
     return { geldig: true, goed: fgoed, waarde: (fgoed || fcan === vraag.answer) ? invoer : fcan };
+  }
+  // Twee getallen, exact: de ruwe invoer is "a|b" (eerste vak, tweede vak). waarde is altijd de canonieke
+  // tekst bij inputConfig.tussen ("12 rest 6", "3\u00a0:\u00a04"); goed alleen als die letterlijk het antwoord is.
+  // Geen omdraaien en geen gelijkwaardige verhouding: "4 : 3" en "6 : 8" zijn fout bij "3 : 4".
+  if (gradingRule === "pair_exact") {
+    var pp = parseTypedPair(invoer);
+    var pw = pp ? writeAnswerPair(pp, inputConfig && inputConfig.tussen) : null;
+    if (pw === null) return { geldig: false, goed: false, waarde: null };
+    return { geldig: true, goed: pw === vraag.answer, waarde: pw };
   }
   // Onbekende regel: nooit goed rekenen; resolveInput laat zo'n vraag niet typen
   return { geldig: false, goed: false, waarde: null };

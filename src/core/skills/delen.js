@@ -747,6 +747,9 @@ var RAW_SKILLS = [
     uitleg: "Past het niet precies, dan blijft er iets over: de rest. 23 : 4: 5 × 4 = 20, er blijft 3 over. Dus 23 : 4 = 5 rest 3. De rest is altijd kleiner dan het getal waardoor je deelt.",
     voorbeeld: "17 : 5 = ?\n3 × 5 = 15, er blijft 2 over.\nAntwoord: 3 rest 2.",
     minCorrect: 8,
+    // Typen: twee vakjes (uitkomst | rest), zie answerCheck.js (paar)
+    inputType: "pair",
+    inputConfig: { tussen: "rest" },
     make: function() {
       var p = pickPerDeler(REST_TAFEL);
       return restQ(p[0], p[1]);
@@ -763,6 +766,9 @@ var RAW_SKILLS = [
     uitleg: "Zoek het grootste getal dat in de tafel past en kijk wat er overblijft. 87 : 4: 21 × 4 = 84, er blijft 3 over. Dus 21 rest 3.",
     voorbeeld: "59 : 6 = ?\n9 × 6 = 54, er blijft 5 over.\nAntwoord: 9 rest 5.",
     minCorrect: 12,
+    // Typen: twee vakjes (uitkomst | rest), zie answerCheck.js (paar)
+    inputType: "pair",
+    inputConfig: { tussen: "rest" },
     make: function() {
       var p = pickPerDeler(REST_GROOT);
       return restQ(p[0], p[1]);

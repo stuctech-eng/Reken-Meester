@@ -45,14 +45,12 @@ var TYPE_CONFIG = {
   delen: {
     kind: "geheel",
     alleenKiezen: [
-      "d27_rest_tafel",           // antwoord met rest ("10 rest 4"): twee getallen
-      "d28_rest_groot",           // antwoord met rest ("10 rest 4"): twee getallen
       "d34_schatten",             // schatten: het goede antwoord is de schatting
       "d35_fout_spotten",         // fout-spotter: kies de foute som
     ],
     // Snelheidsronde d37 mengt vragen uit alle blokken; de schatvragen daarin ("Schat: ...")
-    // blijven kiezen. Fout-spotters en restvragen (antwoord is geen geheel getal) vangt het
-    // vangnet hieronder al. Een vraag die met het cijferblok niet op het scherm past (zoals een
+    // blijven kiezen. Fout-spotters vangt het vangnet hieronder al. De restvragen (d27, d28) hebben
+    // een eigen invoertype (twee vakjes, "pair" in delen.js); in een snelheidsronde ook, via bronSkillId. Een vraag die met het cijferblok niet op het scherm past (zoals een
     // hoog rooster op een kleine telefoon), toont het oefenscherm zelf met keuzes.
     alleenKiezenVraag: /^Schat:/,
   },
@@ -295,6 +293,43 @@ export function writeAnswerFraction(f) {
   return g === "" ? b : g + " " + b;
 }
 
+// ── Twee getallen (deling met rest, verhouding) ────────────────────────────────────────
+// Een paar is tekst met twee gehele getallen en een vaste scheiding (inputConfig.tussen):
+//   "rest" -> "12 rest 6" (gewone spaties), ":" -> "3\u00a0:\u00a04" (vaste spaties), zoals de generatoren.
+// Elk getal 1..PAIR_MAX_DIGITS cijfers, zonder voorloopnul en niet 0 (gemeten: in antwoorden en keuzes
+// van d27, d28, p20 en p23 hoogstens 2 cijfers en nooit 0). De volgorde telt: het eerste vak is het
+// eerste getal van het antwoord.
+export var PAIR_MAX_DIGITS = 2;
+var PAIR_TUSSEN = { rest: " rest ", ":": "\u00a0:\u00a0" };
+var PAIR_DEEL_RE = /^[1-9]\d*$/;
+
+function pairDeelOk(d) {
+  return typeof d === "string" && PAIR_DEEL_RE.test(d) && d.length <= PAIR_MAX_DIGITS;
+}
+
+// Het verwachte antwoord lezen (alleen precies de canonieke vorm van deze scheiding): { a, b }, anders null
+export function readAnswerPair(answer, tussen) {
+  if (typeof answer !== "string" || !Object.prototype.hasOwnProperty.call(PAIR_TUSSEN, tussen)) return null;
+  var delen = answer.split(PAIR_TUSSEN[tussen]);
+  if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
+  return { a: delen[0], b: delen[1] };
+}
+
+// De ruwe invoer uit de twee vakjes lezen: altijd "a|b" (eerste vak, tweede vak). Elk deel
+// 1..PAIR_MAX_DIGITS cijfers, geen voorloopnul, niet 0. Anders null (niet nakijkbaar).
+export function parseTypedPair(text) {
+  if (typeof text !== "string") return null;
+  var delen = text.split("|");
+  if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
+  return { a: delen[0], b: delen[1] };
+}
+
+// Canonieke tekst van een paar bij deze scheiding (null bij een onbekende scheiding)
+export function writeAnswerPair(p, tussen) {
+  if (!p || !Object.prototype.hasOwnProperty.call(PAIR_TUSSEN, tussen)) return null;
+  return p.a + PAIR_TUSSEN[tussen] + p.b;
+}
+
 // Hoeveel decimalen mag een getal met eenheid hebben? Zonder allowDecimal geen (en geen kommatoets).
 export function quantityMaxDecimals(inputConfig) {
   if (!inputConfig || !inputConfig.allowDecimal) return 0;
@@ -304,7 +339,8 @@ export function quantityMaxDecimals(inputConfig) {
 // Uitleg onder de schakelaar Kiezen | Typen (per modus; anders de standaardtekst)
 var TYPE_HINT = {
   geld:              "Je typt het bedrag met het cijferblok; met , typ je de centen. Munten, schatten en fout spotten blijven kiezen.",
-  procenten:         "Je typt het antwoord met het cijferblok: procenten, getallen, bedragen, maten en het deel van een geheel (breukvak). Verhoudingen, vergelijken, schatten en fout spotten blijven kiezen.",
+  procenten:         "Je typt het antwoord met het cijferblok: procenten, getallen, bedragen, maten, het deel van een geheel (breukvak) en een verhouding (twee vakjes). Vergelijken, schatten en fout spotten blijven kiezen.",
+  delen:             "Je typt het antwoord met het cijferblok; bij een deling met rest typ je de uitkomst en de rest in twee vakjes. Schatten en fout spotten blijven kiezen.",
   breuken:           "Je typt het antwoord in het breukvak: tik op teller, noemer of geheel en typ met het cijferblok. Vergelijken, herkennen, schatten en fout spotten blijven kiezen.",
   meten:             "Je typt het antwoord met het cijferblok: getallen, kommagetallen en maten. Eenheden kiezen, vergelijken, schatten en fout spotten blijven kiezen.",
   reizen:            "Je typt afstanden, snelheden, liters en bedragen met het cijferblok. Tijden, schatten en fout spotten blijven kiezen.",

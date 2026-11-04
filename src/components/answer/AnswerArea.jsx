@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import ChoiceGrid from "./ChoiceGrid.jsx";
 import NumberAnswer from "./NumberAnswer.jsx";
 import FractionAnswer from "./FractionAnswer.jsx";
+import PairAnswer from "./PairAnswer.jsx";
 import { readAnswerQuantity, quantityMaxDecimals } from "../../core/answerCheck.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
@@ -10,7 +11,8 @@ import { readAnswerQuantity, quantityMaxDecimals } from "../../core/answerCheck.
 // component (cijferblok); "decimal" is hetzelfde cijferblok met een kommatoets, "money" ook, met
 // "\u20ac" voor het getal; "percent" is het gewone cijferblok met "%" achter het getal; "quantity" is het
 // cijferblok met de eenheid van het antwoord achter het getal (kommatoets alleen met allowDecimal); "fraction"
-// is het breukvak (FractionAnswer: teller, noemer en bij inputConfig.gemengd een geheel). Al het andere,
+// is het breukvak (FractionAnswer: teller, noemer en bij inputConfig.gemengd een geheel); "pair" zijn twee
+// vakjes naast elkaar met inputConfig.tussen ertussen ("rest" of ":"; PairAnswer). Al het andere,
 // ook een onbekend type, toont de vier keuzes.
 // Of een vraag getypt wordt (voorkeur, resolveInput, past het op het scherm) beslist het
 // oefenscherm; dat geeft hier het type door dat getoond moet worden.
@@ -34,6 +36,21 @@ var AnswerArea = forwardRef(function AnswerArea(props, ref) {
         feedback={props.feedback}
         disabled={props.disabled}
         gemengd={!!(props.inputConfig && props.inputConfig.gemengd)}
+        onSubmit={props.onSubmitBreuk}
+      />
+    );
+  }
+  if (props.inputType === "pair") {
+    // zelfde key als het breukvak: per getoonde vraag nieuw, zodat de vakjes bij elke vraag leeg beginnen
+    return (
+      <PairAnswer
+        key={props.breukKey}
+        ref={ref}
+        size={props.size}
+        fit={props.fit}
+        feedback={props.feedback}
+        disabled={props.disabled}
+        tussen={props.inputConfig && props.inputConfig.tussen}
         onSubmit={props.onSubmitBreuk}
       />
     );

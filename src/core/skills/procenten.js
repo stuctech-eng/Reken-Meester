@@ -528,7 +528,8 @@ var RAW_SKILLS = DEFS.map(function(d) {
 
 // Typen (Kiezen | Typen): per vaardigheid het type van het antwoord. Vragen met een andere vorm dan het
 // type (p02: breuk; p03: procent; p35: procent) blijven per vraag vanzelf kiezen (resolveInput).
-// Blijven kiezen: p05, p19, p33 (kiesvragen), p20, p23 (verhouding), p34 (schatten), p36 (fout spotten).
+// Blijven kiezen: p05, p19, p33 (kiesvragen), p34 (schatten), p36 (fout spotten). p20 en p23 zijn een
+// verhouding ("pair", twee vakjes met ":" ertussen; de volgorde telt, en bij p23 alleen de eenvoudigste vorm).
 // p27-p30 en p32 zijn een getal met eenheid ("quantity", zonder kommatoets). p21 is een breuk
 // ("fraction", breukvak); bij p02 blijven de vragen met een breuk als antwoord per vraag kiezen. p37 typt per vraag volgens zijn bron. Vragen veranderen niet.
 var TYPEN = {
@@ -542,6 +543,7 @@ var TYPEN = {
   p27_recept: "quantity", p28_schaal_meter: "quantity", p29_schaal_km: "quantity", p30_schaal_terug: "quantity",
   p32_snelheid: "quantity",
   p21_deel_van_geheel: "fraction",
+  p20_verhouding_lezen: "pair", p23_vereenvoudigen: "pair",
 };
 RAW_SKILLS.forEach(function(s) {
   var t = TYPEN[s.id];
@@ -551,6 +553,7 @@ RAW_SKILLS.forEach(function(s) {
   if (t === "money") s.inputConfig = { maxDecimals: 2 };
   if (t === "quantity") s.inputConfig = {};
   if (t === "fraction") s.inputConfig = {};
+  if (t === "pair") s.inputConfig = { tussen: ":" };
 });
 
 var SKILLS = createSkills("procenten", RAW_SKILLS);

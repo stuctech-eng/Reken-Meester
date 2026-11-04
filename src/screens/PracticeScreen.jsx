@@ -357,7 +357,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     if (selected !== null) return;
     setTyped(function(prev) { return prev.slice(0, -1); });
   }
-  // Breuk: het breukvak geeft de ruwe invoer ("g t/n", "t/n" of "g"); zelfde verwerking als hieronder
+  // Breuk en twee vakjes: het breukvak geeft de ruwe invoer ("g t/n", "t/n" of "g"), de twee vakjes geven
+  // "a|b"; zelfde verwerking als hieronder
   function handleBreukSubmit(ruw) {
     if (selected !== null) return;
     var res = gradeTyped(inputInfo.gradingRule, ruw, currentQuestion, inputInfo.inputConfig);
@@ -533,7 +534,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes).
   // Past het cijferblok niet op het scherm, dan toont deze vraag toch de keuzes (typeFit).
   var inputInfo   = resolveInput(subjectId, currentQuestion.skillId, currentQuestion);
-  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent" || inputInfo.inputType === "quantity" || inputInfo.inputType === "fraction");
+  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent" || inputInfo.inputType === "quantity" || inputInfo.inputType === "fraction" || inputInfo.inputType === "pair");
   var typeMode    = typeAllowed && typeFit !== "kiezen";
   var kpBase      = KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"];
   var kpSize      = (typeFit && typeFit !== "kiezen") ? typeFit : kpBase;
@@ -605,8 +606,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     if (typeFit) { setTypeFit("kiezen"); return undefined; }
     var need = Math.ceil(over);
     // Met tekentoets in het antwoordvak blijft het vak hoog genoeg voor een toets van 44 px (plus de rand)
-    // Het breukvak heeft een vaste hoogte (twee vakken van minstens 44 px): daar valt niets te winnen
-    var vakMin = inputInfo.inputType === "fraction" ? kpBase.vakH : (inputInfo.inputConfig.allowNegative || kommaToegestaan()) ? VAK_MIN_TEKEN : KEYPAD_MIN.vakH;
+    // Het breukvak heeft een vaste hoogte (twee vakken van minstens 44 px): daar valt niets te winnen;
+    // de twee vakjes (pair) ook (een rij vakken van minstens 44 px)
+    var vakMin = (inputInfo.inputType === "fraction" || inputInfo.inputType === "pair") ? kpBase.vakH : (inputInfo.inputConfig.allowNegative || kommaToegestaan()) ? VAK_MIN_TEKEN : KEYPAD_MIN.vakH;
     var room = 4 * (kpBase.keyH - KEYPAD_MIN.keyH) + 3 * (kpBase.gap - KEYPAD_MIN.gap) + (kpBase.vakH - vakMin);
     if (need > room) { setTypeFit("kiezen"); return undefined; }
     var gap = kpBase.gap, vakH = kpBase.vakH, keyH = kpBase.keyH;
