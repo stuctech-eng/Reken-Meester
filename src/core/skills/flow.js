@@ -57,6 +57,8 @@ function noRepeat(skillId, makeFn, subtypes) {
     var bestIdx  = Infinity;
     for (var i = 0; i < MAX_TRIES; i++) {
       var q   = makeFn(sub);
+      // Geen vraag (de generator vond niets geldigs): telt als mislukte poging, nooit naar qKey
+      if (!q) continue;
       var k   = qKey(q);
       var idx = -1;
       for (var j = shown.length - 1; j >= 0; j--) {
@@ -65,6 +67,8 @@ function noRepeat(skillId, makeFn, subtypes) {
       if (idx === -1) { best = q; break; }
       if (idx < bestIdx) { bestIdx = idx; best = q; }
     }
+    // Alle pogingen gaven niets: een duidelijke fout met de vaardigheid, in plaats van een TypeError
+    if (!best) throw new Error("geen geldige vraag: " + skillId);
     var entry = { tick: t, key: qKey(best) };
     if (sameTick) { h[h.length - 1] = entry; } else { h.push(entry); }
     // Eén plaats extra: een herkansing in hetzelfde moment moet nog met 10 getoonde vragen vergelijken
@@ -124,8 +128,12 @@ export function fairEstimate(exact, estimate, step) {
   return Math.abs(exact - estimate) * 2 < step;
 }
 
+// Hoogstens zoveel pogingen; daarna null. Ruim genoeg voor de lastigste voorwaarde (a25 subtype 1: 2 %
+// geldig per poging). Een vraag die binnen minder pogingen lukt, verandert hierdoor niet.
+var RANDOM_WITH_MAX = 5000;
+
 export function randomWith(fn) {
-  for (var i = 0; i < 500; i++) {
+  for (var i = 0; i < RANDOM_WITH_MAX; i++) {
     var r = fn();
     if (r) return r;
   }
