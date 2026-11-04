@@ -166,6 +166,14 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var levelUpData   = luDataState[0];
   var setLevelUpData = luDataState[1];
 
+  // Fout bij het maken van een volgende vraag (klik of timer): React vangt een fout in een klik
+  // of timer niet op. advanceToNext bewaart hem hier; bij het tekenen wordt hij opnieuw gegooid,
+  // zodat de foutopvang (ErrorBoundary) de foutkaart toont in plaats van een hangend scherm.
+  var nextErrState  = useState(null);
+  var nextErr       = nextErrState[0];
+  var setNextErr    = nextErrState[1];
+  if (nextErr) throw nextErr;
+
   // ── Refs (geen re-render) ─────────────────────────────────────
   var activeSkillIdRef           = useRef(startSkillId);
   var sessionSkillStatsRef       = useRef({});
@@ -237,7 +245,13 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   function advanceToNext(nextSkillId) {
     setHelpOpen(false);
-    var nextQ = generateNext(nextSkillId);
+    var nextQ;
+    try {
+      nextQ = generateNext(nextSkillId);
+    } catch (e) {
+      setNextErr(e || new Error("onbekende fout bij de volgende vraag"));
+      return;
+    }
     setCurrentQuestion(nextQ);
     setVraagNr(function(n) { return n + 1; });
     setSelected(null);
