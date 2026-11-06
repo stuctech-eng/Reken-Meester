@@ -534,41 +534,41 @@ THEORIE[G1] =
   "Een hoek zegt hoeveel je moet draaien van het ene been naar het andere. Een hele draai is 360°; die afspraak stamt van de Babyloniërs, omdat 360 door heel veel getallen deelbaar is. Een halve draai (een gestrekte hoek) is dus 180°, en een rechte hoek is een kwart draai: 90°.\n" +
   "Bijna alles in dit blok volgt uit die 180°.\n" +
   "• Nevenhoeken liggen samen op een rechte lijn, dus ze zijn samen 180°.\n" +
-  "• Overstaande hoeken (het kruis van twee lijnen) zijn gelijk: ze zijn allebei nevenhoek van dezelfde hoek, dus allebei 180° min die hoek.\n" +
-  "• Snijdt een lijn twee evenwijdige lijnen, dan maakt hij met beide dezelfde draai. Daarom zijn bij evenwijdige lijnen de F-hoeken gelijk, en ook de Z-hoeken zijn gelijk. Let op de ligging: Z-hoeken liggen binnen de evenwijdige lijnen, aan weerszijden van de snijlijn. Zonder evenwijdige lijnen geldt het niet.\n" +
-  "• Hoekensom van een driehoek: trek door de top een lijn evenwijdig aan de basis. De twee basishoeken komen als Z-hoeken boven terug, naast de tophoek, en samen vormen ze een gestrekte hoek. Elke driehoek heeft dus samen 180°.\n" +
+  "• Overstaande hoeken (het kruis van twee lijnen) zijn gelijk: ze zijn allebei nevenhoek van dezelfde hoek, dus allebei 180° min die hoek.\n[fig:kruis]\n" +
+  "• Snijdt een lijn twee evenwijdige lijnen, dan maakt hij met beide dezelfde draai. Daarom zijn bij evenwijdige lijnen de F-hoeken gelijk, en ook de Z-hoeken zijn gelijk. Let op de ligging: Z-hoeken liggen binnen de evenwijdige lijnen, aan weerszijden van de snijlijn. Zonder evenwijdige lijnen geldt het niet.\n[fig:evenwijdig]\n" +
+  "• Hoekensom van een driehoek: trek door de top een lijn evenwijdig aan de basis. De twee basishoeken komen als Z-hoeken boven terug, naast de tophoek, en samen vormen ze een gestrekte hoek. Elke driehoek heeft dus samen 180°.\n[fig:hoekensom]\n" +
   "• Een veelhoek met n hoeken kun je vanuit één hoekpunt in n − 2 driehoeken verdelen. De hoekensom is daarom (n − 2) · 180°. Een vierhoek is 2 driehoeken: 360°.";
 THEORIE[G2] =
-  "• Een gelijkbenige driehoek heeft twee gelijke zijden en een symmetrieas door de top. Vouw je hem langs die as dubbel, dan vallen de basishoeken op elkaar: ze zijn gelijk.\n" +
+  "• Een gelijkbenige driehoek heeft twee gelijke zijden en een symmetrieas door de top. Vouw je hem langs die as dubbel, dan vallen de basishoeken op elkaar: ze zijn gelijk.\n[fig:gelijkbenig]\n" +
   "• Een gelijkzijdige driehoek is in alle richtingen gelijkbenig: alle hoeken zijn gelijk, 180 : 3 = 60°.\n" +
   "• In een regelmatige veelhoek zijn alle hoeken gelijk. Eén hoek is de hoekensom gedeeld door het aantal hoeken: (n − 2) · 180 : n. Een regelmatige zeshoek: 720 : 6 = 120°. Daarom passen bijenraten zo mooi: drie hoeken van 120° maken precies 360°.\n" +
-  "• Vierhoeken vormen een familie. Elk vierkant is een rechthoek én een ruit. Elke rechthoek en elke ruit is een parallellogram. Afspraak in deze app: een trapezium is een vierhoek met minstens één paar evenwijdige zijden, dus ook elk parallellogram is een trapezium. (Sommige lesmethodes zeggen \"precies één paar\"; dat is een afspraak over het woord, geen andere wiskunde.) Vraagt een opgave de meest precieze naam, kies dan de kleinste familie die past.\n" +
-  "• Je herkent ze aan de zijden (evenwijdig, even lang), de hoeken (recht of niet) en de diagonalen. Delen de diagonalen elkaar middendoor, dan is het een parallellogram. Zijn ze daarbij even lang: rechthoek. Staan ze daarbij loodrecht: ruit. Staan ze loodrecht maar deelt maar één diagonaal de andere middendoor: vlieger. Loodrecht alleen is dus niet genoeg voor een ruit.";
+  "• Vierhoeken vormen een familie. Elk vierkant is een rechthoek én een ruit. Elke rechthoek en elke ruit is een parallellogram. Afspraak in deze app: een trapezium is een vierhoek met minstens één paar evenwijdige zijden, dus ook elk parallellogram is een trapezium. (Sommige lesmethodes zeggen \"precies één paar\"; dat is een afspraak over het woord, geen andere wiskunde.) Vraagt een opgave de meest precieze naam, kies dan de kleinste familie die past.\n[fig:familie]\n" +
+  "• Je herkent ze aan de zijden (evenwijdig, even lang), de hoeken (recht of niet) en de diagonalen. Delen de diagonalen elkaar middendoor, dan is het een parallellogram. Zijn ze daarbij even lang: rechthoek. Staan ze daarbij loodrecht: ruit. Staan ze loodrecht maar deelt maar één diagonaal de andere middendoor: vlieger. Loodrecht alleen is dus niet genoeg voor een ruit.\n[fig:diagonalen]";
 THEORIE[G3] =
   "Oppervlakte is het aantal vierkantjes van 1 bij 1 dat in een figuur past. Bij een rechthoek van 5 bij 3 cm passen 3 rijen van 5: 15 cm². De eenheid is cm kwadraat, omdat je cm keer cm doet.\n" +
-  "• Parallellogram: knip aan één kant een driehoekje af en leg dat aan de andere kant. Je krijgt een rechthoek met dezelfde basis en hoogte. Dus oppervlakte = basis · hoogte. De hoogte staat loodrecht op de basis; de schuine zijde is niet de hoogte.\n" +
-  "• Driehoek: twee dezelfde driehoeken passen samen tot een parallellogram. Eén driehoek is dus de helft: ½ · basis · hoogte.\n" +
-  "• Trapezium: leg er een omgedraaide kopie naast. Samen vormen ze een parallellogram met basis a + b. Eén trapezium is de helft: ½ · (a + b) · hoogte.\n" +
+  "• Parallellogram: knip aan één kant een driehoekje af en leg dat aan de andere kant. Je krijgt een rechthoek met dezelfde basis en hoogte. Dus oppervlakte = basis · hoogte. De hoogte staat loodrecht op de basis; de schuine zijde is niet de hoogte.\n[fig:parallellogram]\n" +
+  "• Driehoek: twee dezelfde driehoeken passen samen tot een parallellogram. Eén driehoek is dus de helft: ½ · basis · hoogte.\n[fig:driehoek]\n" +
+  "• Trapezium: leg er een omgedraaide kopie naast. Samen vormen ze een parallellogram met basis a + b. Eén trapezium is de helft: ½ · (a + b) · hoogte.\n[fig:trapezium]\n" +
   "• Omtrek is iets anders: de lengte van de rand (cm, geen cm²). Bij een L-vorm uit een rechthoek blijft de omtrek gelijk aan die van de hele rechthoek: de twee randen van de inham zijn samen even lang als de stukken die verdwenen.\n" +
   "• Eenheden: 1 m = 100 cm, maar 1 m² is een vierkant van 100 bij 100 cm, dus 10000 cm² (niet 100). Bij oppervlakte omrekenen doe je de factor in het kwadraat.";
 THEORIE[G4] =
   "Leg een touwtje om een ronde pot en meet de middellijn: het touwtje is altijd iets meer dan 3 keer zo lang. Voor elke cirkel is die verhouding hetzelfde getal: π (pi) = 3,14159… De cijfers houden nooit op en herhalen zich nooit. Daarom rekenen we met een benadering: π ≈ 3,14.\n" +
-  "• Vier woorden die je uit elkaar houdt: de straal r (midden tot rand, cm), de middellijn d = 2r (rand tot rand door het midden, cm), de omtrek (de lengte van de rand, cm) en de oppervlakte (wat erbinnen ligt, cm²).\n" +
+  "• Vier woorden die je uit elkaar houdt: de straal r (midden tot rand, cm), de middellijn d = 2r (rand tot rand door het midden, cm), de omtrek (de lengte van de rand, cm) en de oppervlakte (wat erbinnen ligt, cm²).\n[fig:cirkel]\n" +
   "• Omtrek = π · d = 2 · π · r.\n" +
-  "• Oppervlakte = π · r². Waarom? Snijd de cirkel in heel veel smalle taartpunten en leg ze om en om naast elkaar. Je krijgt bijna een parallellogram: de lengte is de halve omtrek (π · r) en de hoogte is de straal (r). Oppervlakte ≈ π · r · r = π · r². Hoe dunner de punten, hoe beter het klopt.\n" +
+  "• Oppervlakte = π · r². Waarom? Snijd de cirkel in heel veel smalle taartpunten en leg ze om en om naast elkaar. Je krijgt bijna een parallellogram: de lengte is de halve omtrek (π · r) en de hoogte is de straal (r). Oppervlakte ≈ π · r · r = π · r². Hoe dunner de punten, hoe beter het klopt.\n[fig:taartpunten]\n" +
   "• Terugrekenen: omtrek 31,4 cm? Dan is d = 31,4 : 3,14 = 10 cm en r = 5 cm.\n" +
   "• Een rekenmachine met de echte π geeft soms een iets ander laatste cijfer. In deze app geldt π ≈ 3,14.";
 THEORIE[G5] =
   "In een rechthoekige driehoek geldt a² + b² = c². Daarbij is c de schuine zijde: de zijde tegenover de rechte hoek, en altijd de langste.\n" +
-  "Waarom? Neem een groot vierkant met zijde a + b en leg er vier kopieën van de driehoek in, zo dat in het midden een scheef vierkant overblijft met zijde c: dat stuk is c². Schuif de vier driehoeken nu anders, twee aan twee tot rechthoeken. Wat overblijft, zijn twee vierkanten: a² en b². Het grote vierkant en de vier driehoeken zijn in beide gevallen hetzelfde, dus c² = a² + b².\n" +
+  "Waarom? Neem een groot vierkant met zijde a + b en leg er vier kopieën van de driehoek in, zo dat in het midden een scheef vierkant overblijft met zijde c: dat stuk is c². Schuif de vier driehoeken nu anders, twee aan twee tot rechthoeken. Wat overblijft, zijn twee vierkanten: a² en b². Het grote vierkant en de vier driehoeken zijn in beide gevallen hetzelfde, dus c² = a² + b².\n[fig:pythagoras]\n" +
   "• Schuine zijde: kwadrateren, optellen, wortel trekken. 6 en 8: 36 + 64 = 100, c = 10.\n" +
   "• Rechthoekszijde: kwadrateren, aftrekken, wortel trekken. c = 13, a = 5: 169 − 25 = 144, b = 12.\n" +
   "• Omgekeerd: klopt a² + b² = c², dan ís de hoek recht. Bouwers gebruiken dat al duizenden jaren: een touw met knopen op 3, 4 en 5 meter geeft een zuivere rechte hoek.\n" +
   "• Let op: Pythagoras geldt alleen in een driehoek met een rechte hoek. Controle: de schuine zijde is de langste. Krijg je bij een rechthoekszijde een langere uitkomst dan c, dan heb je opgeteld in plaats van afgetrokken.";
 THEORIE[G6] =
   "Inhoud is het aantal kubusjes van 1 × 1 × 1 cm dat erin past (cm³).\n" +
-  "• Prisma en cilinder: stapel laagjes van het grondvlak op elkaar. Inhoud = oppervlakte grondvlak · hoogte. Een balk: l · b · h. Een cilinder: π · r² · h.\n" +
-  "• Piramide en kegel: een punt in plaats van een bovenvlak. Inhoud = ⅓ · grondvlak · hoogte. Waarom een derde? Kies in een kubus één hoekpunt. De drie vlakken die er niet aan raken, zijn elk het grondvlak van een piramide met de top in dat hoekpunt. Die drie piramides vullen samen de kubus, zonder overlap. Ze hebben gelijke inhoud: hun grondvlakken zijn even grote vlakken van de kubus en hun hoogte is steeds een ribbe. Elke piramide is dus een derde van de kubus. Voor andere piramides en kegels geldt dezelfde ⅓; dat bewijs is lastiger, maar het idee is hetzelfde.\n" +
+  "• Prisma en cilinder: stapel laagjes van het grondvlak op elkaar. Inhoud = oppervlakte grondvlak · hoogte. Een balk: l · b · h. Een cilinder: π · r² · h.\n[fig:laagjes]\n" +
+  "• Piramide en kegel: een punt in plaats van een bovenvlak. Inhoud = ⅓ · grondvlak · hoogte. Waarom een derde? Kies in een kubus één hoekpunt. De drie vlakken die er niet aan raken, zijn elk het grondvlak van een piramide met de top in dat hoekpunt. Die drie piramides vullen samen de kubus, zonder overlap. Ze hebben gelijke inhoud: hun grondvlakken zijn even grote vlakken van de kubus en hun hoogte is steeds een ribbe. Elke piramide is dus een derde van de kubus. Voor andere piramides en kegels geldt dezelfde ⅓; dat bewijs is lastiger, maar het idee is hetzelfde.\n[fig:piramides]\n" +
   "• Oppervlakte van een ruimtefiguur: klap hem uit tot een plat patroon (de uitslag) en tel alle vlakken op. Een balk heeft 3 paar gelijke vlakken: 2 · (lb + lh + bh).\n" +
   "• Inhoud en liters: 1 dm³ = 1 liter (l) en 1 cm³ = 1 milliliter (ml). Een pak melk van 1 liter is ongeveer 10 × 10 × 10 cm.";
 THEORIE[G7] =
@@ -577,7 +577,7 @@ THEORIE[G7] =
   "• Lengte × k.\n" +
   "• Oppervlakte × k², want lengte én breedte worden k keer zo groot.\n" +
   "• Inhoud × k³, want lengte, breedte én hoogte worden alle drie met factor k vermenigvuldigd.\n" +
-  "Een pizza die 2 keer zo breed is, heeft 4 keer zoveel pizza. Een kubus met 2 keer zo lange ribben heeft 8 keer zoveel inhoud.";
+  "Een pizza die 2 keer zo breed is, heeft 4 keer zoveel pizza. Een kubus met 2 keer zo lange ribben heeft 8 keer zoveel inhoud.\n[fig:vergroten]";
 THEORIE[G8] =
   "Controleer elk antwoord op drie manieren.\n" +
   "1. Eenheid: lengte in cm, oppervlakte in cm², inhoud in cm³. Klopt de eenheid niet, dan klopt de formule niet.\n" +

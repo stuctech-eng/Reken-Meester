@@ -9,6 +9,7 @@ import AnswerArea from "../components/answer/AnswerArea.jsx";
 import { TYPE_MAX_DIGITS, quantityMaxDecimals } from "../core/answerCheck.js";
 import { resolveInput } from "../core/inputResolve.js";
 import { gradeTyped } from "../core/grading.js";
+import TheorieFiguur, { splitsTheorie } from "../components/TheorieFiguur.jsx";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -1093,8 +1094,13 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                   {(theorieOpen ? "▾ " : "▸ ") + "Theorie: waarom klopt dit?"}
                 </button>
                 {theorieOpen && (
-                  <div style={{ padding: "0 14px 12px", fontSize: T.sm, color: A.text, lineHeight: 1.6, whiteSpace: "pre-line" }}>
-                    {currentSkill.theorie}
+                  <div style={{ padding: "0 14px 12px", fontSize: T.sm, color: A.text, lineHeight: 1.6 }}>
+                    {/* Tekst met tekeningen op de plek van de merktekens [fig:<id>] (zie TheorieFiguur) */}
+                    {splitsTheorie(currentSkill.theorie).map(function(deel, i) {
+                      return deel.figuur
+                        ? <TheorieFiguur key={"f" + i} id={deel.figuur} />
+                        : <div key={"t" + i} style={{ whiteSpace: "pre-line" }}>{deel.tekst}</div>;
+                    })}
                   </div>
                 )}
               </div>
