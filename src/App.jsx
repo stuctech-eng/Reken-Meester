@@ -57,23 +57,52 @@ function stableStr(v) {
 // ── Auto-modus ──────────────────────────────────────────────────────
 // Vaste volgorde; na een behaald level gaat Auto naar de volgende modus die nog een level
 // kan opleveren. Volledig beheerste (of niet-beschikbare) modi worden overgeslagen.
-// Breuken, Geld en Kommagetallen doen pas mee als de basis er is: in vermenigvuldigen
-// én delen zijn de eerste AUTO_BASIS_SKILLS skills (alle tafels) beheerst.
+// Drie stappen:
+//   1. + − × ÷ (altijd);
+//   2. Breuken, Geld en Kommagetallen, als de basis er is: in vermenigvuldigen én delen zijn
+//      de eerste AUTO_BASIS_SKILLS skills (alle tafels) beheerst;
+//   3. Meten, Tijd, Procenten en Reizen, als stap 2 er is én de voorkennis (AUTO_PRAKTISCH_DREMPEL):
+//      in breuken, kommagetallen en geld zijn de eerste skills (de blokken "begrijpen") beheerst.
+// Beheerst = skillStats[id].mastered, net als bij de tafels; alleen oefenen telt niet.
 var AUTO_ORDER        = ["optellen", "aftrekken", "vermenigvuldigen", "delen"];
 var AUTO_EXTRA        = ["breuken", "geld", "kommagetallen"];
+var AUTO_PRAKTISCH    = ["meten", "tijd", "procenten", "reizen"];
 var AUTO_BASIS_SKILLS = 18;
+// Voorkennis voor stap 3: breuken b01-b08 (begrijpen, gelijkwaardig), kommagetallen k01-k09
+// (begrijpen, breuk en kommagetal), geld g01-g04 (geld kennen); samen 21 skills
+var AUTO_PRAKTISCH_DREMPEL = { breuken: 8, kommagetallen: 9, geld: 4 };
 
-function autoBasisOk(saveObj) {
-  return ["vermenigvuldigen", "delen"].every(function(id) {
-    var stats = (saveObj.subjects && saveObj.subjects[id] && saveObj.subjects[id].skillStats) || {};
-    return getSkillOrder(id).slice(0, AUTO_BASIS_SKILLS).every(function(sid) {
-      return !!(stats[sid] && stats[sid].mastered);
-    });
+function eersteBeheerst(saveObj, id, n) {
+  var stats = (saveObj.subjects && saveObj.subjects[id] && saveObj.subjects[id].skillStats) || {};
+  return getSkillOrder(id).slice(0, n).every(function(sid) {
+    return !!(stats[sid] && stats[sid].mastered);
   });
 }
 
+function autoBasisOk(saveObj) {
+  return ["vermenigvuldigen", "delen"].every(function(id) {
+    return eersteBeheerst(saveObj, id, AUTO_BASIS_SKILLS);
+  });
+}
+
+function autoPraktischOk(saveObj) {
+  if (!autoBasisOk(saveObj)) return false;
+  return Object.keys(AUTO_PRAKTISCH_DREMPEL).every(function(id) {
+    return eersteBeheerst(saveObj, id, AUTO_PRAKTISCH_DREMPEL[id]);
+  });
+}
+
+// Welke stap van Auto (1, 2 of 3); ook voor de tekst op Home
+function autoStap(saveObj) {
+  if (!autoBasisOk(saveObj)) return 1;
+  return autoPraktischOk(saveObj) ? 3 : 2;
+}
+
 function autoOrder(saveObj) {
-  return autoBasisOk(saveObj) ? AUTO_ORDER.concat(AUTO_EXTRA) : AUTO_ORDER;
+  var stap = autoStap(saveObj);
+  if (stap === 1) return AUTO_ORDER;
+  if (stap === 2) return AUTO_ORDER.concat(AUTO_EXTRA);
+  return AUTO_ORDER.concat(AUTO_EXTRA, AUTO_PRAKTISCH);
 }
 
 // Sessie-uitkomsten verwerken in skillStats (gedeeld door handleFinish en de voorlopige
@@ -687,7 +716,7 @@ export default function App() {
         uid={uid}
         onSubject={function(id) { setSubjectId(id); setScreen("subject"); }}
         onAuto={autoSubjectFrom(save, "optellen", true) ? startAuto : null}
-        autoAll={autoBasisOk(save)}
+        autoStap={autoStap(save)}
         openBoxes={openBoxes}
         onToggleBox={toggleBox}
         onSettings={function() { setScreen("settings"); }}

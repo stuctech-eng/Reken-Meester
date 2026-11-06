@@ -16,6 +16,8 @@ import { WISK_GETALLEN_SKILLS, WISK_GETALLEN_ORDER } from "./skills/wiskunde-get
 import { WISK_ALGEBRA_SKILLS, WISK_ALGEBRA_ORDER } from "./skills/wiskunde-algebra.js";
 import { WISK_ALGEBRA2_SKILLS, WISK_ALGEBRA2_ORDER } from "./skills/wiskunde-algebra2.js";
 
+// group: de hoofdgroep op Home ("rekenen" of "wiskunde"). sub: het tussenkopje binnen Rekenen
+// ("basis", "getallen", "praktisch"); alleen voor de weergave op Home, niet voor opslag of voortgang.
 export var SUBJECTS = [
   {
     id: "optellen",
@@ -27,6 +29,7 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
     group: "rekenen",
+    sub: "basis",
   },
   {
     id: "aftrekken",
@@ -38,6 +41,7 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
     group: "rekenen",
+    sub: "basis",
   },
   {
     id: "vermenigvuldigen",
@@ -49,6 +53,7 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
     group: "rekenen",
+    sub: "basis",
   },
   {
     id: "delen",
@@ -60,6 +65,7 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
     group: "rekenen",
+    sub: "basis",
   },
   {
     id: "breuken",
@@ -71,6 +77,7 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
     group: "rekenen",
+    sub: "getallen",
   },
   {
     id: "geld",
@@ -82,6 +89,7 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
     group: "rekenen",
+    sub: "getallen",
   },
   {
     id: "kommagetallen",
@@ -93,6 +101,7 @@ export var SUBJECTS = [
     available: true,
     levels: 10,
     group: "rekenen",
+    sub: "getallen",
   },
   {
     id: "meten",
@@ -103,7 +112,8 @@ export var SUBJECTS = [
     description: "Lengte, gewicht en inhoud",
     available: true,
     levels: 10,
-    group: "praktisch",
+    group: "rekenen",
+    sub: "praktisch",
   },
   {
     id: "tijd",
@@ -114,7 +124,8 @@ export var SUBJECTS = [
     description: "Klok, duur en kalender",
     available: true,
     levels: 10,
-    group: "praktisch",
+    group: "rekenen",
+    sub: "praktisch",
   },
   {
     id: "procenten",
@@ -125,7 +136,8 @@ export var SUBJECTS = [
     description: "Procent, verhouding en schaal",
     available: true,
     levels: 10,
-    group: "praktisch",
+    group: "rekenen",
+    sub: "praktisch",
   },
   {
     id: "reizen",
@@ -136,7 +148,8 @@ export var SUBJECTS = [
     description: "Afstand, reistijd en kosten",
     available: true,
     levels: 10,
-    group: "praktisch",
+    group: "rekenen",
+    sub: "praktisch",
   },
   {
     id: "wiskunde_getallen",

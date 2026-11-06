@@ -24,15 +24,44 @@ function boxTotals(save, subjects) {
 // openBoxes / onToggleBox: open of dicht per vak ({ rekenen: true, ... }), stand bewaard in App
 // Vakken op Home. Elke modus hoort bij één vak via subject.group. Alleen Rekenen heeft Auto.
 // Een vak zonder zichtbare modus wordt niet getoond. Wiskunde (volwassenen) telt niet mee in
-// de nauwkeurigheid bovenaan (alleen de rekenvakken, zoals vóór Wiskunde).
+// de nauwkeurigheid bovenaan (alleen de rekenmodi, zoals vóór Wiskunde).
 var BOXES = [
   { id: "rekenen",   title: "Rekenen",           auto: true  },
-  { id: "praktisch", title: "Praktisch rekenen", auto: false },
   { id: "wiskunde",  title: "Wiskunde",          auto: false },
 ];
-var ACC_GROUPS = ["rekenen", "praktisch"];
+var ACC_GROUPS = ["rekenen"];
 
-export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, autoAll, openBoxes, onToggleBox }) {
+// Tussenkopjes binnen een vak, in deze volgorde (subject.sub). Een vak zonder sub (Wiskunde)
+// toont de modi zonder kopjes, precies zoals voorheen.
+var SUBS = [
+  { id: "basis",     title: "Basis"     },
+  { id: "getallen",  title: "Getallen"  },
+  { id: "praktisch", title: "Praktisch" },
+];
+
+function renderLijst(subjects, kaart) {
+  var metSub = subjects.some(function(s) { return !!s.sub; });
+  if (!metSub) return subjects.map(kaart);
+  return SUBS.map(function(sb) {
+    var lijst = subjects.filter(function(s) { return s.sub === sb.id; });
+    if (lijst.length === 0) return null;
+    return [
+      <div key={"kop-" + sb.id} style={{ fontSize: T.xs, fontWeight: 800, color: A.textSoft, letterSpacing: 0.8, padding: "6px 4px 0" }}>
+        {sb.title.toUpperCase()}
+      </div>,
+    ].concat(lijst.map(kaart));
+  });
+}
+
+// Tekst onder de Auto-knop per stap (App: autoStap 1 = + − × ÷, 2 = ook breuken, geld en
+// kommagetallen, 3 = alle rekenmodi); zonder onAuto is alles van die stap beheerst
+function autoTekst(autoStap, onAuto) {
+  if (autoStap >= 3) return onAuto ? "Auto wisselt tussen alle rekenmodi na elk behaald level" : "Auto: alle modi beheerst";
+  if (autoStap === 2) return onAuto ? "Auto wisselt tussen + − × ÷, breuken, geld en kommagetallen na elk behaald level" : "Auto: + − × ÷, breuken, geld en kommagetallen beheerst";
+  return onAuto ? "Auto wisselt tussen + − × ÷ na elk behaald level" : "Auto: + − × ÷ beheerst";
+}
+
+export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, autoStap, openBoxes, onToggleBox }) {
   // Bovenste kaart: de laatst geoefende modus (lastSubjectId); zonder die waarde de eerste modus
   var availSubjects = SUBJECTS.filter(function(s) { return s.available; });
   var heroSubject   = availSubjects.filter(function(s) { return s.id === save.lastSubjectId; })[0] || availSubjects[0];
@@ -234,7 +263,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
           </div>
         </div>
 
-        {/* Onderdelen: één inklapbaar vak per groep (Rekenen met Auto, Praktisch rekenen zonder) */}
+        {/* Onderdelen: één inklapbaar vak per groep (Rekenen met Auto en tussenkopjes, Wiskunde zonder) */}
         <div>
         <div style={{ fontSize: T.xs, fontWeight: 800, color: A.textSoft, letterSpacing: 0.8, marginBottom: 12 }}>
           {"ONDERDELEN"}
@@ -285,9 +314,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
                     </div>
                     {isOpen && bx.auto && (
                       <div style={{ fontSize: T.xs, color: A.textSoft, fontWeight: 600, marginTop: 2 }}>
-                        {autoAll
-                          ? (onAuto ? "Auto wisselt tussen alle modi na elk behaald level" : "Auto: alle modi beheerst")
-                          : (onAuto ? "Auto wisselt tussen + − × ÷ na elk behaald level" : "Auto: + − × ÷ beheerst")}
+                        {autoTekst(autoStap, onAuto)}
                       </div>
                     )}
                   </div>
@@ -319,7 +346,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
               </div>
               {isOpen && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {subjects.map(function(subject) {
+                {renderLijst(subjects, function(subject) {
                   var data     = (save.subjects && save.subjects[subject.id]) ? save.subjects[subject.id] : {};
                   var mastered = data.totalSkillsMastered || 0;
                   var isAvail  = subject.available;
