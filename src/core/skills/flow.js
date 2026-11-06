@@ -178,6 +178,8 @@ export function createSkills(owner, rawSkills) {
     if (s.inputType !== undefined)   skill.inputType   = s.inputType;
     if (s.gradingRule !== undefined) skill.gradingRule = s.gradingRule;
     if (s.inputConfig !== undefined) skill.inputConfig = s.inputConfig;
+    // Theorie (optioneel, alleen Meetkunde): getoond in het 💡-venster achter een knop
+    if (s.theorie !== undefined)     skill.theorie     = s.theorie;
     byId[s.id] = skill;
     return skill;
   });

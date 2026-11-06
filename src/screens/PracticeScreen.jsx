@@ -162,6 +162,12 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var helpOpen    = helpState[0];
   var setHelpOpen = helpState[1];
 
+  // theorieOpen: de theorie in het 💡-venster (alleen bij een vaardigheid met theorie); bij elke
+  // nieuwe vraag weer dicht
+  var theorieState   = useState(false);
+  var theorieOpen    = theorieState[0];
+  var setTheorieOpen = theorieState[1];
+
   var luDataState   = useState(null);
   var levelUpData   = luDataState[0];
   var setLevelUpData = luDataState[1];
@@ -245,6 +251,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   function advanceToNext(nextSkillId) {
     setHelpOpen(false);
+    setTheorieOpen(false);
     var nextQ;
     try {
       nextQ = generateNext(nextSkillId);
@@ -561,7 +568,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // ("(5x\u00a0+\u00a03)(x\u00a0+\u00a05)\u00a0="). Zo'n vraag breekt niet af (ook niet tussen ")" en "("); past hij
   // niet, dan maakt de meting hieronder de letter kleiner. Vragen met gewone spaties breken af zoals altijd.
   var isOneUnit  = !isMultiLineQuestion && String(currentQuestion.question).indexOf(" ") < 0;
-  var qBase      = isMultiLineQuestion ? (tiny ? 32 : compact ? 36 : 44) : (tiny ? 40 : compact ? 48 : 60);
+  // Tekstvraag (vraag.tekstVraag, alleen Meetkunde): een hele zin; kleinere letter, zodat de vraag en het
+  // cijferblok op het scherm passen. Andere vragen hebben dit veld niet en blijven precies gelijk.
+  var isTekstVraag = !!currentQuestion.tekstVraag && !isMultiLineQuestion;
+  var qBase      = isTekstVraag ? (tiny ? 20 : compact ? 22 : 26) : isMultiLineQuestion ? (tiny ? 32 : compact ? 36 : 44) : (tiny ? 40 : compact ? 48 : 60);
 
   useLayoutEffect(function() {
     var el = qRef.current;
@@ -805,6 +815,11 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             fontVariantNumeric: "tabular-nums",
             borderBottom: "3px solid " + A.text,
             paddingBottom: 4,
+          } : isTekstVraag ? {
+            fontSize: qFont || qBase,
+            fontWeight: 800,
+            color: A.text,
+            lineHeight: 1.3,
           } : {
             fontSize: qFont || 60,
             fontWeight: 900,
@@ -1045,6 +1060,43 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 <div style={{ fontSize: T.sm, color: A.voorbeeldTxt, lineHeight: 1.55, whiteSpace: "pre-line" }}>
                   {currentSkill.voorbeeld}
                 </div>
+              </div>
+            )}
+
+            {/* Theorie (alleen als de vaardigheid theorie heeft): ingeklapt achter een knop */}
+            {currentSkill.theorie && (
+              <div style={{
+                marginTop: 10,
+                borderRadius: A.r12,
+                border: "1.5px solid " + A.border,
+                background: A.bgCardHigh,
+                overflow: "hidden",
+              }}>
+                <button
+                  type="button"
+                  aria-expanded={theorieOpen}
+                  onClick={function(e) { e.stopPropagation(); setTheorieOpen(!theorieOpen); }}
+                  style={{
+                    width: "100%",
+                    minHeight: 48,
+                    padding: "12px 14px",
+                    background: "transparent",
+                    border: "none",
+                    textAlign: "left",
+                    fontSize: T.sm,
+                    fontWeight: 800,
+                    color: A.text,
+                    cursor: "pointer",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
+                >
+                  {(theorieOpen ? "▾ " : "▸ ") + "Theorie: waarom klopt dit?"}
+                </button>
+                {theorieOpen && (
+                  <div style={{ padding: "0 14px 12px", fontSize: T.sm, color: A.text, lineHeight: 1.6, whiteSpace: "pre-line" }}>
+                    {currentSkill.theorie}
+                  </div>
+                )}
               </div>
             )}
 

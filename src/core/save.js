@@ -222,6 +222,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "aq01_haakjes_keer_haakjes",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Wiskunde, domein Meetkunde (volwassenen): eigen voortgang
+    wiskunde_meetkunde: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "mk01_hoeksoorten",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 

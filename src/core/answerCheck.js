@@ -234,7 +234,7 @@ export function writeAnswerPercent(value) {
 // "45\u00a0cm", "7,5\u00a0kg", "60\u00a0km/u". Canoniek: zonder voorloopnullen, zonder eindnullen na
 // de komma en zonder scheidingsteken voor duizendtallen. Een gewone spatie of een andere eenheid is
 // geen hoeveelheid. De eenheid komt bij het nakijken altijd uit het antwoord, nooit uit de invoer.
-var EENHEDEN = ["mm", "cm", "m", "km", "g", "kg", "ml", "l", "cm\u00b2", "m\u00b2", "km/u", "min"];
+var EENHEDEN = ["mm", "cm", "m", "km", "g", "kg", "ml", "l", "cm\u00b2", "m\u00b2", "km/u", "min", "dm\u00b2", "cm\u00b3"];  // dm² en cm³: Meetkunde
 var ANSWER_QUANTITY_RE = /^(0|[1-9]\d*)(?:,(\d+))?\u00a0(\S+)$/;
 
 export function readAnswerQuantity(answer) {
@@ -348,6 +348,7 @@ var TYPE_HINT = {
   wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief en een breuk typ je in het breukvak. Kommagetallen, procenten en keuzevragen blijven kiezen.",
   wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij invullen; vergelijkingen en vereenvoudigen blijven kiezen.",
   wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij de discriminant en een verhaal; de rest blijft kiezen.",
+  wiskunde_meetkunde: "Je typt het getal met het cijferblok: graden, lengtes, oppervlaktes en inhouden (de eenheid staat al achter het vak; met , typ je een decimaal). Herkennen, fout spotten en schatten blijven kiezen.",
 };
 var TYPE_HINT_STANDAARD = "Je typt het antwoord met het cijferblok. Schatten en fout spotten blijven kiezen.";
 
