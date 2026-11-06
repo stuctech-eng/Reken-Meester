@@ -10,22 +10,23 @@ import { A } from "../styles/tokens.js";
 // Kleuren: lijnen A.text, "gegeven" A.primary, tweede kleur A.gold, hulplijnen gestippeld A.textMid.
 // Gebruik in de theorietekst: een regel "[fig:<id>]" (zie PracticeScreen). Een onbekende id tekent niets.
 
-var LIJN = A.text, P = A.primary, G = A.gold, GROEN = A.success, HULP = A.textMid;
-var PL = A.primaryLight, GL = A.goldBg, GRL = A.successBg;
+// Ook gebruikt door VraagFiguur (TK2): dezelfde kleuren en tekenhulpjes.
+export var LIJN = A.text, P = A.primary, G = A.gold, GROEN = A.success, HULP = A.textMid;
+export var PL = A.primaryLight, GL = A.goldBg, GRL = A.successBg;
 var W = 2.2;        // lijndikte
 var FS = 17;        // lettergrootte
 
-function T(x, y, tekst, kleur, anker, extra) {
+export function T(x, y, tekst, kleur, anker, extra) {
   return <text x={x} y={y} fill={kleur || LIJN} fontSize={(extra && extra.fs) || FS} fontWeight={(extra && extra.fw) || 700} textAnchor={anker || "middle"} dominantBaseline="middle" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" paintOrder="stroke">{tekst}</text>;
 }
-function L(x1, y1, x2, y2, kleur, streep, dikte) {
+export function L(x1, y1, x2, y2, kleur, streep, dikte) {
   return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={kleur || LIJN} strokeWidth={dikte || W} strokeDasharray={streep ? "6 5" : undefined} strokeLinecap="round" />;
 }
-function Poly(pts, vul, rand, streep) {
+export function Poly(pts, vul, rand, streep) {
   return <polygon points={pts.map(function(p) { return p[0] + "," + p[1]; }).join(" ")} fill={vul || "none"} stroke={rand || LIJN} strokeWidth={W} strokeLinejoin="round" strokeDasharray={streep ? "6 5" : undefined} />;
 }
-function Boog(d, kleur) { return <path d={d} fill="none" stroke={kleur} strokeWidth={W + 1} strokeLinecap="round" />; }
-function Pijl(x1, y1, x2, y2, kleur) {
+export function Boog(d, kleur) { return <path d={d} fill="none" stroke={kleur} strokeWidth={W + 1} strokeLinecap="round" />; }
+export function Pijl(x1, y1, x2, y2, kleur) {
   var dx = x2 - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy), ux = dx / len, uy = dy / len;
   var bx = x2 - 9 * ux, by = y2 - 9 * uy;
   return (

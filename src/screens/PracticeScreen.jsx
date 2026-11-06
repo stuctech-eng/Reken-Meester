@@ -10,8 +10,12 @@ import { TYPE_MAX_DIGITS, quantityMaxDecimals } from "../core/answerCheck.js";
 import { resolveInput } from "../core/inputResolve.js";
 import { gradeTyped } from "../core/grading.js";
 import TheorieFiguur, { splitsTheorie } from "../components/TheorieFiguur.jsx";
+import VraagFiguur, { bekendeVraagFiguur, heeftOnderschrift, VF_ONDER_H } from "../components/VraagFiguur.jsx";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
+
+// Tekening bij de vraag (TK2): minstens en hoogstens zo hoog (px) tussen de vraag en het antwoord
+var FIG_MIN = 100, FIG_MAX = 160;
 
 // Sessievoorwaarden voor een level (zelfde regel als meetsMastery in subjects.js):
 // minstens SESSION_MIN sommen van deze skill in de sessie en minstens SESSION_ACC goed.
@@ -169,6 +173,13 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var theorieOpen    = theorieState[0];
   var setTheorieOpen = theorieState[1];
 
+  // figPlek: waar de tekening bij deze vraag (vraag.figuur, TK2) staat. null = nog niet gemeten (geen
+  // tekening); { h } = tussen de vraag en het antwoord, h px hoog; "knop" = alleen een knop die het
+  // 💡-venster opent; "venster" = alleen in het 💡-venster (geen ruimte voor een knop). Per vraag opnieuw.
+  var figState    = useState(null);
+  var figPlek     = figState[0];
+  var setFigPlek  = figState[1];
+
   var luDataState   = useState(null);
   var levelUpData   = luDataState[0];
   var setLevelUpData = luDataState[1];
@@ -265,6 +276,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setSelected(null);
     setTyped("");
     setTypeFit(null);
+    setFigPlek(null);
     setFeedback(null);
     setFbLevel(0);
     setUitlegVisible(false);
@@ -632,10 +644,54 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   // Andere schermgrootte (draaien, venster): opnieuw bepalen
   useEffect(function() {
-    function reset() { setTypeFit(null); }
+    function reset() { setTypeFit(null); setFigPlek(null); }
     window.addEventListener("resize", reset);
     return function() { window.removeEventListener("resize", reset); };
   }, []);
+
+  // Tekening bij de vraag (TK2): pas na de meting van het cijferblok (typeFit) hierboven, en zonder die
+  // te veranderen. Eerst staat alles zoals altijd (zonder tekening); dan wordt gemeten hoeveel ruimte er
+  // onder het antwoordgedeelte over is (tot de onderkant van het scherm, min de veilige zone). Past een
+  // tekening van minstens 100 px, dan komt die tussen de vraag en het antwoord (hoogstens 160 px);
+  // anders een knop van 48 px die het 💡-venster opent, of (ook daarvoor geen ruimte) alleen het venster.
+  // De ruimte voor de regel die na het antwoorden in de vraagkaart verschijnt, blijft vrij (zie onder).
+  // typeFit wordt hier nooit gezet en de tekening telt nooit mee in zijn meting (figPlek is dan null).
+  useLayoutEffect(function() {
+    if (figPlek !== null || feedback || !bekendeVraagFiguur(currentQuestion.figuur)) return undefined;
+    // Het antwoordgedeelte: het element direct na de vraagkaart (cijferblok of keuzes; de tekening en de
+    // knop staan er op dit moment nog niet tussen)
+    var kaart = qRef.current && qRef.current.parentElement;
+    var wrap = kaart && kaart.nextElementSibling;
+    if (!wrap) return undefined;
+    if (typeAllowed && typeFit !== "kiezen") {
+      var ok = wrap.querySelector("[aria-label='Controleer']");
+      // Het cijferblok past nog niet: de meting van typeFit is nog bezig, daarna opnieuw
+      if (ok && ok.getBoundingClientRect().bottom + window.scrollY - window.innerHeight > 0.5) return undefined;
+    }
+    var proef = document.createElement("div");
+    proef.style.cssText = "position:fixed;visibility:hidden;padding-bottom:env(safe-area-inset-bottom, 0px)";
+    document.body.appendChild(proef);
+    var veilig = parseFloat(window.getComputedStyle(proef).paddingBottom) || 0;
+    document.body.removeChild(proef);
+    var vrij = window.innerHeight - veilig - (wrap.getBoundingClientRect().bottom + window.scrollY);
+    // Na het antwoorden komt er een regel in de vraagkaart ("✓ Goed zo!" of "✖ Antwoord: …"); die ruimte
+    // houden we vrij, zodat het antwoord ook daarna in beeld blijft. Gemeten met een onzichtbare proefregel
+    // in dezelfde opmaak, in de kaart zelf (vóór het tekenen weer weg).
+    var naAntwoord = 0;
+    ["✓ Goed zo!", "✖  Antwoord: " + currentQuestion.answer].forEach(function(t) {
+      var regel = document.createElement("div");
+      regel.style.cssText = "margin-top:16px;font-size:" + T.xl + "px;font-weight:800;visibility:hidden";
+      regel.textContent = t;
+      kaart.appendChild(regel);
+      naAntwoord = Math.max(naAntwoord, regel.offsetHeight + 16);
+      kaart.removeChild(regel);
+    });
+    var tussen = tiny ? 8 : compact ? 10 : 16;
+    var ruimte = vrij - naAntwoord - tussen - 8 - (heeftOnderschrift(currentQuestion.figuur) ? VF_ONDER_H : 0);
+    if (ruimte >= FIG_MIN) setFigPlek({ h: Math.min(FIG_MAX, Math.floor(ruimte)) });
+    else setFigPlek(vrij - naAntwoord - tussen - 8 >= 48 ? "knop" : "venster");
+    return undefined;
+  }, [currentQuestion, qFont, typeFit, typeAllowed, feedback, tiny, compact, figPlek]);
 
   // ── Render ────────────────────────────────────────────────────
   return (
@@ -849,6 +905,31 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           )}
         </div>
 
+        {/* Tekening bij de vraag (TK2): alleen als hij past (figPlek), anders een knop naar het 💡-venster */}
+        {figPlek && figPlek.h && (
+          <VraagFiguur figuur={currentQuestion.figuur} hoogte={figPlek.h} />
+        )}
+        {figPlek === "knop" && (
+          <button
+            type="button"
+            onClick={function() { setHelpOpen(true); }}
+            style={{
+              minHeight: 48,
+              padding: "10px 16px",
+              background: A.bgCard,
+              border: "1.5px solid " + A.border,
+              borderRadius: A.r16,
+              fontSize: T.sm,
+              fontWeight: 800,
+              color: A.primary,
+              cursor: "pointer",
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            {"📐 Tekening bij deze vraag"}
+          </button>
+        )}
+
         {/* Antwoordgebied: cijferblok als deze vraag getypt wordt, anders de vier keuzes */}
         <AnswerArea
           ref={kpWrapRef}
@@ -1014,6 +1095,22 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             <div style={{ fontSize: T.xs, fontWeight: 800, color: A.primary, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>
               {currentSkill.label + (currentSkill.strategy ? " · " + currentSkill.strategy : "")}
             </div>
+
+            {/* Tekening bij deze vraag (TK2): altijd hier, ook als hij in de vraag staat; zonder antwoord */}
+            {bekendeVraagFiguur(currentQuestion.figuur) && (
+              <div style={{
+                borderRadius: A.r12,
+                border: "1.5px solid " + A.border,
+                background: A.bgCard,
+                padding: "10px 12px",
+                marginBottom: 10,
+              }}>
+                <div style={{ fontSize: T.xs, fontWeight: 800, color: A.primary, letterSpacing: 0.8, marginBottom: 6 }}>
+                  {"📐 TEKENING BIJ DEZE VRAAG"}
+                </div>
+                <VraagFiguur figuur={currentQuestion.figuur} hoogte={150} />
+              </div>
+            )}
 
             {/* Tip met de getallen van deze som: pas na het antwoorden (verklapt anders het antwoord) */}
             {feedback && (

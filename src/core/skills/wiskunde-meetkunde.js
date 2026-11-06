@@ -52,6 +52,8 @@ function choose4(items) {
   if (uit.length < 4) return null;
   return { answer: uit[0], choices: shuffle(uit) };
 }
+// extra: velden die bij de vraag horen, zoals figuur (TK2: tekening met de getallen van deze vraag,
+// alleen uit waarden die de generator al heeft; geen extra toeval)
 function Q(question, c, stappen, extra) {
   if (!c) return null;
   var q = { question: question, answer: c.answer, choices: c.choices, terms: [stappen] };
@@ -99,21 +101,21 @@ GEN.mk03 = function(sub) {
   if (a === 90) return null;
   if (sub === 0) {
     return Q("Twee lijnen snijden elkaar. Eén hoek is " + a + "°. De overstaande hoek = ? (graden)", choose4([a, 180 - a, 360 - a, Math.abs(90 - a)]),
-      "Overstaande hoeken zijn gelijk: allebei nevenhoek van dezelfde hoek. Dus " + a + "°.");
+      "Overstaande hoeken zijn gelijk: allebei nevenhoek van dezelfde hoek. Dus " + a + "°.", { figuur: { soort: "kruis", gegeven: { a: a }, gevraagd: "overstaand" } });
   }
   return Q("Twee lijnen snijden elkaar. Eén hoek is " + a + "°. De hoek ernaast (nevenhoek) = ? (graden)", choose4([180 - a, a, 360 - a, Math.abs(90 - a)]),
-    "De hoek ernaast ligt samen met " + a + "° op een rechte lijn: 180 " + MIN + " " + a + " = " + (180 - a) + ".");
+    "De hoek ernaast ligt samen met " + a + "° op een rechte lijn: 180 " + MIN + " " + a + " = " + (180 - a) + ".", { figuur: { soort: "kruis", gegeven: { a: a }, gevraagd: "nevenhoek" } });
 };
 GEN.mk04 = function(sub) {
   var a = rnd(25, 155);
   if (a === 90) return null;
   var basis = "Twee evenwijdige lijnen worden gesneden door een derde lijn. Een hoek is " + a + "°. ";
   if (sub === 0) return Q(basis + "De F-hoek ervan = ? (graden)", choose4([a, 180 - a, 360 - a, Math.abs(90 - a)]),
-    "Omdat de lijnen evenwijdig zijn, maakt de snijlijn met beide dezelfde hoek: de F-hoek is ook " + a + "°.");
+    "Omdat de lijnen evenwijdig zijn, maakt de snijlijn met beide dezelfde hoek: de F-hoek is ook " + a + "°.", { figuur: { soort: "evenwijdig", gegeven: { a: a }, gevraagd: "F" } });
   if (sub === 1) return Q(basis + "De Z-hoek ervan = ? (graden)", choose4([a, 180 - a, 360 - a, Math.abs(90 - a)]),
-    "Omdat de lijnen evenwijdig zijn, zijn Z-hoeken gelijk (binnen de lijnen, aan weerszijden van de snijlijn): " + a + "°.");
+    "Omdat de lijnen evenwijdig zijn, zijn Z-hoeken gelijk (binnen de lijnen, aan weerszijden van de snijlijn): " + a + "°.", { figuur: { soort: "evenwijdig", gegeven: { a: a }, gevraagd: "Z" } });
   return Q(basis + "De nevenhoek van de Z-hoek = ? (graden)", choose4([180 - a, a, 360 - a, Math.abs(90 - a)]),
-    "De Z-hoek is " + a + "° (evenwijdige lijnen). Zijn nevenhoek is 180 " + MIN + " " + a + " = " + (180 - a) + ".");
+    "De Z-hoek is " + a + "° (evenwijdige lijnen). Zijn nevenhoek is 180 " + MIN + " " + a + " = " + (180 - a) + ".", { figuur: { soort: "evenwijdig", gegeven: { a: a }, gevraagd: "nevenZ" } });
 };
 GEN.mk05 = function(sub) {
   if (sub === 0) {
@@ -121,12 +123,12 @@ GEN.mk05 = function(sub) {
     if (a + b > 160) return null;
     var c = 180 - a - b;
     return Q("Driehoek met hoeken " + a + "° en " + b + "°. Derde hoek = ? (graden)", choose4([c, a + b, 360 - a - b, 180 - a, 90 - a - b]),
-      "De hoeken van een driehoek zijn samen 180°: 180 " + MIN + " " + a + " " + MIN + " " + b + " = " + c + ".");
+      "De hoeken van een driehoek zijn samen 180°: 180 " + MIN + " " + a + " " + MIN + " " + b + " = " + c + ".", { figuur: { soort: "driehoekhoeken", gegeven: { a: a, b: b }, gevraagd: "derde" } });
   }
   var s = rnd(15, 75);
   if (s === 45) return null;
   return Q("Rechthoekige driehoek, één scherpe hoek is " + s + "°. De andere scherpe hoek = ? (graden)", choose4([90 - s, 180 - s, s, 270 - s]),
-    "Samen 180°, en de rechte hoek is al 90°. De twee scherpe hoeken zijn samen 90°: 90 " + MIN + " " + s + " = " + (90 - s) + ".");
+    "Samen 180°, en de rechte hoek is al 90°. De twee scherpe hoeken zijn samen 90°: 90 " + MIN + " " + s + " = " + (90 - s) + ".", { figuur: { soort: "driehoekhoeken", gegeven: { s: s }, gevraagd: "andere" } });
 };
 var VEELHOEK = { 4: "vierhoek", 5: "vijfhoek", 6: "zeshoek", 7: "zevenhoek", 8: "achthoek", 9: "negenhoek", 10: "tienhoek", 12: "twaalfhoek" };
 GEN.mk06 = function() {
@@ -142,13 +144,13 @@ GEN.mk07 = function(sub) {
     var t = 2 * rnd(10, 80), b = (180 - t) / 2;
     if (t === 60) return null;
     return Q("Gelijkbenige driehoek, tophoek " + t + "°. Elke basishoek = ? (graden)", choose4([b, 180 - t, t, Math.abs(90 - t), 2 * b + 10]),
-      "Basishoeken zijn gelijk. Samen zijn ze 180 " + MIN + " " + t + " = " + (180 - t) + ", dus elk " + (180 - t) + " : 2 = " + b + ".");
+      "Basishoeken zijn gelijk. Samen zijn ze 180 " + MIN + " " + t + " = " + (180 - t) + ", dus elk " + (180 - t) + " : 2 = " + b + ".", { figuur: { soort: "gelijkbenig", gegeven: { top: t }, gevraagd: "basis" } });
   }
   var bh = rnd(20, 85);
   if (bh === 60) return null;
   var top = 180 - 2 * bh;
   return Q("Gelijkbenige driehoek, basishoek " + bh + "°. Tophoek = ? (graden)", choose4([top, 180 - bh, bh, 90 - bh, 2 * bh]),
-    "Beide basishoeken zijn " + bh + "°: samen " + (2 * bh) + "°. Tophoek: 180 " + MIN + " " + (2 * bh) + " = " + top + ".");
+    "Beide basishoeken zijn " + bh + "°: samen " + (2 * bh) + "°. Tophoek: 180 " + MIN + " " + (2 * bh) + " = " + top + ".", { figuur: { soort: "gelijkbenig", gegeven: { basis: bh }, gevraagd: "top" } });
 };
 var REGELMATIG = { 3: "driehoek", 4: "vierhoek (vierkant)", 5: "vijfhoek", 6: "zeshoek", 8: "achthoek", 9: "negenhoek", 10: "tienhoek", 12: "twaalfhoek" };
 GEN.mk08 = function() {
@@ -197,25 +199,25 @@ GEN.mk11 = function() {
   var b = rnd(5, 15), h = rnd(3, 12), s = h + rnd(1, 4), ans = b * h;
   return Q("Parallellogram: basis " + b + " cm, hoogte " + h + " cm, schuine zijde " + s + " cm. Oppervlakte?",
     choose4([maatH(ans, "cm²"), maatH(b * s, "cm²"), (ans % 2 === 0 ? maatH(ans / 2, "cm²") : null), maatH(2 * (b + s), "cm²"), maatH(b + h, "cm²")]),
-    "Basis keer hoogte (loodrecht), niet de schuine zijde: " + b + " " + DOT + " " + h + " = " + ans + " cm².");
+    "Basis keer hoogte (loodrecht), niet de schuine zijde: " + b + " " + DOT + " " + h + " = " + ans + " cm².", { figuur: { soort: "parallellogram", gegeven: { b: b, h: h, s: s }, gevraagd: "opp" } });
 };
 GEN.mk12 = function(sub) {
   var b = rnd(4, 16), h = rnd(3, 14), t = b * h * 5;
   if (sub === 0) {
     return Q("Driehoek: basis " + b + " cm, hoogte " + h + " cm. Oppervlakte?",
       choose4([maat(t, "cm²"), maatH(b * h, "cm²"), maatH(b + h, "cm²"), maatH(2 * b * h, "cm²"), maat(tiendenVan(b * h, 4), "cm²")]),
-      "½ " + DOT + " basis " + DOT + " hoogte = ½ " + DOT + " " + b + " " + DOT + " " + h + " = " + schrijfT(t) + " cm².");
+      "½ " + DOT + " basis " + DOT + " hoogte = ½ " + DOT + " " + b + " " + DOT + " " + h + " = " + schrijfT(t) + " cm².", { figuur: { soort: "driehoekopp", gegeven: { b: b, h: h }, gevraagd: "opp" } });
   }
   var s = h + rnd(1, 5);
   return Q("Driehoek: basis " + b + " cm, schuine zijde " + s + " cm, hoogte " + h + " cm. Oppervlakte?",
     choose4([maat(t, "cm²"), maat(b * s * 5, "cm²"), maatH(b * h, "cm²"), maatH(b * s, "cm²")]),
-    "Gebruik de hoogte (loodrecht op de basis), niet de schuine zijde: ½ " + DOT + " " + b + " " + DOT + " " + h + " = " + schrijfT(t) + " cm².");
+    "Gebruik de hoogte (loodrecht op de basis), niet de schuine zijde: ½ " + DOT + " " + b + " " + DOT + " " + h + " = " + schrijfT(t) + " cm².", { figuur: { soort: "driehoekopp", gegeven: { b: b, h: h, s: s }, gevraagd: "opp" } });
 };
 GEN.mk13 = function() {
   var a = rnd(3, 12), c = a + rnd(2, 8), h = rnd(2, 10), t = (a + c) * h * 5;
   return Q("Trapezium: evenwijdige zijden " + a + " en " + c + " cm, hoogte " + h + " cm. Oppervlakte?",
     choose4([maat(t, "cm²"), maatH((a + c) * h, "cm²"), maatH(a * c * h, "cm²"), maat((c - a) * h * 5, "cm²"), maatH(a * h, "cm²")]),
-    "½ " + DOT + " (a + b) " + DOT + " hoogte = ½ " + DOT + " (" + a + " + " + c + ") " + DOT + " " + h + " = ½ " + DOT + " " + (a + c) + " " + DOT + " " + h + " = " + schrijfT(t) + " cm².");
+    "½ " + DOT + " (a + b) " + DOT + " hoogte = ½ " + DOT + " (" + a + " + " + c + ") " + DOT + " " + h + " = ½ " + DOT + " " + (a + c) + " " + DOT + " " + h + " = " + schrijfT(t) + " cm².", { figuur: { soort: "trapezium", gegeven: { a: a, c: c, h: h }, gevraagd: "opp" } });
 };
 // L-vormen: nooit dezelfde vorm als in de laatste 2 gemaakte vragen (ook niet met de andere vraag erbij)
 var L_LAATST = [];
@@ -228,10 +230,10 @@ GEN.mk14 = function(sub) {
   var q;
   if (sub === 0) {
     q = Q(vorm + "Oppervlakte?", choose4([maatH(opp, "cm²"), maatH(W * H, "cm²"), maatH(W * H - 2 * cw * ch, "cm²"), maatH(cw * ch, "cm²"), maatH(omtrek, "cm²")]),
-      "Hele rechthoek min het stuk eruit: " + W + " " + DOT + " " + H + " " + MIN + " " + cw + " " + DOT + " " + ch + " = " + (W * H) + " " + MIN + " " + (cw * ch) + " = " + opp + " cm².", { lvorm: key });
+      "Hele rechthoek min het stuk eruit: " + W + " " + DOT + " " + H + " " + MIN + " " + cw + " " + DOT + " " + ch + " = " + (W * H) + " " + MIN + " " + (cw * ch) + " = " + opp + " cm².", { lvorm: key, figuur: { soort: "lvorm", gegeven: { W: W, H: H, cw: cw, ch: ch }, gevraagd: "opp" } });
   } else {
     q = Q(vorm + "Omtrek?", choose4([maatH(omtrek, "cm"), maatH(omtrek - cw - ch, "cm"), maatH(opp, "cm"), maatH(omtrek + 2 * (cw + ch), "cm")]),
-      "De inham schuift twee randen naar binnen; samen blijven ze even lang. De omtrek is die van de hele rechthoek: 2 " + DOT + " (" + W + " + " + H + ") = " + omtrek + " cm.", { lvorm: key });
+      "De inham schuift twee randen naar binnen; samen blijven ze even lang. De omtrek is die van de hele rechthoek: 2 " + DOT + " (" + W + " + " + H + ") = " + omtrek + " cm.", { lvorm: key, figuur: { soort: "lvorm", gegeven: { W: W, H: H, cw: cw, ch: ch }, gevraagd: "omtrek" } });
   }
   if (q) { L_LAATST.push(key); if (L_LAATST.length > 2) L_LAATST.shift(); }
   return q;
