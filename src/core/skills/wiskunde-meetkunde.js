@@ -256,41 +256,41 @@ GEN.mk16 = function(sub) {
   if (sub === 0) {
     var r = rnd(2, 20);
     return Q("Cirkel met straal " + r + " cm. Omtrek?" + PI_TXT, choose4([maat(piT(2 * r), "cm"), maat(piT(r), "cm"), maat(piT(r * r), "cm"), maat(piT(4 * r), "cm")]),
-      "Omtrek = 2 " + DOT + " π " + DOT + " r = 2 " + DOT + " 3,14 " + DOT + " " + r + " = " + schrijfT(piT(2 * r)) + " cm.");
+      "Omtrek = 2 " + DOT + " π " + DOT + " r = 2 " + DOT + " 3,14 " + DOT + " " + r + " = " + schrijfT(piT(2 * r)) + " cm.", { figuur: { soort: "cirkel", gegeven: { r: r }, gevraagd: "omtrek" } });
   }
   var d = rnd(3, 30);
   return Q("Cirkel met middellijn " + d + " cm. Omtrek?" + PI_TXT, choose4([maat(piT(d), "cm"), maat(piT(2 * d), "cm"), maat(tiendenVan(PI_H * d, 200), "cm"), maat(tiendenVan(PI_H * d * d, 400), "cm")]),
-    "Omtrek = π " + DOT + " d = 3,14 " + DOT + " " + d + " = " + schrijfT(piT(d)) + " cm.");
+    "Omtrek = π " + DOT + " d = 3,14 " + DOT + " " + d + " = " + schrijfT(piT(d)) + " cm.", { figuur: { soort: "cirkel", gegeven: { d: d }, gevraagd: "omtrek" } });
 };
 GEN.mk17 = function(sub) {
   var r = rnd(2, 15);
   if (sub === 0) {
     return Q("Cirkel met straal " + r + " cm. Oppervlakte?" + PI_TXT, choose4([maat(piT(r * r), "cm²"), maat(piT(2 * r), "cm²"), maat(piT(4 * r * r), "cm²"), maat(piT(r), "cm²")]),
-      "Oppervlakte = π " + DOT + " r² = 3,14 " + DOT + " " + r + " " + DOT + " " + r + " = 3,14 " + DOT + " " + (r * r) + " = " + schrijfT(piT(r * r)) + " cm².");
+      "Oppervlakte = π " + DOT + " r² = 3,14 " + DOT + " " + r + " " + DOT + " " + r + " = 3,14 " + DOT + " " + (r * r) + " = " + schrijfT(piT(r * r)) + " cm².", { figuur: { soort: "cirkel", gegeven: { r: r }, gevraagd: "opp" } });
   }
   var d = 2 * r;
   return Q("Cirkel met middellijn " + d + " cm. Oppervlakte?" + PI_TXT, choose4([maat(piT(r * r), "cm²"), maat(piT(d * d), "cm²"), maat(piT(d), "cm²"), maat(piT(r), "cm²")]),
-    "Eerst de straal: " + d + " : 2 = " + r + " cm. Oppervlakte = π " + DOT + " r² = 3,14 " + DOT + " " + (r * r) + " = " + schrijfT(piT(r * r)) + " cm².");
+    "Eerst de straal: " + d + " : 2 = " + r + " cm. Oppervlakte = π " + DOT + " r² = 3,14 " + DOT + " " + (r * r) + " = " + schrijfT(piT(r * r)) + " cm².", { figuur: { soort: "cirkel", gegeven: { d: d }, gevraagd: "opp" } });
 };
 GEN.mk18 = function(sub) {
   var r = rnd(2, 20), omtrekH = 2 * PI_H * r;   // honderdsten, exact
   if (sub === 0) return Q("Cirkel met omtrek " + schrijfH(omtrekH) + " cm. Straal? (π ≈ 3,14)", choose4([maatH(r, "cm"), maatH(2 * r, "cm"), maatH(4 * r, "cm"), maatH(r + 1, "cm")]),
-    "Omtrek = π " + DOT + " d, dus d = " + schrijfH(omtrekH) + " : 3,14 = " + (2 * r) + " cm. De straal is de helft: " + r + " cm.");
+    "Omtrek = π " + DOT + " d, dus d = " + schrijfH(omtrekH) + " : 3,14 = " + (2 * r) + " cm. De straal is de helft: " + r + " cm.", { figuur: { soort: "cirkel", gegeven: { omtrek: omtrekH / 100 }, gevraagd: "straal" } });
   return Q("Cirkel met omtrek " + schrijfH(omtrekH) + " cm. Middellijn? (π ≈ 3,14)", choose4([maatH(2 * r, "cm"), maatH(r, "cm"), maatH(4 * r, "cm"), maatH(2 * r + 2, "cm")]),
-    "Omtrek = π " + DOT + " d, dus d = " + schrijfH(omtrekH) + " : 3,14 = " + (2 * r) + " cm.");
+    "Omtrek = π " + DOT + " d, dus d = " + schrijfH(omtrekH) + " : 3,14 = " + (2 * r) + " cm.", { figuur: { soort: "cirkel", gegeven: { omtrek: omtrekH / 100 }, gevraagd: "middellijn" } });
 };
 GEN.mk19 = function(sub) {
   var r = rnd(2, 14);
   if (sub === 0) return Q("Halve cirkel met straal " + r + " cm. Oppervlakte?" + PI_TXT,
     choose4([maat(tiendenVan(PI_H * r * r, 200), "cm²"), maat(piT(r * r), "cm²"), maat(tiendenVan(PI_H * r * r, 400), "cm²"), maat(piT(r), "cm²")]),
-    "Hele cirkel: 3,14 " + DOT + " " + (r * r) + " = " + schrijfH(PI_H * r * r) + " cm². De helft: " + schrijfT(tiendenVan(PI_H * r * r, 200)) + " cm².");
+    "Hele cirkel: 3,14 " + DOT + " " + (r * r) + " = " + schrijfH(PI_H * r * r) + " cm². De helft: " + schrijfT(tiendenVan(PI_H * r * r, 200)) + " cm².", { figuur: { soort: "cirkeldeel", gegeven: { r: r }, gevraagd: "halfopp" } });
   if (sub === 1) return Q("Kwart cirkel met straal " + r + " cm. Oppervlakte?" + PI_TXT,
     choose4([maat(tiendenVan(PI_H * r * r, 400), "cm²"), maat(piT(r * r), "cm²"), maat(tiendenVan(PI_H * r * r, 200), "cm²"), maat(tiendenVan(PI_H * r, 200), "cm²")]),
-    "Hele cirkel: 3,14 " + DOT + " " + (r * r) + " = " + schrijfH(PI_H * r * r) + " cm². Een kwart: " + schrijfT(tiendenVan(PI_H * r * r, 400)) + " cm².");
+    "Hele cirkel: 3,14 " + DOT + " " + (r * r) + " = " + schrijfH(PI_H * r * r) + " cm². Een kwart: " + schrijfT(tiendenVan(PI_H * r * r, 400)) + " cm².", { figuur: { soort: "cirkeldeel", gegeven: { r: r }, gevraagd: "kwartopp" } });
   // omtrek halve cirkel: boog (pi·r) + middellijn (2r); in honderdsten: 314·r + 200·r
   return Q("Halve cirkel met straal " + r + " cm. Omtrek (boog + middellijn)?" + PI_TXT,
     choose4([maat(tiendenVan(PI_H * r + 200 * r, 100), "cm"), maat(piT(r), "cm"), maat(tiendenVan(2 * PI_H * r + 200 * r, 100), "cm"), maat(tiendenVan(PI_H * r + 100 * r, 100), "cm")]),
-    "Boog = halve omtrek = 3,14 " + DOT + " " + r + " = " + schrijfH(PI_H * r) + " cm. Plus de middellijn " + (2 * r) + " cm: " + schrijfT(tiendenVan(PI_H * r + 200 * r, 100)) + " cm.");
+    "Boog = halve omtrek = 3,14 " + DOT + " " + r + " = " + schrijfH(PI_H * r) + " cm. Plus de middellijn " + (2 * r) + " cm: " + schrijfT(tiendenVan(PI_H * r + 200 * r, 100)) + " cm.", { figuur: { soort: "cirkeldeel", gegeven: { r: r }, gevraagd: "halfomtrek" } });
 };
 
 // ── Blok 5: Pythagoras ────────────────────────────────────────────
@@ -300,14 +300,14 @@ GEN.mk20 = function() {
   if (rnd(0, 1) === 1) { var w = a; a = b; b = w; }
   return Q("Rechthoekige driehoek, rechthoekszijden " + a + " en " + b + " cm. Schuine zijde?",
     choose4([maatH(c, "cm"), maatH(a + b, "cm"), maatH(a * a + b * b, "cm"), maatH(Math.abs(b - a), "cm"), maatH(c + 1, "cm")]),
-    a + "² + " + b + "² = " + (a * a) + " + " + (b * b) + " = " + (c * c) + ". √" + (c * c) + " = " + c + " cm.");
+    a + "² + " + b + "² = " + (a * a) + " + " + (b * b) + " = " + (c * c) + ". √" + (c * c) + " = " + c + " cm.", { figuur: { soort: "rechthoekig", gegeven: { a: a, b: b }, gevraagd: "schuin" } });
 };
 GEN.mk21 = function() {
   var t = drietal(60), a = t[0], b = t[1], c = t[2];
   if (rnd(0, 1) === 1) { var w = a; a = b; b = w; }
   return Q("Rechthoekige driehoek, schuine zijde " + c + " cm, rechthoekszijde " + a + " cm. Andere rechthoekszijde?",
     choose4([maatH(b, "cm"), maat(wortelTienden(c * c + a * a), "cm"), maatH(c - a, "cm"), maatH(c * c - a * a, "cm")]),
-    "Bij een rechthoekszijde trek je af: " + c + "² " + MIN + " " + a + "² = " + (c * c) + " " + MIN + " " + (a * a) + " = " + (b * b) + ". √" + (b * b) + " = " + b + " cm.");
+    "Bij een rechthoekszijde trek je af: " + c + "² " + MIN + " " + a + "² = " + (c * c) + " " + MIN + " " + (a * a) + " = " + (b * b) + ". √" + (b * b) + " = " + b + " cm.", { figuur: { soort: "rechthoekig", gegeven: { c: c, a: a }, gevraagd: "zijde" } });
 };
 function zijdenTekst(z) { return "zijden " + z[0] + ", " + z[1] + " en " + z[2] + " cm"; }
 function geenRecht() {
@@ -333,13 +333,13 @@ GEN.mk23 = function(sub) {
     if (isKwadraat(s)) return null;
     return Q("Rechthoekige driehoek, rechthoekszijden " + a + " en " + b + " cm. Schuine zijde? (1 decimaal)",
       choose4([maat(wortelTienden(s), "cm"), maatH(a + b, "cm"), maatH(s, "cm"), (a !== b ? maat(wortelTienden(Math.abs(a * a - b * b)), "cm") : null), maat(wortelTienden(s) + 10, "cm")]),
-      a + "² + " + b + "² = " + (a * a) + " + " + (b * b) + " = " + s + ". √" + s + " ≈ " + schrijfT(wortelTienden(s)) + " cm.");
+      a + "² + " + b + "² = " + (a * a) + " + " + (b * b) + " = " + s + ". √" + s + " ≈ " + schrijfT(wortelTienden(s)) + " cm.", { figuur: { soort: "rechthoekig", gegeven: { a: a, b: b }, gevraagd: "schuin" } });
   }
   var c = rnd(6, 20), x = rnd(2, c - 1), r = c * c - x * x;
   if (isKwadraat(r)) return null;
   return Q("Rechthoekige driehoek, schuine zijde " + c + " cm, rechthoekszijde " + x + " cm. Andere zijde? (1 decimaal)",
     choose4([maat(wortelTienden(r), "cm"), maat(wortelTienden(c * c + x * x), "cm"), maatH(c - x, "cm"), maatH(r, "cm")]),
-    c + "² " + MIN + " " + x + "² = " + (c * c) + " " + MIN + " " + (x * x) + " = " + r + ". √" + r + " ≈ " + schrijfT(wortelTienden(r)) + " cm.");
+    c + "² " + MIN + " " + x + "² = " + (c * c) + " " + MIN + " " + (x * x) + " = " + r + ". √" + r + " ≈ " + schrijfT(wortelTienden(r)) + " cm.", { figuur: { soort: "rechthoekig", gegeven: { c: c, a: x }, gevraagd: "zijde" } });
 };
 GEN.mk24 = function(sub) {
   if (sub === 0) {
@@ -348,20 +348,20 @@ GEN.mk24 = function(sub) {
     var hDm = Math.floor((isqrt(4 * n) + 1) / 2);
     return Q("Ladder van " + schrijfT(L) + " m tegen een muur; de voet staat " + schrijfT(v) + " m van de muur. Hoe hoog komt de ladder? (1 decimaal)",
       choose4([maat(hDm, "m"), maat(Math.floor((isqrt(4 * (L * L + v * v)) + 1) / 2), "m"), maat(L - v, "m"), maat(L + v, "m")]),
-      "De ladder is de schuine zijde. " + schrijfT(L) + "² " + MIN + " " + schrijfT(v) + "² = " + schrijfH(n) + ". √" + schrijfH(n) + " ≈ " + schrijfT(hDm) + " m.");
+      "De ladder is de schuine zijde. " + schrijfT(L) + "² " + MIN + " " + schrijfT(v) + "² = " + schrijfH(n) + ". √" + schrijfH(n) + " ≈ " + schrijfT(hDm) + " m.", { figuur: { soort: "ladder", gegeven: { L: L / 10, v: v / 10 }, gevraagd: "hoogte" } });
   }
   if (sub === 1) {
     var b = rnd(40, 120), hh = rnd(25, 80), s = b * b + hh * hh;
     if (isKwadraat(s)) return null;
     return Q("Beeldscherm " + b + " cm breed en " + hh + " cm hoog. Diagonaal? (1 decimaal)",
       choose4([maat(wortelTienden(s), "cm"), maatH(b + hh, "cm"), maat(wortelTienden(Math.abs(b * b - hh * hh)), "cm"), maatH(s, "cm")]),
-      b + "² + " + hh + "² = " + (b * b) + " + " + (hh * hh) + " = " + s + ". √" + s + " ≈ " + schrijfT(wortelTienden(s)) + " cm.");
+      b + "² + " + hh + "² = " + (b * b) + " + " + (hh * hh) + " = " + s + ". √" + s + " ≈ " + schrijfT(wortelTienden(s)) + " cm.", { figuur: { soort: "diagonaal", gegeven: { b: b, h: hh }, eenheid: "cm", gevraagd: "diagonaal" } });
   }
   var l = rnd(20, 90), w = rnd(10, 60), q2 = l * l + w * w;
   if (isKwadraat(q2)) return null;
   return Q("Rechthoekig veld van " + l + " bij " + w + " m. Hoe lang is het pad schuin van hoek tot hoek? (1 decimaal)",
     choose4([maat(wortelTienden(q2), "m"), maatH(l + w, "m"), maatH(2 * (l + w), "m"), maat(wortelTienden(Math.abs(l * l - w * w)), "m")]),
-    l + "² + " + w + "² = " + (l * l) + " + " + (w * w) + " = " + q2 + ". √" + q2 + " ≈ " + schrijfT(wortelTienden(q2)) + " m.");
+    l + "² + " + w + "² = " + (l * l) + " + " + (w * w) + " = " + q2 + ". √" + q2 + " ≈ " + schrijfT(wortelTienden(q2)) + " m.", { figuur: { soort: "diagonaal", gegeven: { b: l, h: w }, eenheid: "m", gevraagd: "diagonaal" } });
 };
 
 // ── Blok 6: Ruimtefiguren ─────────────────────────────────────────
@@ -373,18 +373,18 @@ GEN.mk25 = function(sub) {
     var G = b * h / 2, V = G * l;
     return Q("Driehoekig prisma: het grondvlak is een driehoek met basis " + b + " cm en hoogte " + h + " cm; de lengte is " + l + " cm. Inhoud?",
       choose4([maatH(V, "cm³"), maatH(b * h * l, "cm³"), maatH(G, "cm³"), maatH(b + h + l, "cm³"), maatH(G * l * 2 + 2, "cm³")]),
-      "Grondvlak: ½ " + DOT + " " + b + " " + DOT + " " + h + " = " + G + " cm². Inhoud = grondvlak " + DOT + " lengte = " + G + " " + DOT + " " + l + " = " + V + " cm³.");
+      "Grondvlak: ½ " + DOT + " " + b + " " + DOT + " " + h + " = " + G + " cm². Inhoud = grondvlak " + DOT + " lengte = " + G + " " + DOT + " " + l + " = " + V + " cm³.", { figuur: { soort: "prisma", gegeven: { b: b, h: h, l: l }, gevraagd: "inhoud" } });
   }
   var G2 = rnd(4, 60), h2 = rnd(3, 20);
   return Q("Prisma met een grondvlak van " + G2 + " cm² en een hoogte van " + h2 + " cm. Inhoud?",
     choose4([maatH(G2 * h2, "cm³"), maatH(G2 + h2, "cm³"), (G2 * h2) % 3 === 0 ? maatH(G2 * h2 / 3, "cm³") : null, maatH(G2 * h2 * 2, "cm³"), maatH(G2 * h2 + h2, "cm³")]),
-    "Inhoud = grondvlak " + DOT + " hoogte = " + G2 + " " + DOT + " " + h2 + " = " + (G2 * h2) + " cm³.");
+    "Inhoud = grondvlak " + DOT + " hoogte = " + G2 + " " + DOT + " " + h2 + " = " + (G2 * h2) + " cm³.", { figuur: { soort: "prismaG", gegeven: { G: G2, h: h2 }, gevraagd: "inhoud" } });
 };
 GEN.mk26 = function() {
   var r = rnd(1, 10), h = rnd(2, 20);
   return Q("Cilinder met straal " + r + " cm en hoogte " + h + " cm. Inhoud?" + PI_TXT,
     choose4([maat(piT(r * r * h), "cm³"), maat(piT(r * h), "cm³"), maat(piT(4 * r * r * h), "cm³"), maat(piT(2 * r * h), "cm³")]),
-    "Grondvlak: 3,14 " + DOT + " " + r + "² = " + schrijfH(PI_H * r * r) + " cm². Inhoud = grondvlak " + DOT + " hoogte = " + schrijfH(PI_H * r * r) + " " + DOT + " " + h + " = " + schrijfT(piT(r * r * h)) + " cm³.");
+    "Grondvlak: 3,14 " + DOT + " " + r + "² = " + schrijfH(PI_H * r * r) + " cm². Inhoud = grondvlak " + DOT + " hoogte = " + schrijfH(PI_H * r * r) + " " + DOT + " " + h + " = " + schrijfT(piT(r * r * h)) + " cm³.", { figuur: { soort: "cilinder", gegeven: { r: r, h: h }, gevraagd: "inhoud" } });
 };
 GEN.mk27 = function(sub) {
   if (sub === 0) {
@@ -393,19 +393,19 @@ GEN.mk27 = function(sub) {
     var V = z * z * h / 3;
     return Q("Piramide met een vierkant grondvlak van " + z + " × " + z + " cm en een hoogte van " + h + " cm. Inhoud?",
       choose4([maatH(V, "cm³"), maatH(z * z * h, "cm³"), ((z * z * h) % 2 === 0 ? maatH(z * z * h / 2, "cm³") : null), maatH(z * z + h, "cm³"), maatH(V * 2, "cm³")]),
-      "Grondvlak: " + z + " " + DOT + " " + z + " = " + (z * z) + " cm². Inhoud = ⅓ " + DOT + " " + (z * z) + " " + DOT + " " + h + " = " + V + " cm³.");
+      "Grondvlak: " + z + " " + DOT + " " + z + " = " + (z * z) + " cm². Inhoud = ⅓ " + DOT + " " + (z * z) + " " + DOT + " " + h + " = " + V + " cm³.", { figuur: { soort: "piramide", gegeven: { z: z, h: h }, gevraagd: "inhoud" } });
   }
   var r = rnd(2, 10), hk = 3 * rnd(1, 6);
   return Q("Kegel met straal " + r + " cm en hoogte " + hk + " cm. Inhoud?" + PI_TXT,
     choose4([maat(tiendenVan(PI_H * r * r * hk, 300), "cm³"), maat(piT(r * r * hk), "cm³"), maat(tiendenVan(PI_H * r * hk, 300), "cm³"), maat(tiendenVan(PI_H * 4 * r * r * hk, 300), "cm³")]),
-    "Grondvlak: 3,14 " + DOT + " " + (r * r) + " = " + schrijfH(PI_H * r * r) + " cm². Inhoud = ⅓ " + DOT + " grondvlak " + DOT + " hoogte = ⅓ " + DOT + " " + schrijfH(PI_H * r * r) + " " + DOT + " " + hk + " = " + schrijfT(tiendenVan(PI_H * r * r * hk, 300)) + " cm³.");
+    "Grondvlak: 3,14 " + DOT + " " + (r * r) + " = " + schrijfH(PI_H * r * r) + " cm². Inhoud = ⅓ " + DOT + " grondvlak " + DOT + " hoogte = ⅓ " + DOT + " " + schrijfH(PI_H * r * r) + " " + DOT + " " + hk + " = " + schrijfT(tiendenVan(PI_H * r * r * hk, 300)) + " cm³.", { figuur: { soort: "kegel", gegeven: { r: r, h: hk }, gevraagd: "inhoud" } });
 };
 GEN.mk28 = function() {
   var l = rnd(2, 12), b = rnd(2, 12), h = rnd(2, 12);
   var A = 2 * (l * b + l * h + b * h);
   return Q("Balk van " + l + " × " + b + " × " + h + " cm. Totale oppervlakte (alle zes vlakken)?",
     choose4([maatH(A, "cm²"), maatH(l * b * h, "cm²"), maatH(A / 2, "cm²"), maatH(6 * l * b, "cm²"), maatH(A + 2 * l * b, "cm²")]),
-    "Drie paar gelijke vlakken: 2 " + DOT + " (" + l + DOT + b + " + " + l + DOT + h + " + " + b + DOT + h + ") = 2 " + DOT + " (" + (l * b) + " + " + (l * h) + " + " + (b * h) + ") = " + A + " cm².");
+    "Drie paar gelijke vlakken: 2 " + DOT + " (" + l + DOT + b + " + " + l + DOT + h + " + " + b + DOT + h + ") = 2 " + DOT + " (" + (l * b) + " + " + (l * h) + " + " + (b * h) + ") = " + A + " cm².", { figuur: { soort: "balk", gegeven: { l: l, b: b, h: h }, gevraagd: "opp" } });
 };
 GEN.mk29 = function(sub) {
   if (sub === 0) {
@@ -448,7 +448,7 @@ GEN.mk31 = function() {
   var t = a2 * k;    // b2 in tienden
   return Q("Twee gelijkvormige figuren. Een zijde van " + a1 + " cm hoort bij " + b1 + " cm. Hoe lang wordt een zijde van " + a2 + " cm? (1 decimaal)",
     choose4([maat(t, "cm"), (b1 - a1 > 0 ? maatH(a2 + (b1 - a1), "cm") : null), maat(tiendenVan(a2 * a1, b1), "cm"), maat(t * 2, "cm"), maatH(a2 * b1, "cm")]),
-    "Factor = " + b1 + " : " + a1 + " = " + schrijfT(k) + ". Dus " + a2 + " " + DOT + " " + schrijfT(k) + " = " + schrijfT(t) + " cm. (Niet optellen: vergroten is vermenigvuldigen.)");
+    "Factor = " + b1 + " : " + a1 + " = " + schrijfT(k) + ". Dus " + a2 + " " + DOT + " " + schrijfT(k) + " = " + schrijfT(t) + " cm. (Niet optellen: vergroten is vermenigvuldigen.)", { figuur: { soort: "gelijkvormig", gegeven: { a1: a1, b1: b1, a2: a2 }, gevraagd: "b2" } });
 };
 GEN.mk32 = function() {
   var A = rnd(4, 50), k = rnd(2, 5);
