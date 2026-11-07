@@ -1,7 +1,7 @@
 import { useState, forwardRef } from "react";
 import { A } from "../../styles/tokens.js";
 import Keypad from "../Keypad.jsx";
-import { PAIR_MAX_DIGITS } from "../../core/answerCheck.js";
+import { PAIR_MAX_DIGITS, parseTypedPair } from "../../core/answerCheck.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -19,9 +19,12 @@ import { PAIR_MAX_DIGITS } from "../../core/answerCheck.js";
 // terugkomt. De ref wijst naar de omhullende div, met een knop "Controleer" (meting "Passend cijferblok").
 
 var DELEN  = ["a", "b"];
+// Kloktijd (tussen "klok"): [uren] : [minuten]; een 0 blijft staan ("08", "05", "0"), elk vak hoogstens
+// 2 cijfers, en ✓ alleen bij een geldige tijd (parseTypedPair: uur 0..23, minuten precies 2 cijfers).
 var LABELS = {
   rest: { a: "Uitkomst", b: "Rest", tussen: "rest" },
   ":":  { a: "Links",    b: "Rechts", tussen: ":" },
+  klok: { a: "Uren",     b: "Minuten", tussen: ":", klok: true },
 };
 
 var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled, tussen, onSubmit }, ref) {
@@ -39,15 +42,15 @@ var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled,
   var uit = !!(disabled || feedback);
 
   function deelOk(d) { return d !== "" && Number(d) !== 0; }
-  var geldig = deelOk(waarde.a) && deelOk(waarde.b);
+  var geldig = lab.klok ? parseTypedPair(waarde.a + "|" + waarde.b, "klok") !== null : deelOk(waarde.a) && deelOk(waarde.b);
 
   function cijfer(d) {
     if (uit) return;
     setWaarde(function(w) {
       var oud = w[actief];
-      if (oud.length >= PAIR_MAX_DIGITS && oud !== "0") return w;
+      if (lab.klok ? oud.length >= 2 : (oud.length >= PAIR_MAX_DIGITS && oud !== "0")) return w;
       var nieuw = { a: w.a, b: w.b };
-      nieuw[actief] = oud === "0" ? d : oud + d;
+      nieuw[actief] = (oud === "0" && !lab.klok) ? d : oud + d;
       return nieuw;
     });
   }

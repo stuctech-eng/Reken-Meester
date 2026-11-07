@@ -618,9 +618,18 @@ var DEFS = [
     "Welke is FOUT?\nkwart voor 6 = 6:45 → goed is 5:45.\nDie is fout.", 12],
 ];
 
+// Kloktijd typen (I4b): vaardigheden met tijdstippen als antwoord, twee vakjes [uren] : [minuten] op 24 uur.
+// Klok lezen (t01-t04) is een 12-uursklok: daar is ook het tijdstip 12 uur verder goed (klok12).
+// Een vraag met een ander antwoord (woorden, getal, duur) wordt per vraag Kiezen (resolveInput).
+var KLOK = { t01: true, t02: true, t03: true, t04: true, t06: false, t07: false, t08: false, t17: false, t18: false, t19: false, t20: false, t21: false, t31: false, t35: false };
+
 var RAW_SKILLS = DEFS.map(function(d) {
   var poolId = d[0].slice(0, 3);
+  var klok = Object.prototype.hasOwnProperty.call(KLOK, poolId)
+    ? { inputType: "pair", inputConfig: KLOK[poolId] ? { tussen: "klok", klok12: true } : { tussen: "klok" } } : {};
   return {
+    inputType:   klok.inputType,
+    inputConfig: klok.inputConfig,
     id:         d[0],
     label:      d[1],
     group:      d[2],

@@ -293,23 +293,41 @@ export function writeAnswerFraction(f) {
   return g === "" ? b : g + " " + b;
 }
 
-// ── Twee getallen (deling met rest, verhouding) ────────────────────────────────────────
+// ── Twee getallen (deling met rest, verhouding, kloktijd) ──────────────────────────────
 // Een paar is tekst met twee gehele getallen en een vaste scheiding (inputConfig.tussen):
 //   "rest" -> "12 rest 6" (gewone spaties), ":" -> "3\u00a0:\u00a04" (vaste spaties), zoals de generatoren.
+//   "klok" -> een kloktijd op 24 uur: "8:05", "14:30", "0:30" (uur zonder voorloopnul, minuten 2 cijfers),
+//   zoals tijd.js. Zie hieronder (KLOK_*): eigen regels voor uur en minuten.
 // Elk getal 1..PAIR_MAX_DIGITS cijfers, zonder voorloopnul en niet 0 (gemeten: in antwoorden en keuzes
 // van d27, d28, p20 en p23 hoogstens 2 cijfers en nooit 0). De volgorde telt: het eerste vak is het
 // eerste getal van het antwoord.
 export var PAIR_MAX_DIGITS = 2;
-var PAIR_TUSSEN = { rest: " rest ", ":": "\u00a0:\u00a0" };
+var PAIR_TUSSEN = { rest: " rest ", ":": "\u00a0:\u00a0", klok: ":" };
 var PAIR_DEEL_RE = /^[1-9]\d*$/;
 
 function pairDeelOk(d) {
   return typeof d === "string" && PAIR_DEEL_RE.test(d) && d.length <= PAIR_MAX_DIGITS;
 }
 
+// Kloktijd (tussen "klok"), drie gescheiden stappen:
+//   1. valideren (parseTypedPair): uur 1 of 2 cijfers, 0..23 ("08" mag); minuten precies 2 cijfers, 00..59.
+//      Ongeldig is null: niets wordt aangevuld of omgerekend ("5" wordt geen "05", 24 wordt geen 0).
+//   2. normaliseren (writeAnswerPair): uur zonder voorloopnul, ":", minuten in 2 cijfers ("08"+"05" -> "8:05").
+//   3. nakijken (grading.js, pair_exact): letterlijk gelijk aan het antwoord; met klok12 ook h en h +/- 12.
+var KLOK_UUR_RE = /^\d{1,2}$/;
+var KLOK_MIN_RE = /^\d{2}$/;
+function klokDelenOk(a, b) {
+  return typeof a === "string" && typeof b === "string" && KLOK_UUR_RE.test(a) && Number(a) <= 23 && KLOK_MIN_RE.test(b) && Number(b) <= 59;
+}
+
 // Het verwachte antwoord lezen (alleen precies de canonieke vorm van deze scheiding): { a, b }, anders null
 export function readAnswerPair(answer, tussen) {
   if (typeof answer !== "string" || !Object.prototype.hasOwnProperty.call(PAIR_TUSSEN, tussen)) return null;
+  if (tussen === "klok") {
+    var k = answer.split(":");
+    if (k.length !== 2 || !klokDelenOk(k[0], k[1]) || String(Number(k[0])) !== k[0]) return null;
+    return { a: k[0], b: k[1] };
+  }
   var delen = answer.split(PAIR_TUSSEN[tussen]);
   if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
   return { a: delen[0], b: delen[1] };
@@ -317,9 +335,14 @@ export function readAnswerPair(answer, tussen) {
 
 // De ruwe invoer uit de twee vakjes lezen: altijd "a|b" (eerste vak, tweede vak). Elk deel
 // 1..PAIR_MAX_DIGITS cijfers, geen voorloopnul, niet 0. Anders null (niet nakijkbaar).
-export function parseTypedPair(text) {
+// Bij tussen "klok": de kloktijdregels hierboven (stap 1); de delen blijven zoals getypt ("08", "05").
+export function parseTypedPair(text, tussen) {
   if (typeof text !== "string") return null;
   var delen = text.split("|");
+  if (tussen === "klok") {
+    if (delen.length !== 2 || !klokDelenOk(delen[0], delen[1])) return null;
+    return { a: delen[0], b: delen[1] };
+  }
   if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
   return { a: delen[0], b: delen[1] };
 }
@@ -327,6 +350,7 @@ export function parseTypedPair(text) {
 // Canonieke tekst van een paar bij deze scheiding (null bij een onbekende scheiding)
 export function writeAnswerPair(p, tussen) {
   if (!p || !Object.prototype.hasOwnProperty.call(PAIR_TUSSEN, tussen)) return null;
+  if (tussen === "klok") return klokDelenOk(p.a, p.b) ? String(Number(p.a)) + ":" + p.b : null;
   return p.a + PAIR_TUSSEN[tussen] + p.b;
 }
 

@@ -9,7 +9,7 @@
 //           alleen typen toelaat als answer precies zo terug te schrijven is, geldt: goed <=> waarde === answer.
 // De verwerking daarna (feedback, voortgang) blijft in het oefenscherm (handleChoice).
 
-import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, parseTypedFraction, writeAnswerFraction, parseTypedPair, writeAnswerPair } from "./answerCheck.js";
+import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, parseTypedFraction, writeAnswerFraction, parseTypedPair, readAnswerPair, writeAnswerPair } from "./answerCheck.js";
 
 export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
   if (gradingRule === "numeric_equal") {
@@ -64,10 +64,18 @@ export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
   // Twee getallen, exact: de ruwe invoer is "a|b" (eerste vak, tweede vak). waarde is altijd de canonieke
   // tekst bij inputConfig.tussen ("12 rest 6", "3\u00a0:\u00a04"); goed alleen als die letterlijk het antwoord is.
   // Geen omdraaien en geen gelijkwaardige verhouding: "4 : 3" en "6 : 8" zijn fout bij "3 : 4".
+  // Kloktijd (tussen "klok"): eerst valideren en normaliseren ("08|05" -> "8:05"). Met inputConfig.klok12
+  // (klok lezen, 12-uursklok) is ook het tijdstip 12 uur verder of eerder goed: de minuten gelijk en het
+  // uur gelijk modulo 12 ("13:30" en "1:30", "0:50" en "12:50"); waarde is dan het antwoord zelf.
   if (gradingRule === "pair_exact") {
-    var pp = parseTypedPair(invoer);
-    var pw = pp ? writeAnswerPair(pp, inputConfig && inputConfig.tussen) : null;
+    var tussen = inputConfig && inputConfig.tussen;
+    var pp = parseTypedPair(invoer, tussen);
+    var pw = pp ? writeAnswerPair(pp, tussen) : null;
     if (pw === null) return { geldig: false, goed: false, waarde: null };
+    if (pw !== vraag.answer && tussen === "klok" && inputConfig.klok12) {
+      var pv = readAnswerPair(vraag.answer, "klok");
+      if (pv && Number(pp.a) % 12 === Number(pv.a) % 12 && pp.b === pv.b) return { geldig: true, goed: true, waarde: vraag.answer };
+    }
     return { geldig: true, goed: pw === vraag.answer, waarde: pw };
   }
   // Onbekende regel: nooit goed rekenen; resolveInput laat zo'n vraag niet typen
