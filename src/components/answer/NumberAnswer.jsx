@@ -17,7 +17,9 @@ import { formatTypedDigits } from "../../core/answerCheck.js";
 // procent (inputType "percent"): "%" achter het getal zodra er iets is getypt; alleen weergave, het
 // teken zit niet in typed. eenheid (inputType "quantity"): de eenheid achter het getal, met een vaste spatie
 // ("45 cm"), zodra er iets is getypt; ook alleen weergave. Lange invoer met eenheid krijgt een kleinere
-// letter. Zonder allowNegative, komma, euro, procent en eenheid is het vak precies zoals voorheen.
+// letter. inputConfig.zonderGroepjes === true: de cijfers zonder groepjes van drie (een jaartal: "2014",
+// niet "2 014"). Zonder allowNegative, komma, euro, procent, eenheid en zonderGroepjes is het vak precies
+// zoals voorheen.
 // De teken- en kommatoets staan verticaal in het midden via top/bottom 0 en margin auto, niet via
 // transform: de algemene stijl "button:active { transform: scale(0.97) !important }" zou een
 // transform bij het indrukken vervangen, waardoor de toets verspringt en een tik op de bovenkant
@@ -34,8 +36,9 @@ var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disab
   var neg     = teken && typed.charAt(0) === "-";
   var cijfers = neg ? typed.slice(1) : typed;
   var kpos    = cijfers.indexOf(",");
+  var groepen = (inputConfig && inputConfig.zonderGroepjes === true) ? function(d) { return String(d || ""); } : formatTypedDigits;
   var achter  = eenheid ? "\u00a0" + eenheid : "";
-  var tekst   = (euro ? "\u20ac\u00a0" : "") + (neg ? "\u2212" : "") + (kpos < 0 ? formatTypedDigits(cijfers) : formatTypedDigits(cijfers.slice(0, kpos)) + cijfers.slice(kpos)) + achter;
+  var tekst   = (euro ? "\u20ac\u00a0" : "") + (neg ? "\u2212" : "") + (kpos < 0 ? groepen(cijfers) : groepen(cijfers.slice(0, kpos)) + cijfers.slice(kpos)) + achter;
   var extra   = teken || !!komma;
   var basis   = tiny ? 32 : compact ? 36 : 42;
   // Met teken- of kommatoets is er minder breedte: lange getallen ("\u22129 999 999") krijgen een kleinere letter
@@ -107,7 +110,7 @@ var NumberAnswer = forwardRef(function NumberAnswer({ size, fit, feedback, disab
         )}
         {typed === ""
           ? <span style={{ color: A.textSoft, fontSize: tiny ? 16 : 18, fontWeight: 700, letterSpacing: 0 }}>{"Typ je antwoord"}</span>
-          : (extra || eenheid ? tekst : formatTypedDigits(typed) + (procent ? "%" : ""))}
+          : (extra || eenheid ? tekst : groepen(typed) + (procent ? "%" : ""))}
         {komma && (
           <button
             type="button"

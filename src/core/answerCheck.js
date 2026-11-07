@@ -400,6 +400,7 @@ var TYPE_HINT = {
   procenten:         "Je typt het antwoord met het cijferblok: procenten, getallen, bedragen, maten, het deel van een geheel (breukvak) en een verhouding (twee vakjes). Vergelijken, schatten en fout spotten blijven kiezen.",
   delen:             "Je typt het antwoord met het cijferblok; bij een deling met rest typ je de uitkomst en de rest in twee vakjes. Schatten en fout spotten blijven kiezen.",
   breuken:           "Je typt het antwoord in het breukvak: tik op teller, noemer of geheel en typ met het cijferblok. Vergelijken, herkennen, schatten en fout spotten blijven kiezen.",
+  tijd:              "Je typt getallen met het cijferblok, een tijdstip in uren : minuten en een duur in uren u minuten. Tijden in woorden, weekdagen, maanden, datums, schatten en fout spotten blijven kiezen.",
   meten:             "Je typt het antwoord met het cijferblok: getallen, kommagetallen en maten. Eenheden kiezen, vergelijken, schatten en fout spotten blijven kiezen.",
   reizen:            "Je typt afstanden, snelheden, liters en bedragen met het cijferblok. Tijden, schatten en fout spotten blijven kiezen.",
   kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal en een breuk typ je in het breukvak. Vergelijken, schatten en fout spotten blijven kiezen.",

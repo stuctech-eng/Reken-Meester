@@ -15,7 +15,7 @@
 
 import { shuffle } from "./helpers.js";
 import { registerSkillId, createSkills, createMixer, deckPick } from "./flow.js";
-import { writeDuur as dur } from "../answerCheck.js";
+import { writeDuur as dur, readAnswerInteger, writeAnswerInteger, readAnswerPair } from "../answerCheck.js";
 
 var NB    = "\u00a0";
 var MIN = "−";
@@ -481,6 +481,8 @@ function pick(poolId, skillId) {
   var q  = { terms: [it.tip], question: it.question, answer: it.answer, choices: shuffle(it.choices) };
   if (it.kind === "lang" || it.kind === "fout") q.smallChoices = true;
   if (it.kind === "fout") q.isErrorSpotter = true;
+  var eigen = vraagInvoer(poolId, it.answer);
+  if (eigen) { q.inputType = eigen.inputType; q.inputConfig = eigen.inputConfig; }
   return q;
 }
 
@@ -620,14 +622,36 @@ var DEFS = [
 // Een vraag met een ander antwoord (woorden, getal, duur) wordt per vraag Kiezen (resolveInput).
 var KLOK = { t01: true, t02: true, t03: true, t04: true, t06: false, t07: false, t08: false, t17: false, t18: false, t19: false, t20: false, t21: false, t31: false, t35: false };
 // Tijdsduur typen (I4c): vaardigheden met een duur als antwoord, twee vakjes [uren] u [minuten] min.
-// Een vraag met een getal als antwoord (t09, t13) wordt per vraag Kiezen. Niet hier: t34 (schatten, ook
-// seconden, dagen en weken) en t17 (typt al tijdstippen; de duurvragen daar blijven Kiezen).
+// Niet hier: t34 (schatten, ook seconden, dagen en weken).
 var DUUR = { t09: true, t13: true, t16: true, t22: true, t23: true, t24: true };
+// Getallen typen (I4d): vaardigheden met alleen gehele getallen als antwoord, het cijferblok.
+var GETAL = { t10: true, t11: true, t12: true, t14: true, t15: true, t25: true, t28: true, t30: true, t32: true, t33: true };
+// Jaartallen (t32): in het antwoordvak zonder groepjes van drie ("2014", niet "2 014")
+var ZONDER_GROEPJES = { t32: true };
 
 function invoerVan(poolId) {
   if (Object.prototype.hasOwnProperty.call(KLOK, poolId)) return { inputType: "pair", inputConfig: KLOK[poolId] ? { tussen: "klok", klok12: true } : { tussen: "klok" } };
   if (DUUR[poolId]) return { inputType: "pair", inputConfig: { tussen: "duur" } };
+  if (GETAL[poolId]) return { inputType: "number", inputConfig: ZONDER_GROEPJES[poolId] ? { zonderGroepjes: true } : {} };
   return {};
+}
+
+// Invoer per vraag (I4d) in vaardigheden met gemengde antwoorden: de vraag zelf krijgt inputType en
+// inputConfig (resolveInput kijkt eerst naar de vraag), dus de klok- of duurinstelling van de vaardigheid
+// geldt dan niet. Herkenning alleen met de canonieke lezers van het nakijken (answerCheck.js):
+//   "getal": een geheel getal dat precies zo terug te schrijven is -> cijferblok;
+//   "duur":  een duur in de vorm van writeDuur -> [uren] u [minuten] min (t17: de tijdstippen houden klok).
+// Elke andere vraag houdt de invoer van haar vaardigheid.
+var PER_VRAAG = { t06: "getal", t09: "getal", t13: "getal", t35: "getal", t17: "duur" };
+
+function vraagInvoer(poolId, answer) {
+  var soort = PER_VRAAG[poolId];
+  if (soort === "getal") {
+    var w = readAnswerInteger(answer);
+    if (w !== null && writeAnswerInteger(w, answer) === answer) return { inputType: "number", inputConfig: {} };
+  }
+  if (soort === "duur" && readAnswerPair(answer, "duur") !== null) return { inputType: "pair", inputConfig: { tussen: "duur" } };
+  return null;
 }
 
 var RAW_SKILLS = DEFS.map(function(d) {
