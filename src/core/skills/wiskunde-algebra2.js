@@ -424,6 +424,8 @@ function tipOf(terms) { return terms && terms[0] ? terms[0] : ""; }
 var TYPEN = { aq17_discriminant: true, aq26_kwadratisch_verhaal: true };
 // Stelsels (I5b): het antwoord is "x = <geheel getal>, y = <geheel getal>"; twee vakjes x en y, elk met een teken
 var STELSEL = { aq21_stelsel_invullen: true, aq22_stelsel_substitutie: true, aq23_stelsel_optellen: true, aq24_stelsel_vermenigvuldigen: true };
+// Twee oplossingen (I5c): het antwoord is "x = <a> of x = <b>"; twee vakjes, elk met een teken, volgorde vrij
+var TWEE = { aq11_x_kwadraat_is: true, aq12_product_nul: true, aq13_x_buiten_haakjes: true, aq14_oplossen_ontbinden: true, aq15_getal_voor_x2: true, aq16_eerst_herleiden: true };
 
 var RAW_SKILLS = DEFS.map(function(d) {
   var key = d[0].slice(0, 4), gen = GEN[key], subs = d[8];
@@ -434,6 +436,7 @@ var RAW_SKILLS = DEFS.map(function(d) {
   };
   if (TYPEN[d[0]]) { skill.inputType = "number"; skill.inputConfig = { allowNegative: true }; }
   if (STELSEL[d[0]]) { skill.inputType = "pair"; skill.inputConfig = { tussen: "stelsel" }; }
+  if (TWEE[d[0]]) { skill.inputType = "pair"; skill.inputConfig = { tussen: "of" }; }
   return skill;
 });
 

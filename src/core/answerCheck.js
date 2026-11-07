@@ -319,11 +319,12 @@ export function writeAnswerFraction(f) {
 //   zoals tijd.js. Zie hieronder (KLOK_*): eigen regels voor uur en minuten.
 //   "duur" -> een tijdsduur in de vorm van writeDuur: "45\u00a0min", "2\u00a0uur", "1u30". Zie hieronder (DUUR_*).
 //   "stelsel" -> de oplossing van een stelsel: "x = 9, y = \u22126". Zie hieronder (STELSEL_*).
+//   "of" -> twee oplossingen van een vergelijking: "x = \u22125 of x = 1". Zie hieronder (OF_*).
 // Elk getal 1..PAIR_MAX_DIGITS cijfers, zonder voorloopnul en niet 0 (gemeten: in antwoorden en keuzes
 // van d27, d28, p20 en p23 hoogstens 2 cijfers en nooit 0). De volgorde telt: het eerste vak is het
-// eerste getal van het antwoord.
+// eerste getal van het antwoord. Uitzondering: bij "of" (twee oplossingen) is de volgorde vrij; zie OF_*.
 export var PAIR_MAX_DIGITS = 2;
-var PAIR_TUSSEN = { rest: " rest ", ":": "\u00a0:\u00a0", klok: ":", duur: "u", stelsel: ", " };
+var PAIR_TUSSEN = { rest: " rest ", ":": "\u00a0:\u00a0", klok: ":", duur: "u", stelsel: ", ", of: " of " };
 var PAIR_DEEL_RE = /^[1-9]\d*$/;
 
 function pairDeelOk(d) {
@@ -377,6 +378,28 @@ function stelselTekst(p) {
   return "x = " + writeAnswerInteger(Number(p.a), "") + ", y = " + writeAnswerInteger(Number(p.b), "");
 }
 
+// Twee oplossingen (tussen "of"): x = [a] of [b], de volgorde is vrij. Antwoord "x = \u22125 of x = 1": twee
+// verschillende gehele getallen, oplopend (gewone spaties, minteken U+2212, zoals writeAnswerInteger).
+//   1. valideren (parseTypedPair): elk vak leeg of een "-" en 1 of 2 cijfers ("05", "-05" mag); minstens een vak
+//      ingevuld. Twee lege vakken of alleen "-" is null. Een ingevuld vak mag: dat is een antwoord (altijd fout).
+//   2. normaliseren (writeAnswerPair): de ingevulde getallen oplopend, hetzelfde getal een keer ("-0" is 0);
+//      twee getallen -> "x = a of x = b", een getal -> "x = a" ("1|-5" -> "x = \u22125 of x = 1", "15|15" -> "x = 15").
+//   3. nakijken (grading.js, pair_exact): letterlijk gelijk aan het antwoord.
+// Het antwoord lezen accepteert alleen twee verschillende getallen, oplopend, in precies deze vorm.
+var OF_DEEL_RE = /^(-?\d{1,2})?$/;
+var OF_ANTWOORD_RE = /^x = (\u2212?\d+) of x = (\u2212?\d+)$/;
+function ofDelenOk(a, b) {
+  return typeof a === "string" && typeof b === "string" && OF_DEEL_RE.test(a) && OF_DEEL_RE.test(b) && (a !== "" || b !== "");
+}
+function ofTekst(p) {
+  var w = [];
+  [p.a, p.b].forEach(function(d) { if (d !== "") { var v = Number(d); w.push(v === 0 ? 0 : v); } });
+  w.sort(function(x, y) { return x - y; });
+  if (w.length === 2 && w[0] === w[1]) w.pop();
+  var t = "x = " + writeAnswerInteger(w[0], "");
+  return w.length === 2 ? t + " of x = " + writeAnswerInteger(w[1], "") : t;
+}
+
 // Het verwachte antwoord lezen (alleen precies de canonieke vorm van deze scheiding): { a, b }, anders null
 export function readAnswerPair(answer, tussen) {
   if (typeof answer !== "string" || !Object.prototype.hasOwnProperty.call(PAIR_TUSSEN, tussen)) return null;
@@ -398,6 +421,12 @@ export function readAnswerPair(answer, tussen) {
     var ps = { a: s[1].replace("\u2212", "-"), b: s[2].replace("\u2212", "-") };
     return stelselDelenOk(ps.a, ps.b) && stelselTekst(ps) === answer ? ps : null;
   }
+  if (tussen === "of") {
+    var o = OF_ANTWOORD_RE.exec(answer);
+    if (!o) return null;
+    var po = { a: o[1].replace("\u2212", "-"), b: o[2].replace("\u2212", "-") };
+    return ofDelenOk(po.a, po.b) && Number(po.a) < Number(po.b) && ofTekst(po) === answer ? po : null;
+  }
   var delen = answer.split(PAIR_TUSSEN[tussen]);
   if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
   return { a: delen[0], b: delen[1] };
@@ -405,7 +434,7 @@ export function readAnswerPair(answer, tussen) {
 
 // De ruwe invoer uit de twee vakjes lezen: altijd "a|b" (eerste vak, tweede vak). Elk deel
 // 1..PAIR_MAX_DIGITS cijfers, geen voorloopnul, niet 0. Anders null (niet nakijkbaar).
-// Bij tussen "klok", "duur" en "stelsel": de regels hierboven (stap 1); de delen blijven zoals getypt ("08", "05", "", "-5").
+// Bij tussen "klok", "duur", "stelsel" en "of": de regels hierboven (stap 1); de delen blijven zoals getypt ("08", "05", "", "-5").
 export function parseTypedPair(text, tussen) {
   if (typeof text !== "string") return null;
   var delen = text.split("|");
@@ -421,6 +450,10 @@ export function parseTypedPair(text, tussen) {
     if (delen.length !== 2 || !stelselDelenOk(delen[0], delen[1])) return null;
     return { a: delen[0], b: delen[1] };
   }
+  if (tussen === "of") {
+    if (delen.length !== 2 || !ofDelenOk(delen[0], delen[1])) return null;
+    return { a: delen[0], b: delen[1] };
+  }
   if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
   return { a: delen[0], b: delen[1] };
 }
@@ -431,6 +464,7 @@ export function writeAnswerPair(p, tussen) {
   if (tussen === "klok") return klokDelenOk(p.a, p.b) ? String(Number(p.a)) + ":" + p.b : null;
   if (tussen === "duur") return duurDelenOk(p.a, p.b) ? writeDuur(duurMinuten(p)) : null;
   if (tussen === "stelsel") return stelselDelenOk(p.a, p.b) ? stelselTekst(p) : null;
+  if (tussen === "of") return ofDelenOk(p.a, p.b) ? ofTekst(p) : null;
   return p.a + PAIR_TUSSEN[tussen] + p.b;
 }
 
@@ -452,7 +486,7 @@ var TYPE_HINT = {
   kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal en een breuk typ je in het breukvak. Vergelijken, schatten en fout spotten blijven kiezen.",
   wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief en een breuk typ je in het breukvak. Kommagetallen, procenten en keuzevragen blijven kiezen.",
   wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Bij invullen en bij een vergelijking oplossen (x = \u2026); herleiden, ongelijkheden en opstellen blijven kiezen.",
-  wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Bij de discriminant, een verhaal en een stelsel (x = \u2026, y = \u2026); de rest blijft kiezen.",
+  wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Bij de discriminant, een verhaal, een stelsel (x = \u2026, y = \u2026) en twee oplossingen (x = \u2026 of x = \u2026); de rest blijft kiezen.",
   wiskunde_meetkunde: "Je typt het getal met het cijferblok: graden, lengtes, oppervlaktes en inhouden (de eenheid staat al achter het vak; met , typ je een decimaal). Herkennen, fout spotten en schatten blijven kiezen.",
 };
 var TYPE_HINT_STANDAARD = "Je typt het antwoord met het cijferblok. Schatten en fout spotten blijven kiezen.";

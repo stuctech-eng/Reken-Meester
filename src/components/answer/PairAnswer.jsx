@@ -28,12 +28,15 @@ var DELEN  = ["a", "b"];
 // daarna het teken. Op het kleinste scherm (tiny) is de tussenruimte 6 in plaats van 10, zodat de rij ook met
 // "\u221248" in beide vakken op 320 px past. Alleen bij stelsel is er een tekentoets en die kleinere tussenruimte;
 // de andere scheidingen zijn precies zoals voorheen.
+// Twee oplossingen (tussen "of"): [\u2212/+] x = [a] of [b]. Precies als stelsel (teken per vak, tekentoets,
+// tussenruimte 6 op tiny); ✓ gaat al aan met een ingevuld vak (parseTypedPair), de volgorde is vrij.
 var LABELS = {
   rest: { a: "Uitkomst", b: "Rest", tussen: "rest" },
   ":":  { a: "Links",    b: "Rechts", tussen: ":" },
   klok: { a: "Uren",     b: "Minuten", tussen: ":", tijd: true },
   duur: { a: "Uren",     b: "Minuten", tussen: "u", na: "min", tijd: true },
   stelsel: { a: "x",     b: "y", voor: "x\u00a0=", tussen: "y\u00a0=", teken: true },
+  of:      { a: "Eerste oplossing", b: "Tweede oplossing", voor: "x\u00a0=", tussen: "of", teken: true },
 };
 
 var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled, tussen, onSubmit }, ref) {
