@@ -318,11 +318,12 @@ export function writeAnswerFraction(f) {
 //   "klok" -> een kloktijd op 24 uur: "8:05", "14:30", "0:30" (uur zonder voorloopnul, minuten 2 cijfers),
 //   zoals tijd.js. Zie hieronder (KLOK_*): eigen regels voor uur en minuten.
 //   "duur" -> een tijdsduur in de vorm van writeDuur: "45\u00a0min", "2\u00a0uur", "1u30". Zie hieronder (DUUR_*).
+//   "stelsel" -> de oplossing van een stelsel: "x = 9, y = \u22126". Zie hieronder (STELSEL_*).
 // Elk getal 1..PAIR_MAX_DIGITS cijfers, zonder voorloopnul en niet 0 (gemeten: in antwoorden en keuzes
 // van d27, d28, p20 en p23 hoogstens 2 cijfers en nooit 0). De volgorde telt: het eerste vak is het
 // eerste getal van het antwoord.
 export var PAIR_MAX_DIGITS = 2;
-var PAIR_TUSSEN = { rest: " rest ", ":": "\u00a0:\u00a0", klok: ":", duur: "u" };
+var PAIR_TUSSEN = { rest: " rest ", ":": "\u00a0:\u00a0", klok: ":", duur: "u", stelsel: ", " };
 var PAIR_DEEL_RE = /^[1-9]\d*$/;
 
 function pairDeelOk(d) {
@@ -361,6 +362,21 @@ export function writeDuur(minuten) {
   return Math.floor(minuten / 60) + "u" + (m < 10 ? "0" + m : String(m));
 }
 
+// Stelsel (tussen "stelsel"): [x] en [y], elk met een eigen teken. Antwoord "x = 9, y = \u22126" (gewone spaties,
+// een komma, minteken U+2212, de getallen zoals writeAnswerInteger).
+//   1. valideren (parseTypedPair): elk vak een "-" (het teken) en 1 of 2 cijfers ("05" en "-05" mag); beide
+//      ingevuld. Leeg of alleen "-" is null.
+//   2. normaliseren (writeAnswerPair): "x = " + getal + ", y = " + getal ("05" -> 5, "-0" -> 0).
+//   3. nakijken (grading.js, pair_exact): letterlijk gelijk aan het antwoord (x en y verwisseld is fout).
+var STELSEL_DEEL_RE = /^-?\d{1,2}$/;
+var STELSEL_ANTWOORD_RE = /^x = (\u2212?\d+), y = (\u2212?\d+)$/;
+function stelselDelenOk(a, b) {
+  return typeof a === "string" && typeof b === "string" && STELSEL_DEEL_RE.test(a) && STELSEL_DEEL_RE.test(b);
+}
+function stelselTekst(p) {
+  return "x = " + writeAnswerInteger(Number(p.a), "") + ", y = " + writeAnswerInteger(Number(p.b), "");
+}
+
 // Het verwachte antwoord lezen (alleen precies de canonieke vorm van deze scheiding): { a, b }, anders null
 export function readAnswerPair(answer, tussen) {
   if (typeof answer !== "string" || !Object.prototype.hasOwnProperty.call(PAIR_TUSSEN, tussen)) return null;
@@ -376,6 +392,12 @@ export function readAnswerPair(answer, tussen) {
     var p = { a: String(Math.floor(tot / 60)), b: String(tot % 60) };
     return duurDelenOk(p.a, p.b) && writeDuur(tot) === answer ? p : null;
   }
+  if (tussen === "stelsel") {
+    var s = STELSEL_ANTWOORD_RE.exec(answer);
+    if (!s) return null;
+    var ps = { a: s[1].replace("\u2212", "-"), b: s[2].replace("\u2212", "-") };
+    return stelselDelenOk(ps.a, ps.b) && stelselTekst(ps) === answer ? ps : null;
+  }
   var delen = answer.split(PAIR_TUSSEN[tussen]);
   if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
   return { a: delen[0], b: delen[1] };
@@ -383,7 +405,7 @@ export function readAnswerPair(answer, tussen) {
 
 // De ruwe invoer uit de twee vakjes lezen: altijd "a|b" (eerste vak, tweede vak). Elk deel
 // 1..PAIR_MAX_DIGITS cijfers, geen voorloopnul, niet 0. Anders null (niet nakijkbaar).
-// Bij tussen "klok" en "duur": de regels hierboven (stap 1); de delen blijven zoals getypt ("08", "05", "").
+// Bij tussen "klok", "duur" en "stelsel": de regels hierboven (stap 1); de delen blijven zoals getypt ("08", "05", "", "-5").
 export function parseTypedPair(text, tussen) {
   if (typeof text !== "string") return null;
   var delen = text.split("|");
@@ -395,6 +417,10 @@ export function parseTypedPair(text, tussen) {
     if (delen.length !== 2 || !duurDelenOk(delen[0], delen[1])) return null;
     return { a: delen[0], b: delen[1] };
   }
+  if (tussen === "stelsel") {
+    if (delen.length !== 2 || !stelselDelenOk(delen[0], delen[1])) return null;
+    return { a: delen[0], b: delen[1] };
+  }
   if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
   return { a: delen[0], b: delen[1] };
 }
@@ -404,6 +430,7 @@ export function writeAnswerPair(p, tussen) {
   if (!p || !Object.prototype.hasOwnProperty.call(PAIR_TUSSEN, tussen)) return null;
   if (tussen === "klok") return klokDelenOk(p.a, p.b) ? String(Number(p.a)) + ":" + p.b : null;
   if (tussen === "duur") return duurDelenOk(p.a, p.b) ? writeDuur(duurMinuten(p)) : null;
+  if (tussen === "stelsel") return stelselDelenOk(p.a, p.b) ? stelselTekst(p) : null;
   return p.a + PAIR_TUSSEN[tussen] + p.b;
 }
 
@@ -425,7 +452,7 @@ var TYPE_HINT = {
   kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal en een breuk typ je in het breukvak. Vergelijken, schatten en fout spotten blijven kiezen.",
   wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief en een breuk typ je in het breukvak. Kommagetallen, procenten en keuzevragen blijven kiezen.",
   wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Bij invullen en bij een vergelijking oplossen (x = \u2026); herleiden, ongelijkheden en opstellen blijven kiezen.",
-  wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij de discriminant en een verhaal; de rest blijft kiezen.",
+  wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Bij de discriminant, een verhaal en een stelsel (x = \u2026, y = \u2026); de rest blijft kiezen.",
   wiskunde_meetkunde: "Je typt het getal met het cijferblok: graden, lengtes, oppervlaktes en inhouden (de eenheid staat al achter het vak; met , typ je een decimaal). Herkennen, fout spotten en schatten blijven kiezen.",
 };
 var TYPE_HINT_STANDAARD = "Je typt het antwoord met het cijferblok. Schatten en fout spotten blijven kiezen.";

@@ -22,11 +22,18 @@ var DELEN  = ["a", "b"];
 // Kloktijd (tussen "klok"): [uren] : [minuten]; tijdsduur (tussen "duur"): [uren] u [minuten] min.
 // Bij beide blijft een 0 staan ("08", "05", "0"), elk vak hoogstens 2 cijfers, en ✓ gaat alleen aan als
 // parseTypedPair de invoer geldig vindt (dezelfde regel als het nakijken; bij duur mag één vak leeg).
+// Stelsel (tussen "stelsel"): [\u2212/+] x = [x] y = [y]. Hetzelfde als klok en duur (0 blijft staan, 2 cijfers,
+// ✓ via parseTypedPair), plus een teken per vak: de toets "\u2212/+" draait het teken van het actieve vak om
+// (aria-pressed = het actieve vak is negatief); getoond als echt minteken. Wissen haalt eerst de cijfers weg,
+// daarna het teken. Op het kleinste scherm (tiny) is de tussenruimte 6 in plaats van 10, zodat de rij ook met
+// "\u221248" in beide vakken op 320 px past. Alleen bij stelsel is er een tekentoets en die kleinere tussenruimte;
+// de andere scheidingen zijn precies zoals voorheen.
 var LABELS = {
   rest: { a: "Uitkomst", b: "Rest", tussen: "rest" },
   ":":  { a: "Links",    b: "Rechts", tussen: ":" },
   klok: { a: "Uren",     b: "Minuten", tussen: ":", tijd: true },
   duur: { a: "Uren",     b: "Minuten", tussen: "u", na: "min", tijd: true },
+  stelsel: { a: "x",     b: "y", voor: "x\u00a0=", tussen: "y\u00a0=", teken: true },
 };
 
 var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled, tussen, onSubmit }, ref) {
@@ -42,17 +49,18 @@ var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled,
   var setActief   = actiefState[1];
 
   var uit = !!(disabled || feedback);
+  var regels = !!(lab.tijd || lab.teken);
 
   function deelOk(d) { return d !== "" && Number(d) !== 0; }
-  var geldig = lab.tijd ? parseTypedPair(waarde.a + "|" + waarde.b, tussen) !== null : deelOk(waarde.a) && deelOk(waarde.b);
+  var geldig = regels ? parseTypedPair(waarde.a + "|" + waarde.b, tussen) !== null : deelOk(waarde.a) && deelOk(waarde.b);
 
   function cijfer(d) {
     if (uit) return;
     setWaarde(function(w) {
       var oud = w[actief];
-      if (lab.tijd ? oud.length >= 2 : (oud.length >= PAIR_MAX_DIGITS && oud !== "0")) return w;
+      if (regels ? oud.replace("-", "").length >= 2 : (oud.length >= PAIR_MAX_DIGITS && oud !== "0")) return w;
       var nieuw = { a: w.a, b: w.b };
-      nieuw[actief] = (oud === "0" && !lab.tijd) ? d : oud + d;
+      nieuw[actief] = (oud === "0" && !regels) ? d : oud + d;
       return nieuw;
     });
   }
@@ -66,6 +74,15 @@ var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled,
     setWaarde(function(w) {
       var nieuw = { a: w.a, b: w.b };
       nieuw[actief] = w[actief].slice(0, -1);
+      return nieuw;
+    });
+  }
+  function wisselTeken() {
+    if (uit) return;
+    setWaarde(function(w) {
+      var nieuw = { a: w.a, b: w.b };
+      var oud = w[actief];
+      nieuw[actief] = oud.charAt(0) === "-" ? oud.slice(1) : "-" + oud;
       return nieuw;
     });
   }
@@ -108,7 +125,7 @@ var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled,
           WebkitUserSelect: "none",
         }}
       >
-        {waarde[deel]}
+        {lab.teken ? waarde[deel].replace("-", "\u2212") : waarde[deel]}
       </button>
     );
   }
@@ -119,7 +136,7 @@ var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 10,
+        gap: lab.teken && tiny ? 6 : 10,
         padding: tiny ? 6 : 8,
         borderRadius: A.r16,
         border: "2.5px solid " + (
@@ -130,6 +147,46 @@ var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled,
         background: feedback === "correct" ? A.successBg : feedback === "wrong" ? A.errorBg : A.bgCard,
         boxShadow: feedback ? "none" : A.shadow,
       }}>
+        {lab.teken && (
+          <button
+            type="button"
+            aria-label="Teken wisselen"
+            aria-pressed={waarde[actief].charAt(0) === "-"}
+            disabled={uit}
+            onClick={wisselTeken}
+            style={{
+              width: 44,
+              height: 44,
+              flexShrink: 0,
+              borderRadius: A.r12,
+              border: "2px solid " + A.border,
+              background: waarde[actief].charAt(0) === "-" && !uit ? A.primary : A.bgCard,
+              color: waarde[actief].charAt(0) === "-" && !uit ? "#ffffff" : A.text,
+              fontSize: 18,
+              fontWeight: 900,
+              letterSpacing: 0,
+              cursor: uit ? "default" : "pointer",
+              opacity: feedback ? 0.5 : 1,
+              WebkitTapHighlightColor: "transparent",
+              touchAction: "manipulation",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+            }}
+          >
+            {"\u2212/+"}
+          </button>
+        )}
+        {lab.voor && (
+          <span aria-hidden="true" style={{
+            color: kleur,
+            fontSize: Math.round(letter * 0.7),
+            fontWeight: 900,
+            userSelect: "none",
+            WebkitUserSelect: "none",
+          }}>
+            {lab.voor}
+          </span>
+        )}
         {vak("a")}
         <span aria-hidden="true" style={{
           color: kleur,

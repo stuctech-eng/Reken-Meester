@@ -422,6 +422,8 @@ function tipOf(terms) { return terms && terms[0] ? terms[0] : ""; }
 // terwijl de keuzes er één tonen. De invoer en het nakijken staan in inputResolve.js en grading.js;
 // de vragen zelf veranderen niet. Alle andere vaardigheden blijven kiezen.
 var TYPEN = { aq17_discriminant: true, aq26_kwadratisch_verhaal: true };
+// Stelsels (I5b): het antwoord is "x = <geheel getal>, y = <geheel getal>"; twee vakjes x en y, elk met een teken
+var STELSEL = { aq21_stelsel_invullen: true, aq22_stelsel_substitutie: true, aq23_stelsel_optellen: true, aq24_stelsel_vermenigvuldigen: true };
 
 var RAW_SKILLS = DEFS.map(function(d) {
   var key = d[0].slice(0, 4), gen = GEN[key], subs = d[8];
@@ -431,6 +433,7 @@ var RAW_SKILLS = DEFS.map(function(d) {
     make: function(s) { return retry(function() { return gen(s || 0); }); },
   };
   if (TYPEN[d[0]]) { skill.inputType = "number"; skill.inputConfig = { allowNegative: true }; }
+  if (STELSEL[d[0]]) { skill.inputType = "pair"; skill.inputConfig = { tussen: "stelsel" }; }
   return skill;
 });
 
