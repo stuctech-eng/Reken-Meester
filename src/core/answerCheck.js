@@ -148,6 +148,25 @@ export function writeAnswerInteger(value, answer) {
   return (value < 0 ? "\u2212" : "") + s;
 }
 
+// Een geheel getal met een letter ervoor (oplossing van een vergelijking): "x = 4", "x = \u22125".
+// inputConfig.letter is een kleine letter; daarna " = " (gewone spaties) en het getal in de notatie van
+// writeAnswerInteger. Lezen accepteert alleen precies die vorm ("x = \u22120", "x = 04", "x=4", "x = 4,5",
+// "y = 4" bij letter x geven null); de invoer zelf wordt gelezen zoals altijd (parseTypedSigned).
+var LETTER_RE = /^[a-z]$/;
+export function readAnswerLetterInteger(answer, letter) {
+  if (typeof answer !== "string" || typeof letter !== "string" || !LETTER_RE.test(letter)) return null;
+  var voor = letter + " = ";
+  if (answer.slice(0, voor.length) !== voor) return null;
+  var rest = answer.slice(voor.length);
+  var w = readAnswerInteger(rest);
+  if (w === null || writeAnswerInteger(w, rest) !== rest) return null;
+  return w;
+}
+export function writeAnswerLetterInteger(value, letter) {
+  if (typeof letter !== "string" || !LETTER_RE.test(letter)) return null;
+  return letter + " = " + writeAnswerInteger(value, "");
+}
+
 // ── Kommagetallen (exact: een geheel getal met een schaal, nooit een JavaScript-kommagetal) ──
 // Een decimaal getal is { m, s }: m = alle cijfers als geheel getal, s = aantal decimalen.
 // "0,55" -> { m: 55, s: 2 }; "8,0" -> { m: 80, s: 1 }; "7" -> { m: 7, s: 0 }.
@@ -405,7 +424,7 @@ var TYPE_HINT = {
   reizen:            "Je typt afstanden, snelheden, liters en bedragen met het cijferblok. Tijden, schatten en fout spotten blijven kiezen.",
   kommagetallen:     "Je typt het antwoord met het cijferblok; met , typ je een kommagetal en een breuk typ je in het breukvak. Vergelijken, schatten en fout spotten blijven kiezen.",
   wiskunde_getallen: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief en een breuk typ je in het breukvak. Kommagetallen, procenten en keuzevragen blijven kiezen.",
-  wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij invullen; vergelijkingen en vereenvoudigen blijven kiezen.",
+  wiskunde_algebra:  "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Bij invullen en bij een vergelijking oplossen (x = \u2026); herleiden, ongelijkheden en opstellen blijven kiezen.",
   wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Alleen bij de discriminant en een verhaal; de rest blijft kiezen.",
   wiskunde_meetkunde: "Je typt het getal met het cijferblok: graden, lengtes, oppervlaktes en inhouden (de eenheid staat al achter het vak; met , typ je een decimaal). Herkennen, fout spotten en schatten blijven kiezen.",
 };

@@ -11,7 +11,7 @@
 // als iets anders behandeld: dan is het Kiezen.
 
 import { getSkillList } from "./subjects.js";
-import { typingAvailable, canTypeQuestion, readAnswerInteger, writeAnswerInteger, readAnswerDecimal, writeAnswerDecimal, readAnswerMoney, writeAnswerMoney, readAnswerPercent, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, readAnswerFraction, writeAnswerFraction, FRACTION_MAX_DIGITS, readAnswerPair, writeAnswerPair, TYPE_MAX_DIGITS } from "./answerCheck.js";
+import { typingAvailable, canTypeQuestion, readAnswerInteger, writeAnswerInteger, readAnswerLetterInteger, readAnswerDecimal, writeAnswerDecimal, readAnswerMoney, writeAnswerMoney, readAnswerPercent, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, readAnswerFraction, writeAnswerFraction, FRACTION_MAX_DIGITS, readAnswerPair, writeAnswerPair, TYPE_MAX_DIGITS } from "./answerCheck.js";
 
 // Wat het oefenscherm nu kan: typen met het cijferblok (number) en de vier keuzes (choice),
 // elk met de nakijkregel die erbij hoort. Een andere combinatie kan niet worden nagekeken.
@@ -74,9 +74,11 @@ export function resolveInput(subjectId, skillId, question) {
   // Getypt antwoord moet ook nagekeken kunnen worden: het verwachte antwoord is een geheel getal
   // dat precies zo terug te schrijven is (dan is een goed getypt antwoord letterlijk gelijk aan
   // answer), met hoogstens TYPE_MAX_DIGITS cijfers, en negatief alleen met allowNegative
+  // Met inputConfig.letter is het antwoord "x = 4" (readAnswerLetterInteger: alleen precies die vorm).
   if (r.inputType === "number") {
-    var w = readAnswerInteger(question.answer);
-    if (w === null || writeAnswerInteger(w, question.answer) !== question.answer) return metBron(KIEZEN, "terugval");
+    var letter = r.inputConfig.letter;
+    var w = letter !== undefined ? readAnswerLetterInteger(question.answer, letter) : readAnswerInteger(question.answer);
+    if (w === null || (letter === undefined && writeAnswerInteger(w, question.answer) !== question.answer)) return metBron(KIEZEN, "terugval");
     if (String(Math.abs(w)).length > TYPE_MAX_DIGITS) return metBron(KIEZEN, "terugval");
     if (w < 0 && !r.inputConfig.allowNegative) return metBron(KIEZEN, "terugval");
   }

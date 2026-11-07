@@ -9,13 +9,15 @@
 //           alleen typen toelaat als answer precies zo terug te schrijven is, geldt: goed <=> waarde === answer.
 // De verwerking daarna (feedback, voortgang) blijft in het oefenscherm (handleChoice).
 
-import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, parseTypedFraction, writeAnswerFraction, parseTypedPair, readAnswerPair, writeAnswerPair } from "./answerCheck.js";
+import { parseTypedInteger, parseTypedSigned, writeAnswerInteger, writeAnswerLetterInteger, parseTypedDecimal, writeAnswerDecimal, writeAnswerMoney, writeAnswerPercent, readAnswerQuantity, writeAnswerQuantity, quantityMaxDecimals, parseTypedFraction, writeAnswerFraction, parseTypedPair, readAnswerPair, writeAnswerPair } from "./answerCheck.js";
 
 export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
   if (gradingRule === "numeric_equal") {
     var getal = parseTypedSigned(invoer, !!(inputConfig && inputConfig.allowNegative));
     if (getal === null) return { geldig: false, goed: false, waarde: null };
-    var waarde = writeAnswerInteger(getal, vraag.answer);
+    // Met inputConfig.letter de vorm "x = 4" (zoals het antwoord van een vergelijking)
+    var waarde = (inputConfig && inputConfig.letter !== undefined) ? writeAnswerLetterInteger(getal, inputConfig.letter) : writeAnswerInteger(getal, vraag.answer);
+    if (waarde === null) return { geldig: false, goed: false, waarde: null };
     return { geldig: true, goed: waarde === vraag.answer, waarde: waarde };
   }
   // Kommagetal: exact (geheel getal met schaal). Waarde gelijk ("0,50" = "0,5"), of bij afronden ook

@@ -583,6 +583,8 @@ function tipOf(terms) { return terms && terms[0] ? terms[0] : ""; }
 // negatief. al17 (welke x past) blijft kiezen: het is een controlevraag. De invoer en het nakijken staan in inputResolve.js en grading.js;
 // de vragen zelf veranderen niet. Alle andere vaardigheden blijven kiezen.
 var TYPEN = { al02_invullen: true, al03_invullen_negatief: true, al04_twee_letters: true, al26_formule_invullen: true };
+// Vergelijking oplossen (I5a): het antwoord is "x = <geheel getal>"; typen met "x = " voor het getal en de tekentoets
+var OPLOSSEN = { al18_een_stap: true, al19_twee_stappen: true, al20_negatief: true, al21_beide_kanten: true, al22_met_haakjes: true, al23_met_breuk: true };
 
 var RAW_SKILLS = DEFS.map(function(d) {
   var key = d[0].slice(0, 4), gen = GEN[key], subs = d[8];
@@ -592,6 +594,7 @@ var RAW_SKILLS = DEFS.map(function(d) {
     make: function(s) { return retry(function() { return gen(s || 0); }); },
   };
   if (TYPEN[d[0]]) { skill.inputType = "number"; skill.inputConfig = { allowNegative: true }; }
+  if (OPLOSSEN[d[0]]) { skill.inputType = "number"; skill.inputConfig = { allowNegative: true, letter: "x" }; }
   return skill;
 });
 
