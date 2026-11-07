@@ -16,6 +16,8 @@ import VraagFiguur, { bekendeVraagFiguur, heeftOnderschrift, VF_ONDER_H } from "
 
 // Tekening bij de vraag (TK2): minstens en hoogstens zo hoog (px) tussen de vraag en het antwoord
 var FIG_MIN = 100, FIG_MAX = 160;
+// Omgedraaide vraagkaart (TK3): rand binnen de kaart (px) en de kleinste hoogte van de tekening daarin
+var KAART_RAND = 4, KAART_FIG_MIN = 84;
 
 // Sessievoorwaarden voor een level (zelfde regel als meetsMastery in subjects.js):
 // minstens SESSION_MIN sommen van deze skill in de sessie en minstens SESSION_ACC goed.
@@ -180,6 +182,17 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var figPlek     = figState[0];
   var setFigPlek  = figState[1];
 
+  // Vraagkaart omdraaien (TK3): staat de tekening niet in de vraag (figPlek "knop" of "venster"), dan toont
+  // een tik op de vraagkaart de tekening op dezelfde plek. kaartMaat: de gemeten hoogte van de kaart (px, met breuken),
+  // die tijdens het omdraaien vast blijft; kaartOm: de kaart toont de tekening. Terug naar de vraag bij een
+  // antwoord, een nieuwe vraag en een andere schermgrootte.
+  var kaartMaatState = useState(null);
+  var kaartMaat      = kaartMaatState[0];
+  var setKaartMaat   = kaartMaatState[1];
+  var kaartOmState   = useState(false);
+  var kaartOm        = kaartOmState[0];
+  var setKaartOm     = kaartOmState[1];
+
   var luDataState   = useState(null);
   var levelUpData   = luDataState[0];
   var setLevelUpData = luDataState[1];
@@ -277,6 +290,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setTyped("");
     setTypeFit(null);
     setFigPlek(null);
+    setKaartMaat(null);
+    setKaartOm(false);
     setFeedback(null);
     setFbLevel(0);
     setUitlegVisible(false);
@@ -644,7 +659,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
 
   // Andere schermgrootte (draaien, venster): opnieuw bepalen
   useEffect(function() {
-    function reset() { setTypeFit(null); setFigPlek(null); }
+    function reset() { setTypeFit(null); setFigPlek(null); setKaartMaat(null); setKaartOm(false); }
     window.addEventListener("resize", reset);
     return function() { window.removeEventListener("resize", reset); };
   }, []);
@@ -692,6 +707,26 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     else setFigPlek(vrij - naAntwoord - tussen - 8 >= 48 ? "knop" : "venster");
     return undefined;
   }, [currentQuestion, qFont, typeFit, typeAllowed, feedback, tiny, compact, figPlek]);
+
+  // Vraagkaart omdraaien (TK3): de hoogte van de kaart meten zodra vaststaat dat de tekening niet in de vraag
+  // staat. Alleen lezen; typeFit en figPlek blijven onaangeroerd. Past er geen tekening van minstens 84 px in
+  // (kaart min rand en rand, min de regel "niet op schaal"), dan kan de kaart niet om (0).
+  useLayoutEffect(function() {
+    if (kaartMaat !== null || feedback || !(figPlek === "knop" || figPlek === "venster")) return undefined;
+    var kaart = qRef.current && qRef.current.parentElement;
+    if (!kaart) return undefined;
+    var h = kaart.getBoundingClientRect().height;   // met breuken: zo verschuift er bij het vastzetten niets
+    var ruimte = h - 2 * KAART_RAND - 4 - (heeftOnderschrift(currentQuestion.figuur) ? VF_ONDER_H : 0);
+    setKaartMaat(ruimte >= KAART_FIG_MIN ? h : 0);
+    return undefined;
+  }, [figPlek, kaartMaat, feedback, currentQuestion]);
+  // Na het antwoorden (goed of fout) staat de kaart weer op de vraag, vóór het tekenen
+  useLayoutEffect(function() {
+    if (feedback && kaartOm) setKaartOm(false);
+    return undefined;
+  }, [feedback, kaartOm]);
+  var kanOm = !!kaartMaat && !feedback;
+  function draaiKaart() { if (kanOm) setKaartOm(!kaartOm); }
 
   // ── Render ────────────────────────────────────────────────────
   return (
@@ -821,8 +856,28 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         WebkitOverflowScrolling: "touch",
       }}>
 
-        {/* Vraagkaart */}
-        <div style={{
+        {/* Vraagkaart. Met een tekening die niet in de vraag past (TK3) is de kaart een knop: tik, Enter of
+            spatie toont de tekening op dezelfde plek, met precies dezelfde hoogte (kaartMaat, vast). */}
+        <div
+          role={kanOm ? "button" : undefined}
+          tabIndex={kanOm ? 0 : undefined}
+          aria-pressed={kanOm ? kaartOm : undefined}
+          aria-label={kanOm ? (kaartOm ? "Vraag tonen" : "Tekening tonen") : undefined}
+          onClick={kanOm ? draaiKaart : undefined}
+          onKeyDown={kanOm ? function(e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); draaiKaart(); } } : undefined}
+          style={kanOm ? {
+          background: A.bgCard,
+          borderRadius: A.r20,
+          padding: kaartOm ? KAART_RAND : tiny ? "14px 12px 12px" : compact ? "20px 16px 18px" : "36px 24px 28px",
+          textAlign: "center",
+          boxShadow: A.shadowMd,
+          border: "2px solid " + A.border,
+          position: "relative",
+          boxSizing: "border-box",
+          height: kaartOm ? kaartMaat : undefined,
+          cursor: "pointer",
+          WebkitTapHighlightColor: "transparent",
+        } : {
           background: A.bgCard,
           borderRadius: A.r20,
           padding: tiny ? "14px 12px 12px" : compact ? "20px 16px 18px" : "36px 24px 28px",
@@ -836,9 +891,20 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           transition: "border-color 0.2s",
         }}>
 
+          {/* Omgedraaid (TK3): de tekening, zo hoog als de kaart min de rand; de vraag blijft verborgen staan */}
+          {kanOm && kaartOm && (
+            <VraagFiguur figuur={currentQuestion.figuur} hoogte={kaartMaat - 2 * KAART_RAND - 4 - (heeftOnderschrift(currentQuestion.figuur) ? VF_ONDER_H : 0)} />
+          )}
+          {kanOm && (
+            <span aria-hidden="true" style={{ position: "absolute", top: 3, right: 10, fontSize: 11, fontWeight: 800, color: A.primary, opacity: 0.8, pointerEvents: "none" }}>
+              {kaartOm ? "↩ vraag" : "📐 tik"}
+            </span>
+          )}
+
           {/* Strategie label (voor antwoord) */}
           {currentSkill && currentSkill.strategy && !feedback && (
             <div style={{
+              display: kaartOm ? "none" : undefined,
               fontSize: 10,
               fontWeight: 800,
               color: A.primary,
@@ -854,7 +920,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           {/* De som — een kolomsom (regels met alleen getallen): regels rechts uitgelijnd, cijfers
               even breed, streep onder de laatste regel. Andere vragen met regeleinden (plaatje +
               vraag): gecentreerd, zonder streep. Zonder regeleinde: ongewijzigd. */}
-          <div ref={qRef} style={isMultiLineQuestion && !isColumnSum ? {
+          <div ref={qRef} style={kaartOm ? { display: "none" } : isMultiLineQuestion && !isColumnSum ? {
             fontSize: qFont || 44,
             fontWeight: 900,
             color: A.text,
@@ -905,29 +971,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           )}
         </div>
 
-        {/* Tekening bij de vraag (TK2): alleen als hij past (figPlek), anders een knop naar het 💡-venster */}
+        {/* Tekening bij de vraag (TK2): alleen als hij past (figPlek); anders draait de vraagkaart om (TK3) */}
         {figPlek && figPlek.h && (
           <VraagFiguur figuur={currentQuestion.figuur} hoogte={figPlek.h} />
-        )}
-        {figPlek === "knop" && (
-          <button
-            type="button"
-            onClick={function() { setHelpOpen(true); }}
-            style={{
-              minHeight: 48,
-              padding: "10px 16px",
-              background: A.bgCard,
-              border: "1.5px solid " + A.border,
-              borderRadius: A.r16,
-              fontSize: T.sm,
-              fontWeight: 800,
-              color: A.primary,
-              cursor: "pointer",
-              WebkitTapHighlightColor: "transparent",
-            }}
-          >
-            {"📐 Tekening bij deze vraag"}
-          </button>
         )}
 
         {/* Antwoordgebied: cijferblok als deze vraag getypt wordt, anders de vier keuzes */}
