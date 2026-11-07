@@ -19,12 +19,14 @@ import { PAIR_MAX_DIGITS, parseTypedPair } from "../../core/answerCheck.js";
 // terugkomt. De ref wijst naar de omhullende div, met een knop "Controleer" (meting "Passend cijferblok").
 
 var DELEN  = ["a", "b"];
-// Kloktijd (tussen "klok"): [uren] : [minuten]; een 0 blijft staan ("08", "05", "0"), elk vak hoogstens
-// 2 cijfers, en ✓ alleen bij een geldige tijd (parseTypedPair: uur 0..23, minuten precies 2 cijfers).
+// Kloktijd (tussen "klok"): [uren] : [minuten]; tijdsduur (tussen "duur"): [uren] u [minuten] min.
+// Bij beide blijft een 0 staan ("08", "05", "0"), elk vak hoogstens 2 cijfers, en ✓ gaat alleen aan als
+// parseTypedPair de invoer geldig vindt (dezelfde regel als het nakijken; bij duur mag één vak leeg).
 var LABELS = {
   rest: { a: "Uitkomst", b: "Rest", tussen: "rest" },
   ":":  { a: "Links",    b: "Rechts", tussen: ":" },
-  klok: { a: "Uren",     b: "Minuten", tussen: ":", klok: true },
+  klok: { a: "Uren",     b: "Minuten", tussen: ":", tijd: true },
+  duur: { a: "Uren",     b: "Minuten", tussen: "u", na: "min", tijd: true },
 };
 
 var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled, tussen, onSubmit }, ref) {
@@ -42,15 +44,15 @@ var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled,
   var uit = !!(disabled || feedback);
 
   function deelOk(d) { return d !== "" && Number(d) !== 0; }
-  var geldig = lab.klok ? parseTypedPair(waarde.a + "|" + waarde.b, "klok") !== null : deelOk(waarde.a) && deelOk(waarde.b);
+  var geldig = lab.tijd ? parseTypedPair(waarde.a + "|" + waarde.b, tussen) !== null : deelOk(waarde.a) && deelOk(waarde.b);
 
   function cijfer(d) {
     if (uit) return;
     setWaarde(function(w) {
       var oud = w[actief];
-      if (lab.klok ? oud.length >= 2 : (oud.length >= PAIR_MAX_DIGITS && oud !== "0")) return w;
+      if (lab.tijd ? oud.length >= 2 : (oud.length >= PAIR_MAX_DIGITS && oud !== "0")) return w;
       var nieuw = { a: w.a, b: w.b };
-      nieuw[actief] = (oud === "0" && !lab.klok) ? d : oud + d;
+      nieuw[actief] = (oud === "0" && !lab.tijd) ? d : oud + d;
       return nieuw;
     });
   }
@@ -139,6 +141,17 @@ var PairAnswer = forwardRef(function PairAnswer({ size, fit, feedback, disabled,
           {lab.tussen}
         </span>
         {vak("b")}
+        {lab.na && (
+          <span aria-hidden="true" style={{
+            color: kleur,
+            fontSize: Math.round(letter * 0.7),
+            fontWeight: 900,
+            userSelect: "none",
+            WebkitUserSelect: "none",
+          }}>
+            {lab.na}
+          </span>
+        )}
       </div>
       {!feedback && (
         <Keypad

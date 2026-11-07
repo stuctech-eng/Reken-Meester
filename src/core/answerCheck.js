@@ -293,16 +293,17 @@ export function writeAnswerFraction(f) {
   return g === "" ? b : g + " " + b;
 }
 
-// ── Twee getallen (deling met rest, verhouding, kloktijd) ──────────────────────────────
+// ── Twee getallen (deling met rest, verhouding, kloktijd, tijdsduur) ──────────────────
 // Een paar is tekst met twee gehele getallen en een vaste scheiding (inputConfig.tussen):
 //   "rest" -> "12 rest 6" (gewone spaties), ":" -> "3\u00a0:\u00a04" (vaste spaties), zoals de generatoren.
 //   "klok" -> een kloktijd op 24 uur: "8:05", "14:30", "0:30" (uur zonder voorloopnul, minuten 2 cijfers),
 //   zoals tijd.js. Zie hieronder (KLOK_*): eigen regels voor uur en minuten.
+//   "duur" -> een tijdsduur in de vorm van writeDuur: "45\u00a0min", "2\u00a0uur", "1u30". Zie hieronder (DUUR_*).
 // Elk getal 1..PAIR_MAX_DIGITS cijfers, zonder voorloopnul en niet 0 (gemeten: in antwoorden en keuzes
 // van d27, d28, p20 en p23 hoogstens 2 cijfers en nooit 0). De volgorde telt: het eerste vak is het
 // eerste getal van het antwoord.
 export var PAIR_MAX_DIGITS = 2;
-var PAIR_TUSSEN = { rest: " rest ", ":": "\u00a0:\u00a0", klok: ":" };
+var PAIR_TUSSEN = { rest: " rest ", ":": "\u00a0:\u00a0", klok: ":", duur: "u" };
 var PAIR_DEEL_RE = /^[1-9]\d*$/;
 
 function pairDeelOk(d) {
@@ -320,6 +321,27 @@ function klokDelenOk(a, b) {
   return typeof a === "string" && typeof b === "string" && KLOK_UUR_RE.test(a) && Number(a) <= 23 && KLOK_MIN_RE.test(b) && Number(b) <= 59;
 }
 
+// Tijdsduur (tussen "duur"): [uren] u [minuten] min. Eén schrijfwijze, ook voor de vragen (tijd.js):
+// korter dan een uur "45\u00a0min", hele uren "2\u00a0uur", anders uren + "u" + minuten in 2 cijfers ("1u05").
+//   1. valideren (parseTypedPair): elk vak leeg of 1 of 2 cijfers ("05" mag); minuten hoogstens 59;
+//      een leeg vak telt als 0; samen meer dan 0. Ongeldig is null (0 uur 90 min is niet in te leveren).
+//   2. normaliseren (writeAnswerPair): het totaal in minuten, geschreven met writeDuur ("01"+"05" -> "1u05",
+//      ""+"45" -> "45\u00a0min", "2"+"0" -> "2\u00a0uur").
+//   3. nakijken (grading.js, pair_exact): letterlijk gelijk aan het antwoord.
+var DUUR_DEEL_RE = /^\d{0,2}$/;
+var DUUR_ANTWOORD_RE = /^(\d+)\u00a0(min|uur)$|^(\d+)u(\d\d)$/;
+function duurDelenOk(a, b) {
+  return typeof a === "string" && typeof b === "string" && DUUR_DEEL_RE.test(a) && DUUR_DEEL_RE.test(b) && Number(b) <= 59 && Number(a) * 60 + Number(b) > 0;
+}
+function duurMinuten(p) { return Number(p.a) * 60 + Number(p.b); }
+
+export function writeDuur(minuten) {
+  if (minuten < 60) return minuten + "\u00a0min";
+  if (minuten % 60 === 0) return (minuten / 60) + "\u00a0uur";
+  var m = minuten % 60;
+  return Math.floor(minuten / 60) + "u" + (m < 10 ? "0" + m : String(m));
+}
+
 // Het verwachte antwoord lezen (alleen precies de canonieke vorm van deze scheiding): { a, b }, anders null
 export function readAnswerPair(answer, tussen) {
   if (typeof answer !== "string" || !Object.prototype.hasOwnProperty.call(PAIR_TUSSEN, tussen)) return null;
@@ -328,6 +350,13 @@ export function readAnswerPair(answer, tussen) {
     if (k.length !== 2 || !klokDelenOk(k[0], k[1]) || String(Number(k[0])) !== k[0]) return null;
     return { a: k[0], b: k[1] };
   }
+  if (tussen === "duur") {
+    var d = DUUR_ANTWOORD_RE.exec(answer);
+    if (!d) return null;
+    var tot = d[1] ? (d[2] === "uur" ? Number(d[1]) * 60 : Number(d[1])) : Number(d[3]) * 60 + Number(d[4]);
+    var p = { a: String(Math.floor(tot / 60)), b: String(tot % 60) };
+    return duurDelenOk(p.a, p.b) && writeDuur(tot) === answer ? p : null;
+  }
   var delen = answer.split(PAIR_TUSSEN[tussen]);
   if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
   return { a: delen[0], b: delen[1] };
@@ -335,12 +364,16 @@ export function readAnswerPair(answer, tussen) {
 
 // De ruwe invoer uit de twee vakjes lezen: altijd "a|b" (eerste vak, tweede vak). Elk deel
 // 1..PAIR_MAX_DIGITS cijfers, geen voorloopnul, niet 0. Anders null (niet nakijkbaar).
-// Bij tussen "klok": de kloktijdregels hierboven (stap 1); de delen blijven zoals getypt ("08", "05").
+// Bij tussen "klok" en "duur": de regels hierboven (stap 1); de delen blijven zoals getypt ("08", "05", "").
 export function parseTypedPair(text, tussen) {
   if (typeof text !== "string") return null;
   var delen = text.split("|");
   if (tussen === "klok") {
     if (delen.length !== 2 || !klokDelenOk(delen[0], delen[1])) return null;
+    return { a: delen[0], b: delen[1] };
+  }
+  if (tussen === "duur") {
+    if (delen.length !== 2 || !duurDelenOk(delen[0], delen[1])) return null;
     return { a: delen[0], b: delen[1] };
   }
   if (delen.length !== 2 || !pairDeelOk(delen[0]) || !pairDeelOk(delen[1])) return null;
@@ -351,6 +384,7 @@ export function parseTypedPair(text, tussen) {
 export function writeAnswerPair(p, tussen) {
   if (!p || !Object.prototype.hasOwnProperty.call(PAIR_TUSSEN, tussen)) return null;
   if (tussen === "klok") return klokDelenOk(p.a, p.b) ? String(Number(p.a)) + ":" + p.b : null;
+  if (tussen === "duur") return duurDelenOk(p.a, p.b) ? writeDuur(duurMinuten(p)) : null;
   return p.a + PAIR_TUSSEN[tussen] + p.b;
 }
 

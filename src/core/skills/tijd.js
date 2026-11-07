@@ -15,6 +15,7 @@
 
 import { shuffle } from "./helpers.js";
 import { registerSkillId, createSkills, createMixer, deckPick } from "./flow.js";
+import { writeDuur as dur } from "../answerCheck.js";
 
 var NB    = "\u00a0";
 var MIN = "−";
@@ -35,12 +36,8 @@ function klok(h, m) { return h + ":" + pad(m); }
 function nextH(h) { return h % 12 + 1; }
 function prevH(h) { return (h + 10) % 12 + 1; }
 
-// Duur uit minuten
-function dur(m) {
-  if (m < 60) return m + NB + "min";
-  if (m % 60 === 0) return (m / 60) + NB + "uur";
-  return Math.floor(m / 60) + "u" + pad(m % 60);
-}
+// Duur uit minuten: dur(m) is writeDuur uit answerCheck.js ("45\u00a0min", "2\u00a0uur", "1u30"),
+// dezelfde schrijfwijze als het nakijken van een getypte duur (I4c)
 
 // Kloktijd in woorden (Nederlands), h = 1-12, m = veelvoud van 5
 function woord(h, m) {
@@ -622,14 +619,23 @@ var DEFS = [
 // Klok lezen (t01-t04) is een 12-uursklok: daar is ook het tijdstip 12 uur verder goed (klok12).
 // Een vraag met een ander antwoord (woorden, getal, duur) wordt per vraag Kiezen (resolveInput).
 var KLOK = { t01: true, t02: true, t03: true, t04: true, t06: false, t07: false, t08: false, t17: false, t18: false, t19: false, t20: false, t21: false, t31: false, t35: false };
+// Tijdsduur typen (I4c): vaardigheden met een duur als antwoord, twee vakjes [uren] u [minuten] min.
+// Een vraag met een getal als antwoord (t09, t13) wordt per vraag Kiezen. Niet hier: t34 (schatten, ook
+// seconden, dagen en weken) en t17 (typt al tijdstippen; de duurvragen daar blijven Kiezen).
+var DUUR = { t09: true, t13: true, t16: true, t22: true, t23: true, t24: true };
+
+function invoerVan(poolId) {
+  if (Object.prototype.hasOwnProperty.call(KLOK, poolId)) return { inputType: "pair", inputConfig: KLOK[poolId] ? { tussen: "klok", klok12: true } : { tussen: "klok" } };
+  if (DUUR[poolId]) return { inputType: "pair", inputConfig: { tussen: "duur" } };
+  return {};
+}
 
 var RAW_SKILLS = DEFS.map(function(d) {
   var poolId = d[0].slice(0, 3);
-  var klok = Object.prototype.hasOwnProperty.call(KLOK, poolId)
-    ? { inputType: "pair", inputConfig: KLOK[poolId] ? { tussen: "klok", klok12: true } : { tussen: "klok" } } : {};
+  var invoer = invoerVan(poolId);
   return {
-    inputType:   klok.inputType,
-    inputConfig: klok.inputConfig,
+    inputType:   invoer.inputType,
+    inputConfig: invoer.inputConfig,
     id:         d[0],
     label:      d[1],
     group:      d[2],
