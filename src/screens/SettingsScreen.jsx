@@ -6,7 +6,7 @@ import { SUBJECTS, getSkillOrder } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-export default function SettingsScreen({ save, onBack, onReset }) {
+export default function SettingsScreen({ save, opslag, onBack, onReset }) {
   var name          = save.displayName || "—";
   // Elke beschikbare rekenmodus heeft een eigen titel en eigen statistieken
   var availSubjects = SUBJECTS.filter(function(s) { return s.available; });
@@ -118,6 +118,36 @@ export default function SettingsScreen({ save, onBack, onReset }) {
             </Fragment>
           );
         })}
+
+        {/* Opslag (plan IN, fase IN-1): zichtbaar of alles bewaard is, en de laatste fout */}
+        <SectionLabel style={{ marginTop: 4 }}>{"OPSLAG"}</SectionLabel>
+        <div style={{
+          background: A.bgCard,
+          border: "1.5px solid " + A.border,
+          borderRadius: A.r16,
+          padding: "16px 18px",
+          boxShadow: A.shadow,
+        }}>
+          <StatRow
+            label={"Status"}
+            value={!opslag ? "\u2014" : opslag.wachtend > 0 ? opslag.wachtend + " nog niet bewaard" : "alles bewaard"}
+            highlight={!!opslag && opslag.wachtend === 0}
+          />
+          <Divider style={{ margin: "12px 0" }} />
+          <StatRow
+            label={"Laatste controle"}
+            value={opslag && opslag.laatste ? new Date(opslag.laatste).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }) : "\u2014"}
+            soft={true}
+          />
+          {opslag && opslag.fout && (
+            <Fragment>
+              <Divider style={{ margin: "12px 0" }} />
+              <StatRow label={"Laatste fout"} value={String(opslag.fout)} soft={true} />
+            </Fragment>
+          )}
+          <Divider style={{ margin: "12px 0" }} />
+          <StatRow label={"Schrijfplek"} value={opslag && opslag.plek ? String(opslag.plek) : "\u2014"} soft={true} />
+        </div>
 
         {/* Danger zone */}
         <SectionLabel style={{ marginTop: 4, color: A.error }}>{"ACCOUNT"}</SectionLabel>

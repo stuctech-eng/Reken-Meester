@@ -11,15 +11,15 @@ export async function claimUsername(uid, displayName) {
   }
   const slug = displayName.toLowerCase().replace(/\s+/g, "_");
   const nameRef = doc(db, "usernames", slug);
-  const userRef = doc(db, "users", uid);
 
+  // Alleen de naam claimen. De naam in de voortgang (users/{uid}) zet de app zelf als bewerking
+  // (handleUsernameDone → upSave), via de transactie met rev; hier niet blind in users/ schrijven (plan IN, §3g).
   await runTransaction(db, async (tx) => {
     const nameSnap = await tx.get(nameRef);
     if (nameSnap.exists() && nameSnap.data().uid !== uid) {
       throw new Error("Deze naam is al bezet");
     }
     tx.set(nameRef, { uid, displayName });
-    tx.set(userRef, { username: slug, displayName }, { merge: true });
   });
 }
 

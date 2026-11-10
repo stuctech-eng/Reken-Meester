@@ -1,8 +1,11 @@
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { DEFAULT_SAVE, dClone, dMerge, calcXp, getTitel } from "./core/save.js";
-import { checkLevelUnlock, updateSkillStats, getNextSkill, getSkillOrder, getSubject } from "./core/subjects.js";
+import { DEFAULT_SAVE, dClone, calcXp, getTitel } from "./core/save.js";
+import { getNextSkill, getSkillOrder, getSubject } from "./core/subjects.js";
+import { mergeSessionSkills, pasBewerkingToe, herbouw, normaliseer } from "./core/voortgang.js";
 import { initAuth } from "./services/firebase.js";
-import { loadFromFirestore, saveToFirestore } from "./services/sync.js";
+import { laadServer, slaOp } from "./services/sync.js";
+import { maakSchrijfplek } from "./services/schrijfplek.js";
+import { maakOpslagrij } from "./services/opslagrij.js";
 import { claimUsername, updateGlobalLeaderboard, updateSubjectLeaderboard } from "./services/leaderboard.js";
 import { T, D } from "./styles/tokens.js";
 
@@ -20,15 +23,21 @@ var SHEET_TABS = [
   { id: "more",        label: "Meer",   icon: "⋯"       },
 ];
 
-// ── Concept-sessie (vangnet bij afsluiten van de app) ───────────────
-// Open concept: de lopende sessie, na elk antwoord bijgewerkt (nooit verstuurd).
-// Wachtrij: verstuurde sessies waarvan nog niet bevestigd is dat de opslag is geslaagd;
-// elk item bewaart het blok van de modus vóór en na de opslag (zoals handleFinish het verstuurde).
-// Bij het opstarten wordt de wachtrij op volgorde afgehandeld: blok = na → al bewaard,
-// blok = vóór → opnieuw opslaan, anders (conflict) → niet toepassen.
-var CONCEPT_KEY     = "rekenmeester_concept";
-var QUEUE_KEY       = "rekenmeester_wachtrij";
+// ── Opslag (plan IN, fase IN-1) ───────────────────────────────────────
+// Elke wijziging van de voortgang is een bewerking (core/voortgang.js). Een actie legt haar bewerking eerst
+// vast in de wachtrij van de eigen schrijfplek (services/schrijfplek.js), past haar toe op saveRef.current,
+// zet de stand (zetStand, de enige plek met setSave), schrijft de lokale kopie (cumlaude_save) en vraagt
+// daarna een opslag aan (services/opslagrij.js). De opslag is een Firestore-transactie die de serverstand
+// leest en daarop de openstaande bewerkingen toepast (services/sync.js). Mislukt het vastleggen in de
+// wachtrij, dan wordt de actie afgebroken en staat er een melding in beeld.
+// Open concept: de lopende sessie, na elk antwoord bijgewerkt (per schrijfplek; nooit verstuurd).
+// De oude wachtrij en het oude concept (van voor IN-1) worden bij het opstarten één keer omgezet.
+var OUD_CONCEPT_KEY = "rekenmeester_concept";
+var OUD_QUEUE_KEY   = "rekenmeester_wachtrij";
 var CONCEPT_VERSION = 1;
+var LS_KEY          = "cumlaude_save";
+var FOUT_SESSIE     = "Opslaan op dit toestel lukt niet; je laatste sessie is niet bewaard. Maak ruimte vrij of controleer de instellingen van Safari.";
+var FOUT_WIJZIGING  = "Opslaan op dit toestel lukt niet; je wijziging is niet bewaard. Maak ruimte vrij of controleer de instellingen van Safari.";
 
 function readLS(key) {
   try { var s = localStorage.getItem(key); return s ? JSON.parse(s) : null; } catch(e) { return null; }
@@ -39,15 +48,11 @@ function writeLS(key, val) {
 function removeLS(key) {
   try { localStorage.removeItem(key); } catch(e) {}
 }
-function readQueue() {
-  var q = readLS(QUEUE_KEY);
-  return Array.isArray(q) ? q : [];
-}
-function writeQueue(q) {
-  if (q.length > 0) writeLS(QUEUE_KEY, q); else removeLS(QUEUE_KEY);
-}
+function lokaleBasis() { return normaliseer(readLS(LS_KEY)); }
+function vandaag() { return new Date().toISOString().slice(0, 10); }
+function gisteren() { return new Date(Date.now() - 86400000).toISOString().slice(0, 10); }
 
-// JSON met gesorteerde sleutels: de volgorde van velden uit Firestore is niet gegarandeerd
+// JSON met gesorteerde sleutels (alleen voor het omzetten van de oude wachtrij: vergelijking met pre en post)
 function stableStr(v) {
   if (v === null || typeof v !== "object") return JSON.stringify(v);
   if (Array.isArray(v)) return "[" + v.map(stableStr).join(",") + "]";
@@ -105,18 +110,6 @@ function autoOrder(saveObj) {
   return AUTO_ORDER.concat(AUTO_EXTRA, AUTO_PRAKTISCH);
 }
 
-// Sessie-uitkomsten verwerken in skillStats (gedeeld door handleFinish en de voorlopige
-// stand voor de Auto-knoptekst, zodat beide exact dezelfde regel gebruiken)
-function mergeSessionSkills(subjectId, stats, result) {
-  var out = stats;
-  var sessionSkills = result.sessionSkillStats || {};
-  for (var skillId in sessionSkills) {
-    var ss = sessionSkills[skillId];
-    out = updateSkillStats(subjectId, out, skillId, ss.correct, ss.total, (result.promotionSnapshots || {})[skillId]);
-  }
-  return out;
-}
-
 // Voorlopige stand: huidige opslag + de skills van deze sessie (niet opgeslagen)
 function previewSave(saveObj, result) {
   var next = dClone(saveObj);
@@ -157,6 +150,31 @@ export default function App() {
   var saveState    = useState(dClone(DEFAULT_SAVE));
   var save         = saveState[0];
   var setSave      = saveState[1];
+
+  // De laatst vastgelegde stand, altijd bij: acties rekenen hiermee, niet met een stand die nog niet
+  // gerenderd is. zetStand is de enige plek die de stand verandert (plan IN, §3c).
+  var saveRef      = useRef(save);
+  function zetStand(next) {
+    saveRef.current = next;
+    setSave(next);
+  }
+  var uidRef       = useRef(null);
+
+  // Schrijfplek van dit tabblad en de opslagrij (gezet bij het opstarten). gestartRef: het opstarten maar één
+  // keer, ook als StrictMode (bij ontwikkelen) het effect twee keer uitvoert: anders claimt één tabblad twee plekken.
+  var plekRef      = useRef(null);
+  var rijRef       = useRef(null);
+  var gestartRef   = useRef(false);
+  // toegepastTot van de laatst bekende serverstand: wat er echt bewaard is (voor de status in Instellingen)
+  var bevestigdRef = useRef({});
+
+  // Stand van de opslag (Instellingen) en een melding als vastleggen op dit toestel mislukt
+  var opslagState  = useState({ plek: null, wachtend: 0, fout: null, laatste: null });
+  var opslagStatus = opslagState[0];
+  var setOpslagStatus = opslagState[1];
+  var meldingState = useState(null);
+  var foutMelding  = meldingState[0];
+  var setFoutMelding = meldingState[1];
 
   var loadState    = useState(true);
   var loading      = loadState[0];
@@ -222,9 +240,9 @@ export default function App() {
     window.scrollTo(0, screen === "home" ? homeScrollRef.current : 0);
   }, [screen]);
 
-  // Concept-sessie: herstel één keer na het laden; melding na een herstel
+  // Concept-sessie: herstel één keer na het laden; melding als de herstelde sessies bevestigd zijn
   var restoredRef     = useRef(false);
-  // Herstelde sessies die nog bevestigd moeten worden: { ids: {id: true}, done: {id: true}, shown }
+  // Herstelde sessies die nog bevestigd moeten worden: { nr (hoogste bewerkingsnummer), shown }
   var restoreWaitRef  = useRef(null);
   var noticeState     = useState(false);
   var restoreNotice   = noticeState[0];
@@ -243,35 +261,157 @@ export default function App() {
   var sheetTab      = sheetTabState[0];
   var setSheetTab   = sheetTabState[1];
 
-  // ── Init ─────────────────────────────────────────────────────────
-  useEffect(function() {
-    initAuth()
-      .then(async function(userId) {
-        setUid(userId);
-        var data = await loadFromFirestore(userId);
-        setSave(data);
-        if (!data.username) setNeedsName(true);
-        setLoading(false);
-      })
-      .catch(function() {
-        try {
-          var local = localStorage.getItem("cumlaude_save");
-          if (local) setSave(dMerge(dClone(DEFAULT_SAVE), JSON.parse(local)));
-        } catch(e) {}
-        setLoading(false);
+  // ── Opslag ───────────────────────────────────────────────────────
+  function bewaarLokaal(stand) { writeLS(LS_KEY, stand); }
+
+  function werkStatus(patch) {
+    var plek = plekRef.current;
+    setOpslagStatus(function(prev) {
+      var next = Object.assign({}, prev, patch || {});
+      next.plek = plek ? plek.plek() : null;
+      next.wachtend = plek ? plek.wachtend(bevestigdRef.current) : 0;
+      return next;
+    });
+  }
+
+  // Een bewerking vastleggen in de eigen wachtrij; null (en een melding) als dat niet lukt
+  function legVast(inhoud, melding) {
+    try {
+      return plekRef.current.voegToe(inhoud);
+    } catch (e) {
+      setFoutMelding(melding);
+      return null;
+    }
+  }
+
+  // Een opslag aanvragen (zonder uid: alleen lokaal)
+  function planOpslag() {
+    werkStatus();
+    if (uidRef.current && rijRef.current) rijRef.current.vraag(uidRef.current);
+  }
+
+  // Na een geslaagde transactie: de stand van de server plus wat er sindsdien nog in de wachtrijen kwam
+  function naOpslag(u, stand) {
+    if (u !== uidRef.current) return;
+    bevestigdRef.current = stand.toegepastTot || {};
+    var h = herbouw(stand, plekRef.current.alle());
+    zetStand(h.stand);
+    bewaarLokaal(h.stand);
+    werkStatus({ fout: null, laatste: Date.now() });
+    var w = restoreWaitRef.current;
+    if (w && !w.shown && ((stand.toegepastTot || {})[plekRef.current.schrijver()] || 0) >= w.nr) {
+      w.shown = true;
+      setRestoreNotice(true);
+    }
+  }
+  function naFout(u, fout) {
+    if (u !== uidRef.current) return;
+    werkStatus({ fout: (fout && (fout.code || fout.message)) || "onbekende fout" });
+  }
+
+  // Oude wachtrij en oud concept (van voor IN-1) één keer omzetten. Een oud wachtrij-item wordt een
+  // bewerking als de modus in de basis nog precies in de stand van vóór die sessie staat (pre); staat hij al
+  // in de stand erna (post) of is er een conflict, dan niet. Zelfde regel als het oude restorePending.
+  // Alle om te zetten items gaan in één schrijfactie in de wachtrij (alles of niets); pas daarna verdwijnt de
+  // oude sleutel. Mislukt die schrijfactie, dan blijft alles zoals het was en gebeurt het bij de volgende
+  // start opnieuw, zonder dat er al iets dubbel in de wachtrij staat.
+  // Geeft het hoogste nieuwe nummer (0 als er niets omgezet is).
+  function zetOudOm(basis, u) {
+    var hoogste = 0;
+    var oud = readLS(OUD_QUEUE_KEY);
+    if (Array.isArray(oud)) {
+      var blocks = {};
+      var om = [];
+      // Al omgezet (crash tussen het vastleggen en het weghalen van de oude sleutel): niet nog eens
+      var alOmgezet = {};
+      plekRef.current.alle().forEach(function(w) { w.items.forEach(function(x) { if (x.oudId) alOmgezet[x.oudId] = true; }); });
+      oud.slice().sort(function(a, b) { return ((a && a.seq) || 0) - ((b && b.seq) || 0); }).forEach(function(e) {
+        if (!e || e.v !== CONCEPT_VERSION || e.uid !== u || !e.result || !e.subjectId) return;
+        var b = Object.prototype.hasOwnProperty.call(blocks, e.subjectId) ? blocks[e.subjectId] : stableStr((basis.subjects && basis.subjects[e.subjectId]) || null);
+        if (alOmgezet[e.id]) { blocks[e.subjectId] = e.post; return; }
+        if (b !== e.pre) return;
+        var r = e.result;
+        r.conceptId = e.id;
+        om.push({ soort: "sessie", oudId: e.id, result: r, datum: vandaag(), gisteren: gisteren() });
+        blocks[e.subjectId] = e.post;
       });
+      try {
+        var nieuw = plekRef.current.voegMeerToe(om);
+        if (nieuw.length > 0) hoogste = nieuw[nieuw.length - 1].nr;
+        removeLS(OUD_QUEUE_KEY);
+      } catch (e) {
+        setFoutMelding(FOUT_SESSIE);
+      }
+    }
+    var c = readLS(OUD_CONCEPT_KEY);
+    if (c) {
+      if (c.uid === u && !plekRef.current.leesConcept()) {
+        try { plekRef.current.schrijfConcept(c); removeLS(OUD_CONCEPT_KEY); } catch (e2) {}
+      } else {
+        removeLS(OUD_CONCEPT_KEY);
+      }
+    }
+    return hoogste;
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────
+  // Schrijfplek claimen, de basis laden (de server; zonder verbinding de lokale kopie), de oude opslag
+  // omzetten, de wachtrijen erop toepassen en daarna een opslag aanvragen.
+  useEffect(function() {
+    async function start(userId) {
+      var plek = maakSchrijfplek({ storage: window.localStorage, locks: (typeof navigator !== "undefined" && navigator.locks) || null });
+      await plek.claim();
+      plekRef.current = plek;
+      uidRef.current = userId;
+      setUid(userId);
+      var basis = null;
+      if (userId) {
+        rijRef.current = maakOpslagrij({ slaOp: function(u) { return slaOp(u, plek); }, plek: plek, naOpslag: naOpslag, naFout: naFout });
+        try { basis = await laadServer(userId); bevestigdRef.current = basis.toegepastTot; } catch (e) { werkStatus({ fout: (e && (e.code || e.message)) || "geen verbinding" }); }
+      }
+      if (!basis) basis = lokaleBasis();
+      var omgezet = zetOudOm(basis, userId);
+      if (omgezet > 0) restoreWaitRef.current = { nr: omgezet, shown: false };
+      var h = herbouw(basis, plek.alle());
+      zetStand(h.stand);
+      bewaarLokaal(h.stand);
+      if (userId && !h.stand.username) setNeedsName(true);
+      setLoading(false);
+      planOpslag();
+    }
+    if (gestartRef.current) return;
+    gestartRef.current = true;
+    initAuth()
+      .then(function(userId) { return start(userId); }, function() { return start(null); })
+      .catch(function() { setLoading(false); });
+  }, []);
+
+  // Opnieuw proberen als de verbinding terugkomt of de app weer in beeld komt
+  useEffect(function() {
+    function opnieuw() { if (!document.hidden && plekRef.current) planOpslag(); }
+    // Een ander tabblad op dit toestel veranderde een wachtrij: de status opnieuw tellen
+    function anderTabblad(e) {
+      if (plekRef.current && e && typeof e.key === "string" && e.key.indexOf("rekenmeester_wachtrij_") === 0) werkStatus();
+    }
+    window.addEventListener("online", opnieuw);
+    document.addEventListener("visibilitychange", opnieuw);
+    window.addEventListener("storage", anderTabblad);
+    return function() {
+      window.removeEventListener("online", opnieuw);
+      document.removeEventListener("visibilitychange", opnieuw);
+      window.removeEventListener("storage", anderTabblad);
+    };
   }, []);
 
   // ── Save helper ───────────────────────────────────────────────────
+  // Een wijziging buiten een sessie (Kiezen of Typen, de naam): een bewerking van de soort patch
   function upSave(patch) {
-    setSave(function(prev) {
-      var next = dMerge(dClone(prev), patch);
-      if (uid) saveToFirestore(uid, next);
-      else {
-        try { localStorage.setItem("cumlaude_save", JSON.stringify(next)); } catch(e) {}
-      }
-      return next;
-    });
+    var b = legVast({ soort: "patch", patch: patch }, FOUT_WIJZIGING);
+    if (!b) return;
+    var next = pasBewerkingToe(saveRef.current, b);
+    zetStand(next);
+    bewaarLokaal(next);
+    planOpslag();
   }
 
   // ── Antwoord geven: Kiezen | Typen per modus ──────────────────────
@@ -294,169 +434,64 @@ export default function App() {
   }
 
   // ── Practice finish ───────────────────────────────────────────────
+  // Een sessie: eerst vastleggen als bewerking, dan toepassen, de stand zetten en de lokale kopie schrijven;
+  // het concept pas weg als de bewerking vastligt; daarna de scorelijsten en een opslag aanvragen.
+  // Geeft de bewerking (null als vastleggen mislukte: dan is de voortgang niet veranderd).
   function handleFinish(result) {
-    setSave(function(prev) {
-      var next = dClone(prev);
-      var subj = next.subjects[result.subjectId] || dClone(DEFAULT_SAVE.subjects[result.subjectId] || DEFAULT_SAVE.subjects.optellen);
+    var b = legVast({ soort: "sessie", result: JSON.parse(JSON.stringify(result)), datum: vandaag(), gisteren: gisteren() }, FOUT_SESSIE);
+    if (b) {
+      var next = pasBewerkingToe(saveRef.current, b);
+      zetStand(next);
+      bewaarLokaal(next);
+      var c = plekRef.current.leesConcept();
+      if (c && c.id === result.conceptId) plekRef.current.wisConcept();
 
-      subj.totalCorrect   += result.totalCorrect;
-      subj.totalQuestions += result.totalQuestions;
-      subj.xp              = (subj.xp || 0) + result.totalXp;
-
-      // ── Skill stats bijwerken ────────────────────────────────────
-      // Laatst geoefende modus (voor de bovenste kaart op Home)
-      next.lastSubjectId = result.subjectId;
-
-      var currentSkillStats = mergeSessionSkills(result.subjectId, subj.skillStats || {}, result);
-      subj.skillStats = currentSkillStats;
-
-      // Bereken volgende skill
-      var nextSkillInfo   = getNextSkill(result.subjectId, currentSkillStats);
-      subj.currentSkillId = nextSkillInfo.skillId;
-
-      // Totaal beheerste skills — alleen skills in de actieve skillvolgorde tellen
-      var skillOrder    = getSkillOrder(result.subjectId);
-      var masteredCount = 0;
-      for (var sid in currentSkillStats) {
-        if (currentSkillStats[sid].mastered && skillOrder.indexOf(sid) !== -1) masteredCount++;
-      }
-      subj.totalSkillsMastered = masteredCount;
-
-      // ── Legacy level unlock (XP-gebaseerd) ──────────────────────
-      var acc = Math.round((subj.totalCorrect / subj.totalQuestions) * 100);
-      if (acc >= 80 && result.level === subj.currentLevel) {
-        var nextLvl = subj.currentLevel + 1;
-        if (nextLvl <= 10 && (subj.unlockedLevels || []).indexOf(nextLvl) === -1) {
-          subj.unlockedLevels = (subj.unlockedLevels || [1]).concat([nextLvl]);
-          subj.currentLevel   = nextLvl;
-          subj.bestLevel      = Math.max(subj.bestLevel || 1, nextLvl);
-        }
-      }
-      subj.unlockedLevels = checkLevelUnlock(subj);
-
-      next.subjects[result.subjectId] = subj;
-      next.totalXp       = (next.totalXp || 0) + result.totalXp;
-      // Een Auto-ronde telt als één sessie: volgende opslagen in dezelfde ronde tellen niet mee
-      next.totalSessions = (next.totalSessions || 0) + (result.sameSession ? 0 : 1);
-
-      // Streak
-      var today     = new Date().toISOString().slice(0, 10);
-      if (next.lastSessionDate !== today) {
-        var yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-        if (next.lastSessionDate === yesterday) {
-          next.streak = (next.streak || 0) + 1;
-        } else {
-          next.streak = 1;
-        }
-        next.lastSessionDate = today;
-        next.bestStreak = Math.max(next.bestStreak || 0, next.streak);
-      }
-
-      var sendPromise;
-      if (uid) sendPromise = saveToFirestore(uid, next);
-      else {
-        var lsOk = false;
-        try { localStorage.setItem("cumlaude_save", JSON.stringify(next)); lsOk = true; } catch(e) {}
-        sendPromise = Promise.resolve(lsOk);
-      }
-      noteSend(result, prev, next, sendPromise);
-
-      if (uid && next.displayName) {
+      if (uidRef.current && next.displayName) {
         var titelNu = getTitel(next.subjects.optellen ? (next.subjects.optellen.totalSkillsMastered || 0) : 0);
-        updateGlobalLeaderboard(uid, next.displayName, next.totalXp, titelNu.label);
+        updateGlobalLeaderboard(uidRef.current, next.displayName, next.totalXp, titelNu.label);
         var subjData = next.subjects[result.subjectId];
         var subAcc   = subjData.totalQuestions > 0
           ? Math.round(subjData.totalCorrect / subjData.totalQuestions * 100) : 0;
         var subSkills = subjData.totalSkillsMastered || 0;
-        updateSubjectLeaderboard(uid, next.displayName, result.subjectId, subjData.currentLevel || 1, subAcc, subSkills, getTitel(subSkills, getSkillOrder(result.subjectId).length).label);
+        updateSubjectLeaderboard(uidRef.current, next.displayName, result.subjectId, subjData.currentLevel || 1, subAcc, subSkills, getTitel(subSkills, getSkillOrder(result.subjectId).length).label);
       }
-
-      return next;
-    });
+      planOpslag();
+    }
 
     setLastResult(result);
     setScreen("result");
+    return b;
   }
 
   // ── Concept-sessie ────────────────────────────────────────────────
-  // Na elk antwoord: het open concept bijwerken (synchroon in localStorage)
+  // Na elk antwoord: het open concept van deze schrijfplek bijwerken (synchroon in localStorage)
   function handleProgress(result) {
-    if (!result || !(result.totalQuestions > 0) || !result.conceptId) return;
+    if (!result || !(result.totalQuestions > 0) || !result.conceptId || !plekRef.current) return;
     var r = JSON.parse(JSON.stringify(result));
     r.sameSession = autoActive ? autoCountedRef.current : false;
-    writeLS(CONCEPT_KEY, { v: CONCEPT_VERSION, id: r.conceptId, uid: uid, result: r });
+    try { plekRef.current.schrijfConcept({ v: CONCEPT_VERSION, id: r.conceptId, uid: uidRef.current, result: r }); } catch (e) {}
   }
 
-  // Elke opslag via handleFinish: in de wachtrij (vóór/na-blok), open concept weg; pas bij
-  // een geslaagde opslag dit item én alle oudere wissen (elke opslag schrijft het hele document)
-  function noteSend(result, prev, next, sendPromise) {
-    var sid = result.subjectId;
-    var id  = result.conceptId || ("s" + Date.now());
-    var q   = readQueue().filter(function(e) { return e && e.id !== id; });
-    var seq = 1;
-    q.forEach(function(e) { if (e.seq >= seq) seq = e.seq + 1; });
-    q.push({
-      v: CONCEPT_VERSION, id: id, seq: seq, uid: uid, subjectId: sid,
-      pre:  stableStr((prev.subjects && prev.subjects[sid]) || null),
-      post: stableStr(next.subjects[sid]),
-      result: JSON.parse(JSON.stringify(result)),
-    });
-    writeQueue(q);
-    var c = readLS(CONCEPT_KEY);
-    if (c && c.id === id) removeLS(CONCEPT_KEY);
-    sendPromise.then(function(ok) {
-      if (!ok) return;
-      // Herstelmelding pas als ALLE herstelde sessies van deze start bevestigd zijn
-      var w = restoreWaitRef.current;
-      if (w && !w.shown && w.ids[id]) {
-        w.done[id] = true;
-        if (Object.keys(w.ids).every(function(k) { return w.done[k]; })) {
-          w.shown = true;
-          setRestoreNotice(true);
-        }
-      }
-      writeQueue(readQueue().filter(function(e) { return !(e && e.seq <= seq); }));
-    });
-  }
-
-  // Na het laden: wachtrij op volgorde afhandelen, daarna een open concept; ongeldig → wissen
+  // Na het laden: een open concept van deze schrijfplek (de sessie die niet afgerond werd) één keer toepassen;
+  // ongeldig → wissen. Zonder uid (alleen lokaal) staat de melding er meteen.
   function restorePending() {
-    var apply  = [];
-    var keep   = [];
-    var blocks = {};
-    function curBlock(sid) {
-      if (Object.prototype.hasOwnProperty.call(blocks, sid)) return blocks[sid];
-      return stableStr((save.subjects && save.subjects[sid]) || null);
-    }
-    readQueue().slice().sort(function(a, b) { return ((a && a.seq) || 0) - ((b && b.seq) || 0); }).forEach(function(e) {
-      if (!e || e.v !== CONCEPT_VERSION || e.uid !== uid || !e.result || !e.subjectId) return;
-      var b = curBlock(e.subjectId);
-      if (b === e.post) return;
-      if (b === e.pre) {
-        var r = e.result;
-        r.conceptId = e.id;
-        apply.push(r);
-        keep.push(e);
-        blocks[e.subjectId] = e.post;
+    var plek = plekRef.current;
+    var c = plek.leesConcept();
+    if (c && c.v === CONCEPT_VERSION && c.uid === uidRef.current && c.result && c.result.totalQuestions > 0 && c.result.conceptId === c.id) {
+      var b = handleFinish(c.result);
+      setScreen("home");
+      if (b) {
+        var w = restoreWaitRef.current;
+        restoreWaitRef.current = { nr: Math.max(b.nr, w ? w.nr : 0), shown: false };
+        if (!uidRef.current) { restoreWaitRef.current.shown = true; setRestoreNotice(true); }
       }
-    });
-    writeQueue(keep);
-    var c = readLS(CONCEPT_KEY);
-    if (c && c.v === CONCEPT_VERSION && c.uid === uid && c.result && c.result.totalQuestions > 0 && c.result.conceptId === c.id) {
-      apply.push(c.result);
     } else if (c) {
-      removeLS(CONCEPT_KEY);
+      plek.wisConcept();
     }
-    if (apply.length === 0) return;
-    var wait = { ids: {}, done: {}, shown: false };
-    apply.forEach(function(r) { wait.ids[r.conceptId] = true; });
-    restoreWaitRef.current = wait;
-    apply.forEach(function(r) { handleFinish(r); });
-    setScreen("home");
   }
 
   useEffect(function() {
-    if (loading || needsName || restoredRef.current) return;
+    if (loading || needsName || restoredRef.current || !plekRef.current) return;
     restoredRef.current = true;
     restorePending();
   }, [loading, needsName]);
@@ -532,19 +567,53 @@ export default function App() {
     }
   }, [pendingAuto]);
 
-  // ── Reset ─────────────────────────────────────────────────────────
+  // ── Reset ────────────────────────────────────────────────────────
+  // "Alles wissen" is ook een bewerking: de voortgang terug naar het begin, rev en toegepastTot blijven
   function handleReset() {
     if (!window.confirm("Weet je zeker dat je alles wilt wissen?")) return;
-    var fresh = dClone(DEFAULT_SAVE);
-    removeLS(CONCEPT_KEY);
-    removeLS(QUEUE_KEY);
-    setSave(fresh);
-    if (uid) saveToFirestore(uid, fresh);
-    else {
-      try { localStorage.removeItem("cumlaude_save"); } catch(e) {}
-    }
+    var b = legVast({ soort: "wissen" }, FOUT_WIJZIGING);
+    if (!b) return;
+    try { plekRef.current.wisConcept(); } catch (e) {}
+    var next = pasBewerkingToe(saveRef.current, b);
+    zetStand(next);
+    bewaarLokaal(next);
+    planOpslag();
     setNeedsName(true);
     setScreen("home");
+  }
+
+  // Melding als vastleggen op dit toestel mislukte: boven elk scherm, tot je erop tikt
+  function metMelding(scherm) {
+    if (!foutMelding) return scherm;
+    return (
+      <>
+        {scherm}
+        <div
+          role="alert"
+          onClick={function() { setFoutMelding(null); }}
+          style={{
+            position: "fixed",
+            top: "calc(env(safe-area-inset-top, 0px) + 12px)",
+            left: 16,
+            right: 16,
+            zIndex: 210,
+            minHeight: 44,
+            background: "#fef2f2",
+            border: "1.5px solid #fca5a5",
+            color: "#991b1b",
+            borderRadius: 14,
+            padding: "12px 16px",
+            fontSize: 14,
+            fontWeight: 800,
+            textAlign: "center",
+            boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
+            cursor: "pointer",
+          }}
+        >
+          {foutMelding}
+        </div>
+      </>
+    );
   }
 
   // ── Loading ───────────────────────────────────────────────────────
@@ -576,7 +645,7 @@ export default function App() {
   }
 
   if (needsName) {
-    return <UsernameScreen uid={uid} onDone={handleUsernameDone} />;
+    return metMelding(<UsernameScreen uid={uid} onDone={handleUsernameDone} />);
   }
 
   // Tussenstap tijdens een Auto-wissel (één render, tot het effect de volgende modus opent)
@@ -585,7 +654,7 @@ export default function App() {
   }
 
   if (screen === "subject") {
-    return (
+    return metMelding(
       <SubjectScreen
         subjectId={subjectId}
         save={save}
@@ -612,7 +681,7 @@ export default function App() {
   if (screen === "practice" && fixedSkillId) {
     var fixedSubjData = (save.subjects && save.subjects[subjectId]) || {};
     var leaveFixed    = function() { setFixedSkillId(null); setScreen("subject"); };
-    return (
+    return metMelding(
       <PracticeScreen
         key={subjectId + "-los-" + fixedSkillId}
         subjectId={subjectId}
@@ -641,7 +710,7 @@ export default function App() {
           : "Ga verder →";
       };
     }
-    return (
+    return metMelding(
       <PracticeScreen
         key={subjectId + "-" + autoKey}
         subjectId={subjectId}
@@ -662,7 +731,7 @@ export default function App() {
     var nextLvl  = ((lastResult && lastResult.level) || 1) + 1;
     var hasNext  = nextLvl <= 10 && (subjData.unlockedLevels || [1]).indexOf(nextLvl) !== -1;
 
-    return (
+    return metMelding(
       <ResultScreen
         result={lastResult}
         save={save}
@@ -674,9 +743,10 @@ export default function App() {
   }
 
   if (screen === "settings") {
-    return (
+    return metMelding(
       <SettingsScreen
         save={save}
+        opslag={opslagStatus}
         onBack={function() { setScreen("home"); }}
         onReset={handleReset}
       />
@@ -684,7 +754,7 @@ export default function App() {
   }
 
   // ── Home + bottom sheet ───────────────────────────────────────────
-  return (
+  return metMelding(
     <div style={{ position: "relative", minHeight: "100dvh", background: T.bg }}>
       {restoreNotice && (
         <div
