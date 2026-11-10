@@ -9,8 +9,9 @@
 // - Elke vraag heeft vier verschillende keuzes: het antwoord en drie foute keuzes (de valkuilen van het
 //   plan, zie q.valkuilen). Valt een valkuil samen met het antwoord of is hij ongeldig, dan vult een vaste
 //   reserve aan (het antwoord plus of min een stap).
-// - Fase S1: alleen vaardigheden zonder tekening. De vaardigheden met een tekening (st02, st03, st05-st09,
-//   st14, st20, st26, st27) komen in fase S2 op hun plek in de volgorde; bestaande ids veranderen niet.
+// - Fase S2: de vaardigheden met een tekening bij de vraag (st02, st03, st05-st09, st14, st20, st26, st27),
+//   op hun plek in de volgorde, en een boom bij st29 (3 kinderen) en st31-st33 (twee stappen). Bestaande ids
+//   veranderen niet. De tekening: q.figuur = { soort, gegeven }, getekend door VraagFiguur.
 
 import { rnd, shuffle } from "./helpers.js";
 import { createSkills } from "./flow.js";
@@ -100,6 +101,30 @@ GEN.st01 = function(sub) {
   return Q(item + ": wat voor gegevens?", k, item + ": " + SOORT_WAAROM[s] + ". Dus " + SOORT_LABEL[s] + ".");
 };
 
+// Frequentietabel (st02, st03, st14): kop = de twee rijnamen, w = de waarden, zin(w) = de vraag naar waarde w
+var TABEL = [
+  { kop: ["Huisdieren", "Leerlingen"], van: 0, wie: "leerlingen", zin: function(w) { return "Hoeveel leerlingen hebben " + w + (w === 1 ? " huisdier?" : " huisdieren?"); } },
+  { kop: ["Doelpunten", "Wedstrijden"], van: 0, wie: "wedstrijden", zin: function(w) { return "In hoeveel wedstrijden scoorde het team " + w + (w === 1 ? " doelpunt?" : " doelpunten?"); } },
+  { kop: ["Cijfer", "Leerlingen"], van: 5, wie: "leerlingen", zin: function(w) { return "Hoeveel leerlingen hadden een " + w + "?"; } },
+];
+function tabelFiguur(ctx, waarden, aantallen, totaal) {
+  return { soort: "freqtabel", gegeven: { kop: ctx.kop, waarden: waarden, aantallen: aantallen, totaal: totaal || null } };
+}
+function opeenvolgend(van, n) { var w = []; for (var i = 0; i < n; i++) w.push(van + i); return w; }
+GEN.st02 = function() {
+  var ctx = pickOne(TABEL), n = rnd(4, 5), w = opeenvolgend(ctx.van, n), a = w.map(function() { return rnd(1, 12); });
+  var i = rnd(0, n - 1), j = i === n - 1 ? i - 1 : i + 1;
+  return Q("Tabel: " + ctx.zin(w[i]), keuzes(a[i], [w[i], a[j], som(a)], reserveGetal(a[i])),
+    "Zoek in de bovenste rij " + w[i] + " en lees eronder het aantal: " + a[i] + ".", { figuur: tabelFiguur(ctx, w, a) });
+};
+GEN.st03 = function() {
+  var ctx = pickOne(TABEL), n = rnd(4, 5), w = opeenvolgend(ctx.van, n), a = w.map(function() { return rnd(1, 12); });
+  var i = rnd(0, n - 1), tot = som(a), bekend = a.slice(), eerste = i === 0 ? a[1] : a[0];
+  bekend[i] = null;
+  return Q("Samen " + tot + " " + ctx.wie + ". Wat hoort er op de plek van het vraagteken?", keuzes(a[i], [tot, tot - eerste, tot - a[i]], reserveGetal(a[i])),
+    "Tel de bekende aantallen op: " + (tot - a[i]) + ". " + tot + " " + MIN + " " + (tot - a[i]) + " = " + a[i] + ".", { figuur: tabelFiguur(ctx, w, bekend, tot) });
+};
+
 var RF_CONTEXT = ["leerlingen fietst naar school", "ballen is rood", "dagen regende het", "bezoekers kwam met de bus", "appels was rot"];
 // Relatieve frequentie als procent (ook gebruikt door st36)
 function relFreq(a, n) {
@@ -113,6 +138,71 @@ GEN.st04 = function() {
   var a = stap * rnd(1, n / stap - 1);
   var r = relFreq(a, n);
   return Q(a + " van de " + n + " " + pickOne(RF_CONTEXT) + ". Relatieve frequentie?", keuzes(r.antwoord, r.valkuilen, r.reserve), r.stappen);
+};
+
+// ── G2 Diagrammen ────────────────────────────────────────────────
+var DAGEN = ["ma", "di", "wo", "do", "vr"], DAG = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag"];
+var STAAF_CONTEXT = [["Verkochte ijsjes per dag.", "ijsjes"], ["Uitgeleende boeken per dag.", "boeken"], ["Bezoekers van het zwembad per dag.", "bezoekers"]];
+// Waarden op de rasterlijnen: stap 2, 5 of 10, hoogstens 5 stappen
+function rasterWaarden(n, stap) { var v = []; for (var i = 0; i < n; i++) v.push(stap * rnd(1, 5)); return v; }
+GEN.st05 = function() {
+  var ctx = pickOne(STAAF_CONTEXT), stap = pickOne([2, 5, 10]), v = rasterWaarden(5, stap);
+  var a = rnd(0, 4), b = rnd(0, 4);
+  if (v[a] <= v[b]) return null;
+  var c = [0, 1, 2, 3, 4].filter(function(k) { return k !== a && k !== b && v[k] < v[a]; });
+  var kc = c.length ? pickOne(c) : null;
+  return Q(ctx[0] + " Hoeveel " + ctx[1] + " meer op " + DAG[a] + " dan op " + DAG[b] + "?",
+    keuzes(v[a] - v[b], [Math.max.apply(null, v), kc === null ? null : v[a] - v[kc], v[a] + v[b]], reserveGetal(v[a] - v[b])),
+    "Lees beide staven af: " + DAG[a] + " " + v[a] + ", " + DAG[b] + " " + v[b] + ". " + v[a] + " " + MIN + " " + v[b] + " = " + (v[a] - v[b]) + ".",
+    { figuur: { soort: "staaf", gegeven: { labels: DAGEN, waarden: v, stap: stap, stappen: 5 } } });
+};
+
+var LIJN_CONTEXT = [["Bezoekers van de bibliotheek per week.", "bezoekers"], ["Leden van de sportclub per week.", "leden"], ["Volgers van een account per week.", "volgers"]];
+function weken(n) { var w = []; for (var i = 1; i <= n; i++) w.push(String(i)); return w; }
+GEN.st06 = function() {
+  var ctx = pickOne(LIJN_CONTEXT), stap = pickOne([2, 5, 10]), n = rnd(5, 6), v = rasterWaarden(n, stap);
+  var a = rnd(0, n - 3), b = rnd(a + 2, n - 1);
+  if (v[b] <= v[a]) return null;
+  return Q(ctx[0] + " Hoeveel steeg het aantal " + ctx[1] + " van week " + (a + 1) + " naar week " + (b + 1) + "?",
+    keuzes(v[b] - v[a], [v[b] - v[b - 1], v[b], v[a]], reserveGetal(v[b] - v[a])),
+    "Week " + (a + 1) + ": " + v[a] + ", week " + (b + 1) + ": " + v[b] + ". " + v[b] + " " + MIN + " " + v[a] + " = " + (v[b] - v[a]) + ".",
+    { figuur: { soort: "lijn", gegeven: { labels: weken(n), waarden: v, stap: stap, stappen: 5 } } });
+};
+// Grootste stijging: precies één grootste; de stap naar het hoogste punt is een andere (de valkuil)
+GEN.st07 = function() {
+  var ctx = pickOne(LIJN_CONTEXT), stap = pickOne([2, 5, 10]), v = rasterWaarden(5, stap);
+  var d = [1, 2, 3, 4].map(function(i) { return v[i] - v[i - 1]; }), max = Math.max.apply(null, d), k = d.indexOf(max);
+  var hoog = v.indexOf(Math.max.apply(null, v));
+  if (max <= 0 || d.filter(function(x) { return x === max; }).length !== 1 || v.filter(function(x) { return x === v[hoog]; }).length !== 1 || hoog === 0 || hoog - 1 === k) return null;
+  var labels = [1, 2, 3, 4].map(function(i) { return "week " + i + " naar " + (i + 1); });
+  return Q(ctx[0] + " Tussen welke twee weken steeg het aantal het meest?", keuzes(labels[k], labels.filter(function(l, i) { return i !== k; }), []),
+    "Kijk naar de steilste stijging, niet naar het hoogste punt: van week " + (k + 1) + " naar " + (k + 2) + " steeg het " + max + ".",
+    { figuur: { soort: "lijn", gegeven: { labels: weken(5), waarden: v, stap: stap, stappen: 5 } } });
+};
+
+var CIRKEL_CONTEXT = [["Fiets", "Bus", "Lopen", "Auto"], ["Voetbal", "Tennis", "Hockey", "Zwemmen"]];
+// 3 of 4 stukken, elk een veelvoud van 5% en minstens 10%, samen 100%
+function cirkelDelen() {
+  var n = rnd(3, 4), namen = pickOne(CIRKEL_CONTEXT).slice(0, n), rest = 100, delen = [];
+  for (var i = 0; i < n - 1; i++) { var p = 5 * rnd(2, (rest - 10 * (n - 1 - i)) / 5); delen.push(p); rest -= p; }
+  delen.push(rest);
+  return delen.map(function(p, i) { return { naam: namen[i], pct: p }; });
+}
+GEN.st08 = function() {
+  var delen = cirkelDelen();
+  var d = pickOne(delen), ans = d.pct * 18 / 5;
+  return Q("Cirkeldiagram: " + d.naam + " is " + d.pct + "%. Hoeveel graden is dat stuk?", keuzes(ans, [d.pct, 100 - d.pct, ans % 2 === 0 ? ans / 2 : null], reserveGetal(ans)),
+    "De hele cirkel is 360 graden = 100%. " + d.pct + "% van 360 = " + d.pct + " " + DOT + " 3,6 = " + ans + " graden.",
+    { figuur: { soort: "cirkeldiagram", gegeven: { delen: delen } } });
+};
+var CIRKEL_TOTAAL = [20, 40, 60, 80, 120, 200, 300, 400, 500];
+GEN.st09 = function() {
+  var delen = cirkelDelen();
+  var d = pickOne(delen), N = pickOne(CIRKEL_TOTAAL), ans = d.pct * N / 100, vervoer = d.naam === "Fiets" || d.naam === "Bus" || d.naam === "Lopen" || d.naam === "Auto";
+  var wat = vervoer ? ({ Fiets: "komen met de fiets", Bus: "komen met de bus", Lopen: "komen lopend", Auto: "komen met de auto" })[d.naam] : "kozen " + d.naam.toLowerCase();
+  return Q("Cirkeldiagram van " + N + " leerlingen. Hoeveel leerlingen " + wat + "?", keuzes(ans, [d.pct, N - d.pct, ans * 10], reserveGetal(ans)),
+    d.pct + "% van " + N + " = " + d.pct + " : 100 " + DOT + " " + N + " = " + ans + ".",
+    { figuur: { soort: "cirkeldiagram", gegeven: { delen: delen } } });
 };
 
 // ── G3 Centrummaten ───────────────────────────────────────────────
@@ -167,6 +257,19 @@ GEN.st13 = function() {
   var g = gemiddelde(lijst);
   if (!g) return null;
   return Q("Gemiddelde van " + lijstTekst(lijst) + "?", keuzes(g.antwoord, g.valkuilen, g.reserve), g.stappen);
+};
+
+// Gemiddelde uit een frequentietabel: elke waarde telt zo vaak als het aantal eronder
+GEN.st14 = function() {
+  var ctx = pickOne([TABEL[1], TABEL[2]]), n = rnd(4, 5), w = opeenvolgend(ctx.van, n), a = w.map(function() { return rnd(1, 9); });
+  var tot = som(a), s = 0;
+  w.forEach(function(x, i) { s += x * a[i]; });
+  if ((s * 10) % tot !== 0 || s === 0) return null;
+  var t = s * 10 / tot, ongewogen = (som(w) * 10) % n === 0 ? dec(som(w) * 10 / n) : null, perWaarde = (tot * 10) % n === 0 ? dec(tot * 10 / n) : null;
+  var wat = ctx === TABEL[2] ? "het gemiddelde cijfer" : "het gemiddelde aantal doelpunten per wedstrijd";
+  return Q("Tabel: wat is " + wat + "?", keuzes(dec(t), [ongewogen, perWaarde, String(tot)], reserveTienden(t)),
+    "Elke waarde telt zo vaak als het aantal: " + w.map(function(x, i) { return x + " " + DOT + " " + a[i]; }).join(" + ") + " = " + s + ". Totaal " + tot + " " + ctx.wie + ". " + s + " : " + tot + " = " + dec(t) + ".",
+    { figuur: tabelFiguur(ctx, w, a) });
 };
 
 var RANG = { 4: "Vierde", 5: "Vijfde" };
@@ -235,6 +338,19 @@ GEN.st19 = function() {
   var k = kwartielLijst(), ans = k.q3 - k.q1;
   return Q("Gesorteerd: " + lijstTekst(k.s) + ". Kwartielafstand?", keuzes(ans, [k.s[k.n - 1] - k.s[0], k.q3, k.q1], reserveGetal(ans)),
     helften(k) + " Q1 = " + k.q1 + ", Q3 = " + k.q3 + ". Kwartielafstand = Q3 " + MIN + " Q1 = " + ans + ".");
+};
+
+// Boxplot aflezen: vijf getallen (veelvouden van 5) op een getallenlijn van lo tot lo + 60
+GEN.st20 = function(sub) {
+  var lo = 10 * rnd(0, 4), vijf = [];
+  while (vijf.length < 5) { var x = lo + 5 * rnd(0, 12); if (vijf.indexOf(x) < 0) vijf.push(x); }
+  vijf = gesorteerd(vijf);
+  var mi = vijf[0], q1 = vijf[1], med = vijf[2], q3 = vijf[3], ma = vijf[4], doos = (q1 + q3) % 2 === 0 ? (q1 + q3) / 2 : null, s = sub % 3;
+  var fig = { figuur: { soort: "boxplot", gegeven: { lo: lo, vijf: vijf } } };
+  var bp = "De doos loopt van Q1 tot Q3; de streep in de doos is de mediaan; de snorren lopen naar het kleinste en het grootste getal. ";
+  if (s === 0) return Q("Boxplot: wat is de mediaan?", keuzes(med, [doos, q3, ma], reserveGetal(med)), bp + "De streep staat bij " + med + ".", fig);
+  if (s === 1) return Q("Boxplot: wat is Q3 (derde kwartiel)?", keuzes(q3, [q1, med, ma], reserveGetal(q3)), bp + "Q3 is de rechterkant van de doos: " + q3 + ".", fig);
+  return Q("Boxplot: wat is de kwartielafstand?", keuzes(q3 - q1, [ma - mi, q3, q3 - med], reserveGetal(q3 - q1)), bp + "Q3 " + MIN + " Q1 = " + q3 + " " + MIN + " " + q1 + " = " + (q3 - q1) + ".", fig);
 };
 
 // ── G5 Kans: de basis ─────────────────────────────────────────────
@@ -320,6 +436,19 @@ GEN.st25 = function() {
 };
 
 // ── G6 Tellen ─────────────────────────────────────────────────────
+// Rooster van twee dobbelstenen: som s komt 6 - |s - 7| keer voor (van de 36)
+function roosterAantal(s) { return 6 - Math.abs(s - 7); }
+var ROOSTER = { figuur: { soort: "rooster", gegeven: {} } };
+GEN.st26 = function() {
+  var s = rnd(3, 11), ans = roosterAantal(s);
+  return Q("Twee dobbelstenen. Op hoeveel manieren is de som " + s + "?", keuzes(ans, [1, ans % 2 === 0 ? ans / 2 : null, s], reserveGetal(ans)),
+    "Tel in het rooster de vakjes met " + s + ": dat zijn er " + ans + ". (" + (s <= 7 ? "1 + " + (s - 1) : (s - 6) + " + 6") + " en " + (s <= 7 ? (s - 1) + " + 1" : "6 + " + (s - 6)) + " tellen apart.)", ROOSTER);
+};
+GEN.st27 = function() {
+  var s = rnd(3, 11), n = roosterAantal(s);
+  return Q("Twee dobbelstenen. Wat is de kans dat de som " + s + " is?", keuzes(kans(n, 36), [kans(s, 36), kans(1, 11), kans(n, 18)], reserveKans(n, 36)),
+    "Er zijn 36 vakjes, allemaal even waarschijnlijk. Som " + s + ": " + n + " vakjes. " + n + "/36 = " + kans(n, 36) + ".", ROOSTER);
+};
 var KEER_CONTEXT = [["broeken", "shirts", "outfits"], ["soorten brood", "soorten beleg", "broodjes"], ["voorgerechten", "hoofdgerechten", "menu's"], ["kleuren fiets", "soorten zadel", "fietsen"]];
 // Keerregel (ook gebruikt door st36)
 function keerregel(a, b, ctx) {
@@ -336,9 +465,11 @@ var VOLGORDE_CONTEXT = ["kinderen op een rij staan", "boeken naast elkaar op een
 GEN.st29 = function() {
   var n = pickOne([3, 4, 5]), f = 1, keten = [];
   for (var i = n; i >= 1; i--) { f *= i; keten.push(i); }
-  return Q("Op hoeveel manieren kun je " + n + " " + pickOne(VOLGORDE_CONTEXT) + "?",
+  // Bij 3: de boom met alle volgordes van A, B en C (bij 4 en 5 te groot voor een tekening)
+  return Q("Op hoeveel manieren kun je " + n + " " + pickOne(VOLGORDE_CONTEXT).replace(" ", n === 3 ? " (A, B en C) " : " ") + "?",
     keuzes(f, [n * n, n * (n + 1) / 2, n * (n - 1)], reserveGetal(f)),
-    "Eerste plek: " + n + " keuzes, dan " + (n - 1) + ", enzovoort. " + keten.join(" " + DOT + " ") + " = " + f + ".");
+    "Eerste plek: " + n + " keuzes, dan " + (n - 1) + ", enzovoort. " + keten.join(" " + DOT + " ") + " = " + f + ".",
+    n === 3 ? { figuur: { soort: "boom", gegeven: { volgorde: true } } } : undefined);
 };
 
 GEN.st30 = function() {
@@ -350,19 +481,26 @@ GEN.st30 = function() {
 };
 
 // ── G7 Kansen in stappen ──────────────────────────────────────────
+// [vraag, kans stap 1 (teller, noemer), kans stap 2, uitkomsten stap 1 (wel, niet), uitkomsten stap 2]
+var WORP_6 = ["6", "geen 6"], WORP_MUNT = ["kop", "munt"];
 var TWEE_KEER = [
-  ["Twee keer met een dobbelsteen: kans op twee keer een 6?", 1, 6, 1, 6],
-  ["Twee keer een munt: kans op twee keer kop?", 1, 2, 1, 2],
-  ["Twee keer met een dobbelsteen: kans op twee keer een even getal?", 1, 2, 1, 2],
-  ["Dobbelsteen en munt: kans op een 6 en kop?", 1, 6, 1, 2],
-  ["Twee keer met een dobbelsteen: kans op twee keer meer dan 4?", 1, 3, 1, 3],
+  ["Twee keer met een dobbelsteen: kans op twee keer een 6?", 1, 6, 1, 6, WORP_6, WORP_6],
+  ["Twee keer een munt: kans op twee keer kop?", 1, 2, 1, 2, WORP_MUNT, WORP_MUNT],
+  ["Twee keer met een dobbelsteen: kans op twee keer een even getal?", 1, 2, 1, 2, ["even", "oneven"], ["even", "oneven"]],
+  ["Dobbelsteen en munt: kans op een 6 en kop?", 1, 6, 1, 2, WORP_6, WORP_MUNT],
+  ["Twee keer met een dobbelsteen: kans op twee keer meer dan 4?", 1, 3, 1, 3, ["5 of 6", "1 tot 4"], ["5 of 6", "1 tot 4"]],
 ];
+// Kansboom van twee onafhankelijke stappen: wel/niet met kans a/b, daarna c/d (gelijk na beide takken)
+function boomOnafh(a, b, c, d, u1, u2) {
+  var s2 = [kans(c, d), kans(d - c, d)];
+  return { soort: "boom", gegeven: { uitkomsten: [u1, u2], kansen: [[kans(a, b), kans(b - a, b)], [s2, s2]] } };
+}
 GEN.st31 = function() {
   var t = pickOne(TWEE_KEER), p = kans(t[1], t[2]), q = kans(t[3], t[4]);
   var tel = t[1] * t[3], noem = t[2] * t[4];
   var plus = t[1] * t[4] + t[3] * t[2];
   return Q(t[0], keuzes(kans(tel, noem), [kans(plus, noem), kans(1, t[2] + t[4]), p], reserveKans(tel, noem)),
-    "Onafhankelijk: vermenigvuldigen. " + p + " " + DOT + " " + q + " = " + kans(tel, noem) + ".");
+    "Onafhankelijk: vermenigvuldigen. " + p + " " + DOT + " " + q + " = " + kans(tel, noem) + ".", { figuur: boomOnafh(t[1], t[2], t[3], t[4], t[5], t[6]) });
 };
 
 GEN.st32 = function() {
@@ -370,7 +508,10 @@ GEN.st32 = function() {
   var ans = kans(r * (r - 1), t * (t - 1));
   return Q("Zak met " + r + " rode en " + b + " blauwe knikkers. Je pakt er 2 zonder terugleggen. Kans op twee rode?",
     keuzes(ans, [kans(r * r, t * t), kans(r, t), kans(r * (r - 1), t * t)], reserveKans(r * (r - 1), t * (t - 1))),
-    "Eerste rood: " + r + "/" + t + ". Daarna nog " + (r - 1) + " rode van de " + (t - 1) + ": " + (r - 1) + "/" + (t - 1) + ". " + r + "/" + t + " " + DOT + " " + (r - 1) + "/" + (t - 1) + " = " + ans + ".");
+    "Eerste rood: " + r + "/" + t + ". Daarna nog " + (r - 1) + " rode van de " + (t - 1) + ": " + (r - 1) + "/" + (t - 1) + ". " + r + "/" + t + " " + DOT + " " + (r - 1) + "/" + (t - 1) + " = " + ans + ".",
+    // De boom met de aantallen als breuk (niet vereenvoudigd): na de eerste knikker is er een minder
+    { figuur: { soort: "boom", gegeven: { uitkomsten: [["rood", "blauw"], ["rood", "blauw"]],
+      kansen: [[r + "/" + t, b + "/" + t], [[(r - 1) + "/" + (t - 1), b + "/" + (t - 1)], [r + "/" + (t - 1), (b - 1) + "/" + (t - 1)]]] } } });
 };
 
 var MINSTENS = [
@@ -383,7 +524,9 @@ GEN.st33 = function() {
   var noem = Math.pow(b, n), geen = Math.pow(b - a, n);
   var precies = n * a * Math.pow(b - a, n - 1);
   return Q(m[0], keuzes(kans(noem - geen, noem), [kans(precies, noem), kans(Math.pow(a, n), noem), kans(1, n + 1)], reserveKans(noem - geen, noem)),
-    "Via \"geen enkele\": kans op geen = " + kans(geen, noem) + ". Minstens één = 1 " + MIN + " " + kans(geen, noem) + " = " + kans(noem - geen, noem) + ".");
+    "Via \"geen enkele\": kans op geen = " + kans(geen, noem) + ". Minstens één = 1 " + MIN + " " + kans(geen, noem) + " = " + kans(noem - geen, noem) + ".",
+    // Boom alleen bij 2 worpen (bij 3 worpen 8 routes: te groot voor een tekening)
+    n === 2 ? { figuur: boomOnafh(a, b, a, b, b === 2 ? WORP_MUNT : WORP_6, b === 2 ? WORP_MUNT : WORP_6) } : undefined);
 };
 
 var VERWACHT = [["Je gooit N keer met een dobbelsteen.", "een 6", 6, [60, 120, 300, 600]], ["Je gooit N keer met een munt.", "kop", 2, [50, 100, 200, 500]],
@@ -460,7 +603,7 @@ GEN.st36 = function(sub) {
 };
 
 // ── Groepen, theorie en vaardigheden ──────────────────────────────
-var G1 = "Gegevens ordenen", G3 = "Centrummaten", G4 = "Spreiding", G5 = "Kans", G6 = "Tellen",
+var G1 = "Gegevens ordenen", G2 = "Diagrammen", G3 = "Centrummaten", G4 = "Spreiding", G5 = "Kans", G6 = "Tellen",
     G7 = "Kansen in stappen", G8 = "Toepassen en controle";
 
 var THEORIE = {};
@@ -471,6 +614,12 @@ THEORIE[G1] =
   "• Categorieën zonder volgorde (kleur, merk): namen; rekenen kan niet, tellen wel.\n" +
   "• Categorieën met volgorde (S, M, L; slecht, matig, goed): wel een volgorde, maar geen getallen.\n" +
   "Een frequentie is hoe vaak iets voorkomt. De relatieve frequentie is dat aantal als deel van het geheel, meestal in procenten: aantal : totaal " + DOT + " 100%. 12 van de 40 is 12 : 40 " + DOT + " 100% = 30%. Zo kun je groepen van verschillende grootte eerlijk vergelijken.";
+THEORIE[G2] =
+  "Een diagram laat in \u00e9\u00e9n oogopslag zien wat in een tabel als rij getallen staat. Elk soort diagram past bij een ander soort vraag.\n" +
+  "\u2022 Staafdiagram: aantallen per categorie of per dag vergelijken. Lees de hoogte af op de rasterlijnen; het verschil is de ene hoogte min de andere.\n" +
+  "\u2022 Lijndiagram: hoe iets verandert in de tijd. Een stijging is de nieuwe stand min de oude. De grootste stijging zit waar de lijn het steilst omhoog gaat, en dat is niet altijd bij het hoogste punt.\n" +
+  "\u2022 Cirkeldiagram: delen van een geheel. De hele cirkel is 100% en ook 360 graden, dus 1% is 3,6 graden. Weet je het totaal, dan is een stuk van p% gelijk aan p : 100 " + DOT + " totaal.\n" +
+  "Let op de as: begint de verticale as niet bij 0, dan lijken verschillen groter dan ze zijn. Lees daarom altijd de getallen, niet alleen de lengte van de staven.";
 THEORIE[G3] =
   "Een centrummaat vat een rij getallen samen in één getal dat zegt waar het midden ligt. Er zijn er drie, en ze zeggen elk iets anders.\n" +
   "• Gemiddelde: alles optellen en delen door het aantal. Het is wat ieder krijgt als je eerlijk verdeelt. Ontbreekt er één getal, dan weet je het totaal (gemiddelde " + DOT + " aantal) en trek je de bekende getallen ervan af.\n" +
@@ -491,9 +640,11 @@ THEORIE[G6] =
   "Voor een kans moet je weten hoeveel uitkomsten er mogelijk zijn. Tellen kan slim.\n" +
   "• Keerregel: kies je eerst uit a mogelijkheden en daarna uit b, dan zijn er a " + DOT + " b combinaties. 3 broeken en 4 shirts: bij elke broek passen 4 shirts, dus 3 " + DOT + " 4 = 12. Valkuil: optellen (3 + 4).\n" +
   "• Volgordes: 4 kinderen op een rij. De eerste plek heeft 4 keuzes, de tweede nog 3, dan 2, dan 1: 4 " + DOT + " 3 " + DOT + " 2 " + DOT + " 1 = 24.\n" +
-  "• Codes: mogen cijfers herhalen en mag een 0 vooraan, dan heeft elke plek 10 mogelijkheden. Een code van 3 cijfers: 10 " + DOT + " 10 " + DOT + " 10 = 1000 (000 tot en met 999).";
+  "• Codes: mogen cijfers herhalen en mag een 0 vooraan, dan heeft elke plek 10 mogelijkheden. Een code van 3 cijfers: 10 " + DOT + " 10 " + DOT + " 10 = 1000 (000 tot en met 999).\n" +
+  "\u2022 Rooster: bij twee dobbelstenen zet je de ogen van de ene langs de bovenkant en die van de andere langs de zijkant. Zo zie je alle 6 " + DOT + " 6 = 36 uitkomsten. 3 + 4 en 4 + 3 zijn verschillende vakjes: som 7 komt 6 keer voor, dus de kans is 6/36 = 1/6.\n" +
+  "\u2022 Boom: elke tak is een keuze. Het aantal routes van links naar rechts is het aantal mogelijkheden; bij 3 kinderen 3 " + DOT + " 2 " + DOT + " 1 = 6 routes.";
 THEORIE[G7] =
-  "Bij twee stappen (twee worpen, twee keer pakken) vermenigvuldig je de kansen langs de route: dat is de keerregel voor kansen.\n" +
+  "Bij twee stappen (twee worpen, twee keer pakken) vermenigvuldig je de kansen langs de route: dat is de keerregel voor kansen. Een kansboom laat dat zien: op elke tak staat de kans, en de kans op een route is het product van de kansen op die route.\n" +
   "• Onafhankelijk (de eerste stap verandert niets aan de tweede, zoals twee keer gooien): kans op twee keer een 6 = 1/6 " + DOT + " 1/6 = 1/36. Valkuil: optellen.\n" +
   "• Zonder terugleggen verandert de tweede stap wel: bij 2 rode en 3 blauwe knikkers is de kans op twee rode 2/5 " + DOT + " 1/4 = 1/10, want na de eerste rode zijn er nog 1 rode van de 4.\n" +
   "• Minstens één: reken via het tegendeel. Kans op minstens één keer kop bij 2 worpen = 1 " + MIN + " kans op geen kop = 1 " + MIN + " 1/4 = 3/4.\n" +
@@ -506,9 +657,30 @@ var DEFS = [
   ["st01_soort_gegevens", "Soort gegevens", G1, "Schoenmaat: telbaar of meetbaar?", "tellen, meten of een naam",
     "Kijk wat je opschrijft: een aantal dat je telt (telbaar), iets wat je meet met tussenwaarden (meetbaar), of een naam (categorie). Heeft de naam een vaste volgorde, zoals S, M, L, dan is het een categorie met volgorde.",
     "Lievelingskleur?\nEen naam zonder vaste volgorde.\nAntwoord: categorieën zonder volgorde.", 8, 4],
+  ["st02_frequentietabel", "Frequentietabel aflezen", G1, "2 huisdieren: 7 leerlingen", "waarde boven, aantal eronder",
+    "In de bovenste rij staan de waarden, eronder hoe vaak elke waarde voorkomt. Zoek de waarde en lees het aantal eronder af. Valkuil: de waarde zelf noemen in plaats van het aantal.",
+    "Huisdieren 0 1 2 3, leerlingen 4 9 7 2.\nHoeveel leerlingen hebben 2 huisdieren?\nOnder de 2 staat 7.", 8],
+  ["st03_ontbrekende_frequentie", "Ontbrekende frequentie", G1, "Totaal 30, de rest samen 24: 6", "totaal min de rest",
+    "Het totaal is alle aantallen samen. Tel de bekende aantallen op en trek die som van het totaal af; wat overblijft hoort op de plek van het vraagteken.",
+    "Totaal 30; bekend 8, 10 en 6.\n8 + 10 + 6 = 24.\n30 \u2212 24 = 6.", 8],
   ["st04_relatieve_frequentie", "Relatieve frequentie", G1, "12 van de 40 is 30%", "aantal : totaal · 100%",
     "Deel het aantal door het totaal en vermenigvuldig met 100%. Zo vergelijk je groepen van verschillende grootte eerlijk. Valkuil: het aantal zelf als procent nemen.",
     "12 van de 40?\n12 : 40 = 0,3.\n0,3 · 100% = 30%.", 8],
+  ["st05_staafdiagram", "Staafdiagram aflezen", G2, "Dinsdag 30, maandag 20: 10 meer", "aflezen, dan aftrekken",
+    "Lees de hoogte van elke staaf af op de rasterlijnen. Hoeveel meer is de ene hoogte min de andere. Valkuil: alleen de hoogte van een staaf noemen.",
+    "Maandag 20, dinsdag 30. Hoeveel meer op dinsdag?\n30 \u2212 20.\nAntwoord: 10.", 8],
+  ["st06_lijn_stijging", "Lijndiagram: stijging", G2, "Week 2: 10, week 4: 25. Gestegen: 15", "nieuwe stand min oude stand",
+    "Lees de twee punten af. De stijging is de nieuwe stand min de oude stand, over alle weken daartussen. Valkuil: alleen de laatste stap nemen.",
+    "Week 2: 10, week 3: 20, week 4: 25.\nVan week 2 naar 4?\n25 \u2212 10 = 15.", 8],
+  ["st07_grootste_stijging", "Lijndiagram: grootste stijging", G2, "Waar loopt de lijn het steilst omhoog?", "steilste stuk",
+    "Kijk per stap van week naar week hoeveel het omhoog gaat. Het steilste stuk omhoog is de grootste stijging. Dat is niet altijd het stuk naar het hoogste punt.",
+    "1 \u2192 2: +5, 2 \u2192 3: +20, 3 \u2192 4: +10.\nGrootste stijging:\nweek 2 naar 3.", 8],
+  ["st08_cirkel_graden", "Cirkeldiagram: procent en graden", G2, "25% is 90 graden", "100% = 360 graden",
+    "De hele cirkel is 100% en ook 360 graden. 1% is dus 3,6 graden: vermenigvuldig het procent met 3,6.",
+    "25% in graden?\n25 \u00b7 3,6.\nAntwoord: 90 graden.", 8],
+  ["st09_cirkel_aantal", "Cirkeldiagram: aantallen", G2, "30% van 200 is 60", "procent van het totaal",
+    "Het stuk is een procent van het geheel. Weet je het totaal, dan reken je het aantal uit: procent : 100 \u00b7 totaal.",
+    "30% van 200 leerlingen?\n30 : 100 \u00b7 200.\nAntwoord: 60.", 8],
   ["st10_modus", "Modus", G3, "4, 7, 7, 9, 3: modus 7", "wat komt het vaakst voor",
     "De modus is het getal dat het vaakst voorkomt. Tel per getal hoe vaak het erin staat. Het hoeft niet in het midden te staan en ook niet het grootste te zijn.",
     "4, 7, 7, 9, 3?\n7 staat er twee keer in, de rest één keer.\nAntwoord: 7.", 8],
@@ -521,6 +693,9 @@ var DEFS = [
   ["st13_gemiddelde", "Gemiddelde", G3, "6, 8, 7, 9: gemiddelde 7,5", "optellen, delen door het aantal",
     "Tel alle getallen op en deel door het aantal getallen. Het gemiddelde is wat ieder krijgt als je eerlijk verdeelt. Valkuil: vergeten te delen, of door het verkeerde aantal delen.",
     "6, 8, 7, 9?\n6 + 8 + 7 + 9 = 30.\n30 : 4 = 7,5.", 8],
+  ["st14_gemiddelde_tabel", "Gemiddelde uit een frequentietabel", G3, "Cijfer 6 twee keer, 8 drie keer: 7,2", "elke waarde telt zo vaak als het aantal",
+    "Vermenigvuldig elke waarde met het aantal eronder en tel alles op. Deel door het totale aantal (de som van de onderste rij), niet door het aantal kolommen.",
+    "Cijfer 6: 2 keer, cijfer 8: 3 keer.\n6 \u00b7 2 + 8 \u00b7 3 = 36; 5 leerlingen.\n36 : 5 = 7,2.", 8],
   ["st15_ontbrekend_getal", "Ontbrekend getal bij een gemiddelde", G3, "Gemiddelde 7 van 4 getallen: totaal 28", "eerst het totaal",
     "Het totaal is gemiddelde · aantal. Trek de bekende getallen daarvan af; wat overblijft is het ontbrekende getal.",
     "Gemiddelde van 4 getallen is 7; bekend 5, 8, 6?\nTotaal 4 · 7 = 28. Bekend 19.\n28 − 19 = 9.", 8],
@@ -536,6 +711,9 @@ var DEFS = [
   ["st19_kwartielafstand", "Kwartielafstand", G4, "Q3 − Q1", "breedte van de middelste helft",
     "Bepaal Q1 en Q3 en trek ze af: Q3 − Q1. Dat is de breedte van de middelste helft. Valkuil: grootste min kleinste (dat is de spreidingsbreedte).",
     "2, 5, 8, 11, 13, 17, 20?\nQ1 = 5, Q3 = 17.\n17 − 5 = 12.", 8],
+  ["st20_boxplot", "Boxplot aflezen", G4, "De streep in de doos is de mediaan", "doos, streep en snorren",
+    "De doos loopt van Q1 tot Q3, de streep in de doos is de mediaan, en de snorren lopen naar het kleinste en het grootste getal. Lees af op de getallenlijn eronder. Valkuil: het midden van de doos voor de mediaan aanzien.",
+    "Doos van 20 tot 45, streep bij 30.\nMediaan: 30.\nKwartielafstand: 45 \u2212 20 = 25.", 8, 3],
   ["st21_kansschaal", "Kansschaal", G5, "Kop gooien: fifty-fifty", "van onmogelijk tot zeker",
     "Kan het nooit? Onmogelijk. Altijd? Zeker. Precies de helft van de keren? Fifty-fifty. Daartussen: klein of groot.",
     "Met een dobbelsteen een 6 gooien?\n1 van de 6 uitkomsten.\nAntwoord: klein.", 8, 5],
@@ -551,6 +729,12 @@ var DEFS = [
   ["st25_kans_schatten", "Kans schatten uit een experiment", G5, "46 keer een 6 in 200 worpen: 23%", "relatieve frequentie",
     "Weet je de kans niet, gooi dan vaak en tel. De relatieve frequentie (aantal : totaal · 100%) is een schatting van de kans; hoe vaker je gooit, hoe beter.",
     "46 keer een 6 in 200 worpen?\n46 : 200 = 0,23.\nAntwoord: 23%.", 8],
+  ["st26_rooster_aantal", "Rooster van twee dobbelstenen", G6, "Som 7: 6 vakjes", "vakjes tellen",
+    "In het rooster staat bij elk paar ogen de som. Tel de vakjes met de gevraagde som. 3 + 4 en 4 + 3 zijn twee verschillende vakjes.",
+    "Op hoeveel manieren is de som 4?\n1 + 3, 2 + 2, 3 + 1.\nAntwoord: 3.", 8],
+  ["st27_rooster_kans", "Kans uit een rooster", G6, "Som 7: 6/36 = 1/6", "vakjes : 36",
+    "Alle 36 vakjes zijn even waarschijnlijk. Kans = aantal vakjes met die som : 36, zo eenvoudig mogelijk. Valkuil: 1/11, alsof elke som even vaak voorkomt.",
+    "Kans op som 4?\n3 vakjes van de 36.\n3/36 = 1/12.", 8],
   ["st28_keerregel", "Keerregel", G6, "3 broeken en 4 shirts: 12", "vermenigvuldigen",
     "Kies je eerst uit a mogelijkheden en daarna uit b, dan zijn er a · b combinaties: bij elke eerste keuze passen alle tweede keuzes. Valkuil: optellen.",
     "3 broeken en 4 shirts?\nBij elke broek 4 shirts.\n3 · 4 = 12.", 8],
@@ -585,10 +769,10 @@ function tipOf(terms) { return terms && terms[0] ? terms[0] : ""; }
 // Typen per vaardigheid (plan ST, §2): G geheel getal, K kommagetal (1 decimaal), P procent, B breuk
 // (eenvoudigste vorm, breukvak). Kiezen: soort gegevens (st01), welke centrummaat (st16), kansschaal (st21),
 // fout spotten (st35). Kort verhaal (st36) zet de invoer per vraag.
-var GETAL  = { st10: 1, st11: 1, st15: 1, st17: 1, st18: 1, st19: 1, st28: 1, st29: 1, st30: 1, st34: 1 };
-var KOMMA  = { st12: 1, st13: 1 };
+var GETAL  = { st02: 1, st03: 1, st05: 1, st06: 1, st08: 1, st09: 1, st20: 1, st26: 1, st10: 1, st11: 1, st15: 1, st17: 1, st18: 1, st19: 1, st28: 1, st29: 1, st30: 1, st34: 1 };
+var KOMMA  = { st12: 1, st13: 1, st14: 1 };
 var PROCENT = { st04: 1, st23: 1, st25: 1 };
-var BREUK  = { st22: 1, st24: 1, st31: 1, st32: 1, st33: 1 };
+var BREUK  = { st27: 1, st22: 1, st24: 1, st31: 1, st32: 1, st33: 1 };
 
 var RAW_SKILLS = DEFS.map(function(d) {
   var key = d[0].slice(0, 4), gen = GEN[key], subs = d[8];

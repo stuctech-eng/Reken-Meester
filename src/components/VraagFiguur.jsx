@@ -1,9 +1,9 @@
 import { A } from "../styles/tokens.js";
-import { T, L, Poly, Boog, LIJN, P, G, HULP, PL, GL } from "./TheorieFiguur.jsx";
+import { T, L, Poly, Boog, LIJN, P, G, GROEN, HULP, PL, GL } from "./TheorieFiguur.jsx";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-// Tekening bij een meetkundevraag (plan TK2), met de getallen van die vraag. De generator geeft
+// Tekening bij een vraag van Meetkunde (plan TK2) of Statistiek en kans (plan ST, fase S2), met de getallen van die vraag. De generator geeft
 // vraag.figuur = { soort, gegeven: { ... }, gevraagd }. Alleen gegeven waarden staan erbij; op de plek
 // van het antwoord staat "?". Hoeken zijn echt getekend; lengtes niet op schaal (begrensde verhouding,
 // zodat je het antwoord niet kunt opmeten): daar staat "niet op schaal" onder.
@@ -534,6 +534,152 @@ function gelijkvormig(f) {
   );
 }
 
+// ── Statistiek en kans (plan ST, fase S2) ───────────────────────
+// Tabellen en diagrammen met alleen de waarden uit de vraag. Diagrammen zijn op schaal (waarden liggen op
+// een rasterlijn of een streepje van de as, zodat ze precies af te lezen zijn); het antwoord staat nergens
+// als label. Letters 14 tot 17 eenheden (op 100 px hoogte 10 tot 12 px).
+function TS(x, y, tekst, kleur, anker, fs) { return T(x, y, tekst, kleur, anker, { fs: fs || 16 }); }
+// Vulkleuren voor de stukken van een cirkeldiagram (en de vakjes in de legenda)
+var STUK = [P, G, GROEN, HULP];
+
+// Frequentietabel: twee rijen (de waarden en de aantallen), 4 of 5 kolommen; een leeg vak heeft "?".
+// Met een totaal staat dat onder de tabel.
+function freqtabel(f) {
+  var g = f.gegeven, n = g.waarden.length, kl = 106, kb = Math.floor((VF_B - 4 - kl) / n), x0 = 2, y0 = g.totaal ? 10 : 28, rh = 42;
+  var xs = g.waarden.map(function(w, i) { return x0 + kl + i * kb; });
+  var cel = function(x, y, w, tekst, kleur, vul, fs) {
+    return <g><rect x={x} y={y} width={w} height={rh} fill={vul || "none"} stroke={LIJN} strokeWidth={1.6} />{TS(rond(x + w / 2), y + rh / 2, tekst, kleur, "middle", fs || 17)}</g>;
+  };
+  return (
+    <g>
+      {cel(x0, y0, kl, g.kop[0], LIJN, PL, 15)}{cel(x0, y0 + rh, kl, g.kop[1], LIJN, PL, 15)}
+      {g.waarden.map(function(w, i) { return <g key={"w" + i}>{cel(xs[i], y0, kb, String(w), LIJN, PL)}{cel(xs[i], y0 + rh, kb, g.aantallen[i] === null ? "?" : String(g.aantallen[i]), g.aantallen[i] === null ? G : P)}</g>; })}
+      {g.totaal ? TS(x0 + kl + n * kb, y0 + 2 * rh + 22, "Totaal: " + g.totaal, P, "end", 17) : null}
+    </g>
+  );
+}
+
+// Assen met rasterlijnen voor staaf- en lijndiagram: y van 0 tot stappen * stap, labels bij elke rasterlijn
+var AS_X = 38, AS_R = 296, AS_Y = 112, AS_T = 12;
+function yVan(v, stap, stappen) { return rond(AS_Y - v / (stap * stappen) * (AS_Y - AS_T)); }
+function assen(stap, stappen, labels) {
+  var lijnen = [];
+  for (var i = 0; i <= stappen; i++) {
+    var y = yVan(i * stap, stap, stappen);
+    lijnen.push(<g key={"r" + i}>{L(AS_X, y, AS_R, y, i === 0 ? LIJN : HULP, false, i === 0 ? 2.2 : 0.8)}{TS(AS_X - 6, y, String(i * stap), LIJN, "end", 14)}</g>);
+  }
+  var kb = (AS_R - AS_X) / labels.length;
+  return (
+    <g>
+      {lijnen}{L(AS_X, AS_T - 4, AS_X, AS_Y, LIJN)}
+      {labels.map(function(t, i) { return <g key={"x" + i}>{TS(rond(AS_X + kb * (i + 0.5)), AS_Y + 15, t, LIJN, "middle", 15)}</g>; })}
+    </g>
+  );
+}
+function staaf(f) {
+  var g = f.gegeven, kb = (AS_R - AS_X) / g.labels.length, bw = Math.min(30, kb * 0.6);
+  return (
+    <g>
+      {assen(g.stap, g.stappen, g.labels)}
+      {g.waarden.map(function(v, i) { var y = yVan(v, g.stap, g.stappen); return <rect key={"s" + i} x={rond(AS_X + kb * (i + 0.5) - bw / 2)} y={y} width={rond(bw)} height={rond(AS_Y - y)} fill={PL} stroke={P} strokeWidth={2} />; })}
+    </g>
+  );
+}
+function lijn(f) {
+  var g = f.gegeven, kb = (AS_R - AS_X) / g.labels.length;
+  var pts = g.waarden.map(function(v, i) { return [rond(AS_X + kb * (i + 0.5)), yVan(v, g.stap, g.stappen)]; });
+  return (
+    <g>
+      {assen(g.stap, g.stappen, g.labels)}
+      <polyline points={pts.map(function(p) { return p[0] + "," + p[1]; }).join(" ")} fill="none" stroke={P} strokeWidth={2.6} strokeLinejoin="round" />
+      {pts.map(function(p, i) { return <circle key={"p" + i} cx={p[0]} cy={p[1]} r={4} fill={P} />; })}
+    </g>
+  );
+}
+// Cirkeldiagram links, legenda rechts (naam en procent); de stukken beginnen bovenaan, met de klok mee
+function cirkeldiagram(f) {
+  var g = f.gegeven, c = [72, 70], R = 60, hoek = 90, stukken = [];
+  g.delen.forEach(function(d, i) {
+    var t = d.pct * 3.6, p1 = pt(c, R, hoek), p2 = pt(c, R, hoek - t), groot = t > 180 ? 1 : 0;
+    stukken.push(<path key={"c" + i} d={"M" + c[0] + "," + c[1] + " L" + rond(p1[0]) + "," + rond(p1[1]) + " A" + R + "," + R + " 0 " + groot + " 1 " + rond(p2[0]) + "," + rond(p2[1]) + " Z"} fill={STUK[i]} stroke="#ffffff" strokeWidth={2} />);
+    hoek -= t;
+  });
+  var y0 = 70 - (g.delen.length - 1) * 15;
+  return (
+    <g>
+      {stukken}
+      {g.delen.map(function(d, i) { var y = y0 + i * 30; return <g key={"l" + i}><rect x={148} y={y - 8} width={16} height={16} fill={STUK[i]} />{TS(172, y, d.naam + " " + d.pct + "%", LIJN, "start", 17)}</g>; })}
+    </g>
+  );
+}
+// Boxplot boven een getallenlijn van lo tot lo + 60, streepjes per 5, getallen per 10
+function boxplot(f) {
+  var g = f.gegeven, x = function(v) { return rond(20 + (v - g.lo) / 60 * 260); }, yA = 104, yB = 30, yO = 80, yM = 55;
+  var as = [];
+  for (var v = g.lo; v <= g.lo + 60; v += 5) {
+    var tien = (v - g.lo) % 10 === 0;
+    as.push(<g key={"t" + v}>{L(x(v), yA, x(v), yA + (tien ? 8 : 5), LIJN, false, 1.6)}{tien ? TS(x(v), yA + 20, String(v), LIJN, "middle", 15) : null}</g>);
+  }
+  var w = g.vijf;
+  return (
+    <g>
+      {L(x(g.lo), yA, x(g.lo + 60), yA, LIJN, false, 1.6)}{as}
+      {L(x(w[0]), yM, x(w[1]), yM)}{L(x(w[3]), yM, x(w[4]), yM)}
+      {L(x(w[0]), yM - 10, x(w[0]), yM + 10)}{L(x(w[4]), yM - 10, x(w[4]), yM + 10)}
+      <rect x={x(w[1])} y={yB} width={rond(x(w[3]) - x(w[1]))} height={yO - yB} fill={PL} stroke={P} strokeWidth={2.2} />
+      {L(x(w[2]), yB, x(w[2]), yO, P, false, 3)}
+      {[0, 1, 2, 3, 4].map(function(i) { return <g key={"h" + i}>{L(x(w[i]), yO + 2, x(w[i]), yA - 2, HULP, true, 1)}</g>; })}
+    </g>
+  );
+}
+// Rooster van twee dobbelstenen: 6 bij 6 vakjes met de som, de ogen langs de randen
+function rooster(f) {
+  var kb = 44, kk = 36, rh = 20, out = [];
+  out.push(<g key="k">{TS(kk / 2, rh / 2 + 1, "+", P, "middle", 14)}</g>);
+  for (var i = 1; i <= 6; i++) {
+    out.push(<g key={"a" + i}>{TS(rond(kk + kb * (i - 0.5)), rh / 2 + 1, String(i), P, "middle", 14)}{TS(kk / 2, rond(rh * (i + 0.5)), String(i), P, "middle", 15)}</g>);
+    for (var j = 1; j <= 6; j++) {
+      out.push(<g key={"c" + i + j}><rect x={kk + kb * (j - 1)} y={rh * i} width={kb} height={rh} fill="none" stroke={HULP} strokeWidth={0.8} />{TS(rond(kk + kb * (j - 0.5)), rond(rh * (i + 0.5)), String(i + j), LIJN, "middle", 14)}</g>);
+    }
+  }
+  return <g>{out}{L(kk, 0, kk, 140, LIJN, false, 1.6)}{L(0, rh, VF_B, rh, LIJN, false, 1.6)}</g>;
+}
+// Kansboom van 2 stappen (2 takken per stap, kansen op de takken) of de volgordeboom van A, B en C (3 stappen)
+function boom(f) {
+  var g = f.gegeven;
+  if (g.volgorde) {
+    var lt = ["A", "B", "C"], ys = [12, 35, 58, 82, 105, 128], out = [], k = 0;
+    lt.forEach(function(a, i) {
+      var y1 = (ys[2 * i] + ys[2 * i + 1]) / 2;
+      out.push(<g key={"n" + a}>{L(14, 70, 84, y1, HULP, false, 1.6)}{TS(96, y1, a, P, "middle", 17)}</g>);
+      lt.filter(function(b) { return b !== a; }).forEach(function(b, j) {
+        var y2 = ys[2 * i + j], c = lt.filter(function(z) { return z !== a && z !== b; })[0];
+        out.push(<g key={"r" + (k++)}>{L(108, y1, 170, y2, HULP, false, 1.6)}{TS(182, y2, b, P, "middle", 17)}{L(194, y2, 236, y2, HULP, false, 1.6)}{TS(248, y2, c, P, "middle", 17)}</g>);
+      });
+    });
+    return <g><circle cx={10} cy={70} r={4} fill={LIJN} />{out}</g>;
+  }
+  var y1 = [35, 105], y2 = [[17, 52], [88, 123]], o = [];
+  [0, 1].forEach(function(i) {
+    o.push(<g key={"a" + i}>{L(14, 70, 62, y1[i], HULP, false, 1.6)}{TS(36, rond((70 + y1[i]) / 2) + (i ? 9 : -9), g.kansen[0][i], LIJN, "middle", 15)}{TS(96, y1[i], g.uitkomsten[0][i], P, "middle", 16)}</g>);
+    [0, 1].forEach(function(j) {
+      o.push(<g key={"b" + i + j}>{L(130, y1[i], 210, y2[i][j], HULP, false, 1.6)}{TS(170, rond((y1[i] + y2[i][j]) / 2) + (j ? 8 : -8), g.kansen[1][i][j], LIJN, "middle", 15)}{TS(250, y2[i][j], g.uitkomsten[1][j], P, "middle", 16)}</g>);
+    });
+  });
+  return <g><circle cx={10} cy={70} r={4} fill={LIJN} />{o}</g>;
+}
+function boomTekst(f) {
+  var g = f.gegeven;
+  if (g.volgorde) return "Boom met alle volgordes van A, B en C: eerst 3 takken, dan 2, dan 1.";
+  return "Kansboom in twee stappen. Eerste stap: " + g.uitkomsten[0][0] + " met kans " + g.kansen[0][0] + ", " + g.uitkomsten[0][1] + " met kans " + g.kansen[0][1] +
+    ". Tweede stap na " + g.uitkomsten[0][0] + ": " + g.uitkomsten[1][0] + " " + g.kansen[1][0][0] + ", " + g.uitkomsten[1][1] + " " + g.kansen[1][0][1] +
+    "; na " + g.uitkomsten[0][1] + ": " + g.uitkomsten[1][0] + " " + g.kansen[1][1][0] + ", " + g.uitkomsten[1][1] + " " + g.kansen[1][1][1] + ".";
+}
+function tabelTekst(f) {
+  var g = f.gegeven;
+  return "Tabel. " + g.kop[0] + ": " + g.waarden.join(", ") + ". " + g.kop[1] + ": " + g.aantallen.map(function(a) { return a === null ? "vraagteken" : a; }).join(", ") + "." + (g.totaal ? " Totaal: " + g.totaal + "." : "");
+}
+
 // ── Register ────────────────────────────────────────────────────
 
 var SOORT = {
@@ -557,6 +703,13 @@ var SOORT = {
   kegel: { teken: kegel, schaal: false, tekst: function(f) { return "Kegel met straal " + f.gegeven.r + " cm en hoogte " + f.gegeven.h + " cm. De inhoud heeft een vraagteken."; } },
   balk: { teken: balk, schaal: false, tekst: function(f) { var g = f.gegeven; return "Balk van " + g.l + " bij " + g.b + " bij " + g.h + " cm. De totale oppervlakte heeft een vraagteken."; } },
   gelijkvormig: { teken: gelijkvormig, schaal: false, tekst: function(f) { var g = f.gegeven; return "Twee gelijkvormige driehoeken. Bij de eerste: zijde " + g.a1 + " cm en zijde " + g.a2 + " cm. Bij de tweede hoort " + g.a1 + " cm bij " + g.b1 + " cm; de zijde die bij " + g.a2 + " cm hoort, heeft een vraagteken."; } },
+  freqtabel: { teken: freqtabel, schaal: true, tekst: tabelTekst },
+  staaf: { teken: staaf, schaal: true, tekst: function(f) { var g = f.gegeven; return "Staafdiagram. " + g.labels.map(function(l, i) { return l + " " + g.waarden[i]; }).join(", ") + "."; } },
+  lijn: { teken: lijn, schaal: true, tekst: function(f) { var g = f.gegeven; return "Lijndiagram. " + g.labels.map(function(l, i) { return "week " + l + ": " + g.waarden[i]; }).join(", ") + "."; } },
+  cirkeldiagram: { teken: cirkeldiagram, schaal: true, tekst: function(f) { return "Cirkeldiagram. " + f.gegeven.delen.map(function(d) { return d.naam + " " + d.pct + " procent"; }).join(", ") + "."; } },
+  boxplot: { teken: boxplot, schaal: true, tekst: function(f) { var w = f.gegeven.vijf; return "Boxplot boven een getallenlijn. Snor van " + w[0] + " tot " + w[1] + ", doos van " + w[1] + " tot " + w[3] + " met de streep bij " + w[2] + ", snor van " + w[3] + " tot " + w[4] + "."; } },
+  rooster: { teken: rooster, schaal: true, tekst: function() { return "Rooster van twee dobbelstenen: 6 bij 6 vakjes, in elk vakje de som van de ogen."; } },
+  boom: { teken: boom, schaal: true, tekst: boomTekst },
 };
 export function bekendeVraagFiguur(f) { return !!(f && SOORT[f.soort]); }
 // Hoogte van het onderschrift "niet op schaal" (px), voor de ruimtemeting in PracticeScreen
