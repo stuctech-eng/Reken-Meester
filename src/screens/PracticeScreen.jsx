@@ -39,6 +39,13 @@ function toonVraag(vraag) {
   return String(vraag).replace(GEMENGD_RE, "$1$2\u00a0$3");
 }
 
+// Weergave van het antwoord in de feedbackregel ("✖ Antwoord: ..."): " = " krijgt vaste spaties, zodat
+// "x = 11" of "1 uur = 60 min" niet midden in de gelijkheid over twee regels breekt. Alleen voor het beeld
+// (ook in de proefregel die de ruimte meet): het antwoord zelf en het nakijken houden de gewone spaties.
+function toonAntwoord(antwoord) {
+  return String(antwoord).split(" = ").join("\u00a0=\u00a0");
+}
+
 // Regel van een kolomsom: alleen een getal, eventueel met een rekenteken ervoor ("828", "− 194")
 var COLUMN_LINE_RE = /^[\u2212\u00d7+:-]?\s?[\d.,]+$/;
 // Onder deze schermhoogtes (px) gaat de oefenpagina in de compacte en de extra compacte
@@ -693,7 +700,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     // houden we vrij, zodat het antwoord ook daarna in beeld blijft. Gemeten met een onzichtbare proefregel
     // in dezelfde opmaak, in de kaart zelf (vóór het tekenen weer weg).
     var naAntwoord = 0;
-    ["✓ Goed zo!", "✖  Antwoord: " + currentQuestion.answer].forEach(function(t) {
+    ["✓ Goed zo!", "✖  Antwoord: " + toonAntwoord(currentQuestion.answer)].forEach(function(t) {
       var regel = document.createElement("div");
       regel.style.cssText = "margin-top:16px;font-size:" + T.xl + "px;font-weight:800;visibility:hidden";
       regel.textContent = t;
@@ -965,7 +972,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             }}>
               {feedback === "correct"
                 ? ("✓ Goed zo!")
-                : ("✖  Antwoord: " + currentQuestion.answer)
+                : ("✖  Antwoord: " + toonAntwoord(currentQuestion.answer))
               }
             </div>
           )}

@@ -414,7 +414,7 @@ var MAAND_DAGEN = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   // t33: alleen omrekenen (geen "welke eeuw hoort bij een jaartal")
   for (var e = 1; e <= 9; e++) {
     put("t33", e + (e === 1 ? " eeuw" : " eeuwen") + " = ? jaar", String(e * 100), nums(e * 100, [e * 10, e * 1000, e * 100 + 100], 100), "1 eeuw = 100 jaar: " + e + TIMES + "100 = " + e * 100 + ".");
-    put("t33", e + " decennia = ? jaar", String(e * 10), nums(e * 10, [e * 100, e, e * 10 + 10], 10), "1 decennium = 10 jaar: " + e + TIMES + "10 = " + e * 10 + ".");
+    put("t33", e + (e === 1 ? " decennium" : " decennia") + " = ? jaar", String(e * 10), nums(e * 10, [e * 100, e, e * 10 + 10], 10), "1 decennium = 10 jaar: " + e + TIMES + "10 = " + e * 10 + ".");
     put("t33", e * 10 + " jaar = ? decennia", String(e), nums(e, [e * 10 / 100 % 1 === 0 ? e / 10 : null, e * 10, e + 1, e + 2]), "10 jaar = 1 decennium: " + e * 10 + " : 10 = " + e + ".");
   }
   for (var c = 2; c <= 9; c++) put("t33", c * 100 + " jaar = ? eeuwen", String(c), nums(c, [c * 10, c + 1, c - 1]), "100 jaar = 1 eeuw: " + c * 100 + " : 100 = " + c + ".");
@@ -468,7 +468,7 @@ var MAAND_DAGEN = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 })();
 
 // Niet-afbrekende spatie tussen getal en eenheid in vragen en (niet fout-spot) keuzes
-var UNIT_RE = /(\d) (min|uur|sec|dagen|dag|weken|week|maanden|maand|jaar|eeuwen|eeuw|decennia|kwartier)(?=[\s:.?,]|$)/g;
+var UNIT_RE = /(\d) (min|uur|sec|dagen|dag|weken|week|maanden|maand|jaar|eeuwen|eeuw|decennia|decennium|kwartier)(?=[\s:.?,]|$)/g;
 Object.keys(P).forEach(function(id) { P[id].forEach(function(it) {
   it.question = it.question.replace(UNIT_RE, "$1" + NB + "$2");
   if (it.kind !== "fout") it.answer = it.answer.replace(UNIT_RE, "$1" + NB + "$2");

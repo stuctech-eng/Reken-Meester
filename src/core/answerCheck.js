@@ -356,7 +356,9 @@ function duurDelenOk(a, b) {
 }
 function duurMinuten(p) { return Number(p.a) * 60 + Number(p.b); }
 
+// Alleen een positief geheel aantal minuten; anders null (bescherming bij hergebruik; Tijd geeft altijd > 0)
 export function writeDuur(minuten) {
+  if (typeof minuten !== "number" || !isFinite(minuten) || minuten <= 0 || minuten % 1 !== 0) return null;
   if (minuten < 60) return minuten + "\u00a0min";
   if (minuten % 60 === 0) return (minuten / 60) + "\u00a0uur";
   var m = minuten % 60;
