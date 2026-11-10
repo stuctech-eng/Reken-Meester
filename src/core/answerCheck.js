@@ -98,6 +98,13 @@ export function parseTypedInteger(text) {
   return Number(digits);
 }
 
+// Weergave van een gelijkheid in een antwoord of keuze: " = " krijgt vaste spaties, zodat "x = 11" of
+// "1 uur = 60 min" niet midden in de gelijkheid over twee regels breekt. Alleen voor het beeld (feedbackregel
+// en keuzeknoppen): het antwoord, de keuze zelf en het nakijken houden de gewone spaties.
+export function toonGelijkheid(tekst) {
+  return String(tekst).split(" = ").join("\u00a0=\u00a0");
+}
+
 // Weergave van de cijfers tijdens het typen: groepjes van drie met een spatie ("12 533")
 export function formatTypedDigits(digits) {
   var s = String(digits || "");

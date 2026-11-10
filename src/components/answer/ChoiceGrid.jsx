@@ -1,5 +1,6 @@
 import { useState, useRef, useLayoutEffect } from "react";
 import { A } from "../../styles/tokens.js";
+import { toonGelijkheid } from "../../core/answerCheck.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -18,6 +19,11 @@ import { A } from "../../styles/tokens.js";
 // vier knoppen dan passen met een letter van minstens CH_EEN_REGEL_MIN (of CH_SMALL_EEN_REGEL_MIN).
 // Alles of niets: past dat niet, dan geldt voor de hele set precies de gewone meting hierboven
 // (geen nowrap, afbreken toegestaan). De letter blijft voor alle vier gelijk.
+//
+// Knoptekst bij formuleEenRegel (alleen Algebra en Algebra 2): toonGelijkheid(keuze), " = " met vaste spaties
+// ("x = \u22129 of x = 9" breekt niet midden in "x = 9" af). In de andere modi de keuze zelf (fout spotten met
+// eenheden breekt daar beter op de gewone spaties). Alleen het beeld: de meting hierboven meet de knop zoals hij
+// getoond wordt; key, onChoice, selected en isFormuleKeuze gebruiken de keuze zelf.
 var CH_FONT_MIN  = 22;
 var CH_SMALL_MIN = 16;
 var CH_EEN_REGEL_MIN       = 26;
@@ -145,7 +151,7 @@ export default function ChoiceGrid({ vraag, size, feedback, selected, onChoice, 
               whiteSpace: (formuleEenRegel && chNw && chNw.charAt(ci) === "1") ? "nowrap" : undefined,
             }}
           >
-            {choice}
+            {formuleEenRegel ? toonGelijkheid(choice) : choice}
           </button>
         );
       })}

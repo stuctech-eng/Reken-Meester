@@ -6,7 +6,7 @@ import { getTitel, calcXp } from "../core/save.js";
 import { KEYPAD_SIZES, KEYPAD_MIN } from "../components/Keypad.jsx";
 import { VAK_MIN_TEKEN } from "../components/answer/NumberAnswer.jsx";
 import AnswerArea from "../components/answer/AnswerArea.jsx";
-import { TYPE_MAX_DIGITS, quantityMaxDecimals } from "../core/answerCheck.js";
+import { TYPE_MAX_DIGITS, quantityMaxDecimals, toonGelijkheid } from "../core/answerCheck.js";
 import { resolveInput } from "../core/inputResolve.js";
 import { gradeTyped } from "../core/grading.js";
 import TheorieFiguur, { splitsTheorie } from "../components/TheorieFiguur.jsx";
@@ -37,13 +37,6 @@ var Q_FONT_MIN = 28;
 var GEMENGD_RE = /(^|[^\d\/])(\d+) (\d+\/\d+)/g;
 function toonVraag(vraag) {
   return String(vraag).replace(GEMENGD_RE, "$1$2\u00a0$3");
-}
-
-// Weergave van het antwoord in de feedbackregel ("✖ Antwoord: ..."): " = " krijgt vaste spaties, zodat
-// "x = 11" of "1 uur = 60 min" niet midden in de gelijkheid over twee regels breekt. Alleen voor het beeld
-// (ook in de proefregel die de ruimte meet): het antwoord zelf en het nakijken houden de gewone spaties.
-function toonAntwoord(antwoord) {
-  return String(antwoord).split(" = ").join("\u00a0=\u00a0");
 }
 
 // Regel van een kolomsom: alleen een getal, eventueel met een rekenteken ervoor ("828", "− 194")
@@ -700,7 +693,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     // houden we vrij, zodat het antwoord ook daarna in beeld blijft. Gemeten met een onzichtbare proefregel
     // in dezelfde opmaak, in de kaart zelf (vóór het tekenen weer weg).
     var naAntwoord = 0;
-    ["✓ Goed zo!", "✖  Antwoord: " + toonAntwoord(currentQuestion.answer)].forEach(function(t) {
+    // Zelfde tekst als de zichtbare regel (toonGelijkheid, answerCheck.js), zodat de gemeten hoogte klopt
+    ["✓ Goed zo!", "✖  Antwoord: " + toonGelijkheid(currentQuestion.answer)].forEach(function(t) {
       var regel = document.createElement("div");
       regel.style.cssText = "margin-top:16px;font-size:" + T.xl + "px;font-weight:800;visibility:hidden";
       regel.textContent = t;
@@ -972,7 +966,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
             }}>
               {feedback === "correct"
                 ? ("✓ Goed zo!")
-                : ("✖  Antwoord: " + toonAntwoord(currentQuestion.answer))
+                : ("✖  Antwoord: " + toonGelijkheid(currentQuestion.answer))
               }
             </div>
           )}
