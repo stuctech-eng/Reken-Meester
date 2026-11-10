@@ -16,6 +16,7 @@ import { WISK_GETALLEN_SKILLS, WISK_GETALLEN_ORDER } from "./skills/wiskunde-get
 import { WISK_ALGEBRA_SKILLS, WISK_ALGEBRA_ORDER } from "./skills/wiskunde-algebra.js";
 import { WISK_ALGEBRA2_SKILLS, WISK_ALGEBRA2_ORDER } from "./skills/wiskunde-algebra2.js";
 import { WISK_MEETKUNDE_SKILLS, WISK_MEETKUNDE_ORDER } from "./skills/wiskunde-meetkunde.js";
+import { WISK_STATISTIEK_SKILLS, WISK_STATISTIEK_ORDER } from "./skills/wiskunde-statistiek.js";
 
 // group: de hoofdgroep op Home ("rekenen" of "wiskunde"). sub: het tussenkopje binnen Rekenen
 // ("basis", "getallen", "praktisch"); alleen voor de weergave op Home, niet voor opslag of voortgang.
@@ -196,6 +197,17 @@ export var SUBJECTS = [
     levels: 10,
     group: "wiskunde",
   },
+  {
+    id: "wiskunde_statistiek",
+    label: "Statistiek en kans",
+    icon: "\u2156",
+    color: "#64748b",
+    lightColor: "#f1f5f9",
+    description: "Gegevens, diagrammen, gemiddelde en kans. Aanbevolen: eerst Breuken en Procenten",
+    available: true,
+    levels: 10,
+    group: "wiskunde",
+  },
 ];
 
 export function getSubject(id) {
@@ -226,6 +238,7 @@ export var SUBJECT_SKILLS = {
   wiskunde_algebra: { skills: WISK_ALGEBRA_SKILLS, order: WISK_ALGEBRA_ORDER },
   wiskunde_algebra2: { skills: WISK_ALGEBRA2_SKILLS, order: WISK_ALGEBRA2_ORDER },
   wiskunde_meetkunde: { skills: WISK_MEETKUNDE_SKILLS, order: WISK_MEETKUNDE_ORDER },
+  wiskunde_statistiek: { skills: WISK_STATISTIEK_SKILLS, order: WISK_STATISTIEK_ORDER },
 };
 
 function getSubjectSkills(subjectId) {

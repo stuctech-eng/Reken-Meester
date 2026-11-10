@@ -237,6 +237,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "mk01_hoeksoorten",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Wiskunde, domein Statistiek en kans (volwassenen): eigen voortgang
+    wiskunde_statistiek: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "st01_soort_gegevens",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 
