@@ -613,27 +613,29 @@ THEORIE[G1] =
   "• Meetbare getallen (lengte, tijd, gewicht): ook tussenwaarden, zoals 152,5 cm.\n" +
   "• Categorieën zonder volgorde (kleur, merk): namen; rekenen kan niet, tellen wel.\n" +
   "• Categorieën met volgorde (S, M, L; slecht, matig, goed): wel een volgorde, maar geen getallen.\n" +
+  "[fig:st_soorten]\n" +
   "Een frequentie is hoe vaak iets voorkomt. De relatieve frequentie is dat aantal als deel van het geheel, meestal in procenten: aantal : totaal " + DOT + " 100%. 12 van de 40 is 12 : 40 " + DOT + " 100% = 30%. Zo kun je groepen van verschillende grootte eerlijk vergelijken.";
 THEORIE[G2] =
   "Een diagram laat in \u00e9\u00e9n oogopslag zien wat in een tabel als rij getallen staat. Elk soort diagram past bij een ander soort vraag.\n" +
   "\u2022 Staafdiagram: aantallen per categorie of per dag vergelijken. Lees de hoogte af op de rasterlijnen; het verschil is de ene hoogte min de andere.\n" +
   "\u2022 Lijndiagram: hoe iets verandert in de tijd. Een stijging is de nieuwe stand min de oude. De grootste stijging zit waar de lijn het steilst omhoog gaat, en dat is niet altijd bij het hoogste punt.\n" +
   "\u2022 Cirkeldiagram: delen van een geheel. De hele cirkel is 100% en ook 360 graden, dus 1% is 3,6 graden. Weet je het totaal, dan is een stuk van p% gelijk aan p : 100 " + DOT + " totaal.\n" +
-  "Let op de as: begint de verticale as niet bij 0, dan lijken verschillen groter dan ze zijn. Lees daarom altijd de getallen, niet alleen de lengte van de staven.";
+  "Let op de as: begint de verticale as niet bij 0, dan lijken verschillen groter dan ze zijn. Lees daarom altijd de getallen, niet alleen de lengte van de staven.\n[fig:st_as]";
 THEORIE[G3] =
   "Een centrummaat vat een rij getallen samen in één getal dat zegt waar het midden ligt. Er zijn er drie, en ze zeggen elk iets anders.\n" +
   "• Gemiddelde: alles optellen en delen door het aantal. Het is wat ieder krijgt als je eerlijk verdeelt. Ontbreekt er één getal, dan weet je het totaal (gemiddelde " + DOT + " aantal) en trek je de bekende getallen ervan af.\n" +
   "• Mediaan: eerst sorteren, dan het middelste getal. Bij een even aantal zijn er twee middelste; de mediaan ligt daar precies tussen (hun gemiddelde). Valkuil: het middelste getal nemen zonder te sorteren.\n" +
   "• Modus: het getal (of de categorie) dat het vaakst voorkomt.\n" +
-  "Welke past? Een uitschieter (één heel groot of klein getal) trekt het gemiddelde mee, maar de mediaan nauwelijks. Bij inkomens of huizenprijzen zegt de mediaan daarom meer over het gewone geval. Bij categorieën (kleuren, maten) kan alleen de modus.";
+  "Welke past? Een uitschieter (één heel groot of klein getal) trekt het gemiddelde mee, maar de mediaan nauwelijks. Bij inkomens of huizenprijzen zegt de mediaan daarom meer over het gewone geval. Bij categorieën (kleuren, maten) kan alleen de modus.\n[fig:st_uitschieter]";
 THEORIE[G4] =
   "Twee klassen kunnen hetzelfde gemiddelde hebben en toch heel verschillend zijn: in de ene liggen alle cijfers dicht bij elkaar, in de andere ver uit elkaar. Spreiding meet dat.\n" +
   "• Spreidingsbreedte: grootste min kleinste. Snel, maar één uitschieter maakt hem groot.\n" +
   "• Kwartielen verdelen de gesorteerde rij in vier gelijke delen. Q1 (eerste kwartiel) is de mediaan van de onderste helft, Q3 (derde kwartiel) de mediaan van de bovenste helft. In deze app telt bij een oneven aantal de mediaan zelf niet mee in de helften. Er bestaan ook andere methoden (met de mediaan erbij, of met tussenwaarden zoals rekenmachines doen); die geven soms een iets ander getal.\n" +
-  "• Kwartielafstand: Q3 " + MIN + " Q1. Dat is de breedte van de middelste helft van de gegevens; een uitschieter heeft daar geen invloed op.";
+  "• Kwartielafstand: Q3 " + MIN + " Q1. Dat is de breedte van de middelste helft van de gegevens; een uitschieter heeft daar geen invloed op.\n[fig:st_kwartielen]";
 THEORIE[G5] =
   "Een kans zegt hoe groot de mogelijkheid is dat iets gebeurt, als getal van 0 (onmogelijk) tot 1 (zeker). Precies de helft is fifty-fifty: 1/2 of 50%.\n" +
   "Zijn alle uitkomsten even waarschijnlijk, dan is kans = gunstig : mogelijk. Bij 3 rode en 5 blauwe knikkers is de kans op rood 3/8: 3 gunstige van de 8 knikkers. Valkuil: 3/5 (rood tegen blauw); de noemer is altijd het totaal. Schrijf de breuk zo eenvoudig mogelijk.\n" +
+  "[fig:st_zak]\n" +
   "Kans op niet: iets gebeurt of het gebeurt niet, samen is dat 1. Kans op geen 6 = 1 " + MIN + " 1/6 = 5/6.\n" +
   "Herhaal je een experiment vaak, dan komt de relatieve frequentie steeds dichter bij de kans (de wet van de grote aantallen). Daarom kun je een onbekende kans schatten met een experiment: 46 keer een 6 in 200 worpen geeft ongeveer 23%.";
 THEORIE[G6] =
@@ -642,11 +644,13 @@ THEORIE[G6] =
   "• Volgordes: 4 kinderen op een rij. De eerste plek heeft 4 keuzes, de tweede nog 3, dan 2, dan 1: 4 " + DOT + " 3 " + DOT + " 2 " + DOT + " 1 = 24.\n" +
   "• Codes: mogen cijfers herhalen en mag een 0 vooraan, dan heeft elke plek 10 mogelijkheden. Een code van 3 cijfers: 10 " + DOT + " 10 " + DOT + " 10 = 1000 (000 tot en met 999).\n" +
   "\u2022 Rooster: bij twee dobbelstenen zet je de ogen van de ene langs de bovenkant en die van de andere langs de zijkant. Zo zie je alle 6 " + DOT + " 6 = 36 uitkomsten. 3 + 4 en 4 + 3 zijn verschillende vakjes: som 7 komt 6 keer voor, dus de kans is 6/36 = 1/6.\n" +
+  "[fig:st_rooster]\n" +
   "\u2022 Boom: elke tak is een keuze. Het aantal routes van links naar rechts is het aantal mogelijkheden; bij 3 kinderen 3 " + DOT + " 2 " + DOT + " 1 = 6 routes.";
 THEORIE[G7] =
   "Bij twee stappen (twee worpen, twee keer pakken) vermenigvuldig je de kansen langs de route: dat is de keerregel voor kansen. Een kansboom laat dat zien: op elke tak staat de kans, en de kans op een route is het product van de kansen op die route.\n" +
   "• Onafhankelijk (de eerste stap verandert niets aan de tweede, zoals twee keer gooien): kans op twee keer een 6 = 1/6 " + DOT + " 1/6 = 1/36. Valkuil: optellen.\n" +
   "• Zonder terugleggen verandert de tweede stap wel: bij 2 rode en 3 blauwe knikkers is de kans op twee rode 2/5 " + DOT + " 1/4 = 1/10, want na de eerste rode zijn er nog 1 rode van de 4.\n" +
+  "[fig:st_kansboom]\n" +
   "• Minstens één: reken via het tegendeel. Kans op minstens één keer kop bij 2 worpen = 1 " + MIN + " kans op geen kop = 1 " + MIN + " 1/4 = 3/4.\n" +
   "• Verwacht aantal = aantal keer " + DOT + " kans: bij 600 worpen verwacht je 600 " + DOT + " 1/6 = 100 keer een 6.";
 THEORIE[G8] =

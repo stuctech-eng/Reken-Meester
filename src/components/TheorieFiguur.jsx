@@ -2,7 +2,7 @@ import { A } from "../styles/tokens.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-// Vaste tekeningen bij de theorie van Meetkunde (plan TK1). Elke tekening is een SVG met een vaste
+// Vaste tekeningen bij de theorie van Meetkunde (plan TK1) en van Statistiek en kans (plan ST, fase S3; ids st_...). Elke tekening is een SVG met een vaste
 // viewBox (breedte 320), op het scherm hoogstens 320 px breed en verder schalend met het venster.
 // Letters minstens 17 eenheden en lijnen minstens 2,1 eenheden: op het smalste scherm (tekening ongeveer
 // 236 px breed) is dat nog minstens 12,5 px en 1,5 px. Schematisch, niet op schaal; waar het telt
@@ -323,6 +323,118 @@ FIG.vergroten = { h: 240, label: "Boven twee gelijkvormige rechthoekige driehoek
       {Pijl(212, 190, 228, 190)}
       {KUBUS8.map(function(k, i) { return <g key={"k" + i}>{blokje(KUBUS8_X + k[0] * KUBUS8_S + k[2] * KUBUS8_D, KUBUS8_Y - k[1] * KUBUS8_S - k[2] * KUBUS8_D, KUBUS8_S, KUBUS8_D, GL)}</g>; })}
       {T(268, 222, "8", G)}
+    </g>
+  ); } };
+
+// ── Statistiek en kans (plan ST, fase S3) ────────────────────────
+// Vaste voorbeelden bij de theorie per groep; noemt de tekst een voorbeeld, dan dezelfde getallen.
+var ROOD = A.error;
+function stVak(x, y, b, h, vul, rand) { return <rect x={x} y={y} width={b} height={h} rx={6} fill={vul || "none"} stroke={rand || LIJN} strokeWidth={1.8} />; }
+
+FIG.st_soorten = { h: 150, label: "Vier soorten gegevens. Telbaar: 0, 1, 2, 3. Meetbaar: 152,5 cm. Geen volgorde: rood, blauw. Met volgorde: S, M, L.",
+  onder: "Getallen tel of meet je; categorieën zijn namen, met of zonder vaste volgorde.",
+  teken: function() { return (
+    <g>
+      {stVak(6, 6, 150, 64, PL, P)}{T(81, 26, "telbaar", P)}{T(81, 52, "0, 1, 2, 3")}
+      {stVak(164, 6, 150, 64, PL, P)}{T(239, 26, "meetbaar", P)}{T(239, 52, "152,5 cm")}
+      {stVak(6, 80, 150, 64, GL, G)}{T(81, 100, "geen volgorde", G)}{T(81, 126, "rood, blauw")}
+      {stVak(164, 80, 150, 64, GL, G)}{T(239, 100, "met volgorde", G)}{T(239, 126, "S < M < L")}
+    </g>
+  ); } };
+
+// Twee staafdiagrammen met dezelfde getallen (40 en 44); links begint de as bij 0, rechts bij 38
+function staafje(x0, v, lo, hi, kleur) { var y = 140 - (v - lo) / (hi - lo) * 100; return <g><rect x={x0} y={y} width={34} height={140 - y} fill={kleur === P ? PL : GL} stroke={kleur} strokeWidth={2} />{T(x0 + 17, y - 12, String(v), kleur)}</g>; }
+FIG.st_as = { h: 172, label: "Twee staafdiagrammen met staven van 40 en 44. Links begint de as bij 0: de staven zijn bijna even hoog. Rechts begint de as bij 38: de tweede staaf lijkt drie keer zo hoog.",
+  onder: "Zelfde getallen, andere as: rechts lijkt het verschil veel groter.",
+  teken: function() { return (
+    <g>
+      {L(40, 30, 40, 140)}{L(40, 140, 150, 140)}{T(32, 140, "0", LIJN, "end")}{T(32, 40, "50", LIJN, "end")}
+      {staafje(56, 40, 0, 50, P)}{staafje(104, 44, 0, 50, P)}
+      {L(206, 30, 206, 140)}{L(206, 140, 316, 140)}{T(198, 140, "38", LIJN, "end")}{T(198, 40, "44", LIJN, "end")}
+      {staafje(222, 40, 38, 44, G)}{staafje(270, 44, 38, 44, G)}
+      {T(95, 160, "as vanaf 0", P)}{T(261, 160, "as vanaf 38", G)}
+    </g>
+  ); } };
+
+// Getallenlijn 0..20 met de punten 2, 3, 4, 4, 5, 6, 18: de mediaan (4) en het gemiddelde (6)
+var UIT = [2, 3, 4, 4, 5, 6, 18];
+function ux(v) { return 20 + v * 14; }
+FIG.st_uitschieter = { h: 150, label: "Getallenlijn van 0 tot 20 met de punten 2, 3, 4, 4, 5, 6 en 18. De mediaan is 4. Het gemiddelde is 6: de uitschieter 18 trekt het naar rechts.",
+  onder: "Eén uitschieter (18) trekt het gemiddelde naar 6; de mediaan blijft 4.",
+  teken: function() { return (
+    <g>
+      {L(ux(0), 112, ux(20), 112)}
+      {[0, 5, 10, 15, 20].map(function(v) { return <g key={"t" + v}>{L(ux(v), 106, ux(v), 118)}{T(ux(v), 136, String(v))}</g>; })}
+      {UIT.map(function(v, i) { var dubbel = i > 0 && UIT[i - 1] === v; return <circle key={"p" + i} cx={ux(v)} cy={dubbel ? 78 : 94} r={7} fill={v === 18 ? ROOD : LIJN} />; })}
+      {L(ux(4), 34, ux(4), 104, G, true)}{T(ux(4), 22, "mediaan 4", G)}
+      {L(ux(6), 58, ux(6), 104, P, true)}{T(ux(6) + 6, 48, "gemiddelde 6", P, "start")}
+      {T(ux(18), 70, "uitschieter", ROOD)}
+    </g>
+  ); } };
+
+// Kwartielen bij 2, 5, 8, 11, 13, 17, 20 (de mediaan telt niet mee), met de boxplot eronder
+var KW = [2, 5, 8, 11, 13, 17, 20];
+function kx(i) { return 20 + i * 42; }
+function bx(v) { return 20 + v * 14; }
+FIG.st_kwartielen = { h: 214, label: "De rij 2, 5, 8, 11, 13, 17, 20. De mediaan is 11. Onderste helft 2, 5, 8 met Q1 = 5; bovenste helft 13, 17, 20 met Q3 = 17. Daaronder de boxplot: snor van 2 tot 5, doos van 5 tot 17 met de streep bij 11, snor van 17 tot 20.",
+  onder: "Mediaan 11; Q1 = 5 en Q3 = 17 zijn de middens van de helften. Kwartielafstand 17 − 5 = 12.",
+  teken: function() { return (
+    <g>
+      {KW.map(function(v, i) { var kleur = i === 3 ? G : (i === 1 || i === 5) ? P : LIJN; return <g key={"k" + i}>{stVak(kx(i), 8, 38, 36, i === 3 ? GL : (i === 1 || i === 5) ? PL : "none", kleur)}{T(kx(i) + 19, 27, String(v), kleur)}</g>; })}
+      {L(kx(0), 54, kx(2) + 38, 54, HULP)}{L(kx(4), 54, kx(6) + 38, 54, HULP)}
+      {T(kx(1) + 19, 74, "Q1 = 5", P)}{T(kx(3) + 19, 74, "mediaan", G)}{T(kx(5) + 19, 74, "Q3 = 17", P)}
+      <g>
+        {L(bx(2), 120, bx(5), 120)}{L(bx(17), 120, bx(20), 120)}{L(bx(2), 110, bx(2), 130)}{L(bx(20), 110, bx(20), 130)}
+        <rect x={bx(5)} y={100} width={bx(17) - bx(5)} height={40} fill={PL} stroke={P} strokeWidth={2.2} />
+        {L(bx(11), 100, bx(11), 140, G, false, 3.4)}
+      </g>
+      {L(bx(0), 168, bx(20), 168)}
+      {[0, 5, 10, 15, 20].map(function(v) { return <g key={"a" + v}>{L(bx(v), 162, bx(v), 174)}{T(bx(v), 194, String(v))}</g>; })}
+    </g>
+  ); } };
+
+// Zak met 3 rode en 5 blauwe knikkers
+var ZAK = [[60, 42, 1], [92, 36, 0], [122, 48, 0], [50, 74, 0], [82, 70, 1], [114, 80, 0], [66, 104, 0], [100, 108, 1]];
+FIG.st_zak = { h: 140, label: "Een zak met 3 rode en 5 blauwe knikkers. Kans op rood: 3 gunstige van de 8 mogelijke, dus 3/8.",
+  onder: "Kans = gunstig : mogelijk = 3 : 8 = 3/8.",
+  teken: function() { return (
+    <g>
+      <ellipse cx={86} cy={74} rx={66} ry={60} fill="none" stroke={LIJN} strokeWidth={2.2} />
+      {ZAK.map(function(k, i) { return <circle key={"z" + i} cx={k[0]} cy={k[1]} r={12} fill={k[2] ? ROOD : P} />; })}
+      {T(176, 30, "kans op rood", LIJN, "start")}
+      {T(176, 60, "gunstig: 3", ROOD, "start")}{T(176, 88, "mogelijk: 8", P, "start")}
+      {T(176, 120, "= 3/8", LIJN, "start", { fs: 22, fw: 800 })}
+    </g>
+  ); } };
+
+// Rooster van twee dobbelstenen, de vakjes met som 7 gemarkeerd
+FIG.st_rooster = { h: 200, label: "Rooster van twee dobbelstenen: 6 bij 6 vakjes met de som van de ogen. De 6 vakjes met som 7 zijn gemarkeerd.",
+  onder: "36 vakjes; som 7 komt 6 keer voor, dus de kans is 6/36 = 1/6.",
+  teken: function() {
+    var out = [], x0 = 9, kk = 38, kb = 44, rh = 28;
+    out.push(<g key="k">{T(x0 + kk / 2, rh / 2, "+", P)}</g>);
+    for (var i = 1; i <= 6; i++) {
+      out.push(<g key={"a" + i}>{T(x0 + kk + kb * (i - 0.5), rh / 2, String(i), P)}{T(x0 + kk / 2, rh * (i + 0.5), String(i), P)}</g>);
+      for (var j = 1; j <= 6; j++) {
+        var zeven = i + j === 7;
+        out.push(<g key={"c" + i + "_" + j}><rect x={x0 + kk + kb * (j - 1)} y={rh * i} width={kb} height={rh} fill={zeven ? GL : "none"} stroke={HULP} strokeWidth={1} />{T(x0 + kk + kb * (j - 0.5), rh * (i + 0.5), String(i + j), zeven ? G : LIJN)}</g>);
+      }
+    }
+    return <g>{out}{L(x0 + kk, 0, x0 + kk, 196)}{L(x0, rh, x0 + kk + 6 * kb, rh)}</g>;
+  } };
+
+// Kansboom: 2 rode en 3 blauwe knikkers, twee keer pakken zonder terugleggen; de route rood, rood gemarkeerd
+FIG.st_kansboom = { h: 176, label: "Kansboom zonder terugleggen bij 2 rode en 3 blauwe knikkers. Eerste keer: rood 2/5, blauw 3/5. Na rood: rood 1/4, blauw 3/4. Na blauw: rood 2/4, blauw 2/4. De route rood, rood is gemarkeerd.",
+  onder: "Rood en dan rood: 2/5 · 1/4 = 2/20 = 1/10.",
+  teken: function() { return (
+    <g>
+      <circle cx={14} cy={88} r={5} fill={LIJN} />
+      {L(18, 84, 100, 42, ROOD, false, 3.4)}{L(18, 92, 100, 134, HULP)}
+      {T(52, 50, "2/5", ROOD)}{T(52, 128, "3/5", LIJN)}
+      {T(124, 42, "rood", ROOD)}{T(124, 134, "blauw", P)}
+      {L(150, 38, 236, 16, ROOD, false, 3.4)}{L(150, 46, 236, 68, HULP)}{L(158, 130, 236, 108, HULP)}{L(158, 138, 236, 160, HULP)}
+      {T(190, 14, "1/4", ROOD)}{T(190, 70, "3/4", LIJN)}{T(196, 106, "2/4", LIJN)}{T(196, 162, "2/4", LIJN)}
+      {T(268, 16, "rood", ROOD)}{T(268, 68, "blauw", P)}{T(268, 108, "rood", ROOD)}{T(268, 160, "blauw", P)}
     </g>
   ); } };
 
