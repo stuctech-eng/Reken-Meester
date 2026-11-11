@@ -23,7 +23,7 @@ import { readAnswerQuantity, quantityMaxDecimals } from "../../core/answerCheck.
 //     het oefenscherm of het antwoordgebied op het scherm past);
 //   - props: vraag, size (normal / compact / tiny), fit, feedback, selected, disabled,
 //     inputConfig (bijvoorbeeld allowNegative: tekentoets in het antwoordvak),
-//     formuleEenRegel (keuzes: formules op één regel als dat past; alleen Algebra en Algebra 2).
+//     formuleEenRegel (keuzes: formules op één regel als dat past; alleen Algebra, Algebra 2 en Functies).
 var AnswerArea = forwardRef(function AnswerArea(props, ref) {
   if (props.inputType === "fraction") {
     // breukKey: per getoonde vraag nieuw, zodat het breukvak bij elke vraag leeg begint

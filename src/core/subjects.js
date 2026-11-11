@@ -17,6 +17,7 @@ import { WISK_ALGEBRA_SKILLS, WISK_ALGEBRA_ORDER } from "./skills/wiskunde-algeb
 import { WISK_ALGEBRA2_SKILLS, WISK_ALGEBRA2_ORDER } from "./skills/wiskunde-algebra2.js";
 import { WISK_MEETKUNDE_SKILLS, WISK_MEETKUNDE_ORDER } from "./skills/wiskunde-meetkunde.js";
 import { WISK_STATISTIEK_SKILLS, WISK_STATISTIEK_ORDER } from "./skills/wiskunde-statistiek.js";
+import { WISK_FUNCTIES_SKILLS, WISK_FUNCTIES_ORDER } from "./skills/wiskunde-functies.js";
 
 // group: de hoofdgroep op Home ("rekenen" of "wiskunde"). sub: het tussenkopje binnen Rekenen
 // ("basis", "getallen", "praktisch"); alleen voor de weergave op Home, niet voor opslag of voortgang.
@@ -208,6 +209,17 @@ export var SUBJECTS = [
     levels: 10,
     group: "wiskunde",
   },
+  {
+    id: "wiskunde_functies",
+    label: "Functies",
+    icon: "f(x)",
+    color: "#4b5563",
+    lightColor: "#f1f5f9",
+    description: "Formules, tabellen en grafieken: lineair, kwadratisch en exponentieel. Aanbevolen: eerst Algebra",
+    available: true,
+    levels: 10,
+    group: "wiskunde",
+  },
 ];
 
 export function getSubject(id) {
@@ -239,6 +251,7 @@ export var SUBJECT_SKILLS = {
   wiskunde_algebra2: { skills: WISK_ALGEBRA2_SKILLS, order: WISK_ALGEBRA2_ORDER },
   wiskunde_meetkunde: { skills: WISK_MEETKUNDE_SKILLS, order: WISK_MEETKUNDE_ORDER },
   wiskunde_statistiek: { skills: WISK_STATISTIEK_SKILLS, order: WISK_STATISTIEK_ORDER },
+  wiskunde_functies: { skills: WISK_FUNCTIES_SKILLS, order: WISK_FUNCTIES_ORDER },
 };
 
 function getSubjectSkills(subjectId) {

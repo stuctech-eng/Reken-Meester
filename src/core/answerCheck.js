@@ -498,6 +498,7 @@ var TYPE_HINT = {
   wiskunde_algebra2: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief. Bij de discriminant, een verhaal, een stelsel (x = \u2026, y = \u2026) en twee oplossingen (x = \u2026 of x = \u2026); de rest blijft kiezen.",
   wiskunde_meetkunde: "Je typt het getal met het cijferblok: graden, lengtes, oppervlaktes en inhouden (de eenheid staat al achter het vak; met , typ je een decimaal). Herkennen, fout spotten en schatten blijven kiezen.",
   wiskunde_statistiek: "Je typt het antwoord: getallen met het cijferblok (met , een decimaal), een kans als breuk in het breukvak (zo eenvoudig mogelijk) of als procent. Soort gegevens, kansschaal, centrummaat kiezen en fout spotten blijven kiezen.",
+  wiskunde_functies: "Je typt het antwoord met het cijferblok; met \u2212/+ maak je het negatief en met , typ je een decimaal. Een punt typ je als x = \u2026, y = \u2026 en twee nulpunten als x = \u2026 of x = \u2026. Kwadrant, functie of niet, formules kiezen, dal of berg en fout spotten blijven kiezen.",
 };
 var TYPE_HINT_STANDAARD = "Je typt het antwoord met het cijferblok. Schatten en fout spotten blijven kiezen.";
 

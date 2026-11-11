@@ -14,13 +14,13 @@ import { toonGelijkheid } from "../../core/answerCheck.js";
 // smallChoices en bij fout-spotters: vier hele sommen als keuze, isErrorSpotter). Gemeten vóór
 // het eerste beeld, opnieuw na het laden van de letters en bij een andere schermbreedte; chFont staat niet in de afhankelijkheden, dus het meten geeft geen lus.
 //
-// Formule op één regel (formuleEenRegel, alleen Algebra en Algebra 2): een formule-keuze (geen woord
+// Formule op één regel (formuleEenRegel, alleen Algebra, Algebra 2 en Functies): een formule-keuze (geen woord
 // van 2 of meer letters: "3x\u00b2 + 14x + 49", niet "x = \u22123 of x = 9") breekt niet af, als de
 // vier knoppen dan passen met een letter van minstens CH_EEN_REGEL_MIN (of CH_SMALL_EEN_REGEL_MIN).
 // Alles of niets: past dat niet, dan geldt voor de hele set precies de gewone meting hierboven
 // (geen nowrap, afbreken toegestaan). De letter blijft voor alle vier gelijk.
 //
-// Knoptekst bij formuleEenRegel (alleen Algebra en Algebra 2): toonGelijkheid(keuze), " = " met vaste spaties
+// Knoptekst bij formuleEenRegel (alleen Algebra, Algebra 2 en Functies): toonGelijkheid(keuze), " = " met vaste spaties
 // ("x = \u22129 of x = 9" breekt niet midden in "x = 9" af). In de andere modi de keuze zelf (fout spotten met
 // eenheden breekt daar beter op de gewone spaties). Alleen het beeld: de meting hierboven meet de knop zoals hij
 // getoond wordt; key, onChoice, selected en isFormuleKeuze gebruiken de keuze zelf.

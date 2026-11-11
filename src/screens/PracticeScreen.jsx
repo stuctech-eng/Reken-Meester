@@ -998,7 +998,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           onChoice={handleChoice}
           onSubmitBreuk={handleBreukSubmit}
           breukKey={"vraag-" + vraagNr}
-          formuleEenRegel={subjectId === "wiskunde_algebra" || subjectId === "wiskunde_algebra2"}
+          formuleEenRegel={subjectId === "wiskunde_algebra" || subjectId === "wiskunde_algebra2" || subjectId === "wiskunde_functies"}
         />
 
         {/* Uitlegkaart — verschijnt na fout, blijft tot "Volgende vraag" */}

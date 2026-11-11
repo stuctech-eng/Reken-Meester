@@ -252,6 +252,21 @@ export var DEFAULT_SAVE = {
       currentSkillId: "st01_soort_gegevens",
       totalSkillsMastered: 0,
       bonusStats: {},
+    },
+
+    // Wiskunde, domein Functies (volwassenen): eigen voortgang
+    wiskunde_functies: {
+      unlockedLevels: [1],
+      currentLevel: 1,
+      bestLevel: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      xp: 0,
+      sessions: [],
+      skillStats: {},
+      currentSkillId: "fn02_kwadrant",
+      totalSkillsMastered: 0,
+      bonusStats: {},
     }
   },
 
