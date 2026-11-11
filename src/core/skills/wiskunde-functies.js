@@ -1,7 +1,7 @@
 // Wiskunde, domein Functies: assenstelsel, functies, lineaire, kwadratische en exponentiële verbanden.
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
-// Afspraken (plan FN v2):
+// Afspraken (plan FN v2, fase F2: plan F2 v4):
 // - Gehele getallen in de notatie van Wiskunde: minteken U+2212, groepjes van drie met een vaste spatie
 //   vanaf 10 000. Een kommagetal heeft hoogstens 2 decimalen, zonder eindnul ("1,05", "0,8").
 // - Een punt typen: het paar van de stelsels, "x = 3, y = −6" (tussen "stelsel"). Twee nulpunten:
@@ -11,8 +11,13 @@
 //   getallen toevallig het goede antwoord, dan komt er een andere vraag. Valt een valkuil samen met een andere
 //   keuze of is hij ongeldig (geen geheel getal, meer dan 2 decimalen), dan vult een vaste reserve aan: het
 //   antwoord plus of min een stap.
-// - Fase F1: de 23 vaardigheden zonder tekening. F2 voegt de vaardigheden met een tekening toe op hun plek in
-//   de volgorde (fn01, fn03, fn04, fn09, fn12-fn15, fn20, fn27, fn30, fn31, fn34); bestaande ids veranderen niet.
+// - Fase F1: de 23 vaardigheden zonder tekening. Fase F2: de 13 vaardigheden met een tekening (fn01, fn03, fn04,
+//   fn09, fn12-fn15, fn20, fn27, fn30, fn31, fn34) op hun plek in de volgorde; bestaande ids veranderen niet.
+//   De tekening: q.figuur = { soort, gegeven }, getekend door VraagFiguur ("assenstelsel", "grafiek", "fntabel").
+//   In F2 zijn de drie foute keuzes altijd de drie valkuilen, geldig, verschillend en fout (keuzesStreng).
+// - Een richtingscoëfficiënt als antwoord (fn12, fn13) is geheel of een positieve halve; een halve typ je in het
+//   kommavak (invoer per vraag). Een negatieve halve komt nog niet voor: het kommavak heeft geen −/+-toets
+//   (tijdelijke beperking van de invoer, niet van de stof).
 
 import { rnd, shuffle } from "./helpers.js";
 import { createSkills } from "./flow.js";
@@ -74,8 +79,9 @@ function topvorm(a, p, q) {
   return t;
 }
 function punt(x, y) { return "(" + int(x) + "," + NB + int(y) + ")"; }
-// Een formule in een vraag of bewering breekt niet midden in een term af: vaste spaties
-function vast(t) { return t.replace(/ /g, NB); }
+// Een formule in een vraag, bewering of keuze breekt niet midden in een term af: vaste spaties. Na een minteken
+// voor een haakje ("−(x + 3)²") breekt een browser anders af; daar komt een vaste spatie tussen ("− (x + 3)²").
+function vast(t) { return t.replace(/ /g, NB).split(MIN + "(").join(MIN + NB + "("); }
 // Een punt als antwoord: het stelsel-paar; elk deel geheel en hoogstens 2 cijfers, anders null
 function pt(x, y) {
   if (int(x) === null || int(y) === null || Math.abs(x) > 99 || Math.abs(y) > 99) return null;
@@ -129,6 +135,123 @@ function Q(question, k, stappen, extra) {
   return q;
 }
 function retry(fn) { for (var i = 0; i < 400; i++) { var q = fn(); if (q) return q; } throw new Error("geen geldige vraag"); }
+
+// ── Rooster voor de tekeningen (fase F2) ──────────────────────────
+// Eén indeling voor de generator (passen de getallen en letters?) en voor VraagFiguur (tekenen), zodat er
+// maar één rekening is. Maten in eenheden van het tekenvak (300 bij 140): hokjes van 12, het rooster
+// hoogstens 22 hokjes breed (x 30..294) en precies 10 hoog (y 4..124), gecentreerd als het smaller is.
+// r = { xa, xb, ya, yb (venster in hokjes), sx, sy (stap per hokje), elke (getal bij elke 2e of 4e lijn),
+//       punten: [{ x, y, letter }], namen: [{ grafiek, tekst }], vrij: [{ x, y }] }. De oorsprong ligt altijd in beeld.
+// De maat van tekst is die van de getekende tekst in Nunito vet (gemeten met getBBox, dominant-baseline middle):
+// per teken een breedte in em, van 0,758 em boven tot 0,6 em onder het midden. De witte rand (stroke 4) telt mee:
+// 2 aan elke kant, plus 0,5 marge (de letter wordt op het scherm iets anders afgerond). Een stip: straal 4, plus 0,5.
+export var ROOSTER = { cel: 12, links: 30, boven: 4, breed: 22, hoog: 10, vakB: 300, vakH: 140, fs: 14, letterFs: 15 };
+var EM = { "4": 0.643, x: 0.585, y: 0.585, l: 0.36, m: 0.88, A: 0.79, B: 0.69, C: 0.68, D: 0.77, P: 0.67 }, RAND = 2.5, STIP = 4.5;
+function tekstVak(x, y, tekst, anker, fs) {
+  var w = String(tekst).split("").reduce(function(t, k) { return t + (EM[k] || 0.6) * fs; }, 0);
+  var x1 = anker === "end" ? x - w : anker === "start" ? x : x - w / 2;
+  return { x1: x1 - RAND, x2: x1 + w + RAND, y1: y - 0.758 * fs - RAND, y2: y + 0.6 * fs + RAND };
+}
+function binnen(v) { return v.x1 >= 0 && v.x2 <= ROOSTER.vakB && v.y1 >= 0 && v.y2 <= ROOSTER.vakH; }
+function raakt(a, b) { return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2; }
+function asGetal(v) { return (v < 0 ? MIN : "") + getal(v); }
+export function roosterIndeling(r) {
+  var c = ROOSTER.cel, nx = r.xb - r.xa, ny = r.yb - r.ya;
+  var links = ROOSTER.links + (ROOSTER.breed - nx) * c / 2, boven = ROOSTER.boven;
+  var px = function(x) { return links + (x / r.sx - r.xa) * c; };
+  var py = function(y) { return boven + (r.yb - y / r.sy) * c; };
+  var ax = px(0), ay = py(0), vakken = [], ok = nx > 0 && nx <= ROOSTER.breed && ny === ROOSTER.hoog && r.xa <= 0 && r.xb >= 0 && r.ya <= 0 && r.yb >= 0;
+  function zet(lijst, x, y, tekst, anker, fs) {
+    var v = tekstVak(x, y, tekst, anker, fs);
+    if (!binnen(v) || vakken.some(function(w) { return raakt(v, w); })) ok = false;
+    vakken.push(v);
+    lijst.push({ x: x, y: y, tekst: tekst, anker: anker });
+  }
+  var xLabels = [], yLabels = [], i;
+  // Geen getal op de rand van het rooster (de buitenste lijnen links, rechts en boven): daar past het niet in het vak
+  for (i = r.xa + 1; i < r.xb; i++) if (i !== 0 && i % r.elke === 0) zet(xLabels, px(i * r.sx), ay + 11, asGetal(i * r.sx), "middle", ROOSTER.fs);
+  for (i = r.ya; i < r.yb; i++) if (i !== 0 && i % r.elke === 0) zet(yLabels, ax - 5, py(i * r.sy), asGetal(i * r.sy), "end", ROOSTER.fs);
+  // De 0 één keer, rechtsonder de oorsprong (links ervan staat het getal van de x-as)
+  var nul = []; zet(nul, ax + 3, ay + 11, "0", "start", ROOSTER.fs);
+  // De letters x en y aan het eind van de assen: boven of onder de x-as, rechts of links van de y-as
+  var asLetters = [];
+  function asLetter(opties, tekst) {
+    for (var k = 0; k < opties.length; k++) {
+      var v = tekstVak(opties[k][0], opties[k][1], tekst, opties[k][2], ROOSTER.fs);
+      if (binnen(v) && !vakken.some(function(w) { return raakt(v, w); })) { vakken.push(v); asLetters.push({ x: opties[k][0], y: opties[k][1], tekst: tekst, anker: opties[k][2] }); return; }
+    }
+    ok = false;
+  }
+  asLetter([[links + nx * c - 3, ay - 13, "end"], [links + nx * c - 3, ay + 11, "end"]], "x");
+  asLetter([[ax + 7, boven + 11, "start"], [ax - 7, boven + 11, "end"]], "y");
+  // Plekken die vrij moeten blijven van tekst (r.vrij, niet getekend: bijvoorbeeld het snijpunt bij fn20)
+  (r.vrij || []).forEach(function(p) { var v = { x1: px(p.x) - 6, x2: px(p.x) + 6, y1: py(p.y) - 6, y2: py(p.y) + 6 }; if (vakken.some(function(w) { return raakt(v, w); })) ok = false; });
+  // Stippen (straal 4), niet onder een getal; daarna hun letter op de eerste vrije plek rondom
+  var stippen = (r.punten || []).map(function(p) {
+    var v = { x1: px(p.x) - STIP, x2: px(p.x) + STIP, y1: py(p.y) - STIP, y2: py(p.y) + STIP };
+    if (!binnen(v) || vakken.some(function(w) { return raakt(v, w); })) ok = false;
+    vakken.push(v); return { cx: px(p.x), cy: py(p.y), letter: p.letter };
+  });
+  var PLEK = [[13, -11], [-13, -11], [13, 11], [-13, 11], [16, 0], [-16, 0], [0, -15], [0, 15]];
+  // Een letter staat duidelijk bij zijn eigen stip: elke andere stip ligt minstens 6 verder van de letter
+  function eenduidig(lx, ly, x, y) {
+    var eigen = Math.hypot(lx - x, ly - y);
+    return stippen.every(function(s) { return (s.cx === x && s.cy === y) || Math.hypot(lx - s.cx, ly - s.cy) >= eigen + 6; });
+  }
+  function plaats(x, y, tekst) {
+    for (var k = 0; k < PLEK.length; k++) {
+      var lx = x + PLEK[k][0], ly = y + PLEK[k][1], v = tekstVak(lx, ly, tekst, "middle", ROOSTER.letterFs);
+      if (binnen(v) && !vakken.some(function(w) { return raakt(v, w); }) && eenduidig(lx, ly, x, y)) { vakken.push(v); return { lx: lx, ly: ly }; }
+    }
+    return null;
+  }
+  stippen.forEach(function(s) { var q = plaats(s.cx, s.cy, s.letter); if (!q) { ok = false; q = { lx: s.cx, ly: s.cy }; } s.lx = q.lx; s.ly = q.ly; });
+  // De naam van een grafiek (l, m) bij een roosterpunt van die grafiek binnen het rooster, zo ver mogelijk naar rechts
+  var namen = (r.namen || []).map(function(n) {
+    for (var x = r.xb - 1; x > r.xa; x--) {
+      var y = grafiekWaarde(n.grafiek, x * r.sx);
+      if (y === null || y <= r.ya * r.sy || y >= r.yb * r.sy) continue;
+      var q = plaats(px(x * r.sx), py(y), n.tekst);
+      if (q) return { lx: q.lx, ly: q.ly, tekst: n.tekst };
+    }
+    ok = false; return { lx: 0, ly: 0, tekst: n.tekst };
+  });
+  return { ok: ok, cel: c, links: links, boven: boven, nx: nx, ny: ny, px: px, py: py, ax: ax, ay: ay,
+    xLabels: xLabels, yLabels: yLabels, nul: nul[0], asLetters: asLetters, stippen: stippen, namen: namen };
+}
+// Venster om de gegeven waarden (met de oorsprong), zo mogelijk met een hokje marge en minstens 12 hokjes breed; elke 2e lijn een getal,
+// anders elke 4e. Geen passend venster: null.
+function rooster(xs, ys, sx, sy, punten, namen, vrij) {
+  var xv = xs.concat([0]).map(function(x) { return x / sx; }), yv = ys.concat([0]).map(function(y) { return y / sy; });
+  if (xv.concat(yv).some(function(v) { return Math.floor(v) !== v; })) return null;
+  var x1 = Math.min.apply(null, xv), x2 = Math.max.apply(null, xv), y1 = Math.min.apply(null, yv), y2 = Math.max.apply(null, yv);
+  if (x2 - x1 > ROOSTER.breed || y2 - y1 > ROOSTER.hoog) return null;
+  var xa = x1 - 1, xb = x2 + 1;
+  if (xb - xa > ROOSTER.breed) { xa = x1; xb = x2; }
+  // Minstens 12 hokjes breed, zodat er genoeg van de grafiek te zien is
+  while (xb - xa < 12) { if ((xb - xa) % 2) xa--; else xb++; }
+  // De x-as niet op de onderrand (daar past geen getal onder): ya hoogstens -1
+  var extra = ROOSTER.hoog - (y2 - y1), ya = Math.min(y1 - Math.floor(extra / 2), y2 - ROOSTER.hoog < 0 ? -1 : 0), yb = ya + ROOSTER.hoog;
+  var opties = [2, 4];
+  for (var k = 0; k < opties.length; k++) {
+    var r = { xa: xa, xb: xb, ya: ya, yb: yb, sx: sx, sy: sy, elke: opties[k], punten: punten || [], namen: namen || [], vrij: vrij || [] };
+    if (roosterIndeling(r).ok) return r;
+  }
+  return null;
+}
+// De waarde van een grafiek bij x (null als er geen is): lijn, parabool (topvorm), exponentieel, hyperbool, gebroken lijn
+export function grafiekWaarde(g, x) {
+  if (g.soort === "lijn") return g.a * x + g.b;
+  if (g.soort === "parabool") return g.a * (x - g.p) * (x - g.p) + g.q;
+  if (g.soort === "expo") return g.s * Math.pow(g.g, x);
+  if (g.soort === "hyperbool") return x === 0 ? null : g.k / x;
+  if (g.soort === "gebroken") {
+    var k = g.knik;
+    for (var i = 0; i + 1 < k.length; i++) if (x >= k[i][0] && x <= k[i + 1][0]) return k[i][1] + (k[i + 1][1] - k[i][1]) * (x - k[i][0]) / (k[i + 1][0] - k[i][0]);
+    return null;
+  }
+  return null;
+}
 
 var GEN = {};
 
@@ -465,6 +588,229 @@ GEN.fn36 = function() {
     "Stel gelijk: " + vA + " + " + centen(pA) + "x = " + vB + " + " + centen(pB) + "x. Dan " + centen(dp) + "x = " + (vB - vA) + ", dus x = " + (vB - vA) + " : " + centen(dp) + " = " + x + " minuten.");
 };
 
+// ── Vragen met een tekening (fase F2) ─────────────────────────────
+// Strenger dan F1 (plan F2 §3): de drie foute keuzes zijn altijd de drie valkuilen van het plan, geldig,
+// onderling verschillend en fout. Lukt dat niet, dan een andere vraag (geen reserve).
+function keuzesStreng(antwoord, valkuilen) {
+  var alle = [antwoord].concat(valkuilen);
+  if (alle.some(function(v) { return v === null || v === undefined; })) return { c: null, valkuilen: valkuilen };
+  if (alle.some(function(v, i) { return alle.indexOf(v) !== i; })) return { c: null, valkuilen: valkuilen };
+  return { c: { answer: antwoord, choices: shuffle(alle) }, valkuilen: valkuilen };
+}
+function figuur(soort, gegeven) { return { soort: soort, gegeven: gegeven }; }
+// Een geheel getal als antwoord: het cijferblok (met −/+); een positieve halve: het kommavak (per vraag, plan F2 §4)
+function rcInvoer(a) { return Math.floor(a) === a ? undefined : { inputType: "decimal", inputConfig: { maxDecimals: 1 } }; }
+function metExtra(a, b) { var u = {}, k; for (k in a) u[k] = a[k]; if (b) { for (k in b) u[k] = b[k]; } return u; }
+var LETTERS = ["A", "B", "C", "D"];
+
+GEN.fn01 = function(sub) {
+  // sub kiest het kwadrant van het gevraagde punt
+  var sx = sub === 0 || sub === 3 ? 1 : -1, sy = sub < 2 ? 1 : -1;
+  var x = sx * rnd(1, 9), y = sy * rnd(1, 4);
+  if (Math.abs(x) === Math.abs(y)) return null;
+  var n = rnd(3, 4), gevraagd = rnd(0, n - 1), punten = [], bezet = {};
+  for (var i = 0; i < n; i++) {
+    var p = i === gevraagd ? [x, y] : [nz(-9, 9), nz(-4, 4)];
+    if (bezet[p[0] + "," + p[1]]) return null;
+    bezet[p[0] + "," + p[1]] = true;
+    punten.push({ x: p[0], y: p[1], letter: LETTERS[i] });
+  }
+  var r = rooster(punten.map(function(p) { return p.x; }), [-4, 4], 1, 1, punten);
+  if (!r) return null;
+  var L = LETTERS[gevraagd];
+  return Q("Wat zijn de coördinaten van " + L + "?", keuzesStreng(pt(x, y), [pt(y, x), pt(-x, y), pt(x, -y)]),
+    "Vanuit de oorsprong: " + Math.abs(x) + " naar " + (x > 0 ? "rechts" : "links") + " en " + Math.abs(y) + " naar " + (y > 0 ? "boven" : "beneden") + ". Eerst x, dan y: " + punt(x, y) + ".",
+    { figuur: figuur("assenstelsel", { rooster: r, gevraagd: L }) });
+};
+
+GEN.fn03 = function() {
+  // Gekozen vanuit de x waar de lijn de waarde k heeft (x1), zodat die een roosterpunt is
+  var a = pickOne([-3, -2, 2, 3]), k = nz(-6, 6), x1 = rnd(-6, 6), b = k - a * x1, y = a * k + b;
+  if (x1 === k || Math.abs(b) > 9) return null;
+  var g = { soort: "lijn", a: a, b: b };
+  var r = rooster([k, x1], [y, k], 1, 1, [], [], [{ x: k, y: y }]);
+  if (!r) return null;
+  // valkuilen: x en y verwisseld (de x waar de lijn k is), één hokje te hoog, de waarde bij x + 1
+  return Q("Wat is y als x = " + int(k) + "?", keuzesStreng(int(y), [int(x1), int(y + 1), int(y + a)]),
+    "Ga bij x = " + int(k) + " recht " + (y >= 0 ? "omhoog" : "omlaag") + " naar de lijn en dan opzij naar de y-as: y = " + int(y) + ".",
+    { figuur: figuur("grafiek", { rooster: r, grafieken: [g] }) });
+};
+
+GEN.fn04 = function(sub) {
+  var soorten = shuffle(["stijgt", "daalt", "constant"]), x = rnd(-9, -4), y = rnd(-3, 3), knik = [[x, y]];
+  for (var i = 0; i < 3; i++) {
+    var w = rnd(2, 5), d = soorten[i] === "constant" ? 0 : (soorten[i] === "stijgt" ? 1 : -1) * rnd(1, 4);
+    x += w; y += d; knik.push([x, y]);
+  }
+  var vraag = ["stijgt", "daalt", "constant"][sub], j = soorten.indexOf(vraag);
+  var stuk = function(i) { return "van x = " + int(knik[i][0]) + " tot x = " + int(knik[i + 1][0]); };
+  var r = rooster(knik.map(function(p) { return p[0]; }), knik.map(function(p) { return p[1]; }), 1, 1);
+  if (!r) return null;
+  var anderen = [0, 1, 2].filter(function(i) { return i !== j; }).map(stuk).concat(["de hele grafiek"]);
+  return Q("Op welk stuk " + (vraag === "constant" ? "is de grafiek constant" : (vraag === "stijgt" ? "stijgt" : "daalt") + " de grafiek") + "?", keuzesStreng(stuk(j), anderen),
+    "Lees van links naar rechts. " + (vraag === "constant" ? "Constant is horizontaal" : vraag === "stijgt" ? "Stijgen is omhoog gaan" : "Dalen is omlaag gaan") + ": " + stuk(j) + ".",
+    { figuur: figuur("grafiek", { rooster: r, grafieken: [{ soort: "gebroken", knik: knik }] }) });
+};
+
+GEN.fn09 = function() {
+  var a = pickOne([-5, -4, -3, -2, 2, 3, 4, 5]), b = rnd(-9, 9), n = rnd(4, 5), x0 = rnd(-4, 6 - n), xs = [];
+  for (var i = 0; i < n; i++) xs.push(x0 + i);
+  var v = rnd(0, n - 1), xv = xs[v], xn = v < n - 1 ? xs[v + 1] : xs[v - 1];
+  // plan F2 §3: het "?" en de kolom ernaast niet bij x = 0, en x bij het "?" niet gelijk aan het startgetal
+  if (xv === 0 || xn === 0 || xv === b) return null;
+  var ys = xs.map(function(x, i) { return i === v ? null : a * x + b; });
+  return Q(vast(lijn(a, b)) + ". Welk getal hoort op de plek van ?", keuzesStreng(int(a * xv + b), [int(a * xn + b), int(xv), int(b)]),
+    "Vul x = " + int(xv) + " in: " + int(a) + " " + DOT + " " + (xv < 0 ? "(" + int(xv) + ")" : int(xv)) + (b < 0 ? " " + MIN + " " + (-b) : " + " + b) + " = " + int(a * xv + b) + ".",
+    { figuur: figuur("fntabel", { xs: xs, ys: ys }) });
+};
+
+// Tabel met stappen van 2 in x, zonder x = 0: alle x even en met hetzelfde teken
+function tabelStap2() { var n = rnd(4, 5), start = pickOne([2, 4, -2 * n, -2 * n - 2]), xs = []; for (var i = 0; i < n; i++) xs.push(start + 2 * i); return xs; }
+GEN.fn12 = function() {
+  var a = pickOne([-5, -4, -3, -1, 3, 4, 5, 0.5, 1.5, 2.5]), b = rnd(-9, 9), xs = tabelStap2();
+  if (b === a || b === 2 * a || b === 2) return null;
+  var ys = xs.map(function(x) { return a * x + b; });
+  if (ys.some(function(y) { return Math.abs(y) > 99; })) return null;
+  // valkuilen: het verschil in y zonder te delen, de stap in x, het startgetal
+  return Q("Wat is de richtingscoëfficiënt?", keuzesStreng(asGetal(a), [asGetal(2 * a), "2", asGetal(b)]),
+    "x gaat steeds 2 omhoog en y " + (a > 0 ? "omhoog" : "omlaag") + " met " + getal(Math.abs(2 * a)) + ". Per stap van 1 in x: " + asGetal(2 * a) + " : 2 = " + asGetal(a) + ".",
+    metExtra({ figuur: figuur("fntabel", { xs: xs, ys: ys }) }, rcInvoer(a)));
+};
+
+GEN.fn13 = function() {
+  var a = pickOne([-5, -4, -2, 2, 4, 5, 0.5, 2.5]), dx = Math.floor(a) === a ? rnd(2, 3) : pickOne([2, 4, 6]);
+  if (a * dx === 1 / a) return null;
+  var sy = Math.abs(a * dx) > 6 ? 2 : 1, x1 = rnd(-6, 6 - dx), y1 = sy * rnd(-4, 4), b = y1 - a * x1, x2 = x1 + dx, y2 = y1 + a * dx;
+  if (y2 % sy !== 0 || (x1 === 0 && y1 === 0)) return null;
+  var r = rooster([x1, x2], [y1, y2], 1, sy, [{ x: x1, y: y1, letter: "A" }, { x: x2, y: y2, letter: "B" }]);
+  if (!r) return null;
+  // valkuilen: Δx : Δy, het teken omgedraaid, Δy zonder te delen
+  return Q("Wat is de richtingscoëfficiënt van de lijn door A en B?", keuzesStreng(asGetal(a), [asGetal(1 / a), asGetal(-a), asGetal(a * dx)]),
+    "Van A naar B: " + dx + " naar rechts en " + getal(Math.abs(a * dx)) + (a > 0 ? " omhoog" : " omlaag") + ". rc = " + asGetal(a * dx) + " : " + dx + " = " + asGetal(a) + ".",
+    metExtra({ figuur: figuur("grafiek", { rooster: r, grafieken: [{ soort: "lijn", a: a, b: b }] }) }, rcInvoer(a)));
+};
+
+GEN.fn14 = function() {
+  var a = nz(-5, 5), b = nz(-9, 9), xs = rnd(0, 1) ? tabelStap2() : [-2, 0, 2, 4];
+  if (a === b) return null;
+  var ys = xs.map(function(x) { return a * x + b; });
+  if (ys.some(function(y) { return Math.abs(y) > 99; })) return null;
+  // valkuilen: rc en startgetal verwisseld, het startgetal met het andere teken, de rc niet gedeeld door 2
+  return Q("Welke formule hoort bij de tabel?", keuzesStreng(lijn(a, b), [lijn(b, a), lijn(a, -b), lijn(2 * a, b)]),
+    "Per stap van 2 in x verandert y met " + int(2 * a) + ", dus de rc is " + int(a) + ". Het startgetal (bij x = 0) is " + int(b) + ": " + lijn(a, b) + ".",
+    { figuur: figuur("fntabel", { xs: xs, ys: ys }) });
+};
+
+GEN.fn15 = function() {
+  var a = nz(-3, 3), x0 = nz(-6, 6), b = -a * x0;
+  if (b === 0 || b === a || x0 === b || Math.abs(b) > 8) return null;
+  var r = rooster([x0, 1], [b, a + b], 1, 1);
+  if (!r) return null;
+  // valkuilen: rc en startgetal verwisseld, het teken van de rc omgedraaid, het snijpunt met de x-as als startgetal
+  return Q("Welke formule hoort bij de lijn?", keuzesStreng(lijn(a, b), [lijn(b, a), lijn(-a, b), lijn(a, x0)]),
+    "De lijn snijdt de y-as bij " + int(b) + " (startgetal). Per hokje naar rechts gaat hij " + Math.abs(a) + (a > 0 ? " omhoog" : " omlaag") + " (rc " + int(a) + "): " + lijn(a, b) + ".",
+    { figuur: figuur("grafiek", { rooster: r, grafieken: [{ soort: "lijn", a: a, b: b }] }) });
+};
+
+GEN.fn20 = function() {
+  // Gekozen vanuit het snijpunt (X, Y) en het snijpunt x0 van l met de x-as, zodat alles roosterpunten zijn
+  var X = nz(-5, 5), Y = nz(-4, 4), d = nz(-4, 4), x0 = X - d, a1 = deel(Y, d), a2 = nz(-3, 3);
+  if (a1 === null || X === Y || a1 === a2) return null;
+  var b1 = Y - a1 * X, b2 = Y - a2 * X;
+  // plan F2 §3: l niet door de oorsprong (b1 ≠ 0, dus x0 ≠ 0) en niet horizontaal (a1 ≠ 0, want Y ≠ 0)
+  if (b1 === 0 || Math.abs(a1) > 3 || Math.abs(b1) > 9 || Math.abs(b2) > 9) return null;
+  var l = { soort: "lijn", a: a1, b: b1 }, m = { soort: "lijn", a: a2, b: b2 };
+  var r = rooster([X, x0], [Y, b1], 1, 1, [], [{ grafiek: l, tekst: "l" }, { grafiek: m, tekst: "m" }], [{ x: X, y: Y }]);
+  if (!r) return null;
+  // valkuilen: x en y verwisseld, het snijpunt van l met de x-as, het snijpunt van l met de y-as
+  return Q("l: " + vast(lijn(a1, b1)) + " en m: " + vast(lijn(a2, b2)) + ". Snijpunt van l en m?", keuzesStreng(pt(X, Y), [pt(Y, X), pt(x0, 0), pt(0, b1)]),
+    "Stel gelijk: " + veelterm([[a1, "x"], [b1, ""]]) + " = " + veelterm([[a2, "x"], [b2, ""]]) + " geeft x = " + int(X) + ", en y = " + int(Y) + ". In de tekening snijden de lijnen elkaar daar.",
+    { figuur: figuur("grafiek", { rooster: r, grafieken: [l, m] }) });
+};
+
+GEN.fn27 = function() {
+  var a = pickOne([1, -1]), p = nz(-5, 5), q = rnd(-4, 4);
+  var r = rooster([p - 2, p + 2], [q, q + 4 * a], 1, 1);
+  if (!r) return null;
+  // valkuilen: het teken van a omgedraaid, de top gespiegeld, een verkeerd losse getal. Met vaste spaties: een
+  // topvorm past op 320 px niet altijd op één regel, en mag dan niet midden in een term afbreken (de letter wordt kleiner)
+  return Q("Welke formule hoort bij de parabool?", keuzesStreng(vast(topvorm(a, p, q)), [vast(topvorm(-a, p, q)), vast(topvorm(a, -p, q)), vast(topvorm(a, p, q + pickOne([-1, 1])))]),
+    (a > 0 ? "Een dalparabool: a = 1" : "Een bergparabool: a = " + MIN + "1") + ". De top is " + punt(p, q) + ", dus " + topvorm(a, p, q) + ".",
+    { figuur: figuur("grafiek", { rooster: r, grafieken: [{ soort: "parabool", a: a, p: p, q: q }] }) });
+};
+
+// Groeifactor als breuk teller/noemer (plan F2 §3)
+var FN30_G = [{ t: 5, n: 4 }, { t: 2, n: 1 }, { t: 5, n: 2 }, { t: 4, n: 1 }, { t: 4, n: 5 }, { t: 2, n: 5 }, { t: 1, n: 4 }];
+GEN.fn30 = function() {
+  var f = pickOne(FN30_G), basis = f.n * f.n * f.n, s = basis * rnd(1, Math.max(1, Math.floor(1000 / basis)));
+  if (s < 10 || (basis < 8 && s % 10 !== 0)) return null;
+  var ys = [0, 1, 2, 3].map(function(x) { return s * macht(f.t, x) / macht(f.n, x); });
+  if (ys.some(function(y) { return y > 9999; })) return null;
+  var h = 100 * f.t / f.n, groei = f.t > f.n;
+  // valkuilen: het verschil van de eerste twee waarden, de omgekeerde factor, het procent als factor
+  return Q("Wat is de groeifactor?", keuzesStreng(dec2(h), [dec2(Math.abs(ys[1] - ys[0]) * 100), dec2(100 * f.n / f.t), dec2(groei ? h - 100 : 100 - h)]),
+    "Deel een waarde door de vorige: " + int(ys[1]) + " : " + int(ys[0]) + " = " + dec2(h) + ". Elke stap " + (groei ? "keer " + dec2(h) + " (groei)" : "keer " + dec2(h) + " (afname)") + ".",
+    { figuur: figuur("fntabel", { xs: [0, 1, 2, 3], ys: ys }) });
+};
+
+// fn31: tabel uit één soort, x = 1..4; precies één van de vier rekeningen is constant
+var VERBAND = ["lineair", "exponentieel", "kwadratisch", "omgekeerd evenredig"];
+function verbandVan(xs, ys) {
+  var d = ys.slice(1).map(function(y, i) { return y - ys[i]; }), q = ys.slice(1).map(function(y, i) { return ys[i] === 0 ? null : y / ys[i]; });
+  var d2 = d.slice(1).map(function(y, i) { return y - d[i]; }), xy = xs.map(function(x, i) { return x * ys[i]; });
+  var gelijk = function(l) { return l.every(function(v) { return v !== null && Math.abs(v - l[0]) < 1e-9; }); };
+  return [gelijk(d) && d[0] !== 0, gelijk(q) && q[0] !== 1, gelijk(d2) && d2[0] !== 0, gelijk(xy)];
+}
+GEN.fn31 = function(sub) {
+  var xs = [1, 2, 3, 4], ys;
+  if (sub === 0) { var a = nz(-6, 6), b = rnd(-9, 9); ys = xs.map(function(x) { return a * x + b; }); }
+  else if (sub === 1) { var g = pickOne([2, 3]), s = rnd(1, 5); ys = rnd(0, 1) ? xs.map(function(x) { return s * macht(g, x); }) : xs.map(function(x) { return s * macht(g, 5 - x); }); }
+  else if (sub === 2) { var k = pickOne([1, -1, 2]), c = rnd(-9, 9); ys = xs.map(function(x) { return k * x * x + c; }); }
+  else { var m = pickOne([12, 24, 36, 48]); ys = xs.map(function(x) { return m / x; }); }
+  var v = verbandVan(xs, ys);
+  if (v.filter(Boolean).length !== 1 || !v[sub]) return null;
+  var anderen = VERBAND.filter(function(n, i) { return i !== sub; });
+  var uitleg = ["De verschillen zijn steeds gelijk (elke stap hetzelfde erbij)", "De quotiënten zijn steeds gelijk (elke stap hetzelfde keer)", "De verschillen van de verschillen zijn gelijk", "x keer y is steeds hetzelfde"][sub];
+  return Q("Wat voor verband is dit?", keuzesStreng(VERBAND[sub], anderen), uitleg + ": " + VERBAND[sub] + ".",
+    { figuur: figuur("fntabel", { xs: xs, ys: ys }) });
+};
+
+// fn34: formules per soort (plan F2 §3), met vaste spaties zoals bij fn27
+function fnFormule(g) {
+  if (g.soort === "lijn") return vast(lijn(g.a, g.b));
+  if (g.soort === "parabool") return vast(topvorm(g.a, g.p, g.q));
+  if (g.soort === "expo") return vast("y = " + g.s + " " + DOT + " " + g.g + "^x");
+  return vast("y = " + int(g.k) + " : x");
+}
+// Een grafiek van een andere soort door P (xp, yp), of null als dat niet met hele getallen kan
+// (met overzichtelijke getallen: een los getal tot 12, k tot 36)
+function doorP(soort, xp, yp) {
+  if (soort === "lijn") { var a = nz(-3, 3), b = yp - a * xp; return Math.abs(b) <= 12 ? { soort: "lijn", a: a, b: b } : null; }
+  if (soort === "parabool") { var p = rnd(-3, 3), a2 = pickOne([1, -1]), q = yp - a2 * (xp - p) * (xp - p); return Math.abs(q) <= 12 ? { soort: "parabool", a: a2, p: p, q: q } : null; }
+  if (soort === "expo") { if (xp < 1) return null; var g = pickOne([2, 3]), s = deel(yp, macht(g, xp)); return s && s > 0 ? { soort: "expo", s: s, g: g } : null; }
+  return Math.abs(xp * yp) <= 36 ? { soort: "hyperbool", k: xp * yp } : null;
+}
+var SOORTEN34 = ["lijn", "parabool", "expo", "hyperbool"];
+GEN.fn34 = function(sub) {
+  var soort = SOORTEN34[sub], g, fout, xp, sy = 1;
+  if (soort === "lijn") { g = { soort: "lijn", a: nz(-3, 3), b: rnd(-4, 4) }; xp = nz(-4, 4); fout = { soort: "lijn", a: -g.a, b: g.b }; }
+  else if (soort === "parabool") { g = { soort: "parabool", a: pickOne([1, -1]), p: nz(-3, 3), q: rnd(-3, 3) }; xp = nz(-4, 4); fout = { soort: "parabool", a: g.a, p: -g.p, q: g.q }; }
+  else if (soort === "expo") { g = { soort: "expo", s: rnd(2, 4), g: pickOne([2, 3]) }; xp = 2; fout = { soort: "expo", s: g.g, g: g.s }; }
+  else { g = { soort: "hyperbool", k: pickOne([-12, -8, -6, -4, 4, 6, 8, 12]) }; xp = pickOne([1, 2, 3, 4, 6]) * (g.k > 0 ? 1 : -1); fout = { soort: "hyperbool", k: -g.k }; }
+  var yp = grafiekWaarde(g, xp);
+  // plan F2 §3: P met x ≠ 0 en y > 0, op een roosterpunt
+  if (yp === null || Math.floor(yp) !== yp || !(yp > 0) || xp === 0) return null;
+  if (soort === "expo") sy = yp > 36 ? 10 : yp > 18 ? 5 : yp > 9 ? 2 : 1;
+  if (yp % sy !== 0 || (fout.soort === g.soort && Math.abs(grafiekWaarde(fout, xp) - yp) < 1e-9)) return null;
+  var anderen = shuffle(SOORTEN34.filter(function(s) { return s !== soort; })).map(function(s) { return doorP(s, xp, yp); }).filter(Boolean).slice(0, 2);
+  if (anderen.length < 2) return null;
+  var r = rooster([xp], [yp], 1, sy, [{ x: xp, y: yp, letter: "P" }]);
+  if (!r) return null;
+  return Q("Welke formule past bij deze grafiek?", keuzesStreng(fnFormule(g), [fnFormule(fout)].concat(anderen.map(fnFormule))),
+    "De vorm is " + { lijn: "een rechte lijn", parabool: "een parabool", expo: "exponentieel (steeds sneller stijgend)", hyperbool: "een hyperbool" }[soort] + ", en de grafiek gaat door P " + punt(xp, yp) + ": " + fnFormule(g) + ".",
+    { figuur: figuur("grafiek", { rooster: r, grafieken: [g] }) });
+};
+
 // ── Groepen, theorie en vaardigheden ──────────────────────────────
 var G1 = "Assenstelsel en grafiek lezen", G2 = "Wat is een functie", G3 = "Lineaire verbanden", G4 = "Snijpunten",
     G5 = "Kwadratische verbanden", G6 = "Exponentiële groei", G7 = "Andere verbanden", G8 = "Toepassen en controle";
@@ -530,9 +876,18 @@ THEORIE[G8] =
 
 // [id, label, groep, korte omschrijving, strategie, uitleg, voorbeeld, minCorrect, subtypes]
 var DEFS = [
+  ["fn01_coordinaten", "Coördinaten van een punt", G1, "A ligt 3 naar rechts en 2 omhoog: (3, 2)", "eerst x, dan y",
+    "Begin in de oorsprong. Tel eerst hoeveel hokjes het punt naar rechts (+) of links (" + MIN + ") ligt: dat is x. Dan hoeveel omhoog (+) of omlaag (" + MIN + "): dat is y. Typ x = \u2026, y = \u2026.",
+    "A: 3 naar rechts, 2 omlaag?\nx = 3, y = " + MIN + "2.\nAntwoord: x = 3, y = " + MIN + "2.", 8, 4],
   ["fn02_kwadrant", "Kwadrant", G1, "(" + MIN + "3, 5) ligt in kwadrant II", "tekens van x en y",
     "Kijk naar de tekens: x positief is rechts, negatief links; y positief is boven, negatief onder. De kwadranten gaan tegen de klok in vanaf rechtsboven: I (+, +), II (" + MIN + ", +), III (" + MIN + ", " + MIN + "), IV (+, " + MIN + ").",
     "(" + MIN + "3, 5)?\nx negatief (links), y positief (boven).\nAntwoord: kwadrant II.", 8, 4],
+  ["fn03_waarde_aflezen", "Waarde aflezen", G1, "Bij x = 2 is y = 5", "omhoog naar de grafiek, opzij naar de y-as",
+    "Zoek de gegeven x op de x-as. Ga recht omhoog of omlaag tot je de grafiek raakt, en dan opzij naar de y-as. Lees daar y af. Valkuil: de x en de y verwisselen.",
+    "y bij x = 2?\nVan x = 2 omhoog naar de lijn, opzij naar de y-as.\nAntwoord: 5.", 8],
+  ["fn04_stijgend_dalend", "Stijgend, dalend of constant", G1, "Waar gaat de grafiek omlaag?", "lees van links naar rechts",
+    "Lees de grafiek altijd van links naar rechts. Gaat hij omhoog, dan stijgt hij; omlaag: dalend; horizontaal: constant. De knikpunten horen bij beide stukken.",
+    "Van x = " + MIN + "2 tot x = 1 gaat de lijn omlaag.\nDat stuk daalt.", 8, 3],
   ["fn05_functie_of_niet", "Functie of niet", G2, "Twee keer x = 2 met een andere y: geen functie", "één x, één y",
     "Een functie geeft bij elke x precies één y. Zoek of een x twee keer voorkomt met een andere y: dan is het geen functie. Dezelfde y bij twee x-waarden mag wel, en negatieve getallen ook.",
     "(1, 4), (2, 5), (2, 7), (3, 6)?\nBij x = 2 horen 5 en 7.\nAntwoord: nee, geen functie.", 8, 3],
@@ -545,12 +900,27 @@ var DEFS = [
   ["fn08_terugzoeken", "Terugzoeken", G2, "f(x) = 2x + 1 = 13: x = 6", "vergelijking oplossen",
     "Je weet de uitkomst en zoekt x: maak er een vergelijking van en los die op. Eerst het losse getal naar de andere kant (met het omgekeerde teken), dan delen door het getal bij x.",
     "2x + 1 = 13?\n2x = 12.\nAntwoord: x = 6.", 8],
+  ["fn09_tabel_aanvullen", "Tabel aanvullen", G2, "y = 5x " + MIN + " 2, bij x = 3: 13", "invullen",
+    "Kijk welke x boven het vraagteken staat en vul die in de formule in. Niet het getal van de kolom ernaast.",
+    "y = 5x " + MIN + " 2, x = 3?\n5 " + DOT + " 3 " + MIN + " 2.\nAntwoord: 13.", 8],
   ["fn10_startgetal", "Startgetal", G3, "y = 4x + 7: startgetal 7", "waarde bij x = 0",
     "Het startgetal is het losse getal, met zijn teken: de waarde bij x = 0. Het maakt niet uit of het voor of achter de term met x staat.",
     "y = 7 " + MIN + " 2x?\nBij x = 0: y = 7.\nAntwoord: 7.", 8, 2],
   ["fn11_rc_formule", "Richtingscoëfficiënt uit de formule", G3, "y = " + MIN + "3x + 1: rc " + MIN + "3", "het getal bij x",
     "De richtingscoëfficiënt is het getal bij x, met zijn teken. Staat er alleen " + MIN + "x, dan is het " + MIN + "1. Valkuil: het losse getal nemen.",
     "y = 5 " + MIN + " x?\nBij x staat " + MIN + "1.\nAntwoord: " + MIN + "1.", 8, 3],
+  ["fn12_rc_tabel", "Richtingscoëfficiënt uit een tabel", G3, "x steeds +2, y steeds +6: rc 3", "verschil in y : verschil in x",
+    "Kijk hoeveel y verandert als x één stap verder gaat, en deel door de stap in x. Gaat x met 2 tegelijk, dan deel je door 2.",
+    "x: 2, 4, 6; y: 5, 11, 17?\nPer 2 in x: +6.\n6 : 2 = 3.", 8],
+  ["fn13_rc_grafiek", "Richtingscoëfficiënt uit een grafiek", G3, "Van A naar B: 2 opzij, 6 omhoog: rc 3", "omhoog : opzij",
+    "Ga van A naar B: tel hoeveel je naar rechts gaat en hoeveel omhoog (+) of omlaag (" + MIN + "). rc = verschil in y : verschil in x. Let op de stap van de y-as.",
+    "2 naar rechts, 6 omhoog?\n6 : 2.\nAntwoord: 3.", 8],
+  ["fn14_formule_tabel", "Formule bij een tabel", G3, "Stap 2 in x, +6 in y, bij x = 0 y = 1: y = 3x + 1", "rc en startgetal",
+    "Reken de rc uit (verschil in y : verschil in x) en zoek het startgetal: de y bij x = 0. Staat x = 0 er niet in, reken dan terug met de rc.",
+    "x: 0, 2, 4; y: 1, 7, 13?\nrc = 6 : 2 = 3, startgetal 1.\nAntwoord: y = 3x + 1.", 8],
+  ["fn15_formule_grafiek", "Formule bij een grafiek", G3, "Door (0, 2), per hokje 3 omhoog: y = 3x + 2", "startgetal op de y-as",
+    "Het startgetal lees je af waar de lijn de y-as snijdt. De rc: ga één hokje naar rechts en kijk hoeveel de lijn omhoog of omlaag gaat.",
+    "Snijpunt y-as bij 2, per stap 3 omhoog?\nrc 3, startgetal 2.\nAntwoord: y = 3x + 2.", 8],
   ["fn16_formule_twee_punten", "Formule door twee punten", G3, "(1, 5) en (3, 11): y = 3x + 2", "eerst de rc, dan het startgetal",
     "Bereken de rc: verschil in y : verschil in x. Vul daarna één punt in y = ax + b in om b te vinden. Controleer met het andere punt.",
     "(1, 5) en (3, 11)?\nrc = 6 : 2 = 3; 5 = 3 + b, b = 2.\nAntwoord: y = 3x + 2.", 8],
@@ -563,6 +933,9 @@ var DEFS = [
   ["fn19_snijpunt_x_as", "Snijpunt met de x-as", G4, "y = 2x " + MIN + " 6: (3, 0)", "y = 0",
     "Op de x-as is y = 0. Los de vergelijking ax + b = 0 op. Het snijpunt is (x, 0).",
     "y = 2x " + MIN + " 6?\n2x " + MIN + " 6 = 0, x = 3.\nAntwoord: x = 3, y = 0.", 8],
+  ["fn20_snijpunt_lijnen", "Snijpunt van twee lijnen", G4, "y = 2x + 1 en y = " + MIN + "x + 7: (2, 5)", "gelijkstellen",
+    "Stel de formules gelijk en los x op; vul x in voor y. Controleer in de tekening: daar kruisen de lijnen elkaar.",
+    "2x + 1 = " + MIN + "x + 7?\n3x = 6, x = 2, y = 5.\nAntwoord: x = 2, y = 5.", 8],
   ["fn21_evenwijdig", "Evenwijdig of niet", G4, "Evenwijdig met y = 2x " + MIN + " 1: y = 2x + 5", "dezelfde rc",
     "Evenwijdige lijnen hebben dezelfde richtingscoëfficiënt; het startgetal mag anders zijn. Een tegengestelde of omgekeerde rc is niet evenwijdig.",
     "Evenwijdig met y = 2x " + MIN + " 1?\nZoek rc 2.\nAntwoord: y = 2x + 5.", 8],
@@ -581,18 +954,30 @@ var DEFS = [
   ["fn26_nulpunten", "Nulpunten", G5, "y = x" + SQ + " " + MIN + " x " + MIN + " 6: x = " + MIN + "2 of x = 3", "ontbinden",
     "Stel y = 0 en ontbind: zoek twee getallen met als product c en als som b. Elke factor is 0 geeft een oplossing; let op de tekens: (x " + MIN + " 3) = 0 geeft x = 3.",
     "x" + SQ + " " + MIN + " x " + MIN + " 6 = 0?\n(x " + MIN + " 3)(x + 2) = 0.\nAntwoord: x = " + MIN + "2 of x = 3.", 8],
+  ["fn27_parabool_grafiek", "Parabool bij een grafiek", G5, "Dal met top (2, " + MIN + "1): y = (x " + MIN + " 2)" + SQ + " " + MIN + " 1", "vorm en top",
+    "Dal of berg geeft het teken van a. Lees de top (p, q) af en vul in: y = a(x " + MIN + " p)" + SQ + " + q. Let op het teken van p.",
+    "Dalparabool, top (2, " + MIN + "1)?\na = 1.\nAntwoord: y = (x " + MIN + " 2)" + SQ + " " + MIN + " 1.", 8],
   ["fn28_groeifactor_procent", "Groeifactor uit een procent", G6, "5% groei: 1,05; 20% afname: 0,8", "100% plus of min",
     "Bij groei komt het procent bij de 100%, bij afname gaat het eraf. Deel door 100: 105% is 1,05 en 80% is 0,8.",
     "Afname van 20%?\n100% " + MIN + " 20% = 80%.\nAntwoord: 0,8.", 8, 2],
   ["fn29_waarde_na_stappen", "Waarde na n stappen", G6, "200, factor 1,5, 2 stappen: 450", "elke stap keer de groeifactor",
     "Vermenigvuldig de startwaarde net zo vaak met de groeifactor als er stappen zijn. Niet erbij optellen en niet keer het aantal stappen.",
     "Start 200, factor 1,5, 2 stappen?\n200 " + DOT + " 1,5 " + DOT + " 1,5.\nAntwoord: 450.", 8],
+  ["fn30_groeifactor_tabel", "Groeifactor uit een tabel", G6, "100, 125, 156,25: factor 1,25", "nieuw : oud",
+    "Deel een waarde door de waarde ervoor. Komt er elke stap hetzelfde uit, dan is dat de groeifactor. Niet het verschil nemen.",
+    "x: 0, 1, 2; y: 64, 80, 100?\n80 : 64 = 1,25.\nAntwoord: 1,25.", 8],
+  ["fn31_lineair_exponentieel", "Lineair of exponentieel", G6, "Steeds +3: lineair; steeds " + DOT + "2: exponentieel", "verschillen of quotiënten",
+    "Bereken de verschillen: gelijk is lineair. Anders de quotiënten: gelijk is exponentieel. Zijn de verschillen van de verschillen gelijk: kwadratisch. Is x " + DOT + " y steeds gelijk: omgekeerd evenredig.",
+    "y: 3, 6, 12, 24?\nSteeds keer 2.\nAntwoord: exponentieel.", 8, 4],
   ["fn32_verdubbelen_halveren", "Verdubbelen en halveren", G6, "Elke 3 uur verdubbelen, na 12 uur: 16 keer", "eerst het aantal stappen",
     "Reken eerst uit hoeveel keer het verdubbelt of halveert: de tijd gedeeld door de tijd per stap. Vermenigvuldig dan zo vaak met 2 (of deel zo vaak door 2).",
     "Elke 3 uur verdubbelen, 12 uur?\n12 : 3 = 4 stappen; 2 " + DOT + " 2 " + DOT + " 2 " + DOT + " 2.\nAntwoord: 16 keer.", 8, 2],
   ["fn33_omgekeerd_evenredig", "Omgekeerd evenredig", G7, "4 werkers 6 dagen, 3 werkers: 8 dagen", "het product blijft gelijk",
     "Reken het product uit (werkers keer dagen): dat blijft gelijk. Deel het door het nieuwe aantal. Minder werkers is meer dagen.",
     "4 werkers 6 dagen, 3 werkers?\n4 " + DOT + " 6 = 24; 24 : 3.\nAntwoord: 8.", 8],
+  ["fn34_grafiek_herkennen", "Grafiek herkennen", G7, "Hyperbool door P (2, 3): y = 6 : x", "vorm en een punt",
+    "Herken eerst de vorm: lijn, parabool, exponentieel of hyperbool. Vul daarna P in om te kiezen tussen de formules van die vorm.",
+    "Hyperbool door P (2, 3)?\n2 " + DOT + " 3 = 6.\nAntwoord: y = 6 : x.", 8, 4],
   ["fn35_fout_spotten", "Fout spotten: functies", G8, "y = 2x + 5 heeft rc 5: fout", "controleren",
     "Veel gemaakte fouten: het startgetal als rc, het snijpunt met de y-as als (b, 0), (" + MIN + "3)" + SQ + " = " + MIN + "9, groeifactor 0,05 bij 5% groei, het teken van p bij de top, een tegengestelde rc evenwijdig noemen, en bij x" + SQ + " = 9 de oplossing " + MIN + "3 vergeten.",
     "Welke is FOUT?\ny = 2x + 5 heeft rc 5 → goed is 2.\nDie is fout.", 8],
@@ -605,13 +990,14 @@ function tipOf(terms) { return terms && terms[0] ? terms[0] : ""; }
 
 // Typen per vaardigheid (plan FN, §2): G geheel getal (ook negatief), X "x = <geheel getal>" (vergelijking en
 // symmetrieas), K kommagetal (hoogstens 2 decimalen), P punt "x = …, y = …" (paar "stelsel"), O twee nulpunten
-// "x = … of x = …" (paar "of"). Kiezen: kwadrant (fn02), functie of niet (fn05), formule door twee punten (fn16),
-// evenwijdig (fn21), dal of berg (fn22) en fout spotten (fn35).
-var GETAL_NEG = { fn06: 1, fn07: 1, fn10: 1, fn11: 1 };
+// "x = … of x = …" (paar "of"). fn12 en fn13: een halve rc zet per vraag het kommavak (rcInvoer). Kiezen: kwadrant
+// (fn02), stijgend of dalend (fn04), functie of niet (fn05), formules (fn14, fn15, fn16, fn27, fn34), evenwijdig (fn21),
+// dal of berg (fn22), soort verband (fn31) en fout spotten (fn35).
+var GETAL_NEG = { fn03: 1, fn06: 1, fn07: 1, fn09: 1, fn10: 1, fn11: 1, fn12: 1, fn13: 1 };
 var GETAL     = { fn29: 1, fn32: 1, fn33: 1, fn36: 1 };
 var LETTER_X  = { fn08: 1, fn23: 1 };
-var KOMMA     = { fn17: 1, fn28: 1 };
-var PUNT      = { fn18: 1, fn19: 1, fn24: 1, fn25: 1 };
+var KOMMA     = { fn17: 1, fn28: 1, fn30: 1 };
+var PUNT      = { fn01: 1, fn18: 1, fn19: 1, fn20: 1, fn24: 1, fn25: 1 };
 var TWEE      = { fn26: 1 };
 
 var RAW_SKILLS = DEFS.map(function(d) {

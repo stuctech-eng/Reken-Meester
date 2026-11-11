@@ -1,9 +1,10 @@
 import { A } from "../styles/tokens.js";
 import { T, L, Poly, Boog, LIJN, P, G, GROEN, HULP, PL, GL } from "./TheorieFiguur.jsx";
+import { ROOSTER, roosterIndeling, grafiekWaarde } from "../core/skills/wiskunde-functies.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-// Tekening bij een vraag van Meetkunde (plan TK2) of Statistiek en kans (plan ST, fase S2), met de getallen van die vraag. De generator geeft
+// Tekening bij een vraag van Meetkunde (plan TK2), Statistiek en kans (plan ST, fase S2) of Functies (plan FN, fase F2), met de getallen van die vraag. De generator geeft
 // vraag.figuur = { soort, gegeven: { ... }, gevraagd }. Alleen gegeven waarden staan erbij; op de plek
 // van het antwoord staat "?". Hoeken zijn echt getekend; lengtes niet op schaal (begrensde verhouding,
 // zodat je het antwoord niet kunt opmeten): daar staat "niet op schaal" onder.
@@ -680,6 +681,90 @@ function tabelTekst(f) {
   return "Tabel. " + g.kop[0] + ": " + g.waarden.join(", ") + ". " + g.kop[1] + ": " + g.aantallen.map(function(a) { return a === null ? "vraagteken" : a; }).join(", ") + "." + (g.totaal ? " Totaal: " + g.totaal + "." : "");
 }
 
+// ── Functies (plan FN, fase F2) ─────────────────────────────────
+// Rooster op schaal (hokjes van 12, per as een eigen stap). De indeling (getallen, letters) komt uit
+// roosterIndeling, dezelfde rekening als in de generator. Elk element heeft data-rol, zodat een test de
+// tekening kan teruglezen. Het antwoord wordt nooit getekend.
+function roosterTekening(r, inhoud) {
+  var d = roosterIndeling(r), c = d.cel, x2 = d.links + d.nx * c, y2 = d.boven + d.ny * c, lijnen = [];
+  for (var i = 0; i <= d.nx; i++) { var x = d.links + i * c; if (x !== d.ax) lijnen.push(<line key={"v" + i} data-rol="raster-v" x1={x} y1={d.boven} x2={x} y2={y2} stroke={HULP} strokeWidth={0.6} opacity={0.5} />); }
+  for (var j = 0; j <= d.ny; j++) { var y = d.boven + j * c; if (y !== d.ay) lijnen.push(<line key={"h" + j} data-rol="raster-h" x1={d.links} y1={y} x2={x2} y2={y} stroke={HULP} strokeWidth={0.6} opacity={0.5} />); }
+  var tekst = function(l, rol, k) { return <text key={rol + k} data-rol={rol} x={l.x} y={l.y} fill={LIJN} fontSize={ROOSTER.fs} fontWeight={700} textAnchor={l.anker} dominantBaseline="middle" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" paintOrder="stroke">{l.tekst}</text>; };
+  return (
+    <g>
+      {lijnen}
+      <line data-rol="as-x" x1={d.links} y1={d.ay} x2={x2} y2={d.ay} stroke={LIJN} strokeWidth={1.8} />
+      <line data-rol="as-y" x1={d.ax} y1={d.boven} x2={d.ax} y2={y2} stroke={LIJN} strokeWidth={1.8} />
+      <polygon points={(x2 + 1) + "," + d.ay + " " + (x2 - 5) + "," + (d.ay - 3.5) + " " + (x2 - 5) + "," + (d.ay + 3.5)} fill={LIJN} />
+      <polygon points={d.ax + "," + (d.boven - 1) + " " + (d.ax - 3.5) + "," + (d.boven + 5) + " " + (d.ax + 3.5) + "," + (d.boven + 5)} fill={LIJN} />
+      {inhoud(d)}
+      {d.xLabels.map(function(l, k) { return tekst(l, "xlabel", k); })}
+      {d.yLabels.map(function(l, k) { return tekst(l, "ylabel", k); })}
+      {tekst(d.nul, "nul", 0)}
+      {d.asLetters.map(function(l, k) { return tekst(l, "asletter", k); })}
+      {d.stippen.map(function(s, k) { return <g key={"s" + k}><circle data-rol="punt" data-letter={s.letter} cx={s.cx} cy={s.cy} r={4} fill={P} />{TS(s.lx, s.ly, s.letter, P, "middle", ROOSTER.letterFs)}</g>; })}
+      {d.namen.map(function(n, k) { return <g key={"n" + k}>{TS(n.lx, n.ly, n.tekst, KLEUR_GRAFIEK[k], "middle", ROOSTER.letterFs)}</g>; })}
+    </g>
+  );
+}
+var KLEUR_GRAFIEK = [P, G];
+// De grafiek bemonsterd (8 punten per hokje) en afgesneden aan de rand van het rooster: één of meer stukken
+function grafiekPad(g, r, d, kleur, k) {
+  var ylo = r.ya * r.sy, yhi = r.yb * r.sy, stukken = [], stuk = [], vorige = null;
+  if (g.soort === "gebroken") stukken.push(g.knik.map(function(p) { return [d.px(p[0]), d.py(p[1])]; }));
+  else {
+    for (var i = 0; i <= (r.xb - r.xa) * 8; i++) {
+      var x = (r.xa + i / 8) * r.sx, y = grafiekWaarde(g, x), in_ = y !== null && y >= ylo && y <= yhi;
+      if (in_) {
+        // het stuk begint op de rand: snijpunt met de rand erbij
+        if (!stuk.length && vorige && vorige.y !== null) { var yr = vorige.y < ylo ? ylo : yhi; stuk.push([d.px(vorige.x + (x - vorige.x) * (yr - vorige.y) / (y - vorige.y)), d.py(yr)]); }
+        stuk.push([d.px(x), d.py(y)]);
+      } else if (stuk.length) {
+        if (y !== null) { var yr2 = y < ylo ? ylo : yhi; stuk.push([d.px(vorige.x + (x - vorige.x) * (yr2 - vorige.y) / (y - vorige.y)), d.py(yr2)]); }
+        stukken.push(stuk); stuk = [];
+      }
+      vorige = { x: x, y: y };
+    }
+    if (stuk.length) stukken.push(stuk);
+  }
+  return stukken.filter(function(s) { return s.length > 1; }).map(function(s, j) {
+    return <polyline key={"g" + k + "-" + j} data-rol="grafiek" data-nr={k} points={s.map(function(p) { return rond(p[0]) + "," + rond(p[1]); }).join(" ")} fill="none" stroke={kleur} strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />;
+  });
+}
+function assenstelsel(f) { return roosterTekening(f.gegeven.rooster, function() { return null; }); }
+function grafiek(f) {
+  var r = f.gegeven.rooster;
+  return roosterTekening(r, function(d) { return f.gegeven.grafieken.map(function(g, k) { return <g key={"gr" + k}>{grafiekPad(g, r, d, KLEUR_GRAFIEK[k], k)}</g>; }); });
+}
+// Tabel met de rijen x en y; een vak zonder getal heeft "?"
+function fntabel(f) {
+  var g = f.gegeven, n = g.xs.length, kl = 34, kb = Math.floor((VF_B - 4 - kl) / n), x0 = 2, y0 = 30, rh = 40;
+  var cel = function(x, y, w, tekst, kleur, vul, rol) {
+    return <g><rect x={x} y={y} width={w} height={rh} fill={vul || "none"} stroke={LIJN} strokeWidth={1.6} /><text data-rol={rol} x={rond(x + w / 2)} y={y + rh / 2} fill={kleur} fontSize={17} fontWeight={700} textAnchor="middle" dominantBaseline="middle">{tekst}</text></g>;
+  };
+  var t = function(v) { return v === null ? "?" : (v < 0 ? "−" : "") + String(Math.abs(v)).replace(".", ","); };
+  return (
+    <g>
+      {cel(x0, y0, kl, "x", LIJN, PL, "kop")}{cel(x0, y0 + rh, kl, "y", LIJN, PL, "kop")}
+      {g.xs.map(function(x, i) { return <g key={"k" + i}>{cel(x0 + kl + i * kb, y0, kb, t(x), LIJN, PL, "tabel-x")}{cel(x0 + kl + i * kb, y0 + rh, kb, t(g.ys[i]), g.ys[i] === null ? G : P, null, "tabel-y")}</g>; })}
+    </g>
+  );
+}
+function getalTekst(v) { return (v < 0 ? "min " : "") + String(Math.abs(v)).replace(".", ","); }
+var GRAFIEK_NAAM = { lijn: "een rechte lijn", parabool: "een parabool", expo: "een exponentiële grafiek", hyperbool: "een hyperbool in twee delen", gebroken: "een gebroken lijn van drie stukken" };
+function grafiekTekst(f) {
+  var g = f.gegeven, pnt = g.rooster.punten.map(function(p) { return "punt " + p.letter + " (" + getalTekst(p.x) + ", " + getalTekst(p.y) + ")"; });
+  return "Assenstelsel met " + g.grafieken.map(function(x, k) { return GRAFIEK_NAAM[x.soort] + (g.grafieken.length > 1 ? " (" + ["l", "m"][k] + ")" : ""); }).join(" en ") + (pnt.length ? ", en " + pnt.join(" en ") : "") + ". Lees af in de tekening.";
+}
+function assenTekst(f) {
+  var g = f.gegeven;
+  return "Assenstelsel met de punten " + g.rooster.punten.map(function(p) { return p.letter === g.gevraagd ? p.letter : p.letter + " (" + getalTekst(p.x) + ", " + getalTekst(p.y) + ")"; }).join(", ") + ". Gevraagd: de coördinaten van " + g.gevraagd + ".";
+}
+function fntabelTekst(f) {
+  var g = f.gegeven;
+  return "Tabel. x: " + g.xs.map(getalTekst).join(", ") + ". y: " + g.ys.map(function(v) { return v === null ? "vraagteken" : getalTekst(v); }).join(", ") + ".";
+}
+
 // ── Register ────────────────────────────────────────────────────
 
 var SOORT = {
@@ -710,6 +795,9 @@ var SOORT = {
   boxplot: { teken: boxplot, schaal: true, tekst: function(f) { var w = f.gegeven.vijf; return "Boxplot boven een getallenlijn. Snor van " + w[0] + " tot " + w[1] + ", doos van " + w[1] + " tot " + w[3] + " met de streep bij " + w[2] + ", snor van " + w[3] + " tot " + w[4] + "."; } },
   rooster: { teken: rooster, schaal: true, tekst: function() { return "Rooster van twee dobbelstenen: 6 bij 6 vakjes, in elk vakje de som van de ogen."; } },
   boom: { teken: boom, schaal: true, tekst: boomTekst },
+  assenstelsel: { teken: assenstelsel, schaal: true, tekst: assenTekst },
+  grafiek: { teken: grafiek, schaal: true, tekst: grafiekTekst },
+  fntabel: { teken: fntabel, schaal: true, tekst: fntabelTekst },
 };
 export function bekendeVraagFiguur(f) { return !!(f && SOORT[f.soort]); }
 // Hoogte van het onderschrift "niet op schaal" (px), voor de ruimtemeting in PracticeScreen

@@ -264,7 +264,7 @@ export var DEFAULT_SAVE = {
       xp: 0,
       sessions: [],
       skillStats: {},
-      currentSkillId: "fn02_kwadrant",
+      currentSkillId: "fn01_coordinaten",
       totalSkillsMastered: 0,
       bonusStats: {},
     }
