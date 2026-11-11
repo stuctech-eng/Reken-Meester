@@ -1,4 +1,5 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
+import AccountForm from "../components/AccountForm.jsx";
 import { Screen, TopBar, Card, Btn, Divider, Body } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { getTitel } from "../core/save.js";
@@ -6,7 +7,14 @@ import { SUBJECTS, getSkillOrder } from "../core/subjects.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-export default function SettingsScreen({ save, opslag, onBack, onReset }) {
+export default function SettingsScreen({ save, opslag, account, onMaak, onInlog, onVergeten, onUitloggen, onBack, onReset }) {
+  var uitFoutState = useState(null);
+  var uitFout      = uitFoutState[0];
+  var setUitFout   = uitFoutState[1];
+  function uitloggen() {
+    setUitFout(null);
+    Promise.resolve(onUitloggen()).then(function(tekst) { if (tekst) setUitFout(tekst); });
+  }
   var name          = save.displayName || "—";
   // Elke beschikbare rekenmodus heeft een eigen titel en eigen statistieken
   var availSubjects = SUBJECTS.filter(function(s) { return s.available; });
@@ -147,10 +155,77 @@ export default function SettingsScreen({ save, opslag, onBack, onReset }) {
           )}
           <Divider style={{ margin: "12px 0" }} />
           <StatRow label={"Schrijfplek"} value={opslag && opslag.plek ? String(opslag.plek) : "\u2014"} soft={true} />
+          {opslag && opslag.oudTabblad && (
+            <Fragment>
+              <Divider style={{ margin: "12px 0" }} />
+              <div role="status" style={{ fontSize: T.sm, color: A.textMid, lineHeight: 1.5 }}>
+                {"In een tabblad met de vorige versie is na het wisselen nog geoefend. Die voortgang hoort bij de vorige speler. Sluit oude tabbladen van Reken-Meester."}
+              </div>
+            </Fragment>
+          )}
+          {opslag && opslag.extern && (
+            <Fragment>
+              <Divider style={{ margin: "12px 0" }} />
+              <div role="status" style={{ fontSize: T.sm, color: A.textMid, lineHeight: 1.5 }}>
+                {"Je bent op een ander tabblad afgemeld of aangemeld. Je gegevens van de vorige speler blijven bij die speler."}
+              </div>
+            </Fragment>
+          )}
+        </div>
+
+        {/* Account (plan IN, fase IN-2) */}
+        <SectionLabel style={{ marginTop: 4 }}>{"ACCOUNT"}</SectionLabel>
+        <div style={{
+          background: A.bgCard,
+          border: "1.5px solid " + A.border,
+          borderRadius: A.r16,
+          padding: "16px 18px",
+          boxShadow: A.shadow,
+        }}>
+          {account && account.soort === "account" ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ fontSize: T.sm, color: A.textMid, lineHeight: 1.5, overflowWrap: "anywhere" }}>
+                {"Ingelogd als "}<b style={{ color: A.text }}>{account.email || "\u2014"}</b>
+              </div>
+              <button
+                onClick={uitloggen}
+                disabled={!!account.inlogUit}
+                style={{
+                  width: "100%",
+                  minHeight: 48,
+                  padding: "12px 18px",
+                  background: "transparent",
+                  color: A.primary,
+                  border: "2px solid " + A.primary,
+                  borderRadius: A.r12,
+                  fontSize: T.md,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  opacity: account.inlogUit ? 0.55 : 1,
+                  WebkitTapHighlightColor: "transparent",
+                }}
+              >
+                {"Uitloggen"}
+              </button>
+              {account.inlogUit && <div style={{ fontSize: T.sm, color: A.textSoft }}>{account.inlogUit}</div>}
+              {uitFout && <div role="alert" style={{ fontSize: T.sm, color: A.error, fontWeight: 700, lineHeight: 1.4 }}>{uitFout}</div>}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ fontSize: T.sm, color: A.textMid, lineHeight: 1.5 }}>
+                {account && account.soort === "lokaal"
+                  ? "Er is geen verbinding met de server; je voortgang staat alleen op dit toestel."
+                  : "Je voortgang staat alleen op dit toestel. Met een account kun je ook op een ander toestel verder."}
+              </div>
+              {account && account.soort === "anoniem" && (
+                <AccountForm onMaak={onMaak} onInlog={onInlog} onVergeten={onVergeten} inlogUit={account.inlogUit} />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Danger zone */}
-        <SectionLabel style={{ marginTop: 4, color: A.error }}>{"ACCOUNT"}</SectionLabel>
+        <SectionLabel style={{ marginTop: 4, color: A.error }}>{"VOORTGANG WISSEN"}</SectionLabel>
         <div style={{
           background: A.errorBg,
           border: "1.5px solid " + A.errorBorder,

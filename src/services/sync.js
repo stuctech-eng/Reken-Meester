@@ -1,4 +1,4 @@
-// Firestore-opslag van de voortgang (plan IN, fase IN-1, §3g).
+// Firestore-opslag van de voortgang (plan IN, fase IN-1 §3g, fase IN-2 §22.4).
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
 // - laadServer: alleen Firestore, zonder terugval op localStorage; een fout gaat door naar boven.
@@ -6,6 +6,7 @@
 //   wachtrijen van dit toestel toepassen die er nog niet in zitten (herbouw), en het hele document schrijven
 //   met rev + 1. Verandert het document intussen (een ander toestel of tabblad), dan herhaalt Firestore de
 //   hele functie: elke poging leest de serverstand en de wachtrijen opnieuw. Er wordt nooit blind geschreven.
+//   Alleen de wachtrijen van de eigenaar uid tellen mee (plek.alle(uid)).
 
 import { doc, getDoc, runTransaction } from "firebase/firestore";
 import { db } from "./firebase.js";
@@ -17,10 +18,10 @@ export async function laadServer(uid) {
 }
 
 // Eén poging binnen een transactie (los, zodat de test hem met een nagebootste transactie kan draaien)
-export async function stapTransactie(tx, ref, plek) {
+export async function stapTransactie(tx, ref, plek, uid) {
   var snap   = await tx.get(ref);
   var server = normaliseer(snap.exists() ? snap.data() : null);
-  var h      = herbouw(server, plek.alle());
+  var h      = herbouw(server, plek.alle(uid));
   if (h.toegepast === 0) return server;
   var next = h.stand;
   next.rev = server.rev + 1;
@@ -30,5 +31,5 @@ export async function stapTransactie(tx, ref, plek) {
 
 export function slaOp(uid, plek) {
   var ref = doc(db, "users", uid);
-  return runTransaction(db, function(tx) { return stapTransactie(tx, ref, plek); });
+  return runTransaction(db, function(tx) { return stapTransactie(tx, ref, plek, uid); });
 }

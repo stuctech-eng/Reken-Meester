@@ -9,6 +9,8 @@
 //   soort "sessie": result (zoals PracticeScreen hem geeft), datum en gisteren (JJJJ-MM-DD, bij het maken)
 //   soort "patch":  patch (samengevoegd met dMerge, zoals upSave deed)
 //   soort "wissen": alles terug naar DEFAULT_SAVE, behalve rev en toegepastTot
+//   soort "overname": stand (de hele voortgang zonder rev en toegepastTot) vervangt de voortgang; rev en
+//                     toegepastTot blijven (IN-2, §22.5: de voortgang van dit toestel naar een nieuwe speler)
 // stand.toegepastTot: per schrijver het hoogste nummer dat in de stand zit (nooit vergeten, ook niet bij wissen).
 
 import { DEFAULT_SAVE, dClone, dMerge } from "./save.js";
@@ -91,6 +93,9 @@ export function pasBewerkingToe(stand, b) {
   } else if (b.soort === "wissen") {
     next = dClone(DEFAULT_SAVE);
     next.rev = stand.rev;
+  } else if (b.soort === "overname") {
+    next = dMerge(dClone(DEFAULT_SAVE), dClone(b.stand || {}));
+    next.rev = stand.rev;
   } else {
     throw new Error("onbekende bewerking: " + b.soort);
   }
@@ -122,6 +127,14 @@ export function herbouw(basis, wachtrijen) {
     }
   });
   return { stand: stand, toegepast: toegepast };
+}
+
+// De voortgang zonder rev en toegepastTot (de inhoud van een overname)
+export function zonderSyncVelden(stand) {
+  var s = dClone(stand);
+  delete s.rev;
+  delete s.toegepastTot;
+  return s;
 }
 
 // Vaste vorm van een stand uit Firestore of localStorage: DEFAULT_SAVE aangevuld, rev en toegepastTot gezet

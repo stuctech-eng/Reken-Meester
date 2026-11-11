@@ -2,8 +2,13 @@ import { useState } from "react";
 import { Screen, Card, Btn, Heading, Body } from "../components/UI.jsx";
 import { T, D } from "../styles/tokens.js";
 import { claimUsername } from "../services/leaderboard.js";
+import AccountForm from "../components/AccountForm.jsx";
 
-export default function UsernameScreen({ uid, onDone }) {
+export default function UsernameScreen({ uid, onDone, onInlog, onVergeten, inlogUit }) {
+  var formState    = useState(false);
+  var toonForm     = formState[0];
+  var setToonForm  = formState[1];
+
   var inputState   = useState("");
   var input        = inputState[0];
   var setInput     = inputState[1];
@@ -104,6 +109,36 @@ export default function UsernameScreen({ uid, onDone }) {
           {loading ? "Controleren..." : "Bevestigen"}
         </Btn>
       </Card>
+
+      {onInlog && (
+        <div style={{ marginTop: 16 }}>
+          {toonForm ? (
+            <Card style={{ padding: 20, background: D.bgCard }}>
+              <AccountForm start="inloggen" donker={true} onInlog={onInlog} onVergeten={onVergeten} onTerug={function() { setToonForm(false); }} />
+            </Card>
+          ) : (
+            <button
+              onClick={function() { if (!inlogUit) setToonForm(true); }}
+              disabled={!!inlogUit}
+              style={{
+                width: "100%",
+                minHeight: 44,
+                background: "transparent",
+                border: "none",
+                color: D.primary,
+                fontSize: T.md,
+                fontWeight: 800,
+                cursor: "pointer",
+                opacity: inlogUit ? 0.55 : 1,
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              {"Ik heb al een account"}
+            </button>
+          )}
+          {inlogUit && !toonForm && <div style={{ fontSize: T.sm, color: D.textSoft, textAlign: "center" }}>{inlogUit}</div>}
+        </div>
+      )}
     </Screen>
   );
 }
