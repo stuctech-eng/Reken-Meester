@@ -3,18 +3,18 @@
 
 import { maakDoelen, beslis, isKlein, STRAAL } from "./tikregel.js";
 
-var VERSIE = "T2a-proef-3";
+var VERSIE = "T2a-proef-4";
 var KAARTEN = [
   { id: "proef-nl", titel: "Nederland" },
-  { id: "proef-europa", titel: "Kleine staten" },
+  { id: "proef-europa", titel: "Europa (zuid)" },
   { id: "proef-caribisch-groot", titel: "Grote Antillen" },
-  { id: "proef-caribisch-klein", titel: "Kleine Antillen", sleepUitleg: true },   // te hoog voor het scherm: afgesneden, verticaal slepen
+  { id: "proef-caribisch-klein", titel: "Kleine Antillen" },
   { id: "proef-wereld", titel: "Wereld" }
 ];
 export var ZOOMSTAPPEN = [1, 2, 4, 8];
 export var SLEEPGRENS = 10;   // CSS-pixels: tot en met 10 is het een tik, daarboven slepen
 var NS = "http://www.w3.org/2000/svg";
-var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#c026d3", opdracht: "#dc2626", lijn: "#1d4ed8", punt: "#1a1d3a" };
+var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", opdracht: "#dc2626", lijn: "#1d4ed8", punt: "#1a1d3a" };
 
 var staat = { kaart: null, data: {}, laag: null, stand: "vrij", gekozen: null, doelen: [], opdracht: null, uitslag: {}, log: [], svg: null,
   zoom: 1, ox: 0, oy: 0, aanraking: null, maxH: 0 };
@@ -28,14 +28,22 @@ function laadKaart(id) {
 }
 
 // Zichtbaar deel van de kaart (viewBox-eenheden) en de schaal in CSS-pixels per eenheid.
-// De breedte van het beeld hangt alleen van de zoom af; de hoogte is hoogstens de vrije schermhoogte (staat.maxH).
+// De breedte van het beeld hangt alleen van de zoom af: k.beeld eenheden vullen de schermbreedte bij x1 (zonder beeld: de hele
+// kaartbreedte). Een kaart met een groter doek is breder dan het beeld. De hoogte is hoogstens de vrije schermhoogte (staat.maxH).
+function beeldBreedte(k) { return k.beeld || k.breedte; }
 function venster() {
-  var k = staat.kaart, w = k.breedte / staat.zoom, h = k.hoogte / staat.zoom, b = $("kaartvak").clientWidth;
+  var k = staat.kaart, w = beeldBreedte(k) / staat.zoom, h = k.hoogte / staat.zoom, b = $("kaartvak").clientWidth;
   if (staat.maxH > 0 && b > 0) h = Math.min(h, staat.maxH * w / b);
   return { x: staat.ox, y: staat.oy, w: w, h: h };
 }
 // Vrije hoogte voor de kaart: van de bovenkant van het kaartvak tot de onderste balk, met 8 px ruimte
 function meetRuimte() { staat.maxH = Math.max(120, Math.floor(window.innerHeight - $("kaartvak").offsetTop - $("balk").offsetHeight - 8)); }
+// Past de hele kaart bij x1 in beeld? (breedte en vrije hoogte, gerekend met de gewone opdrachtruimte van 44 px)
+function pastBijEen() {
+  var k = staat.kaart, b = $("kaartvak").clientWidth, o = $("opdracht");
+  var vrij = window.innerHeight - $("kaartvak").offsetTop - $("balk").offsetHeight - 8 + (o.offsetHeight - 44);
+  return k.breedte <= beeldBreedte(k) && k.hoogte * b / beeldBreedte(k) <= vrij;
+}
 function schaal() { return staat.svg ? staat.svg.getBoundingClientRect().width / venster().w : 1; }
 function begrens() {
   var k = staat.kaart, v = venster();
@@ -71,7 +79,7 @@ function zoomKnoppen() {
 }
 
 function kiesKaart(id) {
-  return laadKaart(id).then(function(k) { staat.kaart = k; staat.zoom = 1; staat.ox = 0; staat.oy = 0; return kiesLaag(k.lagen[0].id); });
+  return laadKaart(id).then(function(k) { staat.kaart = k; staat.zoom = 1; staat.ox = k.start ? k.start[0] : 0; staat.oy = k.start ? k.start[1] : 0; return kiesLaag(k.lagen[0].id); });
 }
 function kiesLaag(id) {
   staat.laag = staat.kaart.lagen.filter(function(l) { return l.id === id; })[0];
@@ -82,7 +90,7 @@ function kiesLaag(id) {
 }
 
 function teken() {
-  meetRuimte(); begrens();
+  toonOpdracht(); meetRuimte(); begrens();
   var k = staat.kaart, vak = $("kaartvak"), v = venster();
   vak.innerHTML = "";
   var svg = el("svg", { viewBox: v.x + " " + v.y + " " + v.w + " " + v.h, role: "img", "aria-label": "Kaart " + k.titel + ", zoom " + staat.zoom });
@@ -102,12 +110,15 @@ function teken() {
     var kleur = gek ? KLEUR.gekozen : (opd ? KLEUR.opdracht : null);
     var item = staat.laag.items.filter(function(i) { return i.id === d.id; })[0];
     if (d.soort === "vlak") {
-      if (d.ringen.length) groep.appendChild(el("path", { d: item.d, fill: kleur || KLEUR.doel, "fill-opacity": kleur ? 0.85 : 1, stroke: KLEUR.doelRand, "stroke-width": 1.2 * px, "fill-rule": "evenodd" }));
-      if (isKlein(d, s)) groep.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: kleur || "none", "fill-opacity": kleur ? 0.35 : 0, stroke: kleur || KLEUR.doelRand, "stroke-width": 1.5 * px, "stroke-dasharray": (4 * px) + " " + (3 * px) }));
+      if (d.ringen.length) groep.appendChild(el("path", { d: item.d, fill: kleur || KLEUR.doel, "fill-opacity": kleur ? 0.85 : 1, stroke: gek ? KLEUR.gekozenRand : KLEUR.doelRand, "stroke-width": (gek ? 3 : 1.2) * px, "fill-rule": "evenodd" }));
+      if (isKlein(d, s)) groep.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: kleur || "none", "fill-opacity": kleur ? 0.35 : 0, stroke: gek ? KLEUR.gekozenRand : (kleur || KLEUR.doelRand), "stroke-width": (gek ? 2.5 : 1.5) * px, "stroke-dasharray": (4 * px) + " " + (3 * px) }));
     } else if (d.soort === "lijn") {
-      groep.appendChild(el("path", { d: item.d, fill: "none", stroke: kleur || KLEUR.lijn, "stroke-width": (kleur ? 5 : 3) * px, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+      // gekozen: een witte lijn van 10 px onder een groene van 6 px (2x de gewone 3 px)
+      if (gek) groep.appendChild(el("path", { d: item.d, fill: "none", stroke: "#fff", "stroke-width": 10 * px, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+      groep.appendChild(el("path", { d: item.d, fill: "none", stroke: kleur || KLEUR.lijn, "stroke-width": (gek ? 6 : kleur ? 5 : 3) * px, "stroke-linecap": "round", "stroke-linejoin": "round" }));
     } else {
-      groep.appendChild(el("circle", { cx: d.x, cy: d.y, r: (kleur ? 7 : 5) * px, fill: kleur || KLEUR.punt, stroke: "#fff", "stroke-width": 1.5 * px }));
+      // gekozen: straal 10 (2x de gewone 5) met een witte rand van 3 px
+      groep.appendChild(el("circle", { cx: d.x, cy: d.y, r: (gek ? 10 : kleur ? 7 : 5) * px, fill: kleur || KLEUR.punt, stroke: "#fff", "stroke-width": (gek ? 3 : 1.5) * px }));
     }
   });
   svg.addEventListener("pointerdown", neer);
@@ -184,10 +195,16 @@ function startOpdracht() {
   staat.uitslag[sleutel()] = { doelen: rij.length, gedaan: 0, inEenKeer: 0, metLijst: 0, fout: [], zoom: {} };
   staat.gekozen = null; toonOpdracht();
 }
+// Uitleg bij de opdracht: de stippellijn als het doel bij deze zoom een tikcirkel heeft; slepen als de kaart bij x1 niet past.
+// Elke extra zin krijgt een regel van 22 px erbij (44, 66 of 88 px).
 function toonOpdracht() {
-  var o = staat.opdracht, uitleg = !!(o && o.huidig && staat.kaart && KAARTEN.filter(function(k) { return k.id === staat.kaart.id; })[0].sleepUitleg);
-  $("opdracht").style.height = uitleg ? "66px" : "";   // drie regels alleen bij de Kleine Antillen; elders blijft het 44 px
-  $("opdracht").textContent = o ? (o.huidig ? "Opdracht " + (o.nr + 1) + " van " + o.rij.length + ": tik " + o.huidig.naam + " aan (rood gemarkeerd)." + (uitleg ? " Staat het rode doel buiten beeld? Sleep de kaart omhoog of omlaag." : "") : "Klaar met deze laag. Kopieer de uitslag (knop Uitslag) of kies een andere laag.") : "Vrij tikken: tik op de kaart. Kies Opdracht voor de test.";
+  var o = staat.opdracht, extra = [];
+  if (o && o.huidig) {
+    if (o.huidig.soort === "vlak" && isKlein(o.huidig, $("kaartvak").clientWidth / venster().w)) extra.push("Je mag overal binnen de stippellijn tikken.");
+    if (!pastBijEen()) extra.push("Staat het rode doel buiten beeld? Sleep de kaart.");
+  }
+  $("opdracht").style.height = extra.length ? (44 + 22 * extra.length) + "px" : "";
+  $("opdracht").textContent = o ? (o.huidig ? "Opdracht " + (o.nr + 1) + " van " + o.rij.length + ": tik " + o.huidig.naam + " aan (rood gemarkeerd)." + (extra.length ? " " + extra.join(" ") : "") : "Klaar met deze laag. Kopieer de uitslag (knop Uitslag) of kies een andere laag.") : "Vrij tikken: tik op de kaart. Kies Opdracht voor de test.";
 }
 function bevestig() {
   if (!staat.gekozen) return;

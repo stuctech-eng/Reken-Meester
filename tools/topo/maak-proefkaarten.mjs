@@ -15,7 +15,7 @@ import { fileURLToPath } from "url";
 import { geoPath, geoTransverseMercator, geoAzimuthalEqualArea, geoMercator, geoEqualEarth } from "d3-geo";
 import { topology } from "topojson-server";
 import { presimplify, simplify } from "topojson-simplify";
-import { feature } from "topojson-client";
+import { feature, merge } from "topojson-client";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var BRON = process.argv[2];
@@ -64,6 +64,8 @@ function lijnenSamen(geoms) {
 }
 
 // ── projecteren en uitknippen tot vlakke ringen en lijnen ──
+// De schaal komt altijd uit de uitsnede lon/lat (1000 eenheden = de schermbreedte bij x1). Een kaart met een groter doek
+// (k.doek) houdt die schaal; het doek omvat dan alle doelen, en het beeld begint bij x1 op de oude uitsnede (start).
 function maakProjectie(k) {
   var pr = k.projectie();
   var pts = [];
@@ -72,8 +74,23 @@ function maakProjectie(k) {
   pr.fitWidth(BREEDTE, mp);
   var b = geoPath(pr).bounds(mp);
   var hoogte = Math.ceil(b[1][1]);
-  pr.clipExtent([[0, 0], [BREEDTE, hoogte]]);
-  return { pr: pr, hoogte: hoogte };
+  if (!k.doek) { pr.clipExtent([[0, 0], [BREEDTE, hoogte]]); return { pr: pr, breedte: BREEDTE, hoogte: hoogte, start: [0, 0] }; }
+  // doek: de omhullende van alle doelen (zonder verre delen), met een rand, naar buiten afgerond op hele eenheden
+  var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  k.doek.doelen().forEach(function(item) { var bb = geoPath(pr).bounds(samen(item.delen)); x0 = Math.min(x0, bb[0][0]); y0 = Math.min(y0, bb[0][1]); x1 = Math.max(x1, bb[1][0]); y1 = Math.max(y1, bb[1][1]); });
+  x0 = Math.floor(x0 - k.doek.rand); y0 = Math.floor(y0 - k.doek.rand); x1 = Math.ceil(x1 + k.doek.rand); y1 = Math.ceil(y1 + k.doek.rand);
+  var t = pr.translate(); pr.translate([t[0] - x0, t[1] - y0]);   // hele eenheden verschuiven: vormen en schaal blijven gelijk
+  pr.clipExtent([[0, 0], [x1 - x0, y1 - y0]]);
+  return { pr: pr, breedte: x1 - x0, hoogte: y1 - y0, start: [-x0, -y0] };
+}
+// Delen van een land waarvan het midden ten westen van lonMin ligt (verre overzeese delen), vallen weg
+function zonderVer(item, lonMin) {
+  var delen = item.delen.map(function(g) {
+    var ps = g.type === "Polygon" ? [g.coordinates] : g.coordinates;
+    ps = ps.filter(function(c) { var rr = c[0], som = 0; rr.forEach(function(q) { som += q[0]; }); return som / rr.length >= lonMin; });
+    return ps.length ? { type: "MultiPolygon", coordinates: ps } : null;
+  }).filter(function(g) { return g; });
+  return { id: item.id, naam: item.naam, label: item.label, delen: delen };
 }
 function vlak(pr, geom, gesloten) {
   var ringen = [], huidig = null;
@@ -218,6 +235,52 @@ function pad(ringen, gesloten) {
 }
 
 // ── de kaarten ──
+// Europa (zuid), ronde 4 (D4c): vaste lijst van 28 doelen; elk ander land in het doek is achtergrond.
+// Verre delen van Spanje, het Verenigd Koninkrijk en Portugal (midden ten westen van 12 graden WL: Canarische Eilanden,
+// Rockall, Azoren, Madeira) vallen weg (D2).
+// Marokko: Natural Earth tekent standaard de feitelijke situatie, met het grootste deel van de Westelijke Sahara bij Marokko.
+// Op deze kaart wordt Marokko volgens de gekozen atlasconventie begrensd op 27 graden 40 minuten NB. De Westelijke Sahara
+// (status internationaal betwist) wordt als afzonderlijk grijs gebied weergegeven.
+var GRENS_MAROKKO = 27 + 40 / 60;
+var VER_WEG = ["ESP", "GBR", "PRX"];
+var EUROPA_ZUID = ["AND", "AUT", "BEL", "BIH", "CHE", "CZE", "DEU", "DZA", "ESP", "FXX", "GBR", "GGY", "HRV", "HUN", "ITA", "JEY", "LIE", "LUX", "MAR", "MCO", "MLT", "NLX", "POL", "SMR", "SVK", "SVN", "TUN", "VAT"];
+// Een ring (lon/lat) knippen op een breedtegraad (Sutherland-Hodgman met een halfvlak); noord = het deel ten noorden houden
+function knipRing(ring, lat, noord) {
+  function binnen(q) { return noord ? q[1] >= lat : q[1] <= lat; }
+  function snij(a, b) { var t = (lat - a[1]) / (b[1] - a[1]); return [a[0] + (b[0] - a[0]) * t, lat]; }
+  var uit = [], n = ring.length - 1;
+  for (var i = 0; i < n; i++) {
+    var a = ring[i], b = ring[i + 1];
+    if (binnen(a)) { uit.push(a); if (!binnen(b)) uit.push(snij(a, b)); }
+    else if (binnen(b)) uit.push(snij(a, b));
+  }
+  if (uit.length) uit.push(uit[0]);
+  return uit;
+}
+function knipLand(item, lat, noord) {
+  var delen = item.delen.map(function(g) {
+    var ps = (g.type === "Polygon" ? [g.coordinates] : g.coordinates).map(function(c) { return c.map(function(rr) { return knipRing(rr, lat, noord); }).filter(function(rr) { return rr.length >= 4; }); }).filter(function(c) { return c.length; });
+    return ps.length ? { type: "MultiPolygon", coordinates: ps } : null;
+  }).filter(function(g) { return g; });
+  return { id: item.id, naam: item.naam, label: item.label, delen: delen };
+}
+function europaZuid() {
+  var alle = landen("ne_10m_admin_0_map_units.geojson").map(function(l) { return VER_WEG.indexOf(l.id) >= 0 ? zonderVer(l, -12) : l; });
+  var mar = alle.filter(function(l) { return l.id === "MAR"; })[0], sah = alle.filter(function(l) { return l.id === "SAH"; })[0];
+  var marZuid = knipLand(mar, GRENS_MAROKKO, false);
+  alle = alle.map(function(l) {
+    if (l.id === "MAR") return knipLand(mar, GRENS_MAROKKO, true);
+    if (l.id === "SAH") {
+      // de twee delen samenvoegen tot één vlak, zodat er geen grenslijn midden in de Westelijke Sahara staat
+      var t = topology({ s: { type: "GeometryCollection", geometries: sah.delen.concat(marZuid.delen) } });
+      return { id: sah.id, naam: sah.naam, label: sah.label, delen: [merge(t, t.objects.s.geometries)] };
+    }
+    return l;
+  }).filter(function(l) { return l.delen.length; });
+  var doelen = alle.filter(function(l) { return EUROPA_ZUID.indexOf(l.id) >= 0; });
+  if (doelen.length !== EUROPA_ZUID.length) throw new Error("Europa (zuid): " + doelen.length + " doelen in plaats van " + EUROPA_ZUID.length);
+  return { doelen: doelen, achtergrond: alle.filter(function(l) { return EUROPA_ZUID.indexOf(l.id) < 0; }) };
+}
 var KREEFTSKEERKRING = 23.4362; // vaste breedte; bron vast te leggen in T2b
 
 var KAARTEN = [
@@ -243,11 +306,12 @@ var KAARTEN = [
         { id: "rivieren", titel: "Rivieren", soort: "lijn", items: riv }
       ] };
     } },
-  { id: "proef-europa", titel: "Kleine staten van Europa", lon: [-3.5, 16.5], lat: [35.0, 51.5],
+  { id: "proef-europa", titel: "Europa (zuid)", lon: [-3.5, 16.5], lat: [35.0, 51.5],
     projectie: function() { return geoAzimuthalEqualArea().rotate([-6.5, -43.5]); },
+    doek: { rand: 20, doelen: function() { return europaZuid().doelen; } },
     maak: function(pr) {
-      var alle = landen("ne_10m_admin_0_map_units.geojson");
-      return { achtergrond: [], lagen: [ { id: "landen", titel: "Landen", soort: "vlak", items: alle } ] };
+      var e = europaZuid();
+      return { achtergrond: e.achtergrond, lagen: [ { id: "landen", titel: "Landen", soort: "vlak", items: e.doelen } ] };
     } },
   { id: "proef-caribisch-groot", titel: "Grote Antillen en Bahama's", lon: [-86.0, -67.5], lat: [16.8, 27.5],
     projectie: function() { return geoMercator(); },
@@ -329,14 +393,17 @@ function maakKaart(k) {
   }
   achter.forEach(vul);
   lagen.forEach(function(l) { if (l.soort !== "punt") l.items.forEach(vul); });
-  return { kaart: { id: k.id, titel: k.titel, breedte: BREEDTE, hoogte: p.hoogte, achtergrond: achter, lagen: lagen },
+  var kaart = { id: k.id, titel: k.titel, breedte: p.breedte, hoogte: p.hoogte, achtergrond: achter, lagen: lagen };
+  // alleen een kaart met een groter doek krijgt beeld en start; de andere kaarten blijven byte-gelijk
+  if (k.doek) kaart = { id: k.id, titel: k.titel, breedte: p.breedte, hoogte: p.hoogte, beeld: BREEDTE, start: p.start, achtergrond: achter, lagen: lagen };
+  return { kaart: kaart,
     meting: { maxAfwijkingPx: Math.round(v.max * EENHEID_PX * 1000) / 1000, gewicht: v.gewicht } };
 }
 
 function schrijf(k, res) {
   var kop = "// GEGENEREERD door tools/topo/maak-proefkaarten.mjs; niet met de hand bewerken.\n" +
     "// Bron: Natural Earth " + bronnen.versie + " (commit " + bronnen.commit.slice(0, 12) + "); SHA-256 van de bronbestanden in tools/topo/bronnen.json.\n" +
-    "// Eenheden: viewBox " + BREEDTE + " breed; afwijking door vereenvoudiging hoogstens " + TOL_PX + " CSS-pixel bij " + WEERGAVE + " CSS-pixels breed (gemeten: " + res.meting.maxAfwijkingPx + ").\n";
+    (res.kaart.beeld ? "// Eenheden: " + BREEDTE + " eenheden = de schermbreedte bij x1 (doek " + res.kaart.breedte + " x " + res.kaart.hoogte + ");" : "// Eenheden: viewBox " + BREEDTE + " breed;") + " afwijking door vereenvoudiging hoogstens " + TOL_PX + " CSS-pixel bij " + WEERGAVE + " CSS-pixels breed (gemeten: " + res.meting.maxAfwijkingPx + ").\n";
   fs.writeFileSync(path.join(UIT, k.id + ".js"), kop + "export default " + JSON.stringify(res.kaart) + ";\n");
 }
 
