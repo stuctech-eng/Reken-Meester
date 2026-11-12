@@ -2,7 +2,7 @@ import { A } from "../styles/tokens.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
-// Vaste tekeningen bij de theorie van Meetkunde (plan TK1) en van Statistiek en kans (plan ST, fase S3; ids st_...). Elke tekening is een SVG met een vaste
+// Vaste tekeningen bij de theorie van Meetkunde (plan TK1), Statistiek en kans (plan ST, fase S3; ids st_...) en Functies (plan FN, fase F3; ids fn_...). Elke tekening is een SVG met een vaste
 // viewBox (breedte 320), op het scherm hoogstens 320 px breed en verder schalend met het venster.
 // Letters minstens 17 eenheden en lijnen minstens 2,1 eenheden: op het smalste scherm (tekening ongeveer
 // 236 px breed) is dat nog minstens 12,5 px en 1,5 px. Schematisch, niet op schaal; waar het telt
@@ -435,6 +435,198 @@ FIG.st_kansboom = { h: 176, label: "Kansboom zonder terugleggen bij 2 rode en 3 
       {L(150, 38, 236, 16, ROOD, false, 3.4)}{L(150, 46, 236, 68, HULP)}{L(158, 130, 236, 108, HULP)}{L(158, 138, 236, 160, HULP)}
       {T(190, 14, "1/4", ROOD)}{T(190, 70, "3/4", LIJN)}{T(196, 106, "2/4", LIJN)}{T(196, 162, "2/4", LIJN)}
       {T(268, 16, "rood", ROOD)}{T(268, 68, "blauw", P)}{T(268, 108, "rood", ROOD)}{T(268, 160, "blauw", P)}
+    </g>
+  ); } };
+
+// ── Functies (plan FN, fase F3) ──────────────────────────────────
+// Vaste voorbeelden bij de theorie per groep, met precies de getallen uit de tekst. Een tekening met een rooster
+// is op schaal: vierkante hokjes, per as een stap, en elk punt en elke grafiek ligt waar zijn getallen zeggen.
+// Elk getekend element heeft een data-rol (zoals bij de vraagtekeningen), zodat een test de tekening kan teruglezen.
+// Rooster: r = { links, boven, cel, xa, xb, ya, yb (in hokjes), sx, sy (stap per hokje), xl, yl (waarden met een getal) }
+function fnPx(r, x) { return r.links + (x / r.sx - r.xa) * r.cel; }
+function fnPy(r, y) { return r.boven + (r.yb - y / r.sy) * r.cel; }
+function fnTekst(x, y, tekst, kleur, anker, rol, fs) {
+  return <text data-rol={rol || "tekst"} x={x} y={y} fill={kleur || LIJN} fontSize={fs || FS} fontWeight={700} textAnchor={anker || "middle"} dominantBaseline="middle" stroke="#ffffff" strokeWidth={4} strokeLinejoin="round" paintOrder="stroke">{tekst}</text>;
+}
+function fnGetal(v) { return (v < 0 ? "−" : "") + String(Math.abs(v)).replace(".", ","); }
+function fnRooster(r) {
+  var x2 = fnPx(r, r.xb * r.sx), y2 = fnPy(r, r.ya * r.sy), ax = fnPx(r, 0), ay = fnPy(r, 0), uit = [], i;
+  for (i = r.xa; i <= r.xb; i++) if (i !== 0) uit.push(<line key={"v" + i} data-rol="raster-v" x1={fnPx(r, i * r.sx)} y1={r.boven} x2={fnPx(r, i * r.sx)} y2={y2} stroke={HULP} strokeWidth={0.8} opacity={0.45} />);
+  for (i = r.ya; i <= r.yb; i++) if (i !== 0) uit.push(<line key={"h" + i} data-rol="raster-h" x1={r.links} y1={fnPy(r, i * r.sy)} x2={x2} y2={fnPy(r, i * r.sy)} stroke={HULP} strokeWidth={0.8} opacity={0.45} />);
+  return (
+    <g>
+      {uit}
+      <line data-rol="as-x" x1={r.links} y1={ay} x2={x2} y2={ay} stroke={LIJN} strokeWidth={2.2} />
+      <line data-rol="as-y" x1={ax} y1={r.boven} x2={ax} y2={y2} stroke={LIJN} strokeWidth={2.2} />
+      <polygon points={(x2 + 2) + "," + ay + " " + (x2 - 7) + "," + (ay - 5) + " " + (x2 - 7) + "," + (ay + 5)} fill={LIJN} />
+      <polygon points={ax + "," + (r.boven - 2) + " " + (ax - 5) + "," + (r.boven + 7) + " " + (ax + 5) + "," + (r.boven + 7)} fill={LIJN} />
+      {r.xl.map(function(v) { return <g key={"xl" + v}>{fnTekst(fnPx(r, v), ay + 16, fnGetal(v), LIJN, "middle", "xlabel")}</g>; })}
+      {r.yl.map(function(v) { return <g key={"yl" + v}>{fnTekst(ax - 9, fnPy(r, v), fnGetal(v), LIJN, "end", "ylabel")}</g>; })}
+    </g>
+  );
+}
+// Een grafiek bemonsterd binnen het rooster (24 punten per hokje), afgesneden aan de rand
+function fnPad(r, f, kleur, nr) {
+  var ylo = r.ya * r.sy, yhi = r.yb * r.sy, stukken = [], stuk = [];
+  for (var i = 0; i <= (r.xb - r.xa) * 24; i++) {
+    var x = (r.xa + i / 24) * r.sx, y = f(x);
+    if (y !== null && y >= ylo && y <= yhi) stuk.push(Math.round(fnPx(r, x) * 10) / 10 + "," + Math.round(fnPy(r, y) * 10) / 10);
+    else { if (stuk.length > 1) stukken.push(stuk); stuk = []; }
+  }
+  if (stuk.length > 1) stukken.push(stuk);
+  return stukken.map(function(s, j) { return <polyline key={"p" + nr + "-" + j} data-rol="grafiek" data-nr={nr} points={s.join(" ")} fill="none" stroke={kleur} strokeWidth={2.6} strokeLinejoin="round" strokeLinecap="round" />; });
+}
+function fnStip(r, x, y, kleur) { return <circle data-rol="punt" cx={fnPx(r, x)} cy={fnPy(r, y)} r={5} fill={kleur || P} />; }
+function fnStippel(r, x, y) { return <g>{L(fnPx(r, x), fnPy(r, y), fnPx(r, x), fnPy(r, 0), HULP, true, 2.1)}{L(fnPx(r, x), fnPy(r, y), fnPx(r, 0), fnPy(r, y), HULP, true, 2.1)}</g>; }
+
+// G1: assenstelsel met de vier kwadranten en de punten (2, 5) en (5, 2)
+var FN_AS = { links: 58, boven: 12, cel: 17, xa: -6, xb: 6, ya: -6, yb: 6, sx: 1, sy: 1, xl: [-4, 2, 4], yl: [-4, -2, 2] };
+FIG.fn_assenstelsel = { h: 244, label: "Assenstelsel van min 6 tot 6. De vier kwadranten: I rechtsboven, II linksboven, III linksonder, IV rechtsonder. De punten (2, 5) en (5, 2). Langs de x-as: min 4, 2 en 4. Langs de y-as: min 4, min 2 en 2.",
+  onder: "(2, 5) en (5, 2) zijn verschillende punten: eerst x, dan y.",
+  teken: function() { var r = FN_AS; return (
+    <g>
+      {fnRooster(r)}
+      {[["I", 5, 5], ["II", -5, 5], ["III", -5, -5], ["IV", 5, -5]].map(function(k) { return <g key={k[0]}>{fnTekst(fnPx(r, k[1]), fnPy(r, k[2]), k[0], G, "middle", "kwadrant", 20)}</g>; })}
+      {fnStippel(r, 2, 5)}{fnStippel(r, 5, 2)}
+      {fnStip(r, 2, 5)}{fnStip(r, 5, 2)}
+      {fnTekst(fnPx(r, 0) - 7, fnPy(r, 5), "(2, 5)", P, "end")}{fnTekst(fnPx(r, 5) + 2, fnPy(r, 2) - 19, "(5, 2)", P, "middle")}
+    </g>
+  ); } };
+
+// G2: een functie als machine: 5 erin, f(x) = 3x − 4, 11 eruit
+FIG.fn_machine = { h: 140, label: "Een machine met f(x) = 3x min 4. Er gaat 5 in en er komt 11 uit. Daaronder: f(3) = 9 en f(min 3) = 9.",
+  onder: "Elke x geeft precies één uitkomst: f(5) = 3 · 5 − 4 = 11.",
+  teken: function() { return (
+    <g>
+      {fnTekst(26, 50, "5", P, "middle", "tekst", 22)}
+      {Pijl(42, 50, 82, 50, LIJN)}
+      <rect data-rol="machine" x={86} y={22} width={148} height={56} rx={10} fill={PL} stroke={P} strokeWidth={2.2} />
+      {fnTekst(160, 50, "f(x) = 3x − 4", LIJN)}
+      {Pijl(238, 50, 278, 50, LIJN)}
+      {fnTekst(298, 50, "11", P, "middle", "tekst", 22)}
+      {fnTekst(160, 116, "f(3) = 9 en f(−3) = 9", G)}
+    </g>
+  ); } };
+
+// G3: de lijn y = 3x + 2 door (1, 5) en (3, 11), startgetal 2, een trapje van 1 opzij en 3 omhoog
+var FN_LIJN = { links: 120, boven: 10, cel: 15, xa: -2, xb: 5, ya: -1, yb: 12, sx: 1, sy: 1, xl: [2, 4], yl: [4, 8] };
+FIG.fn_lijn = { h: 232, label: "De lijn y = 3x + 2 door de punten (1, 5) en (3, 11) (stippen). Het startgetal 2 bij x = 0. Een trapje van 1 naar rechts en 3 omhoog: de richtingscoëfficiënt 3. Langs de x-as: 2 en 4. Langs de y-as: 4 en 8.",
+  onder: "Startgetal 2 (bij x = 0); elke stap van 1 in x komt er 3 bij.",
+  teken: function() { var r = FN_LIJN; return (
+    <g>
+      {fnRooster(r)}
+      {fnPad(r, function(x) { return 3 * x + 2; }, P, 0)}
+      <polyline data-rol="trap" points={fnPx(r, 1) + "," + fnPy(r, 5) + " " + fnPx(r, 2) + "," + fnPy(r, 5) + " " + fnPx(r, 2) + "," + fnPy(r, 8)} fill="none" stroke={G} strokeWidth={2.6} />
+      {fnTekst(fnPx(r, 1.5), fnPy(r, 5) + 23, "1", G)}{fnTekst(fnPx(r, 2) + 8, fnPy(r, 6.5), "3", G, "start")}
+      {fnStip(r, 0, 2, G)}{fnStip(r, 1, 5)}{fnStip(r, 3, 11)}
+      {fnTekst(fnPx(r, 0) - 10, fnPy(r, 2), "startgetal 2", G, "end")}
+      {fnTekst(fnPx(r, 5) + 8, fnPy(r, 6.5), "rc 3", G, "start")}
+    </g>
+  ); } };
+
+// G4: de lijnen y = 2x + 1 en y = −x + 7, het snijpunt (2, 5)
+var FN_SNIJ = { links: 60, boven: 10, cel: 20, xa: -1, xb: 6, ya: -1, yb: 8, sx: 1, sy: 1, xl: [2, 4], yl: [2, 4, 6] };
+FIG.fn_snijpunt = { h: 212, label: "De lijnen y = 2x + 1 en y = min x + 7 snijden elkaar in het punt (2, 5). Langs de x-as: 2 en 4. Langs de y-as: 2, 4 en 6.",
+  onder: "Het snijpunt (2, 5) ligt op beide lijnen.",
+  teken: function() { var r = FN_SNIJ; return (
+    <g>
+      {fnRooster(r)}
+      {fnPad(r, function(x) { return 2 * x + 1; }, P, 0)}{fnPad(r, function(x) { return -x + 7; }, G, 1)}
+      {fnStip(r, 2, 5, LIJN)}
+      {fnTekst(fnPx(r, 2) + 10, fnPy(r, 5) - 16, "(2, 5)", LIJN, "start")}
+      {fnTekst(fnPx(r, 6) + 6, fnPy(r, 7.5), "y = 2x + 1", P, "start")}{fnTekst(fnPx(r, 6) + 6, fnPy(r, 1), "y = −x + 7", G, "start")}
+    </g>
+  ); } };
+
+// G5: dal en berg naast elkaar (schets van de vorm, zonder getallen)
+// Schets in een vak van b bij h: t en y van -1 tot 1; buiten het vak (of zonder waarde) begint een nieuw stuk
+function fnSchets(x0, y0, b, h, f, kleur, nr) {
+  var stukken = [], stuk = [];
+  for (var i = 0; i <= 96; i++) {
+    var t = -1 + i / 48, y = f(t);
+    if (y !== null && y >= -1 && y <= 1) stuk.push(Math.round((x0 + (t + 1) / 2 * b) * 10) / 10 + "," + Math.round((y0 + (1 - y) / 2 * h) * 10) / 10);
+    else { if (stuk.length > 1) stukken.push(stuk); stuk = []; }
+  }
+  if (stuk.length > 1) stukken.push(stuk);
+  return (
+    <g>
+      {L(x0, y0 + h / 2, x0 + b, y0 + h / 2, LIJN, false, 2.1)}{L(x0 + b / 2, y0, x0 + b / 2, y0 + h, LIJN, false, 2.1)}
+      {stukken.map(function(st, j) { return <polyline key={"s" + j} data-rol="grafiek" data-nr={nr} points={st.join(" ")} fill="none" stroke={kleur} strokeWidth={2.6} strokeLinejoin="round" strokeLinecap="round" />; })}
+    </g>
+  );
+}
+FIG.fn_dalberg = { h: 150, label: "Links de dalparabool y = x kwadraat: a is groter dan 0, open naar boven. Rechts de bergparabool y = min x kwadraat: a is kleiner dan 0, open naar beneden.",
+  onder: "Het teken van a bepaalt de vorm: a > 0 een dal, a < 0 een berg.",
+  teken: function() { return (
+    <g>
+      {fnSchets(20, 8, 120, 100, function(t) { return 1.8 * t * t - 0.9; }, P, 0)}
+      {fnSchets(180, 8, 120, 100, function(t) { return 0.9 - 1.8 * t * t; }, G, 1)}
+      {fnTekst(80, 128, "dal: a > 0", P)}{fnTekst(240, 128, "berg: a < 0", G)}
+    </g>
+  ); } };
+
+// G5: y = x² − 6x + 5 met de symmetrieas x = 3, de top (3, −4) en de nulpunten 1 en 5
+var FN_PAR = { links: 88, boven: 10, cel: 18, xa: -1, xb: 7, ya: -5, yb: 6, sx: 1, sy: 1, xl: [2, 4, 6], yl: [-4, -2, 2, 4] };
+FIG.fn_parabool = { h: 232, label: "De parabool y = x kwadraat min 6x + 5. Symmetrieas x = 3 (gestippeld). Top (3, min 4). Nulpunten x = 1 en x = 5. Langs de x-as: 2, 4 en 6. Langs de y-as: min 4, min 2, 2 en 4.",
+  onder: "Symmetrieas x = 3, top (3, −4), nulpunten 1 en 5.",
+  teken: function() { var r = FN_PAR; return (
+    <g>
+      {fnRooster(r)}
+      <line data-rol="as-sym" x1={fnPx(r, 3)} y1={r.boven} x2={fnPx(r, 3)} y2={fnPy(r, -5)} stroke={G} strokeWidth={2.1} strokeDasharray="6 5" />
+      {fnPad(r, function(x) { return x * x - 6 * x + 5; }, P, 0)}
+      {fnStip(r, 3, -4, G)}{fnStip(r, 1, 0)}{fnStip(r, 5, 0)}
+      {fnTekst(fnPx(r, 3) + 10, fnPy(r, -4) + 2, "top (3, −4)", G, "start")}
+      {fnTekst(fnPx(r, 3) + 8, fnPy(r, 5.5), "x = 3", G, "start")}
+    </g>
+  ); } };
+
+// G6: lineair (+100) en exponentieel (keer 1,5) vanuit 200, bij x = 0, 1 en 2
+var FN_GROEI = { links: 80, boven: 12, cel: 34, xa: 0, xb: 3, ya: 0, yb: 5, sx: 1, sy: 100, xl: [1, 2], yl: [100, 200, 300, 400] };
+FIG.fn_groei = { h: 214, label: "Vanuit 200. Lineair, elke stap plus 100: 200, 300, 400. Exponentieel, elke stap keer 1,5: 200, 300, 450. Langs de x-as, het aantal stappen: 1 en 2. Langs de y-as: 100, 200, 300 en 400.",
+  onder: "Lineair: elke stap +100. Exponentieel: elke stap keer 1,5; na 2 stappen 450 en niet 400.",
+  teken: function() { var r = FN_GROEI; return (
+    <g>
+      {fnRooster(r)}
+      {fnPad(r, function(x) { return x <= 2 ? 200 + 100 * x : null; }, P, 0)}
+      {fnPad(r, function(x) { return x <= 2 ? 200 * Math.pow(1.5, x) : null; }, G, 1)}
+      {fnStip(r, 0, 200, LIJN)}{fnStip(r, 1, 300, LIJN)}{fnStip(r, 2, 400, P)}{fnStip(r, 2, 450, G)}
+      {fnTekst(fnPx(r, 2) + 10, fnPy(r, 400) + 10, "400: +100", P, "start")}{fnTekst(fnPx(r, 2) + 10, fnPy(r, 450) - 8, "450: keer 1,5", G, "start")}
+    </g>
+  ); } };
+
+// G7: de vier soorten grafieken in een raster van 2 bij 2 (schetsen van de vorm)
+FIG.fn_vier = { h: 264, label: "Vier soorten grafieken. Rechte lijn: lineair, y = ax + b. Parabool: kwadratisch, y = ax kwadraat + bx + c. Exponentieel, y = b keer g tot de macht x: steeds sneller stijgend, boven de x-as. Hyperbool in twee delen: omgekeerd evenredig, y = k : x.",
+  onder: "Vier vormen: een lijn, een parabool, steeds sneller stijgend, en een hyperbool in twee delen.",
+  teken: function() {
+    var vakken = [
+      ["rechte lijn", "y = ax + b", function(t) { return 0.8 * t; }],
+      ["parabool", "y = ax² + bx + c", function(t) { return 1.6 * t * t - 0.8; }],
+      ["exponentieel", "y = b · g^x", function(t) { return 0.06 * Math.pow(5, t + 1); }],
+      ["hyperbool", "y = k : x", function(t) { return t === 0 ? null : 0.2 / t; }],
+    ];
+    return (
+      <g>
+        {vakken.map(function(v, i) {
+          var x0 = i % 2 === 0 ? 10 : 170, y0 = i < 2 ? 4 : 136;
+          return <g key={"v" + i}>{fnTekst(x0 + 70, y0 + 12, v[0], P, "middle", "soort")}{fnSchets(x0 + 25, y0 + 26, 90, 64, v[2], P, i)}{fnTekst(x0 + 70, y0 + 108, v[1], LIJN, "middle", "formule")}</g>;
+        })}
+      </g>
+    );
+  } };
+
+// G8: A: y = 10 + 0,20x en B: y = 25 + 0,05x; even duur bij 100 minuten
+var FN_ABO = { links: 70, boven: 24, cel: 26, xa: 0, xb: 8, ya: 0, yb: 5, sx: 25, sy: 10, xl: [50, 100, 150], yl: [20, 40] };
+FIG.fn_abonnementen = { h: 190, label: "Kosten in euro tegen het aantal minuten. A: y = 10 + 0,20x. B: y = 25 + 0,05x. De lijnen snijden elkaar bij 100 minuten en 30 euro. Links daarvan is A goedkoper, rechts B. Langs de x-as, in minuten: 50, 100 en 150. Langs de y-as, in euro: 20 en 40.",
+  onder: "Even duur bij 100 minuten: daarvóór is A goedkoper, daarna B.",
+  teken: function() { var r = FN_ABO; return (
+    <g>
+      {fnRooster(r)}
+      {fnPad(r, function(x) { return 10 + 0.2 * x; }, P, 0)}{fnPad(r, function(x) { return 25 + 0.05 * x; }, G, 1)}
+      {fnStip(r, 100, 30, LIJN)}
+      {fnTekst(fnPx(r, 200) + 6, fnPy(r, 50), "A", P, "start")}{fnTekst(fnPx(r, 200) + 6, fnPy(r, 35), "B", G, "start")}
+      {fnTekst(fnPx(r, 50), fnPy(r, 46.5), "A is", P, "middle", "gebied")}{fnTekst(fnPx(r, 50), fnPy(r, 35), "goedkoper", P, "middle", "gebied")}
+      {fnTekst(fnPx(r, 150), fnPy(r, 24), "B is", G, "middle", "gebied")}{fnTekst(fnPx(r, 150), fnPy(r, 12.5), "goedkoper", G, "middle", "gebied")}
+      {fnTekst(fnPx(r, 0) + 8, r.boven, "€", LIJN, "start")}{fnTekst(fnPx(r, 200), fnPy(r, 0) + 16, "min", LIJN, "middle")}
     </g>
   ); } };
 

@@ -820,10 +820,12 @@ THEORIE[G1] =
   "Een assenstelsel bestaat uit twee getallenlijnen die elkaar loodrecht snijden in de oorsprong (0, 0): de x-as loopt horizontaal, de y-as verticaal. Zo krijgt elk punt van het vlak precies één paar getallen.\n" +
   "• Een punt (x, y): eerst x (hoe ver naar rechts, of naar links als x negatief is), dan y (hoe ver omhoog, of omlaag als y negatief is). De volgorde ligt vast, want (2, 5) en (5, 2) zijn verschillende punten.\n" +
   "• De assen verdelen het vlak in vier kwadranten, genummerd tegen de klok in vanaf rechtsboven: I (x en y positief), II (x negatief, y positief), III (beide negatief) en IV (x positief, y negatief). Een punt op een as ligt in geen enkel kwadrant.\n" +
+  "[fig:fn_assenstelsel]\n" +
   "• Een grafiek aflezen: ga bij de gegeven x recht omhoog of omlaag tot de grafiek, en dan opzij naar de y-as.\n" +
   "• Loopt de grafiek van links naar rechts omhoog, dan is hij stijgend; omlaag dalend; horizontaal constant.";
 THEORIE[G2] =
   "Een functie werkt als een machine: je stopt er een getal x in en er komt precies één uitkomst uit, f(x). Bij f(x) = 3x " + MIN + " 4 geeft x = 5 de uitkomst f(5) = 3 " + DOT + " 5 " + MIN + " 4 = 11.\n" +
+  "[fig:fn_machine]\n" +
   "• Twee keer dezelfde x met een andere y kan niet: dan weet de machine niet welke uitkomst hij moet geven. Zo'n tabel hoort niet bij een functie.\n" +
   "• Twee verschillende x-waarden met dezelfde y mag wel: bij f(x) = x" + SQ + " geven 3 en " + MIN + "3 allebei 9.\n" +
   "• Een negatief getal vul je in tussen haakjes. f(x) = x" + SQ + " " + MIN + " 2x geeft f(" + MIN + "3) = (" + MIN + "3)" + SQ + " " + MIN + " 2 " + DOT + " (" + MIN + "3) = 9 + 6 = 15. Min keer min is plus, dus (" + MIN + "3)" + SQ + " = 9 en niet " + MIN + "9.\n" +
@@ -834,18 +836,22 @@ THEORIE[G3] =
   "• a is de richtingscoëfficiënt (rc): wat er bij y bijkomt als x 1 groter wordt. Is a positief, dan stijgt de lijn; negatief: dalend; 0: horizontaal.\n" +
   "• Staat het getal vooraan, zoals y = 7 " + MIN + " 2x, dan is het startgetal 7 en de rc " + MIN + "2: het getal bij x hoort bij x, met zijn teken.\n" +
   "• Door twee punten: rc = verschil in y : verschil in x. Door (1, 5) en (3, 11): (11 " + MIN + " 5) : (3 " + MIN + " 1) = 3. Dan het startgetal: 5 = 3 " + DOT + " 1 + b, dus b = 2 en y = 3x + 2.\n" +
+  "[fig:fn_lijn]\n" +
   "• In een verhaal is het startgetal wat je altijd betaalt (ook bij 0), en de rc wat er per kilometer, per minuut of per stuk bijkomt.";
 THEORIE[G4] =
   "Een snijpunt ligt op beide grafieken, dus het voldoet aan beide formules.\n" +
   "• Snijpunt met de y-as: daar is x = 0. Bij y = 2x " + MIN + " 6 is dat (0, " + MIN + "6), het startgetal.\n" +
   "• Snijpunt met de x-as: daar is y = 0. Los 2x " + MIN + " 6 = 0 op: x = 3, dus (3, 0).\n" +
   "• Twee lijnen: stel de formules aan elkaar gelijk. 2x + 1 = " + MIN + "x + 7 geeft 3x = 6, dus x = 2, en y = 2 " + DOT + " 2 + 1 = 5. Het snijpunt is (2, 5). Dat is hetzelfde als een stelsel oplossen (Algebra 2).\n" +
+  "[fig:fn_snijpunt]\n" +
   "• Lijnen met dezelfde rc en een ander startgetal zijn evenwijdig: ze stijgen even snel en snijden elkaar nooit. Twee lijnen met een andere rc snijden elkaar precies één keer.\n" +
   "Een punt typ je in deze app als x = …, y = …, net als de oplossing van een stelsel.";
 THEORIE[G5] =
   "Een kwadratisch verband heeft een x" + SQ + ": y = ax" + SQ + " + bx + c. De grafiek is een parabool.\n" +
   "• Het teken van a bepaalt de vorm. a > 0 geeft een dalparabool (open naar boven, met een laagste punt); a < 0 een bergparabool (open naar beneden, met een hoogste punt). Voor grote x wint ax" + SQ + " het altijd van bx + c; b en c verschuiven de parabool alleen.\n" +
-  "• Een parabool is symmetrisch. De symmetrieas is de verticale lijn x = " + MIN + "b : 2a, en de top ligt op die lijn. Bij y = x" + SQ + " " + MIN + " 6x + 5 is dat x = 6 : 2 = 3, en de top is (3, 9 " + MIN + " 18 + 5) = (3, " + MIN + "4).\n" +
+  "[fig:fn_dalberg]\n" +
+  "• Een parabool is symmetrisch. De symmetrieas is de verticale lijn x = " + MIN + "b : 2a, en de top ligt op die lijn. Bij y = x" + SQ + " " + MIN + " 6x + 5 is dat x = 6 : 2 = 3, en de top is (3, 9 " + MIN + " 18 + 5) = (3, " + MIN + "4). Deze parabool snijdt de x-as bij x = 1 en x = 5, want x" + SQ + " " + MIN + " 6x + 5 = (x " + MIN + " 1)(x " + MIN + " 5).\n" +
+  "[fig:fn_parabool]\n" +
   "• De topvorm y = a(x " + MIN + " p)" + SQ + " + q heeft top (p, q). Let op het teken: y = (x + 2)" + SQ + " + 3 heeft top (" + MIN + "2, 3), want x + 2 = x " + MIN + " (" + MIN + "2).\n" +
   "• Nulpunten zijn de snijpunten met de x-as: los ax" + SQ + " + bx + c = 0 op. Ontbinden: x" + SQ + " " + MIN + " x " + MIN + " 6 = (x " + MIN + " 3)(x + 2) = 0, dus x = 3 of x = " + MIN + "2. Een product is 0 als een van de factoren 0 is. Een dalparabool met een top onder de x-as heeft er twee.";
 THEORIE[G6] =
@@ -853,6 +859,7 @@ THEORIE[G6] =
   "• Groei van p% per stap: groeifactor 1 + p : 100. Er komt 5% bij: 100% + 5% = 105%, dus 1,05.\n" +
   "• Afname van p%: groeifactor 1 " + MIN + " p : 100. Er gaat 20% af: 80% blijft over, dus 0,8. Een groeifactor groter dan 1 is groei, tussen 0 en 1 afname.\n" +
   "• Na n stappen vermenigvuldig je n keer: startwaarde 200 met groeifactor 1,5 geeft na 2 stappen 200 " + DOT + " 1,5 " + DOT + " 1,5 = 450. Lineair rekenen (200 + 100 + 100 = 400) is hier fout.\n" +
+  "[fig:fn_groei]\n" +
   "• Verdubbelen is groeifactor 2, halveren 0,5. Verdubbelt iets elke 3 uur, dan zijn 12 uur 4 stappen: 2 " + DOT + " 2 " + DOT + " 2 " + DOT + " 2 = 16 keer zo veel; niet 4 keer en niet 8 keer.\n" +
   "• Lineair of exponentieel? In een tabel met gelijke stappen in x: zijn de verschillen gelijk, dan is het lineair; zijn de quotiënten (nieuw : oud) gelijk, dan exponentieel.";
 THEORIE[G7] =
@@ -863,9 +870,11 @@ THEORIE[G7] =
   "• rechte lijn: lineair, y = ax + b;\n" +
   "• parabool (dal of berg): kwadratisch, y = ax" + SQ + " + bx + c;\n" +
   "• steeds sneller stijgend (of steeds langzamer dalend), altijd boven de x-as: exponentieel, y = b " + DOT + " g^x;\n" +
-  "• hyperbool in twee delen: omgekeerd evenredig, y = k : x.";
+  "• hyperbool in twee delen: omgekeerd evenredig, y = k : x.\n" +
+  "[fig:fn_vier]";
 THEORIE[G8] =
   "Verbanden vergelijken: twee abonnementen zijn even duur waar hun lijnen elkaar snijden. Dat vind je door de formules aan elkaar gelijk te stellen, zoals bij een snijpunt (Snijpunten). A: 10 + 0,20x en B: 25 + 0,05x geeft 0,15x = 15, dus x = 100 minuten. Vóór dat punt is A goedkoper (lagere vaste kosten), erna B (lagere prijs per minuut).\n" +
+  "[fig:fn_abonnementen]\n" +
   "Een bewering controleer je door een getal in te vullen, door de rc te vergelijken, of door te kijken of de tekens kloppen. Typische fouten:\n" +
   "• het startgetal als richtingscoëfficiënt nemen, of het snijpunt met de y-as als (b, 0) schrijven in plaats van (0, b) (Lineaire verbanden, Snijpunten);\n" +
   "• (" + MIN + "3)" + SQ + " als " + MIN + "9 rekenen (Wat is een functie);\n" +
