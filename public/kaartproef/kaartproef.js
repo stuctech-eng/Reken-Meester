@@ -3,21 +3,21 @@
 
 import { maakDoelen, beslis, isKlein, STRAAL } from "./tikregel.js";
 
-var VERSIE = "T2a-proef-2";
+var VERSIE = "T2a-proef-3";
 var KAARTEN = [
   { id: "proef-nl", titel: "Nederland" },
   { id: "proef-europa", titel: "Kleine staten" },
   { id: "proef-caribisch-groot", titel: "Grote Antillen" },
-  { id: "proef-caribisch-klein", titel: "Kleine Antillen" },
+  { id: "proef-caribisch-klein", titel: "Kleine Antillen", sleepUitleg: true },   // te hoog voor het scherm: afgesneden, verticaal slepen
   { id: "proef-wereld", titel: "Wereld" }
 ];
 export var ZOOMSTAPPEN = [1, 2, 4, 8];
 export var SLEEPGRENS = 10;   // CSS-pixels: tot en met 10 is het een tik, daarboven slepen
 var NS = "http://www.w3.org/2000/svg";
-var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#4f46e5", opdracht: "#dc2626", lijn: "#1d4ed8", punt: "#1a1d3a" };
+var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#c026d3", opdracht: "#dc2626", lijn: "#1d4ed8", punt: "#1a1d3a" };
 
 var staat = { kaart: null, data: {}, laag: null, stand: "vrij", gekozen: null, doelen: [], opdracht: null, uitslag: {}, log: [], svg: null,
-  zoom: 1, ox: 0, oy: 0, aanraking: null };
+  zoom: 1, ox: 0, oy: 0, aanraking: null, maxH: 0 };
 
 function el(naam, attr) { var e = document.createElementNS(NS, naam); for (var k in attr) e.setAttribute(k, attr[k]); return e; }
 function $(id) { return document.getElementById(id); }
@@ -27,8 +27,15 @@ function laadKaart(id) {
   return import("./data/" + id + ".js").then(function(m) { staat.data[id] = m.default; return m.default; });
 }
 
-// Zichtbaar deel van de kaart (viewBox-eenheden) en de schaal in CSS-pixels per eenheid
-function venster() { var k = staat.kaart; return { x: staat.ox, y: staat.oy, w: k.breedte / staat.zoom, h: k.hoogte / staat.zoom }; }
+// Zichtbaar deel van de kaart (viewBox-eenheden) en de schaal in CSS-pixels per eenheid.
+// De breedte van het beeld hangt alleen van de zoom af; de hoogte is hoogstens de vrije schermhoogte (staat.maxH).
+function venster() {
+  var k = staat.kaart, w = k.breedte / staat.zoom, h = k.hoogte / staat.zoom, b = $("kaartvak").clientWidth;
+  if (staat.maxH > 0 && b > 0) h = Math.min(h, staat.maxH * w / b);
+  return { x: staat.ox, y: staat.oy, w: w, h: h };
+}
+// Vrije hoogte voor de kaart: van de bovenkant van het kaartvak tot de onderste balk, met 8 px ruimte
+function meetRuimte() { staat.maxH = Math.max(120, Math.floor(window.innerHeight - $("kaartvak").offsetTop - $("balk").offsetHeight - 8)); }
 function schaal() { return staat.svg ? staat.svg.getBoundingClientRect().width / venster().w : 1; }
 function begrens() {
   var k = staat.kaart, v = venster();
@@ -44,29 +51,23 @@ function zetZoom(z, cx, cy) {
   begrens(); teken();
 }
 
+function optie(lijst, waarde, tekst) { var o = document.createElement("option"); o.value = waarde; o.textContent = tekst; lijst.appendChild(o); }
 function knoppen() {
-  var kv = $("kaarten"); kv.innerHTML = "";
-  KAARTEN.forEach(function(k) {
-    var b = document.createElement("button"); b.textContent = k.titel; if (staat.kaart && staat.kaart.id === k.id) b.className = "aan";
-    b.onclick = function() { kiesKaart(k.id); }; kv.appendChild(b);
-  });
-  var lv = $("lagen"); lv.innerHTML = "";
-  if (staat.kaart && staat.kaart.lagen.length > 1) staat.kaart.lagen.forEach(function(l) {
-    var b = document.createElement("button"); b.textContent = l.titel; if (staat.laag && staat.laag.id === l.id) b.className = "aan";
-    b.onclick = function() { kiesLaag(l.id); }; lv.appendChild(b);
-  });
-  var sv = $("standen"); sv.innerHTML = "";
-  [["vrij", "Vrij tikken"], ["opdracht", "Opdracht"]].forEach(function(s) {
-    var b = document.createElement("button"); b.textContent = s[1]; if (staat.stand === s[0]) b.className = "aan";
-    b.onclick = function() { staat.stand = s[0]; if (s[0] === "opdracht") startOpdracht(); else { staat.opdracht = null; toonOpdracht(); } knoppen(); teken(); }; sv.appendChild(b);
-  });
+  var kv = $("kaartkeuze"); kv.innerHTML = "";
+  KAARTEN.forEach(function(k) { optie(kv, k.id, k.titel); });
+  if (staat.kaart) kv.value = staat.kaart.id;
+  var lv = $("laagkeuze"); lv.innerHTML = "";
+  if (staat.kaart) staat.kaart.lagen.forEach(function(l) { optie(lv, l.id, l.titel); });
+  if (staat.laag) lv.value = staat.laag.id;
+  lv.style.display = staat.kaart && staat.kaart.lagen.length > 1 ? "" : "none";
+  var sb = $("stand"); sb.className = staat.stand === "opdracht" ? "aan" : ""; sb.setAttribute("aria-pressed", staat.stand === "opdracht" ? "true" : "false");
 }
 function zoomKnoppen() {
   var i = ZOOMSTAPPEN.indexOf(staat.zoom);
   $("zoomin").disabled = i === ZOOMSTAPPEN.length - 1;
   $("zoomuit").disabled = i === 0;
   $("heel").disabled = staat.zoom === 1;
-  $("zoomwaarde").textContent = "Zoom x" + staat.zoom;
+  $("zoomwaarde").textContent = "x" + staat.zoom;
 }
 
 function kiesKaart(id) {
@@ -77,10 +78,11 @@ function kiesLaag(id) {
   staat.doelen = maakDoelen(staat.laag);
   staat.gekozen = null;
   if (staat.stand === "opdracht") startOpdracht(); else staat.opdracht = null;
-  knoppen(); teken(); toonGekozen(); toonOpdracht();
+  knoppen(); toonGekozen(); toonOpdracht(); teken();
 }
 
 function teken() {
+  meetRuimte(); begrens();
   var k = staat.kaart, vak = $("kaartvak"), v = venster();
   vak.innerHTML = "";
   var svg = el("svg", { viewBox: v.x + " " + v.y + " " + v.w + " " + v.h, role: "img", "aria-label": "Kaart " + k.titel + ", zoom " + staat.zoom });
@@ -127,7 +129,7 @@ function beweeg(e) {
   if (!a || e.pointerId !== a.id) return;
   var dx = e.clientX - a.x, dy = e.clientY - a.y;
   if (!a.slepen && Math.sqrt(dx * dx + dy * dy) > SLEEPGRENS) a.slepen = true;
-  if (a.slepen && staat.zoom > 1) {
+  if (a.slepen) {                                   // begrens() houdt het beeld binnen de kaart
     var s = schaal();
     staat.ox = a.ox - dx / s; staat.oy = a.oy - dy / s; begrens();
     var v = venster(); staat.svg.setAttribute("viewBox", v.x + " " + v.y + " " + v.w + " " + v.h);
@@ -183,8 +185,9 @@ function startOpdracht() {
   staat.gekozen = null; toonOpdracht();
 }
 function toonOpdracht() {
-  var o = staat.opdracht;
-  $("opdracht").textContent = o ? (o.huidig ? "Opdracht " + (o.nr + 1) + " van " + o.rij.length + ": tik " + o.huidig.naam + " aan (rood gemarkeerd)." : "Klaar met deze laag. Kopieer de uitslag of kies een andere laag.") : "";
+  var o = staat.opdracht, uitleg = !!(o && o.huidig && staat.kaart && KAARTEN.filter(function(k) { return k.id === staat.kaart.id; })[0].sleepUitleg);
+  $("opdracht").style.height = uitleg ? "66px" : "";   // drie regels alleen bij de Kleine Antillen; elders blijft het 44 px
+  $("opdracht").textContent = o ? (o.huidig ? "Opdracht " + (o.nr + 1) + " van " + o.rij.length + ": tik " + o.huidig.naam + " aan (rood gemarkeerd)." + (uitleg ? " Staat het rode doel buiten beeld? Sleep de kaart omhoog of omlaag." : "") : "Klaar met deze laag. Kopieer de uitslag (knop Uitslag) of kies een andere laag.") : "Vrij tikken: tik op de kaart. Kies Opdracht voor de test.";
 }
 function bevestig() {
   if (!staat.gekozen) return;
@@ -219,6 +222,12 @@ function toonDebug() { $("debug").textContent = uitslagTekst(); }
 $("bevestig").onclick = bevestig;
 $("anders").onclick = function() { openLijst(staat.doelen.slice().sort(function(a, b) { return a.naam < b.naam ? -1 : 1; }), "Kies uit de lijst"); };
 $("lijst").onclick = function(e) { if (e.target.id === "lijst") sluitLijst(); };
+$("kaartkeuze").onchange = function() { kiesKaart(this.value); };
+$("laagkeuze").onchange = function() { kiesLaag(this.value); };
+$("stand").onclick = function() { staat.stand = staat.stand === "opdracht" ? "vrij" : "opdracht"; if (staat.stand === "opdracht") startOpdracht(); else { staat.opdracht = null; toonOpdracht(); } knoppen(); teken(); };
+$("meer").onclick = function() { toonDebug(); $("paneel").style.display = "flex"; };
+$("sluit").onclick = function() { $("paneel").style.display = "none"; };
+$("paneel").onclick = function(e) { if (e.target.id === "paneel") $("paneel").style.display = "none"; };
 $("toondebug").onclick = function() { var d = $("debug"); d.style.display = d.style.display === "block" ? "none" : "block"; toonDebug(); };
 $("zoomin").onclick = function() { var i = ZOOMSTAPPEN.indexOf(staat.zoom); if (i < ZOOMSTAPPEN.length - 1) zetZoom(ZOOMSTAPPEN[i + 1]); };
 $("zoomuit").onclick = function() { var i = ZOOMSTAPPEN.indexOf(staat.zoom); if (i > 0) zetZoom(ZOOMSTAPPEN[i - 1]); };
