@@ -1,0 +1,14 @@
+{
+  "naturalEarth": {
+    "versie": "v5.1.2",
+    "commit": "f1890d9f152c896d250a77557a5751a93d494776",
+    "basisUrl": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/",
+    "bestanden": {
+      "ne_10m_admin_0_map_units.geojson": "57da82be755f4afccd8f3b14251bb2752f5df1395f47d2d86f817470c4a48862",
+      "ne_10m_admin_1_states_provinces.geojson": "22d0e3ad85eb3e27f17cabf8ba2d50e554fbc27a87796ff891d958185da62fb5",
+      "ne_10m_populated_places_simple.geojson": "fd3fa867a320cbd5c5b6bb5bc550afeec2939fb2cef688e508007282a55ac42f",
+      "ne_10m_rivers_lake_centerlines.geojson": "bb854a900ecbd3b408df46d5e16e3e0f974ba55993f9d8b5c26e855273c0905a",
+      "ne_50m_admin_0_map_units.geojson": "b8d421aca6e9e08e8cdf09cc26af111cc3e0deba4fe915611d58ade71e8a4db0"
+    }
+  }
+}

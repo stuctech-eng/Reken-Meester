@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Kaartproef</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      body { font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f4ff; color: #1a1d3a;
+        padding: calc(env(safe-area-inset-top) + 12px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 140px) calc(env(safe-area-inset-left) + 16px); }
+      h1 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+      .rij { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+      button { font-family: inherit; font-weight: 700; font-size: 15px; min-height: 44px; min-width: 44px; padding: 0 12px; border-radius: 12px; border: 2px solid #c7d2fe; background: #fff; color: #1a1d3a; }
+      button.aan { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+      #opdracht { font-size: 17px; font-weight: 800; min-height: 28px; margin: 4px 0 8px; }
+      #kaartvak { width: 100%; background: #dbeafe; border-radius: 12px; overflow: hidden; }
+      #kaartvak svg { touch-action: none; }
+      #kaartvak svg { display: block; width: 100%; height: auto; }
+      #balk { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 2px solid #c7d2fe; padding: 10px calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 10px) calc(env(safe-area-inset-left) + 16px); }
+      #balk .tekst { font-weight: 800; font-size: 16px; margin-bottom: 8px; min-height: 22px; }
+      #lijst { position: fixed; inset: 0; background: rgba(26, 29, 58, 0.45); display: none; align-items: flex-end; }
+      #lijst .vel { background: #fff; width: 100%; max-height: 75vh; overflow-y: auto; border-radius: 16px 16px 0 0; padding: 16px 16px calc(env(safe-area-inset-bottom) + 16px); }
+      #lijst .vel button { display: block; width: 100%; text-align: left; margin-bottom: 6px; }
+      #debug { margin-top: 12px; font-size: 12px; font-family: ui-monospace, Menlo, monospace; white-space: pre-wrap; background: #fff; border-radius: 12px; padding: 8px; display: none; }
+      .klein { font-size: 13px; color: #4a5068; margin-top: 6px; }
+    </style>
+  </head>
+  <body>
+    <h1>Kaartproef Topografie (T2a, met zoom)</h1>
+    <div class="rij" id="kaarten"></div>
+    <div class="rij" id="lagen"></div>
+    <div class="rij" id="standen"></div>
+    <div id="opdracht"></div>
+    <div class="rij" style="align-items: center">
+      <button id="zoomuit" aria-label="Uitzoomen">−</button>
+      <button id="zoomin" aria-label="Inzoomen">+</button>
+      <button id="heel">Heel de kaart</button>
+      <span id="zoomwaarde" style="font-weight: 800"></span>
+    </div>
+    <div id="kaartvak"></div>
+    <div class="klein" id="info"></div>
+    <div class="rij" style="margin-top: 10px">
+      <button id="kopieer">Kopieer uitslag</button>
+      <button id="toondebug">Debugpaneel</button>
+    </div>
+    <div id="debug"></div>
+    <div id="balk">
+      <div class="tekst" id="gekozen">Tik op de kaart.</div>
+      <div class="rij">
+        <button id="bevestig" class="aan" disabled>Dit is mijn antwoord</button>
+        <button id="anders">Iets anders kiezen</button>
+      </div>
+    </div>
+    <div id="lijst" role="dialog" aria-label="Keuzelijst"><div class="vel" id="lijstvel"></div></div>
+    <script type="module" src="./kaartproef.js"></script>
+  </body>
+</html>

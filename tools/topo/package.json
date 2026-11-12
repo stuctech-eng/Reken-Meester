@@ -1,0 +1,13 @@
+{
+  "name": "topo-tools",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Kaartscript voor Topografie Meester (alleen bouwomgeving, niet in de app)",
+  "dependencies": {
+    "d3-geo": "3.1.2",
+    "topojson-client": "3.1.0",
+    "topojson-server": "3.0.1",
+    "topojson-simplify": "3.0.3"
+  }
+}
