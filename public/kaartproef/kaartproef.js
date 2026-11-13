@@ -3,7 +3,7 @@
 
 import { maakDoelen, beslis, isKlein, STRAAL } from "./tikregel.js";
 
-var VERSIE = "T2a-proef-4";
+var VERSIE = "T2a-proef-5";
 var KAARTEN = [
   { id: "proef-nl", titel: "Nederland" },
   { id: "proef-europa", titel: "Europa (zuid)" },
@@ -17,7 +17,7 @@ var NS = "http://www.w3.org/2000/svg";
 var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", opdracht: "#dc2626", lijn: "#1d4ed8", punt: "#1a1d3a" };
 
 var staat = { kaart: null, data: {}, laag: null, stand: "vrij", gekozen: null, doelen: [], opdracht: null, uitslag: {}, log: [], svg: null,
-  zoom: 1, ox: 0, oy: 0, aanraking: null, maxH: 0 };
+  zoom: 1, ox: 0, oy: 0, aanraking: null, maxH: 0, alternatief: null };
 
 function el(naam, attr) { var e = document.createElementNS(NS, naam); for (var k in attr) e.setAttribute(k, attr[k]); return e; }
 function $(id) { return document.getElementById(id); }
@@ -84,7 +84,7 @@ function kiesKaart(id) {
 function kiesLaag(id) {
   staat.laag = staat.kaart.lagen.filter(function(l) { return l.id === id; })[0];
   staat.doelen = maakDoelen(staat.laag);
-  staat.gekozen = null;
+  staat.gekozen = null; staat.alternatief = null; toonAlternatief();
   if (staat.stand === "opdracht") startOpdracht(); else staat.opdracht = null;
   knoppen(); toonGekozen(); toonOpdracht(); teken();
 }
@@ -164,9 +164,40 @@ function tik(x, y) {
     kandidaten: b.kandidaten.map(function(c) { return c.doel.id + ":" + c.afstand.toFixed(1); }).join(" ") };
   staat.log.push(regel); if (staat.log.length > 50) staat.log.shift();
   toonDebug();
+  // een nieuwe tik wist altijd de vorige melding; alleen "ingesloten" met een ander vlak onder de tik zet een nieuwe
+  staat.alternatief = null; toonAlternatief();
   if (b.uitkomst === "geen") { staat.gekozen = null; $("gekozen").textContent = "Tik op een gebied."; $("bevestig").disabled = true; teken(); return; }
   if (b.uitkomst === "twijfel") { if (staat.opdracht) staat.opdracht.keuzelijst = true; openLijst(b.kandidaten.map(function(c) { return c.doel; }), "Welke bedoel je?"); return; }
-  staat.gekozen = b.doel; toonGekozen(); teken();
+  if (b.regel === "ingesloten") staat.alternatief = vlakOnderTik(b);
+  kies(b.doel, "tik");
+}
+// Het grotere vlak waarin de tik valt, als een klein doel met "ingesloten" won (plan ronde 5, §1.1): de kandidaat met
+// afstand 0 (de tik ligt in zijn vlak) die niet het gekozen doel is. Vlakken overlappen niet, dus hoogstens één.
+function vlakOnderTik(b) {
+  var v = b.kandidaten.filter(function(c) { return c.doel !== b.doel && c.doel.soort === "vlak" && c.afstand === 0; });
+  return v.length ? v[0].doel : null;
+}
+// Eén samenhangende selectie (plan ronde 5, §2.2): hoe = "tik", "lijst" of "melding"
+function kies(doel, hoe) {
+  var vorig = staat.gekozen;
+  staat.gekozen = doel;
+  if (hoe !== "tik") staat.alternatief = null;
+  if (hoe === "melding") {
+    if (staat.opdracht && staat.opdracht.huidig) staat.opdracht.melding = true;
+    staat.log.push({ t: new Date().toISOString().slice(11, 19), kaart: staat.kaart.id, laag: staat.laag.id, x: "", y: "", zoom: staat.zoom, uitkomst: "alternatief " + (vorig ? vorig.id : "-") + " -> " + doel.id, kandidaten: "" });
+    if (staat.log.length > 50) staat.log.shift();
+    toonDebug();
+  }
+  toonGekozen(); toonAlternatief(); teken();
+}
+// De melding boven de balk; laat aanraking door naar de kaart (pointer-events: none), alleen de knop vangt tikken
+function toonAlternatief() {
+  var m = $("alternatief"), a = staat.alternatief;
+  if (!a || !staat.gekozen) { m.style.display = "none"; return; }
+  $("alttekst").textContent = "Je tikte in de stippellijn van " + staat.gekozen.naam + ". Bedoelde je " + a.naam + "?";
+  $("altknop").textContent = a.naam;
+  m.style.bottom = $("balk").offsetHeight + "px";
+  m.style.display = "flex";
 }
 
 function toonGekozen() {
@@ -179,7 +210,7 @@ function openLijst(doelen, kop) {
   var h = document.createElement("div"); h.style.fontWeight = "800"; h.style.marginBottom = "8px"; h.textContent = kop; v.appendChild(h);
   doelen.forEach(function(d) {
     var b = document.createElement("button"); b.textContent = d.naam;
-    b.onclick = function() { sluitLijst(); staat.gekozen = d; toonGekozen(); teken(); }; v.appendChild(b);
+    b.onclick = function() { sluitLijst(); kies(d, "lijst"); }; v.appendChild(b);
   });
   var a = document.createElement("button"); a.textContent = "Annuleren"; a.onclick = sluitLijst; v.appendChild(a);
   $("lijst").style.display = "flex";
@@ -191,9 +222,9 @@ function sleutel() { return staat.kaart.id + "/" + staat.laag.id; }
 function startOpdracht() {
   var rij = staat.doelen.slice();
   for (var i = rij.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = rij[i]; rij[i] = rij[j]; rij[j] = t; }
-  staat.opdracht = { rij: rij, nr: 0, huidig: rij[0], keuzelijst: false };
-  staat.uitslag[sleutel()] = { doelen: rij.length, gedaan: 0, inEenKeer: 0, metLijst: 0, fout: [], zoom: {} };
-  staat.gekozen = null; toonOpdracht();
+  staat.opdracht = { rij: rij, nr: 0, huidig: rij[0], keuzelijst: false, melding: false };
+  staat.uitslag[sleutel()] = { doelen: rij.length, gedaan: 0, inEenKeer: 0, metLijst: 0, metMelding: 0, fout: [], zoom: {} };
+  staat.gekozen = null; staat.alternatief = null; toonAlternatief(); toonOpdracht();
 }
 // Uitleg bij de opdracht: de stippellijn als het doel bij deze zoom een tikcirkel heeft; slepen als de kaart bij x1 niet past.
 // Elke extra zin krijgt een regel van 22 px erbij (44, 66 of 88 px).
@@ -212,15 +243,17 @@ function bevestig() {
   if (o && o.huidig) {
     var u = staat.uitslag[sleutel()]; u.gedaan++;
     var goed = staat.gekozen.id === o.huidig.id;
-    if (goed && !o.keuzelijst) u.inEenKeer++;
+    // B2: in één keer goed alleen zonder hulp; keuzelijst en melding tellen apart als hulp (één bevestiging = één telling)
+    if (goed && !o.keuzelijst && !o.melding) u.inEenKeer++;
     if (o.keuzelijst) u.metLijst++;
+    if (o.melding) u.metMelding++;
     if (!goed) u.fout.push(o.huidig.id + " -> " + staat.gekozen.id);
     u.zoom[o.huidig.id] = staat.zoom;
     staat.log.push({ t: new Date().toISOString().slice(11, 19), kaart: staat.kaart.id, laag: staat.laag.id, x: "", y: "", zoom: staat.zoom, uitkomst: "bevestigd " + staat.gekozen.id + (goed ? " (goed)" : " (FOUT, gevraagd " + o.huidig.id + ")"), kandidaten: "" });
-    o.nr++; o.huidig = o.rij[o.nr] || null; o.keuzelijst = false;
+    o.nr++; o.huidig = o.rij[o.nr] || null; o.keuzelijst = false; o.melding = false;
     toonOpdracht();
   }
-  staat.gekozen = null; toonGekozen(); teken(); toonDebug();
+  staat.gekozen = null; staat.alternatief = null; toonGekozen(); toonAlternatief(); teken(); toonDebug();
 }
 
 function uitslagTekst() {
@@ -228,7 +261,7 @@ function uitslagTekst() {
   Object.keys(staat.uitslag).forEach(function(k) {
     var u = staat.uitslag[k], zs = {};
     Object.keys(u.zoom).forEach(function(d) { zs["x" + u.zoom[d]] = (zs["x" + u.zoom[d]] || 0) + 1; });
-    r.push(k + ": " + u.gedaan + " van " + u.doelen + " gedaan; in één keer goed " + u.inEenKeer + " (" + (u.gedaan ? Math.round(100 * u.inEenKeer / u.gedaan) : 0) + "%); met keuzelijst " + u.metLijst + "; fout " + u.fout.length + (u.fout.length ? " [" + u.fout.join(", ") + "]" : "") + "; zoom bij bevestigen " + JSON.stringify(zs));
+    r.push(k + ": " + u.gedaan + " van " + u.doelen + " gedaan; in één keer goed " + u.inEenKeer + " (" + (u.gedaan ? Math.round(100 * u.inEenKeer / u.gedaan) : 0) + "%); met keuzelijst " + u.metLijst + "; via melding " + u.metMelding + "; fout " + u.fout.length + (u.fout.length ? " [" + u.fout.join(", ") + "]" : "") + "; zoom bij bevestigen " + JSON.stringify(zs));
   });
   r.push("", "Laatste tikken:");
   staat.log.forEach(function(l) { r.push(l.t + " " + l.kaart + "/" + l.laag + " x" + l.zoom + " (" + l.x + "," + l.y + ") " + l.uitkomst + (l.kandidaten ? " | " + l.kandidaten : "")); });
@@ -241,7 +274,8 @@ $("anders").onclick = function() { openLijst(staat.doelen.slice().sort(function(
 $("lijst").onclick = function(e) { if (e.target.id === "lijst") sluitLijst(); };
 $("kaartkeuze").onchange = function() { kiesKaart(this.value); };
 $("laagkeuze").onchange = function() { kiesLaag(this.value); };
-$("stand").onclick = function() { staat.stand = staat.stand === "opdracht" ? "vrij" : "opdracht"; if (staat.stand === "opdracht") startOpdracht(); else { staat.opdracht = null; toonOpdracht(); } knoppen(); teken(); };
+$("stand").onclick = function() { staat.stand = staat.stand === "opdracht" ? "vrij" : "opdracht"; if (staat.stand === "opdracht") startOpdracht(); else { staat.opdracht = null; staat.alternatief = null; toonAlternatief(); toonOpdracht(); } knoppen(); teken(); };
+$("altknop").onclick = function() { if (staat.alternatief) kies(staat.alternatief, "melding"); };
 $("meer").onclick = function() { toonDebug(); $("paneel").style.display = "flex"; };
 $("sluit").onclick = function() { $("paneel").style.display = "none"; };
 $("paneel").onclick = function(e) { if (e.target.id === "paneel") $("paneel").style.display = "none"; };
