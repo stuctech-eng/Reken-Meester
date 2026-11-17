@@ -54,3 +54,89 @@ controleert dat elke afwijking hier staat met een geldige status, en dat hier ge
 - buren-wc-buiten-ISR | onderzocht | Israel grenst aan Palestina (PSX); geen item van de 194
 - buren-wc-buiten-JOR | onderzocht | Jordanie grenst aan Palestina (Westelijke Jordaanoever, PSX); geen item van de 194
 - buren-wc-buiten-ESP | onderzocht | Spanje grenst aan Gibraltar (1,8 km, in WC en in de geometrie); geen item van de 194
+
+## Landen: namen, hoofdsteden, codes en werelddelen (T2b-1, plan §1.3 A)
+
+Bronnen: TU (namen, hoofdsteden, ISO-codes), M49 (werelddeel en groep), UN (de lijst). WC is alleen controle.
+
+### Beslist (GPT, 17-11-2026)
+
+- iso-LBY | gecorrigeerd | de TU-pagina van Libie geeft geen ISO-codes. Alpha-3 komt voor alle 194 uniform uit M49: LBY. Alpha-2 en numeriek komen uit de TU en blijven voor Libie leeg
+- iso-NRU | gecorrigeerd | de TU-pagina van Naoero geeft als alpha-3 NRO (letterlijk zo). Alpha-3 komt voor alle 194 uniform uit M49: NRU; de TU-waarde is alleen controle
+- naam-dubbel-COG-COD | gecorrigeerd | de TU noemt beide landen Congo. Getoond worden Congo-Brazzaville en Congo-Kinshasa, de namen ter onderscheiding uit de TU-opmerking; Congo blijft bij beide een variant. De ids COG en COD staan daar los van
+- naam-voorkeur-BLR | gecorrigeerd | Wit-Rusland als voorkeursnaam (volgens de TU de meest gebruikte vorm buiten officiele teksten), Belarus als variant; beide gelden als goed antwoord
+- naam-voorkeur-GBR | gecorrigeerd | Verenigd Koninkrijk als voorkeursnaam (de landnaam; Groot-Brittannie is ook het eiland), Groot-Brittannie als variant
+- naam-voorkeur-SAU | gecorrigeerd | Saoedi-Arabie als voorkeursnaam (de titel van de TU-pagina), Saudi-Arabie als variant
+- naam-wc-BLR | gecorrigeerd | na het besluit bij naam-voorkeur-BLR is de voorkeursnaam gelijk aan WC (Wit-Rusland); geen verschil meer
+- naam-wc-GBR | gecorrigeerd | na het besluit bij naam-voorkeur-GBR is de voorkeursnaam gelijk aan WC (Verenigd Koninkrijk); geen verschil meer
+
+### De 12 bijzondere gevallen (T1 §3.6): geen automatische hoofdstad, rollen nog vast te stellen met OV
+
+- bijzonder-BDI | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Gitega
+- bijzonder-BEN | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Porto-Novo (De regering zetelt in Cotonou.)
+- bijzonder-BOL | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Sucre (De regering zetelt in La Paz.)
+- bijzonder-CIV | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Yamoussoukro
+- bijzonder-IDN | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Jakarta
+- bijzonder-ISR | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Jeruzalem (Opmerking: De status van Jeruzalem als hoofdstad is omstreden. Israël beschouwt heel Jeruzalem als hoofdstad van het land. [ingekort door de leesfunctie])
+- bijzonder-LKA | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Colombo, Sri Jayewardenapura Kotte (Sri Jayewardenapura Kotte is de (administratieve) hoofdstad. Colombo wordt genoemd als de ‘commerciële hoofdstad’.)
+- bijzonder-MYS | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Kuala Lumpur
+- bijzonder-NLD | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Amsterdam (Opmerking: De regering zetelt in Den Haag (officiële naam: ’s-Gravenhage).)
+- bijzonder-NRU | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Yaren
+- bijzonder-SWZ | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Mbabane
+- bijzonder-ZAF | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Bloemfontein, Kaapstad, Pretoria (De bestuurlijke hoofdstad is Pretoria, waar de regering zetelt. De wetgevende hoofdstad is Kaapstad, waar het parlement is gevestigd. De gerechtelijke hoofdstad is Bloemfontein en het Grondwettelijk Hof zetelt in Johannesburg.)
+
+### Onderzocht of bevestigd
+
+- ingekort-hoofdstad-CHN | onderzocht | de leesfunctie gaf de opmerking bij Peking ingekort (over het gebruik van Beijing). De hoofdstad zelf is niet onzeker; de volledige opmerking volgt bij de uitleg
+- ingekort-hoofdstad-ISR | onderzocht | de opmerking over de omstreden status van Jeruzalem is ingekort; Israel is een bijzonder geval zonder gevraagde rol (T1 §3.6)
+- ingekort-naam-FSM | onderzocht | de opmerking bij Micronesie (verwarring met de eilandengroep) is ingekort; de naam zelf is niet onzeker
+- naam-wc-BHS | onderzocht | alleen het teken van de apostrof verschilt (TU recht, WC gekruld)
+- naam-wc-COD | onderzocht | WC: Congo (DRC); getoond wordt Congo-Kinshasa (besluit bij naam-dubbel-COG-COD)
+- naam-wc-COG | onderzocht | WC: Congo; getoond wordt Congo-Brazzaville (besluit bij naam-dubbel-COG-COD)
+- naam-wc-MDV | bevestigd verschil | WC: Maldiven; TU noemt Malediven de meest gebruikte vorm. TU is primair
+- naam-wc-NRU | bevestigd verschil | WC: Nauru; de Nederlandse naam volgens de TU is Naoero. TU is primair
+- werelddeel-wc-CYP | bevestigd verschil | WC zet Cyprus bij Europa, M49 bij Azie (West-Azie). M49 is primair (plan §0.2); Cyprus komt ook in de modus Europa
+- hoofdstad-wc-GNQ | bevestigd verschil | TU: Ciudad de la Paz; WC: Malabo. Ciudad de la Paz is bij decreet van januari 2026 tot hoofdstad verklaard (nieuwsberichten, o.a. africanews 5-1-2026); de verplaatsing van de overheidsdiensten mocht nog tot een jaar duren. Besluit GPT 17-11-2026: blijft voorlopig een gewone TU-hoofdstad (telt mee bij de 182) met de markering teVerifieren; wettelijke hoofdstad en feitelijke regeringszetel worden nagekeken met OV in de deelstap van de bijzondere gevallen
+
+### Hoofdsteden: WC geeft de Engelse schrijfwijze (zelfde stad)
+
+- hoofdstad-wc-ARM | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Yerevan), de TU de Nederlandse (Jerevan)
+- hoofdstad-wc-AUT | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Vienna), de TU de Nederlandse (Wenen)
+- hoofdstad-wc-AZE | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Baku), de TU de Nederlandse (Bakoe)
+- hoofdstad-wc-BEL | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Brussels), de TU de Nederlandse (Brussel)
+- hoofdstad-wc-CHN | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Beijing), de TU de Nederlandse (Peking)
+- hoofdstad-wc-CZE | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Prague), de TU de Nederlandse (Praag)
+- hoofdstad-wc-DEU | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Berlin), de TU de Nederlandse (Berlijn)
+- hoofdstad-wc-DNK | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Copenhagen), de TU de Nederlandse (Kopenhagen)
+- hoofdstad-wc-ETH | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Addis Ababa), de TU de Nederlandse (Addis Abeba)
+- hoofdstad-wc-FRA | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Paris), de TU de Nederlandse (Parijs)
+- hoofdstad-wc-GBR | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (London), de TU de Nederlandse (Londen)
+- hoofdstad-wc-GRC | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Athens), de TU de Nederlandse (Athene)
+- hoofdstad-wc-GRD | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (St. George's), de TU de Nederlandse (Saint George's)
+- hoofdstad-wc-GTM | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Guatemala City), de TU de Nederlandse (Guatemala-Stad)
+- hoofdstad-wc-HUN | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Budapest), de TU de Nederlandse (Boedapest)
+- hoofdstad-wc-IRN | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Tehran), de TU de Nederlandse (Teheran)
+- hoofdstad-wc-IRQ | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Baghdad), de TU de Nederlandse (Bagdad)
+- hoofdstad-wc-JPN | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Tokyo), de TU de Nederlandse (Tokio)
+- hoofdstad-wc-KGZ | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Bishkek), de TU de Nederlandse (Bisjkek)
+- hoofdstad-wc-KIR | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (South Tarawa), de TU de Nederlandse (Tarawa)
+- hoofdstad-wc-KWT | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Kuwait City), de TU de Nederlandse (Koeweit)
+- hoofdstad-wc-LBN | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Beirut), de TU de Nederlandse (Beiroet)
+- hoofdstad-wc-LUX | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Luxembourg), de TU de Nederlandse (Luxemburg)
+- hoofdstad-wc-MEX | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Mexico City), de TU de Nederlandse (Mexico-Stad)
+- hoofdstad-wc-MNG | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Ulan Bator), de TU de Nederlandse (Ulaanbaatar)
+- hoofdstad-wc-PAN | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Panama City), de TU de Nederlandse (Panama-Stad)
+- hoofdstad-wc-PHL | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Manila), de TU de Nederlandse (Manilla)
+- hoofdstad-wc-POL | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Warsaw), de TU de Nederlandse (Warschau)
+- hoofdstad-wc-PRT | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Lisbon), de TU de Nederlandse (Lissabon)
+- hoofdstad-wc-ROU | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Bucharest), de TU de Nederlandse (Boekarest)
+- hoofdstad-wc-RUS | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Moscow), de TU de Nederlandse (Moskou)
+- hoofdstad-wc-SAU | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Riyadh), de TU de Nederlandse (Riyad)
+- hoofdstad-wc-SDN | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Khartoum), de TU de Nederlandse (Khartoem)
+- hoofdstad-wc-SMR | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (City of San Marino), de TU de Nederlandse (San Marino)
+- hoofdstad-wc-SRB | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Belgrade), de TU de Nederlandse (Belgrado)
+- hoofdstad-wc-TJK | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Dushanbe), de TU de Nederlandse (Doesjanbe)
+- hoofdstad-wc-TKM | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Ashgabat), de TU de Nederlandse (Asjchabad)
+- hoofdstad-wc-USA | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Washington D.C.), de TU de Nederlandse (Washington)
+- hoofdstad-wc-UZB | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Tashkent), de TU de Nederlandse (Tasjkent)
+- hoofdstad-wc-VAT | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Vatican City), de TU de Nederlandse (Vaticaanstad)

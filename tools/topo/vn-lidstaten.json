@@ -12,781 +12,975 @@
  "landen": [
   {
    "vn": "Afghanistan",
-   "ne": "AFG"
+   "ne": "AFG",
+   "tu": "af"
   },
   {
    "vn": "Albania",
-   "ne": "ALB"
+   "ne": "ALB",
+   "tu": "al"
   },
   {
    "vn": "Algeria",
-   "ne": "DZA"
+   "ne": "DZA",
+   "tu": "dz"
   },
   {
    "vn": "Andorra",
-   "ne": "AND"
+   "ne": "AND",
+   "tu": "ad"
   },
   {
    "vn": "Angola",
-   "ne": "AGO"
+   "ne": "AGO",
+   "tu": "ao"
   },
   {
    "vn": "Antigua and Barbuda",
-   "ne": "ATG"
+   "ne": "ATG",
+   "tu": "ag"
   },
   {
    "vn": "Argentina",
-   "ne": "ARG"
+   "ne": "ARG",
+   "tu": "ar"
   },
   {
    "vn": "Armenia",
-   "ne": "ARM"
+   "ne": "ARM",
+   "tu": "am"
   },
   {
    "vn": "Australia",
-   "ne": "AUS"
+   "ne": "AUS",
+   "tu": "au"
   },
   {
    "vn": "Austria",
-   "ne": "AUT"
+   "ne": "AUT",
+   "tu": "at"
   },
   {
    "vn": "Azerbaijan",
-   "ne": "AZE"
+   "ne": "AZE",
+   "tu": "az"
   },
   {
    "vn": "The Bahamas",
-   "ne": "BHS"
+   "ne": "BHS",
+   "tu": "bs"
   },
   {
    "vn": "Bahrain",
-   "ne": "BHR"
+   "ne": "BHR",
+   "tu": "bh"
   },
   {
    "vn": "Bangladesh",
-   "ne": "BGD"
+   "ne": "BGD",
+   "tu": "bd"
   },
   {
    "vn": "Barbados",
-   "ne": "BRB"
+   "ne": "BRB",
+   "tu": "bb"
   },
   {
    "vn": "Belarus",
-   "ne": "BLR"
+   "ne": "BLR",
+   "tu": "by-0"
   },
   {
    "vn": "Belgium",
-   "ne": "BEL"
+   "ne": "BEL",
+   "tu": "be"
   },
   {
    "vn": "Belize",
-   "ne": "BLZ"
+   "ne": "BLZ",
+   "tu": "bz"
   },
   {
    "vn": "Benin",
-   "ne": "BEN"
+   "ne": "BEN",
+   "tu": "bj"
   },
   {
    "vn": "Bhutan",
-   "ne": "BTN"
+   "ne": "BTN",
+   "tu": "bt"
   },
   {
    "vn": "Bolivia (Plurinational State of)",
-   "ne": "BOL"
+   "ne": "BOL",
+   "tu": "bo"
   },
   {
    "vn": "Bosnia and Herzegovina",
-   "ne": "BIH"
+   "ne": "BIH",
+   "tu": "ba"
   },
   {
    "vn": "Botswana",
-   "ne": "BWA"
+   "ne": "BWA",
+   "tu": "bw"
   },
   {
    "vn": "Brazil",
-   "ne": "BRA"
+   "ne": "BRA",
+   "tu": "br"
   },
   {
    "vn": "Brunei Darussalam",
-   "ne": "BRN"
+   "ne": "BRN",
+   "tu": "bn"
   },
   {
    "vn": "Bulgaria",
-   "ne": "BGR"
+   "ne": "BGR",
+   "tu": "bg"
   },
   {
    "vn": "Burkina Faso",
-   "ne": "BFA"
+   "ne": "BFA",
+   "tu": "bf"
   },
   {
    "vn": "Burundi",
-   "ne": "BDI"
+   "ne": "BDI",
+   "tu": "bi"
   },
   {
    "vn": "Cabo Verde",
-   "ne": "CPV"
+   "ne": "CPV",
+   "tu": "cv"
   },
   {
    "vn": "Cambodia",
-   "ne": "KHM"
+   "ne": "KHM",
+   "tu": "kh"
   },
   {
    "vn": "Cameroon",
-   "ne": "CMR"
+   "ne": "CMR",
+   "tu": "cm"
   },
   {
    "vn": "Canada",
-   "ne": "CAN"
+   "ne": "CAN",
+   "tu": "ca"
   },
   {
    "vn": "Central African Republic",
-   "ne": "CAF"
+   "ne": "CAF",
+   "tu": "cf"
   },
   {
    "vn": "Chad",
-   "ne": "TCD"
+   "ne": "TCD",
+   "tu": "td"
   },
   {
    "vn": "Chile",
-   "ne": "CHL"
+   "ne": "CHL",
+   "tu": "cl"
   },
   {
    "vn": "China",
-   "ne": "CHN"
+   "ne": "CHN",
+   "tu": "cn"
   },
   {
    "vn": "Colombia",
-   "ne": "COL"
+   "ne": "COL",
+   "tu": "co"
   },
   {
    "vn": "Comoros",
-   "ne": "COM"
+   "ne": "COM",
+   "tu": "km"
   },
   {
    "vn": "Congo",
-   "ne": "COG"
+   "ne": "COG",
+   "tu": "cg"
   },
   {
    "vn": "Costa Rica",
-   "ne": "CRI"
+   "ne": "CRI",
+   "tu": "cr"
   },
   {
    "vn": "Côte d'Ivoire",
-   "ne": "CIV"
+   "ne": "CIV",
+   "tu": "ci"
   },
   {
    "vn": "Croatia",
-   "ne": "HRV"
+   "ne": "HRV",
+   "tu": "hr"
   },
   {
    "vn": "Cuba",
-   "ne": "CUB"
+   "ne": "CUB",
+   "tu": "cu"
   },
   {
    "vn": "Cyprus",
-   "ne": "CYP"
+   "ne": "CYP",
+   "tu": "cy"
   },
   {
    "vn": "Czechia",
-   "ne": "CZE"
+   "ne": "CZE",
+   "tu": "cz"
   },
   {
    "vn": "Democratic People's Republic of Korea",
-   "ne": "PRK"
+   "ne": "PRK",
+   "tu": "kp"
   },
   {
    "vn": "Democratic Republic of the Congo",
-   "ne": "COD"
+   "ne": "COD",
+   "tu": "cd"
   },
   {
    "vn": "Denmark",
-   "ne": "DNK"
+   "ne": "DNK",
+   "tu": "dk"
   },
   {
    "vn": "Djibouti",
-   "ne": "DJI"
+   "ne": "DJI",
+   "tu": "dj"
   },
   {
    "vn": "Dominica",
-   "ne": "DMA"
+   "ne": "DMA",
+   "tu": "dm"
   },
   {
    "vn": "Dominican Republic",
-   "ne": "DOM"
+   "ne": "DOM",
+   "tu": "do"
   },
   {
    "vn": "Ecuador",
-   "ne": "ECU"
+   "ne": "ECU",
+   "tu": "ec"
   },
   {
    "vn": "Egypt",
-   "ne": "EGY"
+   "ne": "EGY",
+   "tu": "eg"
   },
   {
    "vn": "El Salvador",
-   "ne": "SLV"
+   "ne": "SLV",
+   "tu": "sv"
   },
   {
    "vn": "Equatorial Guinea",
-   "ne": "GNQ"
+   "ne": "GNQ",
+   "tu": "gq"
   },
   {
    "vn": "Eritrea",
-   "ne": "ERI"
+   "ne": "ERI",
+   "tu": "er"
   },
   {
    "vn": "Estonia",
-   "ne": "EST"
+   "ne": "EST",
+   "tu": "ee"
   },
   {
    "vn": "Eswatini",
-   "ne": "SWZ"
+   "ne": "SWZ",
+   "tu": "sz"
   },
   {
    "vn": "Ethiopia",
-   "ne": "ETH"
+   "ne": "ETH",
+   "tu": "et"
   },
   {
    "vn": "Fiji",
-   "ne": "FJI"
+   "ne": "FJI",
+   "tu": "fj"
   },
   {
    "vn": "Finland",
-   "ne": "FIN"
+   "ne": "FIN",
+   "tu": "fi"
   },
   {
    "vn": "France",
-   "ne": "FRA"
+   "ne": "FRA",
+   "tu": "fr"
   },
   {
    "vn": "Gabon",
-   "ne": "GAB"
+   "ne": "GAB",
+   "tu": "ga"
   },
   {
    "vn": "Gambia",
-   "ne": "GMB"
+   "ne": "GMB",
+   "tu": "gm"
   },
   {
    "vn": "Georgia",
-   "ne": "GEO"
+   "ne": "GEO",
+   "tu": "ge"
   },
   {
    "vn": "Germany",
-   "ne": "DEU"
+   "ne": "DEU",
+   "tu": "de"
   },
   {
    "vn": "Ghana",
-   "ne": "GHA"
+   "ne": "GHA",
+   "tu": "gh"
   },
   {
    "vn": "Greece",
-   "ne": "GRC"
+   "ne": "GRC",
+   "tu": "gr"
   },
   {
    "vn": "Grenada",
-   "ne": "GRD"
+   "ne": "GRD",
+   "tu": "gd"
   },
   {
    "vn": "Guatemala",
-   "ne": "GTM"
+   "ne": "GTM",
+   "tu": "gt"
   },
   {
    "vn": "Guinea",
-   "ne": "GIN"
+   "ne": "GIN",
+   "tu": "gn"
   },
   {
    "vn": "Guinea-Bissau",
-   "ne": "GNB"
+   "ne": "GNB",
+   "tu": "gw"
   },
   {
    "vn": "Guyana",
-   "ne": "GUY"
+   "ne": "GUY",
+   "tu": "gy"
   },
   {
    "vn": "Haiti",
-   "ne": "HTI"
+   "ne": "HTI",
+   "tu": "ht"
   },
   {
    "vn": "Honduras",
-   "ne": "HND"
+   "ne": "HND",
+   "tu": "hn"
   },
   {
    "vn": "Hungary",
-   "ne": "HUN"
+   "ne": "HUN",
+   "tu": "hu"
   },
   {
    "vn": "Iceland",
-   "ne": "ISL"
+   "ne": "ISL",
+   "tu": "is"
   },
   {
    "vn": "India",
-   "ne": "IND"
+   "ne": "IND",
+   "tu": "in"
   },
   {
    "vn": "Indonesia",
-   "ne": "IDN"
+   "ne": "IDN",
+   "tu": "id"
   },
   {
    "vn": "Iran (Islamic Republic of)",
-   "ne": "IRN"
+   "ne": "IRN",
+   "tu": "ir"
   },
   {
    "vn": "Iraq",
-   "ne": "IRQ"
+   "ne": "IRQ",
+   "tu": "iq"
   },
   {
    "vn": "Ireland",
-   "ne": "IRL"
+   "ne": "IRL",
+   "tu": "ie"
   },
   {
    "vn": "Israel",
-   "ne": "ISR"
+   "ne": "ISR",
+   "tu": "il"
   },
   {
    "vn": "Italy",
-   "ne": "ITA"
+   "ne": "ITA",
+   "tu": "it"
   },
   {
    "vn": "Jamaica",
-   "ne": "JAM"
+   "ne": "JAM",
+   "tu": "jm"
   },
   {
    "vn": "Japan",
-   "ne": "JPN"
+   "ne": "JPN",
+   "tu": "jp"
   },
   {
    "vn": "Jordan",
-   "ne": "JOR"
+   "ne": "JOR",
+   "tu": "jo"
   },
   {
    "vn": "Kazakhstan",
-   "ne": "KAZ"
+   "ne": "KAZ",
+   "tu": "kz"
   },
   {
    "vn": "Kenya",
-   "ne": "KEN"
+   "ne": "KEN",
+   "tu": "ke"
   },
   {
    "vn": "Kiribati",
-   "ne": "KIR"
+   "ne": "KIR",
+   "tu": "ki"
   },
   {
    "vn": "Kuwait",
-   "ne": "KWT"
+   "ne": "KWT",
+   "tu": "kw"
   },
   {
    "vn": "Kyrgyzstan",
-   "ne": "KGZ"
+   "ne": "KGZ",
+   "tu": "kg"
   },
   {
    "vn": "Lao People's Democratic Republic",
-   "ne": "LAO"
+   "ne": "LAO",
+   "tu": "la"
   },
   {
    "vn": "Latvia",
-   "ne": "LVA"
+   "ne": "LVA",
+   "tu": "lv"
   },
   {
    "vn": "Lebanon",
-   "ne": "LBN"
+   "ne": "LBN",
+   "tu": "lb"
   },
   {
    "vn": "Lesotho",
-   "ne": "LSO"
+   "ne": "LSO",
+   "tu": "ls"
   },
   {
    "vn": "Liberia",
-   "ne": "LBR"
+   "ne": "LBR",
+   "tu": "lr"
   },
   {
    "vn": "Libya",
-   "ne": "LBY"
+   "ne": "LBY",
+   "tu": "ly"
   },
   {
    "vn": "Liechtenstein",
-   "ne": "LIE"
+   "ne": "LIE",
+   "tu": "li"
   },
   {
    "vn": "Lithuania",
-   "ne": "LTU"
+   "ne": "LTU",
+   "tu": "lt"
   },
   {
    "vn": "Luxembourg",
-   "ne": "LUX"
+   "ne": "LUX",
+   "tu": "lu"
   },
   {
    "vn": "Madagascar",
-   "ne": "MDG"
+   "ne": "MDG",
+   "tu": "mg"
   },
   {
    "vn": "Malawi",
-   "ne": "MWI"
+   "ne": "MWI",
+   "tu": "mw"
   },
   {
    "vn": "Malaysia",
-   "ne": "MYS"
+   "ne": "MYS",
+   "tu": "my"
   },
   {
    "vn": "Maldives",
-   "ne": "MDV"
+   "ne": "MDV",
+   "tu": "mv"
   },
   {
    "vn": "Mali",
-   "ne": "MLI"
+   "ne": "MLI",
+   "tu": "ml"
   },
   {
    "vn": "Malta",
-   "ne": "MLT"
+   "ne": "MLT",
+   "tu": "mt"
   },
   {
    "vn": "Marshall Islands",
-   "ne": "MHL"
+   "ne": "MHL",
+   "tu": "mh"
   },
   {
    "vn": "Mauritania",
-   "ne": "MRT"
+   "ne": "MRT",
+   "tu": "mr"
   },
   {
    "vn": "Mauritius",
-   "ne": "MUS"
+   "ne": "MUS",
+   "tu": "mu"
   },
   {
    "vn": "Mexico",
-   "ne": "MEX"
+   "ne": "MEX",
+   "tu": "mx"
   },
   {
    "vn": "Micronesia (Federated States of)",
-   "ne": "FSM"
+   "ne": "FSM",
+   "tu": "fm"
   },
   {
    "vn": "Monaco",
-   "ne": "MCO"
+   "ne": "MCO",
+   "tu": "mc"
   },
   {
    "vn": "Mongolia",
-   "ne": "MNG"
+   "ne": "MNG",
+   "tu": "mn"
   },
   {
    "vn": "Montenegro",
-   "ne": "MNE"
+   "ne": "MNE",
+   "tu": "me"
   },
   {
    "vn": "Morocco",
-   "ne": "MAR"
+   "ne": "MAR",
+   "tu": "ma"
   },
   {
    "vn": "Mozambique",
-   "ne": "MOZ"
+   "ne": "MOZ",
+   "tu": "mz"
   },
   {
    "vn": "Myanmar",
-   "ne": "MMR"
+   "ne": "MMR",
+   "tu": "mm"
   },
   {
    "vn": "Namibia",
-   "ne": "NAM"
+   "ne": "NAM",
+   "tu": "na"
   },
   {
    "vn": "Naoero",
-   "ne": "NRU"
+   "ne": "NRU",
+   "tu": "nr"
   },
   {
    "vn": "Nepal",
-   "ne": "NPL"
+   "ne": "NPL",
+   "tu": "np"
   },
   {
    "vn": "Netherlands (Kingdom of the)",
-   "ne": "NLD"
+   "ne": "NLD",
+   "tu": "nl"
   },
   {
    "vn": "New Zealand",
-   "ne": "NZL"
+   "ne": "NZL",
+   "tu": "nz"
   },
   {
    "vn": "Nicaragua",
-   "ne": "NIC"
+   "ne": "NIC",
+   "tu": "ni"
   },
   {
    "vn": "Niger",
-   "ne": "NER"
+   "ne": "NER",
+   "tu": "ne"
   },
   {
    "vn": "Nigeria",
-   "ne": "NGA"
+   "ne": "NGA",
+   "tu": "ng"
   },
   {
    "vn": "North Macedonia",
-   "ne": "MKD"
+   "ne": "MKD",
+   "tu": "mk"
   },
   {
    "vn": "Norway",
-   "ne": "NOR"
+   "ne": "NOR",
+   "tu": "no"
   },
   {
    "vn": "Oman",
-   "ne": "OMN"
+   "ne": "OMN",
+   "tu": "om"
   },
   {
    "vn": "Pakistan",
-   "ne": "PAK"
+   "ne": "PAK",
+   "tu": "pk"
   },
   {
    "vn": "Palau",
-   "ne": "PLW"
+   "ne": "PLW",
+   "tu": "pw"
   },
   {
    "vn": "Panama",
-   "ne": "PAN"
+   "ne": "PAN",
+   "tu": "pa"
   },
   {
    "vn": "Papua New Guinea",
-   "ne": "PNG"
+   "ne": "PNG",
+   "tu": "pg"
   },
   {
    "vn": "Paraguay",
-   "ne": "PRY"
+   "ne": "PRY",
+   "tu": "py"
   },
   {
    "vn": "Peru",
-   "ne": "PER"
+   "ne": "PER",
+   "tu": "pe"
   },
   {
    "vn": "Philippines",
-   "ne": "PHL"
+   "ne": "PHL",
+   "tu": "ph"
   },
   {
    "vn": "Poland",
-   "ne": "POL"
+   "ne": "POL",
+   "tu": "pl"
   },
   {
    "vn": "Portugal",
-   "ne": "PRT"
+   "ne": "PRT",
+   "tu": "pt"
   },
   {
    "vn": "Qatar",
-   "ne": "QAT"
+   "ne": "QAT",
+   "tu": "qa"
   },
   {
    "vn": "Republic of Korea",
-   "ne": "KOR"
+   "ne": "KOR",
+   "tu": "kr"
   },
   {
    "vn": "Republic of Moldova",
-   "ne": "MDA"
+   "ne": "MDA",
+   "tu": "md"
   },
   {
    "vn": "Romania",
-   "ne": "ROU"
+   "ne": "ROU",
+   "tu": "ro"
   },
   {
    "vn": "Russian Federation",
-   "ne": "RUS"
+   "ne": "RUS",
+   "tu": "ru"
   },
   {
    "vn": "Rwanda",
-   "ne": "RWA"
+   "ne": "RWA",
+   "tu": "rw"
   },
   {
    "vn": "Saint Kitts and Nevis",
-   "ne": "KNA"
+   "ne": "KNA",
+   "tu": "kn"
   },
   {
    "vn": "Saint Lucia",
-   "ne": "LCA"
+   "ne": "LCA",
+   "tu": "lc"
   },
   {
    "vn": "Saint Vincent and the Grenadines",
-   "ne": "VCT"
+   "ne": "VCT",
+   "tu": "vc"
   },
   {
    "vn": "Samoa",
-   "ne": "WSM"
+   "ne": "WSM",
+   "tu": "ws"
   },
   {
    "vn": "San Marino",
-   "ne": "SMR"
+   "ne": "SMR",
+   "tu": "sm"
   },
   {
    "vn": "Sao Tome and Principe",
-   "ne": "STP"
+   "ne": "STP",
+   "tu": "st"
   },
   {
    "vn": "Saudi Arabia",
-   "ne": "SAU"
+   "ne": "SAU",
+   "tu": "sa"
   },
   {
    "vn": "Senegal",
-   "ne": "SEN"
+   "ne": "SEN",
+   "tu": "sn"
   },
   {
    "vn": "Serbia",
-   "ne": "SRB"
+   "ne": "SRB",
+   "tu": "rs"
   },
   {
    "vn": "Seychelles",
-   "ne": "SYC"
+   "ne": "SYC",
+   "tu": "sc"
   },
   {
    "vn": "Sierra Leone",
-   "ne": "SLE"
+   "ne": "SLE",
+   "tu": "sl"
   },
   {
    "vn": "Singapore",
-   "ne": "SGP"
+   "ne": "SGP",
+   "tu": "sg"
   },
   {
    "vn": "Slovakia",
-   "ne": "SVK"
+   "ne": "SVK",
+   "tu": "sk"
   },
   {
    "vn": "Slovenia",
-   "ne": "SVN"
+   "ne": "SVN",
+   "tu": "si"
   },
   {
    "vn": "Solomon Islands",
-   "ne": "SLB"
+   "ne": "SLB",
+   "tu": "sb"
   },
   {
    "vn": "Somalia",
-   "ne": "SOM"
+   "ne": "SOM",
+   "tu": "so"
   },
   {
    "vn": "South Africa",
-   "ne": "ZAF"
+   "ne": "ZAF",
+   "tu": "za"
   },
   {
    "vn": "South Sudan",
    "ne": "SDS",
-   "wc": "SSD"
+   "wc": "SSD",
+   "tu": "ss"
   },
   {
    "vn": "Spain",
-   "ne": "ESP"
+   "ne": "ESP",
+   "tu": "es"
   },
   {
    "vn": "Sri Lanka",
-   "ne": "LKA"
+   "ne": "LKA",
+   "tu": "lk"
   },
   {
    "vn": "Sudan",
-   "ne": "SDN"
+   "ne": "SDN",
+   "tu": "sd"
   },
   {
    "vn": "Suriname",
-   "ne": "SUR"
+   "ne": "SUR",
+   "tu": "sr"
   },
   {
    "vn": "Sweden",
-   "ne": "SWE"
+   "ne": "SWE",
+   "tu": "se"
   },
   {
    "vn": "Switzerland",
-   "ne": "CHE"
+   "ne": "CHE",
+   "tu": "ch"
   },
   {
    "vn": "Syrian Arab Republic",
-   "ne": "SYR"
+   "ne": "SYR",
+   "tu": "sy"
   },
   {
    "vn": "Tajikistan",
-   "ne": "TJK"
+   "ne": "TJK",
+   "tu": "tj"
   },
   {
    "vn": "Thailand",
-   "ne": "THA"
+   "ne": "THA",
+   "tu": "th"
   },
   {
    "vn": "Timor-Leste",
-   "ne": "TLS"
+   "ne": "TLS",
+   "tu": "tl"
   },
   {
    "vn": "Togo",
-   "ne": "TGO"
+   "ne": "TGO",
+   "tu": "tg"
   },
   {
    "vn": "Tonga",
-   "ne": "TON"
+   "ne": "TON",
+   "tu": "to"
   },
   {
    "vn": "Trinidad and Tobago",
-   "ne": "TTO"
+   "ne": "TTO",
+   "tu": "tt"
   },
   {
    "vn": "Tunisia",
-   "ne": "TUN"
+   "ne": "TUN",
+   "tu": "tn"
   },
   {
    "vn": "Türkiye",
-   "ne": "TUR"
+   "ne": "TUR",
+   "tu": "tr"
   },
   {
    "vn": "Turkmenistan",
-   "ne": "TKM"
+   "ne": "TKM",
+   "tu": "tm"
   },
   {
    "vn": "Tuvalu",
-   "ne": "TUV"
+   "ne": "TUV",
+   "tu": "tv"
   },
   {
    "vn": "Uganda",
-   "ne": "UGA"
+   "ne": "UGA",
+   "tu": "ug"
   },
   {
    "vn": "Ukraine",
-   "ne": "UKR"
+   "ne": "UKR",
+   "tu": "ua"
   },
   {
    "vn": "United Arab Emirates",
-   "ne": "ARE"
+   "ne": "ARE",
+   "tu": "ae"
   },
   {
    "vn": "United Kingdom",
-   "ne": "GBR"
+   "ne": "GBR",
+   "tu": "gb-0"
   },
   {
    "vn": "United Republic of Tanzania",
-   "ne": "TZA"
+   "ne": "TZA",
+   "tu": "tz"
   },
   {
    "vn": "United States",
-   "ne": "USA"
+   "ne": "USA",
+   "tu": "us"
   },
   {
    "vn": "Uruguay",
-   "ne": "URY"
+   "ne": "URY",
+   "tu": "uy"
   },
   {
    "vn": "Uzbekistan",
-   "ne": "UZB"
+   "ne": "UZB",
+   "tu": "uz"
   },
   {
    "vn": "Vanuatu",
-   "ne": "VUT"
+   "ne": "VUT",
+   "tu": "vu"
   },
   {
    "vn": "Venezuela (Bolivarian Republic of)",
-   "ne": "VEN"
+   "ne": "VEN",
+   "tu": "ve"
   },
   {
    "vn": "Viet Nam",
-   "ne": "VNM"
+   "ne": "VNM",
+   "tu": "vn"
   },
   {
    "vn": "Yemen",
-   "ne": "YEM"
+   "ne": "YEM",
+   "tu": "ye"
   },
   {
    "vn": "Zambia",
-   "ne": "ZMB"
+   "ne": "ZMB",
+   "tu": "zm"
   },
   {
    "vn": "Zimbabwe",
-   "ne": "ZWE"
+   "ne": "ZWE",
+   "tu": "zw"
   },
   {
    "vn": "Holy See (waarnemer)",
    "ne": "VAT",
-   "conventie": "plan T2b §0.2: de 193 lidstaten plus Vaticaanstad"
+   "conventie": "plan T2b §0.2: de 193 lidstaten plus Vaticaanstad",
+   "tu": "va"
   }
  ]
 }

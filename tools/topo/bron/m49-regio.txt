@@ -1,0 +1,247 @@
+iso3|regio|groep|middengroep_of_-
+ABW|Americas|Caribbean|Latin America and the Caribbean
+AFG|Asia|Southern Asia|-
+AGO|Africa|Middle Africa|Sub-Saharan Africa
+AIA|Americas|Caribbean|Latin America and the Caribbean
+ALA|Europe|Northern Europe|-
+ALB|Europe|Southern Europe|-
+AND|Europe|Southern Europe|-
+ARE|Asia|Western Asia|-
+ARG|Americas|South America|Latin America and the Caribbean
+ARM|Asia|Western Asia|-
+ASM|Oceania|Polynesia|-
+ATF|Africa|Eastern Africa|Sub-Saharan Africa
+ATG|Americas|Caribbean|Latin America and the Caribbean
+AUS|Oceania|Australia and New Zealand|-
+AUT|Europe|Western Europe|-
+AZE|Asia|Western Asia|-
+BDI|Africa|Eastern Africa|Sub-Saharan Africa
+BEL|Europe|Western Europe|-
+BEN|Africa|Western Africa|Sub-Saharan Africa
+BES|Americas|Caribbean|Latin America and the Caribbean
+BFA|Africa|Western Africa|Sub-Saharan Africa
+BGD|Asia|Southern Asia|-
+BGR|Europe|Eastern Europe|-
+BHR|Asia|Western Asia|-
+BHS|Americas|Caribbean|Latin America and the Caribbean
+BIH|Europe|Southern Europe|-
+BLM|Americas|Caribbean|Latin America and the Caribbean
+BLR|Europe|Eastern Europe|-
+BLZ|Americas|Central America|Latin America and the Caribbean
+BMU|Americas|Northern America|-
+BOL|Americas|South America|Latin America and the Caribbean
+BRA|Americas|South America|Latin America and the Caribbean
+BRB|Americas|Caribbean|Latin America and the Caribbean
+BRN|Asia|South-eastern Asia|-
+BTN|Asia|Southern Asia|-
+BVT|Americas|South America|Latin America and the Caribbean
+BWA|Africa|Southern Africa|Sub-Saharan Africa
+CAF|Africa|Middle Africa|Sub-Saharan Africa
+CAN|Americas|Northern America|-
+CCK|Oceania|Australia and New Zealand|-
+CHE|Europe|Western Europe|-
+CHL|Americas|South America|Latin America and the Caribbean
+CHN|Asia|Eastern Asia|-
+CIV|Africa|Western Africa|Sub-Saharan Africa
+CMR|Africa|Middle Africa|Sub-Saharan Africa
+COD|Africa|Middle Africa|Sub-Saharan Africa
+COG|Africa|Middle Africa|Sub-Saharan Africa
+COL|Americas|South America|Latin America and the Caribbean
+COM|Africa|Eastern Africa|Sub-Saharan Africa
+CPV|Africa|Western Africa|Sub-Saharan Africa
+CRI|Americas|Central America|Latin America and the Caribbean
+CUB|Americas|Caribbean|Latin America and the Caribbean
+CUW|Americas|Caribbean|Latin America and the Caribbean
+CXR|Oceania|Australia and New Zealand|-
+CYM|Americas|Caribbean|Latin America and the Caribbean
+CYP|Asia|Western Asia|-
+CZE|Europe|Eastern Europe|-
+DEU|Europe|Western Europe|-
+DJI|Africa|Eastern Africa|Sub-Saharan Africa
+DMA|Americas|Caribbean|Latin America and the Caribbean
+DNK|Europe|Northern Europe|-
+DOM|Americas|Caribbean|Latin America and the Caribbean
+DZA|Africa|Northern Africa|-
+ECU|Americas|South America|Latin America and the Caribbean
+EGY|Africa|Northern Africa|-
+ERI|Africa|Eastern Africa|Sub-Saharan Africa
+ESH|Africa|Northern Africa|-
+ESP|Europe|Southern Europe|-
+EST|Europe|Northern Europe|-
+ETH|Africa|Eastern Africa|Sub-Saharan Africa
+FIN|Europe|Northern Europe|-
+FJI|Oceania|Melanesia|-
+FLK|Americas|South America|Latin America and the Caribbean
+FRA|Europe|Western Europe|-
+FRO|Europe|Northern Europe|-
+FSM|Oceania|Micronesia|-
+GAB|Africa|Middle Africa|Sub-Saharan Africa
+GBR|Europe|Northern Europe|-
+GEO|Asia|Western Asia|-
+GGY|Europe|Northern Europe|-
+GHA|Africa|Western Africa|Sub-Saharan Africa
+GIB|Europe|Southern Europe|-
+GIN|Africa|Western Africa|Sub-Saharan Africa
+GLP|Americas|Caribbean|Latin America and the Caribbean
+GMB|Africa|Western Africa|Sub-Saharan Africa
+GNB|Africa|Western Africa|Sub-Saharan Africa
+GNQ|Africa|Middle Africa|Sub-Saharan Africa
+GRC|Europe|Southern Europe|-
+GRD|Americas|Caribbean|Latin America and the Caribbean
+GRL|Americas|Northern America|-
+GTM|Americas|Central America|Latin America and the Caribbean
+GUF|Americas|South America|Latin America and the Caribbean
+GUM|Oceania|Micronesia|-
+GUY|Americas|South America|Latin America and the Caribbean
+HKG|Asia|Eastern Asia|-
+HMD|Oceania|Australia and New Zealand|-
+HND|Americas|Central America|Latin America and the Caribbean
+HRV|Europe|Southern Europe|-
+HTI|Americas|Caribbean|Latin America and the Caribbean
+HUN|Europe|Eastern Europe|-
+IDN|Asia|South-eastern Asia|-
+IMN|Europe|Northern Europe|-
+IND|Asia|Southern Asia|-
+IOT|Africa|Eastern Africa|Sub-Saharan Africa
+IRL|Europe|Northern Europe|-
+IRN|Asia|Southern Asia|-
+IRQ|Asia|Western Asia|-
+ISL|Europe|Northern Europe|-
+ISR|Asia|Western Asia|-
+ITA|Europe|Southern Europe|-
+JAM|Americas|Caribbean|Latin America and the Caribbean
+JEY|Europe|Northern Europe|-
+JOR|Asia|Western Asia|-
+JPN|Asia|Eastern Asia|-
+KAZ|Asia|Central Asia|-
+KEN|Africa|Eastern Africa|Sub-Saharan Africa
+KGZ|Asia|Central Asia|-
+KHM|Asia|South-eastern Asia|-
+KIR|Oceania|Micronesia|-
+KNA|Americas|Caribbean|Latin America and the Caribbean
+KOR|Asia|Eastern Asia|-
+KWT|Asia|Western Asia|-
+LAO|Asia|South-eastern Asia|-
+LBN|Asia|Western Asia|-
+LBR|Africa|Western Africa|Sub-Saharan Africa
+LBY|Africa|Northern Africa|-
+LCA|Americas|Caribbean|Latin America and the Caribbean
+LIE|Europe|Western Europe|-
+LKA|Asia|Southern Asia|-
+LSO|Africa|Southern Africa|Sub-Saharan Africa
+LTU|Europe|Northern Europe|-
+LUX|Europe|Western Europe|-
+LVA|Europe|Northern Europe|-
+MAC|Asia|Eastern Asia|-
+MAF|Americas|Caribbean|Latin America and the Caribbean
+MAR|Africa|Northern Africa|-
+MCO|Europe|Western Europe|-
+MDA|Europe|Eastern Europe|-
+MDG|Africa|Eastern Africa|Sub-Saharan Africa
+MDV|Asia|Southern Asia|-
+MEX|Americas|Central America|Latin America and the Caribbean
+MHL|Oceania|Micronesia|-
+MKD|Europe|Southern Europe|-
+MLI|Africa|Western Africa|Sub-Saharan Africa
+MLT|Europe|Southern Europe|-
+MMR|Asia|South-eastern Asia|-
+MNE|Europe|Southern Europe|-
+MNG|Asia|Eastern Asia|-
+MNP|Oceania|Micronesia|-
+MOZ|Africa|Eastern Africa|Sub-Saharan Africa
+MRT|Africa|Western Africa|Sub-Saharan Africa
+MSR|Americas|Caribbean|Latin America and the Caribbean
+MTQ|Americas|Caribbean|Latin America and the Caribbean
+MUS|Africa|Eastern Africa|Sub-Saharan Africa
+MWI|Africa|Eastern Africa|Sub-Saharan Africa
+MYS|Asia|South-eastern Asia|-
+MYT|Africa|Eastern Africa|Sub-Saharan Africa
+NAM|Africa|Southern Africa|Sub-Saharan Africa
+NCL|Oceania|Melanesia|-
+NER|Africa|Western Africa|Sub-Saharan Africa
+NFK|Oceania|Australia and New Zealand|-
+NGA|Africa|Western Africa|Sub-Saharan Africa
+NIC|Americas|Central America|Latin America and the Caribbean
+NIU|Oceania|Polynesia|-
+NLD|Europe|Western Europe|-
+NOR|Europe|Northern Europe|-
+NPL|Asia|Southern Asia|-
+NRU|Oceania|Micronesia|-
+NZL|Oceania|Australia and New Zealand|-
+OMN|Asia|Western Asia|-
+PAK|Asia|Southern Asia|-
+PAN|Americas|Central America|Latin America and the Caribbean
+PCN|Oceania|Polynesia|-
+PER|Americas|South America|Latin America and the Caribbean
+PHL|Asia|South-eastern Asia|-
+PLW|Oceania|Micronesia|-
+PNG|Oceania|Melanesia|-
+POL|Europe|Eastern Europe|-
+PRI|Americas|Caribbean|Latin America and the Caribbean
+PRK|Asia|Eastern Asia|-
+PRT|Europe|Southern Europe|-
+PRY|Americas|South America|Latin America and the Caribbean
+PSE|Asia|Western Asia|-
+PYF|Oceania|Polynesia|-
+QAT|Asia|Western Asia|-
+REU|Africa|Eastern Africa|Sub-Saharan Africa
+ROU|Europe|Eastern Europe|-
+RUS|Europe|Eastern Europe|-
+RWA|Africa|Eastern Africa|Sub-Saharan Africa
+SAU|Asia|Western Asia|-
+SDN|Africa|Northern Africa|-
+SEN|Africa|Western Africa|Sub-Saharan Africa
+SGP|Asia|South-eastern Asia|-
+SGS|Americas|South America|Latin America and the Caribbean
+SHN|Africa|Western Africa|Sub-Saharan Africa
+SJM|Europe|Northern Europe|-
+SLB|Oceania|Melanesia|-
+SLE|Africa|Western Africa|Sub-Saharan Africa
+SLV|Americas|Central America|Latin America and the Caribbean
+SMR|Europe|Southern Europe|-
+SOM|Africa|Eastern Africa|Sub-Saharan Africa
+SPM|Americas|Northern America|-
+SRB|Europe|Southern Europe|-
+SSD|Africa|Eastern Africa|Sub-Saharan Africa
+STP|Africa|Middle Africa|Sub-Saharan Africa
+SUR|Americas|South America|Latin America and the Caribbean
+SVK|Europe|Eastern Europe|-
+SVN|Europe|Southern Europe|-
+SWE|Europe|Northern Europe|-
+SWZ|Africa|Southern Africa|Sub-Saharan Africa
+SXM|Americas|Caribbean|Latin America and the Caribbean
+SYC|Africa|Eastern Africa|Sub-Saharan Africa
+SYR|Asia|Western Asia|-
+TCA|Americas|Caribbean|Latin America and the Caribbean
+TCD|Africa|Middle Africa|Sub-Saharan Africa
+TGO|Africa|Western Africa|Sub-Saharan Africa
+THA|Asia|South-eastern Asia|-
+TJK|Asia|Central Asia|-
+TKL|Oceania|Polynesia|-
+TKM|Asia|Central Asia|-
+TLS|Asia|South-eastern Asia|-
+TON|Oceania|Polynesia|-
+TTO|Americas|Caribbean|Latin America and the Caribbean
+TUN|Africa|Northern Africa|-
+TUR|Asia|Western Asia|-
+TUV|Oceania|Polynesia|-
+TZA|Africa|Eastern Africa|Sub-Saharan Africa
+UGA|Africa|Eastern Africa|Sub-Saharan Africa
+UKR|Europe|Eastern Europe|-
+UMI|Oceania|Micronesia|-
+URY|Americas|South America|Latin America and the Caribbean
+USA|Americas|Northern America|-
+UZB|Asia|Central Asia|-
+VAT|Europe|Southern Europe|-
+VCT|Americas|Caribbean|Latin America and the Caribbean
+VEN|Americas|South America|Latin America and the Caribbean
+VGB|Americas|Caribbean|Latin America and the Caribbean
+VIR|Americas|Caribbean|Latin America and the Caribbean
+VNM|Asia|South-eastern Asia|-
+VUT|Oceania|Melanesia|-
+WLF|Oceania|Polynesia|-
+WSM|Oceania|Polynesia|-
+YEM|Asia|Western Asia|-
+ZAF|Africa|Southern Africa|Sub-Saharan Africa
+ZMB|Africa|Eastern Africa|Sub-Saharan Africa
+ZWE|Africa|Eastern Africa|Sub-Saharan Africa

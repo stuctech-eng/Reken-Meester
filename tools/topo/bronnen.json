@@ -22,5 +22,25 @@
     "gedownload": "2026-11-17",
     "sha256Pakket": "329eb6ef4099ffb590219c9beb634bf489a5e4b10d8ab0ac52a58ebf7b9f8495",
     "countriesJson": "359431fb9475666dfad1ea5e72e53521cef40520f65eecd08e02ba569eb8491b"
+  },
+  "lijsten": {
+    "taalunie-landen.tsv": {
+      "bron": "TU",
+      "titel": "Taalunie, Buitenlandse aardrijkskundige namen: landpagina per land",
+      "basisUrl": "https://namen.taalunie.org/land/",
+      "geraadpleegd": "2026-11-17",
+      "methode": "leesfunctie per landpagina (samenvatting); velden letterlijk overgenomen; zie de rapportage voor nagekeken twijfelgevallen",
+      "peildatum": "niet op de pagina vermeld; laatste zichtbare wijziging op /wijzigingen: 12 juli 2022 (pagina afgekapt)",
+      "sha256": "7436a06f177ec878f236952aa9d128be9f87e6d636458e4424dc359d7e55cd3e"
+    },
+    "m49-regio.txt": {
+      "bron": "M49",
+      "titel": "UNSD, Standard country or area codes for statistical use (M49), Geographic Regions",
+      "url": "https://unstats.un.org/unsd/methodology/m49",
+      "geraadpleegd": "2026-11-17",
+      "methode": "leesfunctie (twee uittreksels: Afrika en Amerika; Azie, Europa en Oceanie)",
+      "peildatum": "geen versiedatum op de pagina",
+      "sha256": "e5ea02c51e5fd34834bc0e46574788d35a80d0a179d8895bdc47811fa5789da5"
+    }
   }
 }

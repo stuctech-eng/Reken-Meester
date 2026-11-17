@@ -1,0 +1,159 @@
+// Tests voor de 194 landen (plan T2b §1.3 A en §3.5). Alleen bouwomgeving, niet in de app.
+// NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
+//
+// Gebruik: node test-landen.mjs <countries.json van world-countries 5.1.0> [landen.js]
+// Zonder tweede argument: test src/core/topo/items/landen.js en controleert dat het script het byte-gelijk opnieuw maakt.
+// Met een tweede argument (mutanten): alleen de inhoudelijke controles. De controles lezen de bronbestanden zelf opnieuw in.
+
+import fs from "fs";
+import os from "os";
+import path from "path";
+import crypto from "crypto";
+import { execFileSync } from "child_process";
+import { fileURLToPath, pathToFileURL } from "url";
+
+var HIER = path.dirname(fileURLToPath(import.meta.url));
+var ROOT = path.resolve(HIER, "..", "..");
+var WCF = process.argv[2];
+var STANDAARD = path.join(ROOT, "src", "core", "topo", "items", "landen.js");
+var DOEL = process.argv[3] ? path.resolve(process.argv[3]) : STANDAARD;
+var MUTANT = !!process.argv[3];
+var STATUSSEN = ["onderzocht", "bevestigd verschil", "nog onbeslist", "gecorrigeerd"];
+var fouten = [], geslaagd = 0;
+function eis(ok, tekst) { if (ok) geslaagd++; else fouten.push(tekst); }
+function sha(b) { return crypto.createHash("sha256").update(b).digest("hex"); }
+
+var R = await import(pathToFileURL(DOEL).href + "?" + Date.now());
+var bronnen = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
+var VN = JSON.parse(fs.readFileSync(path.join(HIER, "vn-lidstaten.json"), "utf8"));
+var WC = JSON.parse(fs.readFileSync(WCF, "utf8")), wcPer = {};
+WC.forEach(function(w) { wcPer[w.cca3] = w; });
+
+// ---- bronbestanden, eigen inlezing ----
+["taalunie-landen.tsv", "m49-regio.txt"].forEach(function(n) {
+  var b = bronnen.lijsten[n];
+  eis(b && sha(fs.readFileSync(path.join(HIER, "bron", n))) === b.sha256, "SHA-256 van bron/" + n);
+  eis(b && b.geraadpleegd && (b.url || b.basisUrl) && b.bron, "bronvermelding van bron/" + n);
+});
+var tuRegels = fs.readFileSync(path.join(HIER, "bron", "taalunie-landen.tsv"), "utf8").trim().split("\n");
+eis(tuRegels[0].split("\t").length === 10, "kop van taalunie-landen.tsv");
+var TU = {};
+tuRegels.slice(1).forEach(function(r) { var k = r.split("\t"); eis(k.length === 10, "tien kolommen: " + k[0]); TU[k[0]] = k; });
+var M49 = {};
+fs.readFileSync(path.join(HIER, "bron", "m49-regio.txt"), "utf8").trim().split("\n").slice(1).forEach(function(r) { var k = r.split("|"); M49[k[0]] = k; });
+function namen(v) { return v === "-" ? [] : v.split(" ; "); }
+
+// ---- telling en ids ----
+eis(R.LANDEN.length === 194, "194 landen");
+var perId = {};
+R.LANDEN.forEach(function(r) { eis(!perId[r.id], "id een keer: " + r.id); perId[r.id] = r; });
+VN.landen.forEach(function(l) { eis(!!perId[l.wc || l.ne], "land uit de VN-lijst aanwezig: " + (l.wc || l.ne)); });
+var DEEL = { Africa: "Afrika", Americas: "Amerika", Asia: "Azië", Europe: "Europa", Oceania: "Oceanië" };
+var telling = {};
+R.LANDEN.forEach(function(r) { telling[r.werelddeel.waarde] = (telling[r.werelddeel.waarde] || 0) + 1; });
+eis(telling["Europa"] === 44 && telling["Azië"] === 47 && telling["Afrika"] === 54 && telling["Amerika"] === 35 && telling["Oceanië"] === 14, "verdeling 44 + 47 + 54 + 35 + 14 (§0.2)");
+eis(JSON.stringify(R.TELLING) === JSON.stringify(telling), "TELLING klopt met de records");
+var zes = R.LANDEN.filter(function(r) { return r.modusEuropa; }).map(function(r) { return r.id; }).sort();
+eis(JSON.stringify(zes) === JSON.stringify(["ARM", "AZE", "CYP", "GEO", "KAZ", "TUR"]), "precies de zes aanvullende landen in de modus Europa");
+eis(zes.every(function(c) { return perId[c].werelddeel.waarde === "Azië"; }), "de zes staan bij Azië (M49)");
+eis(perId.RUS.werelddeel.waarde === "Europa" && !perId.RUS.modusEuropa, "Rusland bij de 44 van Europa");
+
+// ---- per land: waarde uit de primaire bron, met bron per feit ----
+var BIJZONDER = ["BDI", "BEN", "BOL", "CIV", "IDN", "ISR", "LKA", "MYS", "NLD", "NRU", "SWZ", "ZAF"];
+VN.landen.forEach(function(l) {
+  var id = l.wc || l.ne, r = perId[id], t = TU[l.tu], m = M49[id];
+  if (!r || !t || !m) { eis(false, "records voor " + id); return; }
+  var url = bronnen.lijsten["taalunie-landen.tsv"].basisUrl + l.tu;
+  [r.naam.bron, r.hoofdstad.bron, r.iso.alpha2.bron, r.iso.numeriek.bron].forEach(function(b, i) { eis(b.id === "TU" && b.url === url && !!b.geraadpleegd, "bron TU (" + i + "): " + id); });
+  eis(r.iso.alpha3.bron.id === "M49" && !!r.iso.alpha3.bron.url, "bron M49 bij alpha-3: " + id);
+  eis(r.werelddeel.bron.id === "M49" && !!r.werelddeel.bron.url && !!r.werelddeel.bron.geraadpleegd, "bron M49: " + id);
+  eis(r.vn.bron.id === "UN" && r.vn.waarde === l.vn, "bron UN: " + id);
+  // de namen zijn die van de TU; een extra naam mag alleen de TU-naam ter onderscheiding zijn, letterlijk uit de opmerking
+  var recNamen = [r.naam.waarde].concat(r.naam.varianten.map(function(v) { return v.naam; }));
+  eis(namen(t[1]).every(function(n) { return recNamen.indexOf(n) >= 0; }), "alle TU-namen aanwezig: " + id);
+  recNamen.filter(function(n) { return namen(t[1]).indexOf(n) < 0; }).forEach(function(n) { eis(t[2].indexOf("‘" + n + "’") >= 0, "extra naam staat letterlijk in de TU-opmerking: " + id + " " + n); });
+  if (t[8] !== "-" && t[7] !== "-") eis(t[7].toLowerCase() === l.tu.replace("-0", ""), "TU-slug hoort bij de ISO alpha-2 van de pagina: " + id);
+  eis(r.iso.alpha3.waarde === id && !!m, "alpha-3 uit M49 (de code in het M49-uittreksel): " + id);
+  eis(r.iso.alpha3.controle.waarde === (t[8] === "-" ? null : t[8]) && r.iso.alpha3.controle.uitkomst === (t[8] === id ? "gelijk" : "afwijkend, zie open lijst"), "TU-alpha-3 als controle: " + id);
+  eis(r.iso.alpha2.waarde === (t[7] === "-" ? null : t[7]) && r.iso.numeriek.waarde === (t[9] === "-" ? null : Number(t[9])), "alpha-2 en numeriek uit de TU: " + id);
+  eis(r.werelddeel.waarde === DEEL[m[1]] && r.werelddeel.groep === m[2], "werelddeel en groep uit M49: " + id);
+  if (BIJZONDER.indexOf(id) >= 0) eis(r.hoofdstad.bijzonder === true && r.hoofdstad.waarde === null, "bijzonder geval zonder automatische hoofdstad: " + id);
+  else eis(r.hoofdstad.bijzonder === false && r.hoofdstad.waarde === namen(t[4])[0], "hoofdstad uit de TU: " + id);
+});
+eis(R.LANDEN.filter(function(r) { return r.hoofdstad.bijzonder; }).length === 12, "precies 12 bijzondere gevallen");
+eis(R.LANDEN.filter(function(r) { return !r.hoofdstad.bijzonder; }).length === 182, "182 gewone hoofdsteden");
+var teVer = R.LANDEN.filter(function(r) { return r.hoofdstad.teVerifieren; }).map(function(r) { return r.id; });
+eis(JSON.stringify(teVer) === JSON.stringify(["GNQ"]) && !perId.GNQ.hoofdstad.bijzonder && perId.GNQ.hoofdstad.waarde === "Ciudad de la Paz", "alleen Equatoriaal-Guinea: gewone TU-hoofdstad met de markering teVerifieren (12 + 182 blijft)");
+// de besluiten van 17-11-2026
+eis(perId.BLR.naam.waarde === "Wit-Rusland" && perId.GBR.naam.waarde === "Verenigd Koninkrijk" && perId.SAU.naam.waarde === "Saoedi-Arabië", "besluiten Wit-Rusland, Verenigd Koninkrijk, Saoedi-Arabië");
+eis(perId.COG.naam.waarde === "Congo-Brazzaville" && perId.COD.naam.waarde === "Congo-Kinshasa" && perId.COG.naam.varianten.some(function(v) { return v.naam === "Congo"; }) && perId.COD.naam.varianten.some(function(v) { return v.naam === "Congo"; }), "besluit Congo-Brazzaville en Congo-Kinshasa, Congo als variant");
+["BLR", "GBR", "SAU", "COG", "COD"].forEach(function(c) { eis(!!perId[c].naam.besluit, "besluit vastgelegd bij " + c); });
+
+// ---- een variant met een gebied heeft die aantekening op de TU-pagina ----
+R.LANDEN.forEach(function(r) {
+  r.naam.varianten.forEach(function(v) {
+    if (v.gebied) eis((r.naam.opmerking || "").indexOf("vrijwel alleen in " + v.gebied + " gebruikelijk") >= 0, "gebied van de variant staat bij de TU: " + r.id + " " + v.naam);
+  });
+});
+// en omgekeerd: staat er zo'n aantekening bij de naam, dan heeft een variant dat gebied (de voorkeursnaam heeft er nooit een)
+R.LANDEN.forEach(function(r) {
+  ["Vlaanderen", "Nederland"].forEach(function(g) {
+    if ((r.naam.opmerking || "").indexOf("vrijwel alleen in " + g + " gebruikelijk") >= 0) eis(r.naam.varianten.some(function(v) { return v.gebied === g; }), "aantekening " + g + " verwerkt als gebied van een variant: " + r.id);
+  });
+});
+// ---- namen: geen dubbele voorkeursnamen buiten de open lijst; een variant is nooit de naam van een ander land ----
+var perNaam = {};
+R.LANDEN.forEach(function(r) { (perNaam[r.naam.waarde] = perNaam[r.naam.waarde] || []).push(r.id); });
+var afwIds = {};
+R.AFWIJKINGEN_LANDEN.forEach(function(a) { afwIds[a.id] = a; });
+Object.keys(perNaam).forEach(function(n) { if (perNaam[n].length > 1) eis(!!afwIds["naam-dubbel-" + perNaam[n].join("-")], "dubbele voorkeursnaam staat op de open lijst: " + n); });
+R.LANDEN.forEach(function(r) { r.naam.varianten.forEach(function(v) { eis(!perNaam[v.naam] || perNaam[v.naam].indexOf(r.id) >= 0, "variant is geen naam van een ander land: " + v.naam); }); });
+// ---- ISO: uniek ----
+var a2 = {}, a3 = {};
+R.LANDEN.forEach(function(r) { var x2 = r.iso.alpha2.waarde, x3 = r.iso.alpha3.waarde; if (x2) { eis(!a2[x2], "alpha-2 uniek: " + x2); a2[x2] = 1; } eis(!a3[x3], "alpha-3 uniek: " + x3); a3[x3] = 1; });
+
+// ---- vergelijking met WC (eigen code): elke afwijking staat in AFWIJKINGEN_LANDEN ----
+function norm(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z]/g, ""); }
+var verwacht = {};
+R.LANDEN.forEach(function(r) {
+  var w = wcPer[r.id];
+  eis(!!w, "WC kent " + r.id);
+  if (!w) return;
+  if (r.iso.alpha3.controle.waarde !== r.id) verwacht["iso-" + r.id] = 1;
+  if (w.translations.nld.common !== r.naam.waarde) verwacht["naam-wc-" + r.id] = 1;
+  if (!r.hoofdstad.bijzonder && !(w.capital || []).some(function(c) { return [r.hoofdstad.waarde].concat(r.hoofdstad.varianten).map(norm).indexOf(norm(c)) >= 0; })) verwacht["hoofdstad-wc-" + r.id] = 1;
+  if (DEEL[w.region] !== r.werelddeel.waarde) verwacht["werelddeel-wc-" + r.id] = 1;
+  if (r.hoofdstad.bijzonder) verwacht["bijzonder-" + r.id] = 1;
+  if (r.naam.besluit && ["COG", "COD"].indexOf(r.id) < 0) verwacht["naam-voorkeur-" + r.id] = 1;
+});
+Object.keys(verwacht).forEach(function(id) { eis(!!afwIds[id], "afwijking ontbreekt: " + id); });
+eis(!!afwIds["werelddeel-wc-CYP"], "Cyprus: verschil M49 en WC gemeld");
+eis(!!afwIds["naam-dubbel-COG-COD"], "dubbele TU-naam Congo gemeld");
+
+// ---- de open lijst ----
+var open = {};
+fs.readFileSync(path.join(ROOT, "src", "core", "topo", "open-vragen.md"), "utf8").split("\n").forEach(function(r) {
+  var m = /^- ([a-zA-Z0-9-]+) \| ([a-z ]+) \| (.+)$/.exec(r);
+  if (m) open[m[1]] = { status: m[2], uitleg: m[3] };
+});
+R.AFWIJKINGEN_LANDEN.forEach(function(a) {
+  var o = open[a.id];
+  eis(!!o && STATUSSEN.indexOf(o.status) >= 0 && o.uitleg.length > 10, "op de open lijst met status: " + a.id);
+});
+
+// ---- reproduceerbaar en app onaangeroerd ----
+if (!MUTANT) {
+  var tmp = fs.mkdtempSync(path.join(os.tmpdir(), "landen-"));
+  [1, 2].forEach(function(n) {
+    execFileSync("node", [path.join(HIER, "maak-landen.mjs"), WCF, path.join(tmp, "r" + n)]);
+    eis(fs.readFileSync(path.join(tmp, "r" + n, "landen.js")).equals(fs.readFileSync(STANDAARD)), "script geeft byte-gelijk landen.js (run " + n + ")");
+  });
+  var git = function(a) { return execFileSync("git", a, { cwd: ROOT }).toString(); };
+  git(["diff", "--name-only", "main"]).split("\n").concat(git(["ls-files", "--others", "--exclude-standard"]).split("\n")).filter(Boolean).forEach(function(f) {
+    eis(/^(tools\/topo\/|src\/core\/topo\/|public\/kaartproef\/)/.test(f), "buiten de toegestane mappen gewijzigd: " + f);
+  });
+}
+
+console.log((fouten.length ? "FOUT" : "GOED") + ": " + geslaagd + " controles geslaagd, " + fouten.length + " mislukt");
+fouten.slice(0, 30).forEach(function(f) { console.log("  - " + f); });
+process.exit(fouten.length ? 1 : 0);
