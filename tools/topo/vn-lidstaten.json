@@ -1,0 +1,792 @@
+{
+ "bron": {
+  "id": "UN",
+  "titel": "Current Member States (UN Research Guides)",
+  "url": "https://research.un.org/en/unmembers/currentmembers",
+  "geraadpleegd": "2026-11-17",
+  "paginaGewijzigd": "2026-10-30",
+  "methode": "leesfunctie (samenvatting van de pagina); 193 namen in paginavolgorde",
+  "opmerking": "de pagina schrijft Naoero voor Nauru"
+ },
+ "koppeling": "ne = ADM0_A3 in Natural Earth v5.1.2 (ne_10m_admin_0_map_units); een land is het geheel van de kaarteenheden met deze ADM0_A3",
+ "landen": [
+  {
+   "vn": "Afghanistan",
+   "ne": "AFG"
+  },
+  {
+   "vn": "Albania",
+   "ne": "ALB"
+  },
+  {
+   "vn": "Algeria",
+   "ne": "DZA"
+  },
+  {
+   "vn": "Andorra",
+   "ne": "AND"
+  },
+  {
+   "vn": "Angola",
+   "ne": "AGO"
+  },
+  {
+   "vn": "Antigua and Barbuda",
+   "ne": "ATG"
+  },
+  {
+   "vn": "Argentina",
+   "ne": "ARG"
+  },
+  {
+   "vn": "Armenia",
+   "ne": "ARM"
+  },
+  {
+   "vn": "Australia",
+   "ne": "AUS"
+  },
+  {
+   "vn": "Austria",
+   "ne": "AUT"
+  },
+  {
+   "vn": "Azerbaijan",
+   "ne": "AZE"
+  },
+  {
+   "vn": "The Bahamas",
+   "ne": "BHS"
+  },
+  {
+   "vn": "Bahrain",
+   "ne": "BHR"
+  },
+  {
+   "vn": "Bangladesh",
+   "ne": "BGD"
+  },
+  {
+   "vn": "Barbados",
+   "ne": "BRB"
+  },
+  {
+   "vn": "Belarus",
+   "ne": "BLR"
+  },
+  {
+   "vn": "Belgium",
+   "ne": "BEL"
+  },
+  {
+   "vn": "Belize",
+   "ne": "BLZ"
+  },
+  {
+   "vn": "Benin",
+   "ne": "BEN"
+  },
+  {
+   "vn": "Bhutan",
+   "ne": "BTN"
+  },
+  {
+   "vn": "Bolivia (Plurinational State of)",
+   "ne": "BOL"
+  },
+  {
+   "vn": "Bosnia and Herzegovina",
+   "ne": "BIH"
+  },
+  {
+   "vn": "Botswana",
+   "ne": "BWA"
+  },
+  {
+   "vn": "Brazil",
+   "ne": "BRA"
+  },
+  {
+   "vn": "Brunei Darussalam",
+   "ne": "BRN"
+  },
+  {
+   "vn": "Bulgaria",
+   "ne": "BGR"
+  },
+  {
+   "vn": "Burkina Faso",
+   "ne": "BFA"
+  },
+  {
+   "vn": "Burundi",
+   "ne": "BDI"
+  },
+  {
+   "vn": "Cabo Verde",
+   "ne": "CPV"
+  },
+  {
+   "vn": "Cambodia",
+   "ne": "KHM"
+  },
+  {
+   "vn": "Cameroon",
+   "ne": "CMR"
+  },
+  {
+   "vn": "Canada",
+   "ne": "CAN"
+  },
+  {
+   "vn": "Central African Republic",
+   "ne": "CAF"
+  },
+  {
+   "vn": "Chad",
+   "ne": "TCD"
+  },
+  {
+   "vn": "Chile",
+   "ne": "CHL"
+  },
+  {
+   "vn": "China",
+   "ne": "CHN"
+  },
+  {
+   "vn": "Colombia",
+   "ne": "COL"
+  },
+  {
+   "vn": "Comoros",
+   "ne": "COM"
+  },
+  {
+   "vn": "Congo",
+   "ne": "COG"
+  },
+  {
+   "vn": "Costa Rica",
+   "ne": "CRI"
+  },
+  {
+   "vn": "Côte d'Ivoire",
+   "ne": "CIV"
+  },
+  {
+   "vn": "Croatia",
+   "ne": "HRV"
+  },
+  {
+   "vn": "Cuba",
+   "ne": "CUB"
+  },
+  {
+   "vn": "Cyprus",
+   "ne": "CYP"
+  },
+  {
+   "vn": "Czechia",
+   "ne": "CZE"
+  },
+  {
+   "vn": "Democratic People's Republic of Korea",
+   "ne": "PRK"
+  },
+  {
+   "vn": "Democratic Republic of the Congo",
+   "ne": "COD"
+  },
+  {
+   "vn": "Denmark",
+   "ne": "DNK"
+  },
+  {
+   "vn": "Djibouti",
+   "ne": "DJI"
+  },
+  {
+   "vn": "Dominica",
+   "ne": "DMA"
+  },
+  {
+   "vn": "Dominican Republic",
+   "ne": "DOM"
+  },
+  {
+   "vn": "Ecuador",
+   "ne": "ECU"
+  },
+  {
+   "vn": "Egypt",
+   "ne": "EGY"
+  },
+  {
+   "vn": "El Salvador",
+   "ne": "SLV"
+  },
+  {
+   "vn": "Equatorial Guinea",
+   "ne": "GNQ"
+  },
+  {
+   "vn": "Eritrea",
+   "ne": "ERI"
+  },
+  {
+   "vn": "Estonia",
+   "ne": "EST"
+  },
+  {
+   "vn": "Eswatini",
+   "ne": "SWZ"
+  },
+  {
+   "vn": "Ethiopia",
+   "ne": "ETH"
+  },
+  {
+   "vn": "Fiji",
+   "ne": "FJI"
+  },
+  {
+   "vn": "Finland",
+   "ne": "FIN"
+  },
+  {
+   "vn": "France",
+   "ne": "FRA"
+  },
+  {
+   "vn": "Gabon",
+   "ne": "GAB"
+  },
+  {
+   "vn": "Gambia",
+   "ne": "GMB"
+  },
+  {
+   "vn": "Georgia",
+   "ne": "GEO"
+  },
+  {
+   "vn": "Germany",
+   "ne": "DEU"
+  },
+  {
+   "vn": "Ghana",
+   "ne": "GHA"
+  },
+  {
+   "vn": "Greece",
+   "ne": "GRC"
+  },
+  {
+   "vn": "Grenada",
+   "ne": "GRD"
+  },
+  {
+   "vn": "Guatemala",
+   "ne": "GTM"
+  },
+  {
+   "vn": "Guinea",
+   "ne": "GIN"
+  },
+  {
+   "vn": "Guinea-Bissau",
+   "ne": "GNB"
+  },
+  {
+   "vn": "Guyana",
+   "ne": "GUY"
+  },
+  {
+   "vn": "Haiti",
+   "ne": "HTI"
+  },
+  {
+   "vn": "Honduras",
+   "ne": "HND"
+  },
+  {
+   "vn": "Hungary",
+   "ne": "HUN"
+  },
+  {
+   "vn": "Iceland",
+   "ne": "ISL"
+  },
+  {
+   "vn": "India",
+   "ne": "IND"
+  },
+  {
+   "vn": "Indonesia",
+   "ne": "IDN"
+  },
+  {
+   "vn": "Iran (Islamic Republic of)",
+   "ne": "IRN"
+  },
+  {
+   "vn": "Iraq",
+   "ne": "IRQ"
+  },
+  {
+   "vn": "Ireland",
+   "ne": "IRL"
+  },
+  {
+   "vn": "Israel",
+   "ne": "ISR"
+  },
+  {
+   "vn": "Italy",
+   "ne": "ITA"
+  },
+  {
+   "vn": "Jamaica",
+   "ne": "JAM"
+  },
+  {
+   "vn": "Japan",
+   "ne": "JPN"
+  },
+  {
+   "vn": "Jordan",
+   "ne": "JOR"
+  },
+  {
+   "vn": "Kazakhstan",
+   "ne": "KAZ"
+  },
+  {
+   "vn": "Kenya",
+   "ne": "KEN"
+  },
+  {
+   "vn": "Kiribati",
+   "ne": "KIR"
+  },
+  {
+   "vn": "Kuwait",
+   "ne": "KWT"
+  },
+  {
+   "vn": "Kyrgyzstan",
+   "ne": "KGZ"
+  },
+  {
+   "vn": "Lao People's Democratic Republic",
+   "ne": "LAO"
+  },
+  {
+   "vn": "Latvia",
+   "ne": "LVA"
+  },
+  {
+   "vn": "Lebanon",
+   "ne": "LBN"
+  },
+  {
+   "vn": "Lesotho",
+   "ne": "LSO"
+  },
+  {
+   "vn": "Liberia",
+   "ne": "LBR"
+  },
+  {
+   "vn": "Libya",
+   "ne": "LBY"
+  },
+  {
+   "vn": "Liechtenstein",
+   "ne": "LIE"
+  },
+  {
+   "vn": "Lithuania",
+   "ne": "LTU"
+  },
+  {
+   "vn": "Luxembourg",
+   "ne": "LUX"
+  },
+  {
+   "vn": "Madagascar",
+   "ne": "MDG"
+  },
+  {
+   "vn": "Malawi",
+   "ne": "MWI"
+  },
+  {
+   "vn": "Malaysia",
+   "ne": "MYS"
+  },
+  {
+   "vn": "Maldives",
+   "ne": "MDV"
+  },
+  {
+   "vn": "Mali",
+   "ne": "MLI"
+  },
+  {
+   "vn": "Malta",
+   "ne": "MLT"
+  },
+  {
+   "vn": "Marshall Islands",
+   "ne": "MHL"
+  },
+  {
+   "vn": "Mauritania",
+   "ne": "MRT"
+  },
+  {
+   "vn": "Mauritius",
+   "ne": "MUS"
+  },
+  {
+   "vn": "Mexico",
+   "ne": "MEX"
+  },
+  {
+   "vn": "Micronesia (Federated States of)",
+   "ne": "FSM"
+  },
+  {
+   "vn": "Monaco",
+   "ne": "MCO"
+  },
+  {
+   "vn": "Mongolia",
+   "ne": "MNG"
+  },
+  {
+   "vn": "Montenegro",
+   "ne": "MNE"
+  },
+  {
+   "vn": "Morocco",
+   "ne": "MAR"
+  },
+  {
+   "vn": "Mozambique",
+   "ne": "MOZ"
+  },
+  {
+   "vn": "Myanmar",
+   "ne": "MMR"
+  },
+  {
+   "vn": "Namibia",
+   "ne": "NAM"
+  },
+  {
+   "vn": "Naoero",
+   "ne": "NRU"
+  },
+  {
+   "vn": "Nepal",
+   "ne": "NPL"
+  },
+  {
+   "vn": "Netherlands (Kingdom of the)",
+   "ne": "NLD"
+  },
+  {
+   "vn": "New Zealand",
+   "ne": "NZL"
+  },
+  {
+   "vn": "Nicaragua",
+   "ne": "NIC"
+  },
+  {
+   "vn": "Niger",
+   "ne": "NER"
+  },
+  {
+   "vn": "Nigeria",
+   "ne": "NGA"
+  },
+  {
+   "vn": "North Macedonia",
+   "ne": "MKD"
+  },
+  {
+   "vn": "Norway",
+   "ne": "NOR"
+  },
+  {
+   "vn": "Oman",
+   "ne": "OMN"
+  },
+  {
+   "vn": "Pakistan",
+   "ne": "PAK"
+  },
+  {
+   "vn": "Palau",
+   "ne": "PLW"
+  },
+  {
+   "vn": "Panama",
+   "ne": "PAN"
+  },
+  {
+   "vn": "Papua New Guinea",
+   "ne": "PNG"
+  },
+  {
+   "vn": "Paraguay",
+   "ne": "PRY"
+  },
+  {
+   "vn": "Peru",
+   "ne": "PER"
+  },
+  {
+   "vn": "Philippines",
+   "ne": "PHL"
+  },
+  {
+   "vn": "Poland",
+   "ne": "POL"
+  },
+  {
+   "vn": "Portugal",
+   "ne": "PRT"
+  },
+  {
+   "vn": "Qatar",
+   "ne": "QAT"
+  },
+  {
+   "vn": "Republic of Korea",
+   "ne": "KOR"
+  },
+  {
+   "vn": "Republic of Moldova",
+   "ne": "MDA"
+  },
+  {
+   "vn": "Romania",
+   "ne": "ROU"
+  },
+  {
+   "vn": "Russian Federation",
+   "ne": "RUS"
+  },
+  {
+   "vn": "Rwanda",
+   "ne": "RWA"
+  },
+  {
+   "vn": "Saint Kitts and Nevis",
+   "ne": "KNA"
+  },
+  {
+   "vn": "Saint Lucia",
+   "ne": "LCA"
+  },
+  {
+   "vn": "Saint Vincent and the Grenadines",
+   "ne": "VCT"
+  },
+  {
+   "vn": "Samoa",
+   "ne": "WSM"
+  },
+  {
+   "vn": "San Marino",
+   "ne": "SMR"
+  },
+  {
+   "vn": "Sao Tome and Principe",
+   "ne": "STP"
+  },
+  {
+   "vn": "Saudi Arabia",
+   "ne": "SAU"
+  },
+  {
+   "vn": "Senegal",
+   "ne": "SEN"
+  },
+  {
+   "vn": "Serbia",
+   "ne": "SRB"
+  },
+  {
+   "vn": "Seychelles",
+   "ne": "SYC"
+  },
+  {
+   "vn": "Sierra Leone",
+   "ne": "SLE"
+  },
+  {
+   "vn": "Singapore",
+   "ne": "SGP"
+  },
+  {
+   "vn": "Slovakia",
+   "ne": "SVK"
+  },
+  {
+   "vn": "Slovenia",
+   "ne": "SVN"
+  },
+  {
+   "vn": "Solomon Islands",
+   "ne": "SLB"
+  },
+  {
+   "vn": "Somalia",
+   "ne": "SOM"
+  },
+  {
+   "vn": "South Africa",
+   "ne": "ZAF"
+  },
+  {
+   "vn": "South Sudan",
+   "ne": "SDS",
+   "wc": "SSD"
+  },
+  {
+   "vn": "Spain",
+   "ne": "ESP"
+  },
+  {
+   "vn": "Sri Lanka",
+   "ne": "LKA"
+  },
+  {
+   "vn": "Sudan",
+   "ne": "SDN"
+  },
+  {
+   "vn": "Suriname",
+   "ne": "SUR"
+  },
+  {
+   "vn": "Sweden",
+   "ne": "SWE"
+  },
+  {
+   "vn": "Switzerland",
+   "ne": "CHE"
+  },
+  {
+   "vn": "Syrian Arab Republic",
+   "ne": "SYR"
+  },
+  {
+   "vn": "Tajikistan",
+   "ne": "TJK"
+  },
+  {
+   "vn": "Thailand",
+   "ne": "THA"
+  },
+  {
+   "vn": "Timor-Leste",
+   "ne": "TLS"
+  },
+  {
+   "vn": "Togo",
+   "ne": "TGO"
+  },
+  {
+   "vn": "Tonga",
+   "ne": "TON"
+  },
+  {
+   "vn": "Trinidad and Tobago",
+   "ne": "TTO"
+  },
+  {
+   "vn": "Tunisia",
+   "ne": "TUN"
+  },
+  {
+   "vn": "Türkiye",
+   "ne": "TUR"
+  },
+  {
+   "vn": "Turkmenistan",
+   "ne": "TKM"
+  },
+  {
+   "vn": "Tuvalu",
+   "ne": "TUV"
+  },
+  {
+   "vn": "Uganda",
+   "ne": "UGA"
+  },
+  {
+   "vn": "Ukraine",
+   "ne": "UKR"
+  },
+  {
+   "vn": "United Arab Emirates",
+   "ne": "ARE"
+  },
+  {
+   "vn": "United Kingdom",
+   "ne": "GBR"
+  },
+  {
+   "vn": "United Republic of Tanzania",
+   "ne": "TZA"
+  },
+  {
+   "vn": "United States",
+   "ne": "USA"
+  },
+  {
+   "vn": "Uruguay",
+   "ne": "URY"
+  },
+  {
+   "vn": "Uzbekistan",
+   "ne": "UZB"
+  },
+  {
+   "vn": "Vanuatu",
+   "ne": "VUT"
+  },
+  {
+   "vn": "Venezuela (Bolivarian Republic of)",
+   "ne": "VEN"
+  },
+  {
+   "vn": "Viet Nam",
+   "ne": "VNM"
+  },
+  {
+   "vn": "Yemen",
+   "ne": "YEM"
+  },
+  {
+   "vn": "Zambia",
+   "ne": "ZMB"
+  },
+  {
+   "vn": "Zimbabwe",
+   "ne": "ZWE"
+  },
+  {
+   "vn": "Holy See (waarnemer)",
+   "ne": "VAT",
+   "conventie": "plan T2b §0.2: de 193 lidstaten plus Vaticaanstad"
+  }
+ ]
+}
