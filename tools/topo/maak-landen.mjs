@@ -19,6 +19,7 @@ var WC_BESTAND = process.argv[2];
 var UIT = process.argv[3];
 var bronnen = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
 var VN = JSON.parse(fs.readFileSync(path.join(HIER, "vn-lidstaten.json"), "utf8"));
+var OV = JSON.parse(fs.readFileSync(path.join(HIER, "ov-rollen.json"), "utf8"));
 
 function sha(buf) { return crypto.createHash("sha256").update(buf).digest("hex"); }
 function leesBron(naam) {
@@ -32,6 +33,20 @@ var WC = JSON.parse(wcBuf.toString("utf8"));
 
 // De 12 bijzondere gevallen (plan T1 §3.6): geen automatische hoofdstad; een aparte lijst per rol (OV), ter beoordeling.
 var BIJZONDER = ["BDI", "BEN", "BOL", "CIV", "IDN", "ISR", "LKA", "MYS", "NLD", "NRU", "SWZ", "ZAF"];
+// De rollen per bijzonder geval komen uit ov-rollen.json (besluiten GPT 17-11-2026). Een rol heeft een OV-bron met passage;
+// een open rol en een bronnotitie leveren geen vraag op.
+if (Object.keys(OV.landen).sort().join() !== BIJZONDER.slice().sort().join()) throw new Error("ov-rollen.json hoort precies de 12 bijzondere gevallen te bevatten");
+BIJZONDER.forEach(function(id) {
+  var o = OV.landen[id];
+  o.rollen.forEach(function(r) {
+    if (OV.vasteRollen.indexOf(r.rol) < 0) throw new Error("rol buiten de vaste lijst: " + id + " " + r.rol);
+    var b = r.bron || {};
+    if (b.id !== "OV" || !b.url || !b.passage || !b.geraadpleegd || !b.document) throw new Error("OV-bron onvolledig: " + id + " " + r.rol);
+  });
+  o.open.forEach(function(r) {
+    if (OV.vasteRollen.indexOf(r.rol) < 0 || OV.openStatussen.indexOf(r.status) < 0 || !r.reden) throw new Error("open rol onvolledig: " + id + " " + r.rol);
+  });
+});
 // De zes aanvullende Aziatische landen in de modus Europa (plan T2b §0.2, D7-a)
 var MODUS_EUROPA = ["ARM", "AZE", "CYP", "GEO", "KAZ", "TUR"];
 var WERELDDEEL = { Africa: "Afrika", Americas: "Amerika", Asia: "Azië", Europe: "Europa", Oceania: "Oceanië" };
@@ -110,7 +125,7 @@ var LANDEN = VN.landen.map(function(l) {
     ne: l.ne,
     naam: { waarde: n.voorkeur, varianten: n.varianten, opmerking: t.opmNaam, besluit: n.besluit, bron: tuBron(l.tu) },
     hoofdstad: bijzonder
-      ? { bijzonder: true, waarde: null, tu: { hoofdstad: t.hoofdstad, opmerking: t.opmHoofdstad }, bron: tuBron(l.tu) }
+      ? { bijzonder: true, waarde: null, rollen: OV.landen[id].rollen, open: OV.landen[id].open, notities: OV.landen[id].notities, tu: { hoofdstad: t.hoofdstad, opmerking: t.opmHoofdstad }, bron: tuBron(l.tu) }
       : { bijzonder: false, waarde: t.hoofdstad[0], varianten: t.hoofdstad.slice(1).concat(t.altHoofdstad), opmerking: t.opmHoofdstad, teVerifieren: TE_VERIFIEREN[id] || null, bron: tuBron(l.tu) },
     // alpha-3 uniform uit M49 (besluit GPT 17-11-2026); alpha-2 en numeriek uit de TU; de alpha-3 van de TU is alleen controle
     iso: {
@@ -140,6 +155,7 @@ var LANDEN = VN.landen.map(function(l) {
   }
   if (MEER_NAMEN[id] && MEER_NAMEN[id].besluit) afw("naam-voorkeur-" + id, "naam-voorkeur", "TU noemt de namen zonder voorkeur; besloten: " + MEER_NAMEN[id].besluit);
   if (bijzonder) afw("bijzonder-" + id, "bijzonder", "bijzonder geval (T1 §3.6): geen automatische hoofdstad; TU: " + t.hoofdstad.join(", ") + (t.opmHoofdstad ? " (" + t.opmHoofdstad + ")" : ""));
+  if (bijzonder) OV.landen[id].open.forEach(function(r) { afw("rol-open-" + id + "-" + norm(r.rol), "rol-open", r.label + " " + r.stad + ": " + r.status + "; " + r.reden); });
   if (t.opmNaam && t.opmNaam.indexOf("[ingekort") >= 0) afw("ingekort-naam-" + id, "ingekort", "de opmerking bij de naam is door de leesfunctie ingekort");
   if (t.opmHoofdstad && (t.opmHoofdstad.indexOf("[ingekort") >= 0 || t.opmHoofdstad.indexOf("[…]") >= 0)) afw("ingekort-hoofdstad-" + id, "ingekort", "de opmerking bij de hoofdstad is door de leesfunctie ingekort");
   return rec;
@@ -154,16 +170,21 @@ AFWIJKINGEN.sort(function(x, y) { return x.id < y.id ? -1 : x.id > y.id ? 1 : 0;
 var TELLING = {};
 LANDEN.forEach(function(r) { TELLING[r.werelddeel.waarde] = (TELLING[r.werelddeel.waarde] || 0) + 1; });
 
+var ROLLEN_MET_VRAAG = [];
+LANDEN.forEach(function(r) { if (r.hoofdstad.bijzonder) r.hoofdstad.rollen.forEach(function(x) { ROLLEN_MET_VRAAG.push({ land: r.id, rol: x.rol, label: x.label, stad: x.stad }); }); });
+
 function regel(naam, waarde) { return "export var " + naam + " = " + JSON.stringify(waarde) + ";\n"; }
 var tekst = "// GEGENEREERD door tools/topo/maak-landen.mjs uit tools/topo/bron/ (SHA-256 in tools/topo/bronnen.json); niet met de hand bewerken.\n" +
   "// Per feit een bron: TU (namen, hoofdsteden, ISO-codes), M49 (werelddeel en groep), UN (de lijst). WC is alleen controle.\n" +
   "// NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.\n" +
   regel("TELLING", TELLING) +
   regel("LANDEN", LANDEN) +
+  "// de rollen van de bijzondere gevallen met een vraag (plan T1 §3.6; bron per rol in LANDEN)\n" +
+  regel("ROLLEN_MET_VRAAG", ROLLEN_MET_VRAAG) +
   "// verschillen met de controlebron en andere punten voor de open lijst (src/core/topo/open-vragen.md)\n" +
   regel("AFWIJKINGEN_LANDEN", AFWIJKINGEN);
 fs.mkdirSync(UIT, { recursive: true });
 fs.writeFileSync(path.join(UIT, "landen.js"), tekst);
 var soorten = {};
 AFWIJKINGEN.forEach(function(a) { soorten[a.soort] = (soorten[a.soort] || 0) + 1; });
-console.log(JSON.stringify({ landen: LANDEN.length, telling: TELLING, afwijkingen: AFWIJKINGEN.length, soorten: soorten }));
+console.log(JSON.stringify({ landen: LANDEN.length, telling: TELLING, rollenMetVraag: ROLLEN_MET_VRAAG.length, afwijkingen: AFWIJKINGEN.length, soorten: soorten }));

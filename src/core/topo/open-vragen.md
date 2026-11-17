@@ -70,20 +70,33 @@ Bronnen: TU (namen, hoofdsteden, ISO-codes), M49 (werelddeel en groep), UN (de l
 - naam-wc-BLR | gecorrigeerd | na het besluit bij naam-voorkeur-BLR is de voorkeursnaam gelijk aan WC (Wit-Rusland); geen verschil meer
 - naam-wc-GBR | gecorrigeerd | na het besluit bij naam-voorkeur-GBR is de voorkeursnaam gelijk aan WC (Verenigd Koninkrijk); geen verschil meer
 
-### De 12 bijzondere gevallen (T1 §3.6): geen automatische hoofdstad, rollen nog vast te stellen met OV
+### De 12 bijzondere gevallen (T1 §3.6): rollen vastgesteld met OV (besluiten GPT 17-11-2026, ronden 1 en 2)
 
-- bijzonder-BDI | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Gitega
-- bijzonder-BEN | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Porto-Novo (De regering zetelt in Cotonou.)
-- bijzonder-BOL | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Sucre (De regering zetelt in La Paz.)
-- bijzonder-CIV | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Yamoussoukro
-- bijzonder-IDN | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Jakarta
-- bijzonder-ISR | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Jeruzalem (Opmerking: De status van Jeruzalem als hoofdstad is omstreden. Israël beschouwt heel Jeruzalem als hoofdstad van het land. [ingekort door de leesfunctie])
-- bijzonder-LKA | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Colombo, Sri Jayewardenapura Kotte (Sri Jayewardenapura Kotte is de (administratieve) hoofdstad. Colombo wordt genoemd als de ‘commerciële hoofdstad’.)
-- bijzonder-MYS | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Kuala Lumpur
-- bijzonder-NLD | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Amsterdam (Opmerking: De regering zetelt in Den Haag (officiële naam: ’s-Gravenhage).)
-- bijzonder-NRU | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Yaren
-- bijzonder-SWZ | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Mbabane
-- bijzonder-ZAF | nog onbeslist | bijzonder geval uit plan T1 §3.6: de rollen worden apart vastgesteld met een officiele bron (OV), met artikel en peildatum. TU: Bloemfontein, Kaapstad, Pretoria (De bestuurlijke hoofdstad is Pretoria, waar de regering zetelt. De wetgevende hoofdstad is Kaapstad, waar het parlement is gevestigd. De gerechtelijke hoofdstad is Bloemfontein en het Grondwettelijk Hof zetelt in Johannesburg.)
+De rollen, bronnen en bronnotities staan in tools/topo/ov-rollen.json. 9 rollen met een vraag; een open rol of een bronnotitie levert geen vraag op. Telling blijft 12 + 182.
+
+- bijzonder-BDI | nog onbeslist | geen rol met een vraag: politieke hoofdstad Gitega is gedeeltelijk bewezen (zie rol-open-BDI-hoofdstad). TU: Gitega
+- bijzonder-BEN | onderzocht | 1 rol: officiële hoofdstad Porto-Novo (Grondwet art. 1). Cotonou: regeringszetel niet aangetoond met OV, maar ook niet afwezig verklaard; alleen uitleg. TU: Porto-Novo (De regering zetelt in Cotonou.)
+- bijzonder-BOL | onderzocht | 2 rollen: grondwettelijke hoofdstad Sucre (CPE art. 6.I); regeringszetel La Paz (Declaracion Camaral 386/2022-2023 van de Senaat, "Sede de Gobierno"; beperking: considerando van een eerbetoonverklaring, scan deels slecht leesbaar)
+- bijzonder-CIV | onderzocht | 1 rol: politieke hoofdstad Yamoussoukro (Direction Generale de l'Economie, "Political capital"); niet omzetten naar een algemene of bestuurlijke hoofdstad. Abidjan: economische hoofdstad, alleen uitleg
+- bijzonder-IDN | nog onbeslist | geen rol met een vraag: Jakarta blijft onzeker (zie rol-open-IDN-hoofdstad). TU: Jakarta
+- bijzonder-ISR | onderzocht | geen gevraagde rol (T1 §3.6); de hoofdstad is omstreden, alleen uitleg volgens [bron]
+- bijzonder-LKA | nog onbeslist | geen rol met een vraag. Bronnotitie: parlement gevestigd in Sri Jayewardenepura Kotte (parliament.lk, How to Get Here); dat is geen hoofdstadrol (zie rol-open-LKA-hoofdstad)
+- bijzonder-MYS | nog onbeslist | 1 rol: bestuurlijke hoofdstad Putrajaya met het label federaal bestuurscentrum (Jabatan Audit Negara 2021, "Federal Government Administrative Centre"; de bron zegt niet letterlijk administratieve hoofdstad). Kuala Lumpur gedeeltelijk bewezen (zie rol-open-MYS-hoofdstad)
+- bijzonder-NLD | nog onbeslist | 1 rol: hoofdstad Amsterdam (Grondwet art. 32). Regeringszetel Den Haag niet aangetoond (zie rol-open-NLD-regeringszetel)
+- bijzonder-NRU | nog onbeslist | geen rol met een vraag: regeringszetel Yaren niet aangetoond (zie rol-open-NRU-regeringszetel)
+- bijzonder-SWZ | nog onbeslist | geen rol met een vraag. Bronnotitie: parlement gevestigd in Lobamba (parliament.gov.sz); dat is geen hoofdstadrol. Mbabane niet aangetoond (zie rol-open-SWZ-bestuurlijkehoofdstad en rol-open-SWZ-wetgevendehoofdstad)
+- bijzonder-ZAF | onderzocht | 3 rollen: bestuurlijke hoofdstad Pretoria, wetgevende hoofdstad Kaapstad, gerechtelijke hoofdstad Bloemfontein (DIRCO, South Africa in brief, met de letterlijke termen; aanvullend Grondwet s. 42(6) en Superior Courts Act s. 5(1)(b)). Johannesburg (Constitutional Court): alleen uitleg
+
+### Open rollen van de bijzondere gevallen (optie A: geen vraag zolang de rol niet officieel aantoonbaar is)
+
+- rol-open-BDI-hoofdstad | nog onbeslist | politieke hoofdstad Gitega gedeeltelijk: Loi n°1/04 du 04 fevrier 2019 alleen genoemd in een organieke wet uit 2020 (FAOLEX); de wettekst zelf is niet gevonden
+- rol-open-IDN-hoofdstad | nog onbeslist | Jakarta onzeker op de peildatum: MK-uitspraak mei 2026 (Jakarta tot de Keppres verschijnt); mkri.id niet leesbaar, geen Keppres gevonden. Vlag onzeker
+- rol-open-LKA-hoofdstad | nog onbeslist | officiële hoofdstad Sri Jayewardenepura Kotte niet aangetoond: de officiële bron noemt alleen de zetel van het parlement; parlementszetel staat niet in de vaste rollenlijst
+- rol-open-MYS-hoofdstad | nog onbeslist | Kuala Lumpur gedeeltelijk: Federal Capital Act 1960 (Act 190) staat in de wetgevingslijst van DBKL, de tekst is niet gelezen; alleen het wetsontwerp noemt KL de Federal Capital
+- rol-open-NLD-regeringszetel | nog onbeslist | Den Haag niet aangetoond als regeringszetel: geen wet en geen officiële publicatie met die term gevonden (optie A)
+- rol-open-NRU-regeringszetel | nog onbeslist | Yaren niet aangetoond: geen officiële Nauruaanse publicatie gevonden (optie A)
+- rol-open-SWZ-bestuurlijkehoofdstad | nog onbeslist | Mbabane niet aangetoond: gov.sz Vital Statistics niet leesbaar (robots), geen andere officiële tekst (optie A)
+- rol-open-SWZ-wetgevendehoofdstad | nog onbeslist | Lobamba niet aangetoond als wetgevende hoofdstad: de officiële bron noemt alleen de zetel van het parlement
 
 ### Onderzocht of bevestigd
 
@@ -96,7 +109,7 @@ Bronnen: TU (namen, hoofdsteden, ISO-codes), M49 (werelddeel en groep), UN (de l
 - naam-wc-MDV | bevestigd verschil | WC: Maldiven; TU noemt Malediven de meest gebruikte vorm. TU is primair
 - naam-wc-NRU | bevestigd verschil | WC: Nauru; de Nederlandse naam volgens de TU is Naoero. TU is primair
 - werelddeel-wc-CYP | bevestigd verschil | WC zet Cyprus bij Europa, M49 bij Azie (West-Azie). M49 is primair (plan §0.2); Cyprus komt ook in de modus Europa
-- hoofdstad-wc-GNQ | bevestigd verschil | TU: Ciudad de la Paz; WC: Malabo. Ciudad de la Paz is bij decreet van januari 2026 tot hoofdstad verklaard (nieuwsberichten, o.a. africanews 5-1-2026); de verplaatsing van de overheidsdiensten mocht nog tot een jaar duren. Besluit GPT 17-11-2026: blijft voorlopig een gewone TU-hoofdstad (telt mee bij de 182) met de markering teVerifieren; wettelijke hoofdstad en feitelijke regeringszetel worden nagekeken met OV in de deelstap van de bijzondere gevallen
+- hoofdstad-wc-GNQ | bevestigd verschil | TU: Ciudad de la Paz; WC: Malabo. Ciudad de la Paz is bij decreet van januari 2026 tot hoofdstad verklaard (nieuwsberichten, o.a. africanews 5-1-2026); de verplaatsing van de overheidsdiensten mocht nog tot een jaar duren. Besluit GPT 17-11-2026: blijft voorlopig een gewone TU-hoofdstad (telt mee bij de 182) met de markering teVerifieren; wettelijke hoofdstad en feitelijke regeringszetel worden nagekeken met OV in de deelstap van de bijzondere gevallen. Ronde 2 (17-11-2026): geen officiële tekst van de decreet-wet gevonden, alleen nieuws (EFE: nueva capital administrativa); feitelijke regeringszetel onbekend. Ciudad de la Paz en teVerifieren blijven; geen 13e bijzonder geval
 
 ### Hoofdsteden: WC geeft de Engelse schrijfwijze (zelfde stad)
 

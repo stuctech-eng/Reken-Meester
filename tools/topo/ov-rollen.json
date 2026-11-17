@@ -1,0 +1,125 @@
+{
+  "toelichting": "De rollen van de 12 bijzondere gevallen (plan T1 par. 3.6), elk met een officiele bron (OV). Besluiten GPT 17-11-2026, ronden 1 en 2. Alleen rollen uit de vaste lijst; een rol zonder voldoende bewijs staat bij open en levert geen vraag op. Een bronnotitie is geen rol en levert geen vraag op.",
+  "geraadpleegd": "2026-11-17",
+  "vasteRollen": ["hoofdstad", "regeringszetel", "bestuurlijke hoofdstad", "wetgevende hoofdstad", "gerechtelijke hoofdstad"],
+  "openStatussen": ["niet aangetoond", "gedeeltelijk", "onzeker"],
+  "landen": {
+    "BDI": {
+      "rollen": [],
+      "open": [
+        { "rol": "hoofdstad", "label": "politieke hoofdstad", "stad": "Gitega", "status": "gedeeltelijk", "reden": "Loi n°1/04 du 04 fevrier 2019 portant Fixation de la Capitale Politique et de la Capitale Economique du Burundi wordt alleen genoemd in de aanhef van een organieke wet uit 2020 (faolex.fao.org/docs/pdf/bur222012.pdf); de wettekst zelf is niet gevonden" }
+      ],
+      "notities": []
+    },
+    "BEN": {
+      "rollen": [
+        { "rol": "hoofdstad", "label": "officiële hoofdstad", "stad": "Porto-Novo",
+          "bron": { "id": "OV", "soort": "grondwet", "document": "Constitution de la Republique du Benin, loi n° 90-32 du 11-12-1990, herzien bij loi n° 2019-40 du 07-11-2019, art. 1", "url": "https://courconstitutionnelle.bj/files/documents/1677952525_constitution_de_.pdf", "passage": "La capitale de la République du Bénin est Porto-Novo.", "publicatiedatum": "2019-11-07", "geraadpleegd": "2026-11-17" } }
+      ],
+      "open": [],
+      "notities": [
+        { "stad": "Cotonou", "tekst": "regeringszetel niet aangetoond met OV; de grondwet noemt geen regeringszetel. Dat bewijst niet dat Cotonou geen bestuurlijke functie heeft: niet afwezig, alleen niet aangetoond. Alleen uitleg (T1 par. 3.6)" }
+      ]
+    },
+    "BOL": {
+      "rollen": [
+        { "rol": "hoofdstad", "label": "grondwettelijke hoofdstad", "stad": "Sucre",
+          "bron": { "id": "OV", "soort": "grondwet", "document": "Constitucion Politica del Estado, art. 6.I (tekst van de Defensoria del Pueblo)", "url": "https://www.defensoria.gob.bo/uploads/files/la-constitucion-politica-del-estado-y-los-derechos-humanos.pdf", "passage": "Sucre es la Capital de Bolivia.", "publicatiedatum": "2009-02-07", "datumSoort": "afkondigingsdatum van de Boliviaanse grondwet (Constitucion Politica del Estado); niet de datum van het geraadpleegde PDF-bestand van de Defensoria del Pueblo, dat geen datum vermeldt", "geraadpleegd": "2026-11-17" } },
+        { "rol": "regeringszetel", "label": "regeringszetel", "stad": "La Paz",
+          "bron": { "id": "OV", "soort": "parlement", "document": "Declaracion Camaral N° 386/2022-2023, Camara de Senadores, Asamblea Legislativa Plurinacional", "url": "https://web.senado.gob.bo/sites/default/files/declaraciones/D.C.%20N%C2%B0%20386-2022-2023.PDF", "passage": "siendo Sede de Gobierno y Capital Político Administrativa", "context": "de passage staat in de considerando over het Municipio de Nuestra Señora de La Paz; de stad staat niet in de passage zelf", "publicatiedatum": "2023-07-05", "geraadpleegd": "2026-11-17" },
+          "beperking": "geen wet: de passage staat in een considerando van een eerbetoonverklaring; de scan is deels slecht leesbaar (OCR). Voldoende onder optie C (besluit GPT 17-11-2026)" }
+      ],
+      "open": [],
+      "notities": []
+    },
+    "CIV": {
+      "rollen": [
+        { "rol": "hoofdstad", "label": "politieke hoofdstad", "stad": "Yamoussoukro",
+          "bron": { "id": "OV", "soort": "ministerie", "document": "Direction Generale de l'Economie (ministerie van Economie, Financien en Begroting), Cote d'Ivoire en bref, General Information", "url": "https://economie-ivoirienne.ci/en/cote-divoire-en-bref/presentation-country.html", "passage": "Political capital: Yamoussoukro", "publicatiedatum": "2025-11-12", "geraadpleegd": "2026-11-17" },
+          "beperking": "de bron zegt political capital; niet omzetten naar een algemene of bestuurlijke hoofdstad (besluit GPT 17-11-2026). De wet n° 83-242 zelf is niet gevonden" }
+      ],
+      "open": [],
+      "notities": [
+        { "stad": "Abidjan", "tekst": "economische hoofdstad volgens dezelfde bron (Economic capital: Abidjan); geen rol uit de vaste lijst, alleen uitleg" }
+      ]
+    },
+    "IDN": {
+      "rollen": [],
+      "open": [
+        { "rol": "hoofdstad", "label": "hoofdstad op de peildatum", "stad": "Jakarta", "status": "onzeker", "reden": "uitspraak van het Constitutioneel Hof (mei 2026): Jakarta blijft hoofdstad tot de Keppres over de verhuizing verschijnt. De MK-pagina (mkri.id) kon niet gelezen worden; een Keppres is niet gevonden, maar dat bewijst niet dat er geen is. Vlag onzeker (T1 par. 3.6)" }
+      ],
+      "notities": []
+    },
+    "ISR": {
+      "rollen": [],
+      "open": [],
+      "notities": [
+        { "stad": null, "tekst": "geen gevraagde rol (T1 par. 3.6): de hoofdstad is omstreden; alleen uitleg volgens [bron]" }
+      ]
+    },
+    "LKA": {
+      "rollen": [],
+      "open": [
+        { "rol": "hoofdstad", "label": "officiële hoofdstad", "stad": "Sri Jayewardenepura Kotte", "status": "niet aangetoond", "reden": "de officiele bron noemt alleen de zetel van het parlement, niet de hoofdstad" }
+      ],
+      "notities": [
+        { "stad": "Sri Jayewardenepura Kotte", "tekst": "parlement gevestigd in Sri Jayewardenepura Kotte. Bron: Parliament of Sri Lanka, How to Get Here, https://www.parliament.lk/en/visit-parliament/visiting-parliament/how-to-get-here, passage: Sri Lanka Parliament is located in the center of Sri Jayewardenepura Kotte. Geen publicatiedatum; geraadpleegd 2026-11-17. Geen rol (parlementszetel staat niet in de vaste lijst), geen vraag" }
+      ]
+    },
+    "MYS": {
+      "rollen": [
+        { "rol": "bestuurlijke hoofdstad", "label": "federaal bestuurscentrum", "stad": "Putrajaya",
+          "bron": { "id": "OV", "soort": "overheidsinstelling", "document": "Jabatan Audit Negara, Auditor General's Report 2021 Series 2, Pembangunan Putrajaya", "url": "https://lkan.audit.gov.my/documents/lkan/1531/2-2-RE-BI-Pembangunan-Putrajaya.pdf", "passage": "The development of Putrajaya as a new Federal Government Administrative Centre began in 1992", "publicatiedatum": "2021", "geraadpleegd": "2026-11-17" },
+          "beperking": "de bronterm is Federal Government Administrative Centre; de bron zegt niet letterlijk administratieve hoofdstad. In de vraag het label federaal bestuurscentrum gebruiken (besluit GPT 17-11-2026)" }
+      ],
+      "open": [
+        { "rol": "hoofdstad", "label": "hoofdstad", "stad": "Kuala Lumpur", "status": "gedeeltelijk", "reden": "de aangenomen Federal Capital Act 1960 (Act 190) staat in de wetgevingslijst van DBKL (dbkl.gov.my/en/corporate-info/legislation-list), maar de tekst is niet gelezen; alleen het wetsontwerp (Federal Capital Bill 1960, s. 15(1), repositori.parlimen.gov.my) noemt Kuala Lumpur de Federal Capital" }
+      ],
+      "notities": []
+    },
+    "NLD": {
+      "rollen": [
+        { "rol": "hoofdstad", "label": "hoofdstad", "stad": "Amsterdam",
+          "bron": { "id": "OV", "soort": "grondwet", "document": "Grondwet, art. 32", "url": "https://wetten.overheid.nl/BWBR0001840/2023-02-22", "passage": "beëdigd en ingehuldigd in de hoofdstad Amsterdam", "publicatiedatum": "2023-02-22", "geraadpleegd": "2026-11-17" } }
+      ],
+      "open": [
+        { "rol": "regeringszetel", "label": "regeringszetel", "stad": "Den Haag", "status": "niet aangetoond", "reden": "geen wet en geen officiele publicatie gevonden die Den Haag regeringszetel of zetel van de regering noemt (doorzocht: rijksoverheid.nl, Kabinet van de Koning, Tweede Kamer, Eerste Kamer, Gemeenteblad 2026 nr. 78897). Optie A" }
+      ],
+      "notities": []
+    },
+    "NRU": {
+      "rollen": [],
+      "open": [
+        { "rol": "regeringszetel", "label": "regeringszetel (district)", "stad": "Yaren", "status": "niet aangetoond", "reden": "geen officiele Nauruaanse publicatie gevonden; publicaties van andere landen tellen niet. Optie A" }
+      ],
+      "notities": []
+    },
+    "SWZ": {
+      "rollen": [],
+      "open": [
+        { "rol": "bestuurlijke hoofdstad", "label": "bestuurlijke hoofdstad", "stad": "Mbabane", "status": "niet aangetoond", "reden": "de gov.sz-pagina Vital Statistics mag niet gelezen worden (robots); geen andere officiele tekst gevonden. Optie A" },
+        { "rol": "wetgevende hoofdstad", "label": "wetgevende hoofdstad", "stad": "Lobamba", "status": "niet aangetoond", "reden": "de officiele bron noemt alleen de zetel van het parlement, niet een wetgevende hoofdstad" }
+      ],
+      "notities": [
+        { "stad": "Lobamba", "tekst": "parlement gevestigd in Lobamba. Bron: Parliament of Eswatini, https://parliament.gov.sz/about/faqs/ en https://parliament.gov.sz/contactus/, passage: It is located in the Lobamba, Hhohho Region, next to the National Museum; adres Parliament Road, Lobamba. Geen publicatiedatum; geraadpleegd 2026-11-17. Geen rol (parlementszetel staat niet in de vaste lijst), geen vraag" }
+      ]
+    },
+    "ZAF": {
+      "rollen": [
+        { "rol": "bestuurlijke hoofdstad", "label": "bestuurlijke hoofdstad", "stad": "Pretoria",
+          "bron": { "id": "OV", "soort": "ministerie", "document": "DIRCO (ministerie van Buitenlandse Zaken), ambassade Parijs, South Africa in brief", "url": "https://dirco.gov.za/paris/south-africa-in-brief/", "passage": "Pretoria (the administrative capital, where the Central Government, the Ministries and the Embassies are located);", "publicatiedatum": "2025-01-31", "geraadpleegd": "2026-11-17" },
+          "beperking": "publicatiedatum is de laatste wijziging volgens de metadata; geen wet" },
+        { "rol": "wetgevende hoofdstad", "label": "wetgevende hoofdstad", "stad": "Kaapstad",
+          "bron": { "id": "OV", "soort": "ministerie", "document": "DIRCO (ministerie van Buitenlandse Zaken), ambassade Parijs, South Africa in brief", "url": "https://dirco.gov.za/paris/south-africa-in-brief/", "passage": "Cape Town (the legislative capital, where the Parliament is located)", "publicatiedatum": "2025-01-31", "geraadpleegd": "2026-11-17" },
+          "aanvulling": "Grondwet s. 42(6): The seat of Parliament is Cape Town (gov.za, hoofdstuk 4; gelezen in ronde 1)" },
+        { "rol": "gerechtelijke hoofdstad", "label": "gerechtelijke hoofdstad", "stad": "Bloemfontein",
+          "bron": { "id": "OV", "soort": "ministerie", "document": "DIRCO (ministerie van Buitenlandse Zaken), ambassade Parijs, South Africa in brief", "url": "https://dirco.gov.za/paris/south-africa-in-brief/", "passage": "Bloemfontein (the judicial capital, where the Supreme Court is located).", "publicatiedatum": "2025-01-31", "geraadpleegd": "2026-11-17" },
+          "aanvulling": "Superior Courts Act 10 of 2013, s. 5(1)(b): the seat of the Supreme Court of Appeal is in Bloemfontein (parliament.gov.za; gelezen in ronde 1)" }
+      ],
+      "open": [],
+      "notities": [
+        { "stad": "Johannesburg", "tekst": "zetel van het Constitutional Court (Superior Courts Act s. 4(1)(b)); geen gevraagde rol, alleen uitleg" }
+      ]
+    }
+  }
+}

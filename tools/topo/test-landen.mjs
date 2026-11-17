@@ -84,6 +84,48 @@ eis(R.LANDEN.filter(function(r) { return r.hoofdstad.bijzonder; }).length === 12
 eis(R.LANDEN.filter(function(r) { return !r.hoofdstad.bijzonder; }).length === 182, "182 gewone hoofdsteden");
 var teVer = R.LANDEN.filter(function(r) { return r.hoofdstad.teVerifieren; }).map(function(r) { return r.id; });
 eis(JSON.stringify(teVer) === JSON.stringify(["GNQ"]) && !perId.GNQ.hoofdstad.bijzonder && perId.GNQ.hoofdstad.waarde === "Ciudad de la Paz", "alleen Equatoriaal-Guinea: gewone TU-hoofdstad met de markering teVerifieren (12 + 182 blijft)");
+// ---- de rollen van de bijzondere gevallen (ov-rollen.json; besluiten GPT 17-11-2026, ronden 1 en 2) ----
+var OVR = JSON.parse(fs.readFileSync(path.join(HIER, "ov-rollen.json"), "utf8"));
+var VAST = ["hoofdstad", "regeringszetel", "bestuurlijke hoofdstad", "wetgevende hoofdstad", "gerechtelijke hoofdstad"];
+eis(JSON.stringify(OVR.vasteRollen) === JSON.stringify(VAST), "vaste rollenlijst van T1 §3.6, niet uitgebreid");
+var VERWACHT_ROLLEN = [
+  "BEN|hoofdstad|officiële hoofdstad|Porto-Novo", "BOL|hoofdstad|grondwettelijke hoofdstad|Sucre", "BOL|regeringszetel|regeringszetel|La Paz",
+  "CIV|hoofdstad|politieke hoofdstad|Yamoussoukro", "MYS|bestuurlijke hoofdstad|federaal bestuurscentrum|Putrajaya", "NLD|hoofdstad|hoofdstad|Amsterdam",
+  "ZAF|bestuurlijke hoofdstad|bestuurlijke hoofdstad|Pretoria", "ZAF|wetgevende hoofdstad|wetgevende hoofdstad|Kaapstad", "ZAF|gerechtelijke hoofdstad|gerechtelijke hoofdstad|Bloemfontein"];
+var gevonden = [];
+R.LANDEN.forEach(function(r) {
+  if (!r.hoofdstad.bijzonder) { eis(r.hoofdstad.rollen === undefined, "geen rollen bij een gewoon geval: " + r.id); return; }
+  var o = OVR.landen[r.id];
+  eis(!!o && JSON.stringify(r.hoofdstad.rollen) === JSON.stringify(o.rollen) && JSON.stringify(r.hoofdstad.open) === JSON.stringify(o.open) && JSON.stringify(r.hoofdstad.notities) === JSON.stringify(o.notities), "rollen, open en notities uit ov-rollen.json: " + r.id);
+  r.hoofdstad.rollen.forEach(function(x) {
+    gevonden.push(r.id + "|" + x.rol + "|" + x.label + "|" + x.stad);
+    var b = x.bron || {};
+    eis(VAST.indexOf(x.rol) >= 0, "rol uit de vaste lijst: " + r.id + " " + x.rol);
+    eis(b.id === "OV" && /^https:\/\//.test(b.url) && b.passage.length > 10 && b.geraadpleegd === "2026-11-17" && !!b.document && /^[0-9]{4}(-[0-9]{2}-[0-9]{2})?$/.test(b.publicatiedatum || ""), "OV-bron met URL, passage, geldige publicatiedatum (jaar of volledige datum) en raadpleegdatum: " + r.id + " " + x.rol);
+    eis((b.passage + " " + (b.context || "")).indexOf(x.stad === "Kaapstad" ? "Cape Town" : x.stad) >= 0, "de passage of haar context noemt de stad: " + r.id + " " + x.stad);
+  });
+  r.hoofdstad.open.forEach(function(x) {
+    eis(VAST.indexOf(x.rol) >= 0 && ["niet aangetoond", "gedeeltelijk", "onzeker"].indexOf(x.status) >= 0 && x.reden.length > 20, "open rol met status en reden: " + r.id + " " + x.rol);
+    eis(r.hoofdstad.rollen.every(function(y) { return y.stad !== x.stad; }), "een open rol is niet ook een rol: " + r.id + " " + x.stad);
+  });
+});
+eis(gevonden.slice().sort().join() === VERWACHT_ROLLEN.slice().sort().join(), "precies de 9 rollen met een vraag");
+eis(JSON.stringify(R.ROLLEN_MET_VRAAG.map(function(x) { return x.land + "|" + x.rol + "|" + x.label + "|" + x.stad; }).sort()) === JSON.stringify(VERWACHT_ROLLEN.slice().sort()), "ROLLEN_MET_VRAAG = de 9 rollen");
+// de passages die de keuze van het label dragen
+eis(perId.BOL.hoofdstad.rollen[0].bron.publicatiedatum === "2009-02-07" && /afkondigingsdatum/.test(perId.BOL.hoofdstad.rollen[0].bron.datumSoort || "") && /niet de datum van het geraadpleegde PDF/.test(perId.BOL.hoofdstad.rollen[0].bron.datumSoort || ""), "Sucre: afkondigingsdatum grondwet 2009-02-07, met datumSoort");
+eis(perId.BOL.hoofdstad.rollen[1].bron.passage.indexOf("Sede de Gobierno") >= 0 && !!perId.BOL.hoofdstad.rollen[1].beperking, "La Paz: Sede de Gobierno, met de bronbeperking");
+eis(perId.CIV.hoofdstad.rollen[0].bron.passage.indexOf("Political capital") >= 0, "Yamoussoukro: label volgt Political capital");
+eis(perId.MYS.hoofdstad.rollen[0].bron.passage.indexOf("Federal Government Administrative Centre") >= 0 && perId.MYS.hoofdstad.rollen[0].bron.passage.indexOf("capital") < 0, "Putrajaya: bronterm federaal bestuurscentrum, niet administratieve hoofdstad");
+// Kotte en Lobamba: alleen bronnotitie, geen rol
+[["LKA", "Sri Jayewardenepura Kotte"], ["SWZ", "Lobamba"]].forEach(function(k) {
+  var h = perId[k[0]].hoofdstad;
+  eis(h.rollen.length === 0 && h.notities.some(function(n) { return n.stad === k[1] && n.tekst.indexOf("parlement gevestigd in " + k[1]) === 0; }), "alleen bronnotitie parlement: " + k[1]);
+});
+eis(perId.IDN.hoofdstad.open.length === 1 && perId.IDN.hoofdstad.open[0].status === "onzeker" && perId.IDN.hoofdstad.rollen.length === 0, "Indonesie: onzeker, geen vraag");
+eis(perId.ISR.hoofdstad.rollen.length === 0 && perId.ISR.hoofdstad.open.length === 0, "Israel: geen gevraagde rol");
+eis(perId.BEN.hoofdstad.notities.some(function(n) { return n.stad === "Cotonou" && n.tekst.indexOf("niet afwezig") >= 0; }), "Cotonou: niet aangetoond, niet afwezig");
+[["BDI", "gedeeltelijk"], ["MYS", "gedeeltelijk"], ["NLD", "niet aangetoond"], ["NRU", "niet aangetoond"], ["SWZ", "niet aangetoond"]].forEach(function(k) { eis(perId[k[0]].hoofdstad.open.some(function(x) { return x.status === k[1]; }), "open rol " + k[1] + ": " + k[0]); });
+
 // de besluiten van 17-11-2026
 eis(perId.BLR.naam.waarde === "Wit-Rusland" && perId.GBR.naam.waarde === "Verenigd Koninkrijk" && perId.SAU.naam.waarde === "Saoedi-Arabië", "besluiten Wit-Rusland, Verenigd Koninkrijk, Saoedi-Arabië");
 eis(perId.COG.naam.waarde === "Congo-Brazzaville" && perId.COD.naam.waarde === "Congo-Kinshasa" && perId.COG.naam.varianten.some(function(v) { return v.naam === "Congo"; }) && perId.COD.naam.varianten.some(function(v) { return v.naam === "Congo"; }), "besluit Congo-Brazzaville en Congo-Kinshasa, Congo als variant");
@@ -124,6 +166,7 @@ R.LANDEN.forEach(function(r) {
   if (!r.hoofdstad.bijzonder && !(w.capital || []).some(function(c) { return [r.hoofdstad.waarde].concat(r.hoofdstad.varianten).map(norm).indexOf(norm(c)) >= 0; })) verwacht["hoofdstad-wc-" + r.id] = 1;
   if (DEEL[w.region] !== r.werelddeel.waarde) verwacht["werelddeel-wc-" + r.id] = 1;
   if (r.hoofdstad.bijzonder) verwacht["bijzonder-" + r.id] = 1;
+  if (r.hoofdstad.bijzonder) r.hoofdstad.open.forEach(function(x) { verwacht["rol-open-" + r.id + "-" + x.rol.replace(/ /g, "")] = 1; });
   if (r.naam.besluit && ["COG", "COD"].indexOf(r.id) < 0) verwacht["naam-voorkeur-" + r.id] = 1;
 });
 Object.keys(verwacht).forEach(function(id) { eis(!!afwIds[id], "afwijking ontbreekt: " + id); });
