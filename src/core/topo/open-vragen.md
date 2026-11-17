@@ -153,3 +153,20 @@ De rollen, bronnen en bronnotities staan in tools/topo/ov-rollen.json. 9 rollen 
 - hoofdstad-wc-USA | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Washington D.C.), de TU de Nederlandse (Washington)
 - hoofdstad-wc-UZB | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Tashkent), de TU de Nederlandse (Tasjkent)
 - hoofdstad-wc-VAT | onderzocht | zelfde stad; WC geeft de Engelse schrijfwijze (Vatican City), de TU de Nederlandse (Vaticaanstad)
+
+## Nederlandse steden (T2b-1 D6; CBS Bevolkingskernen 2021, peildatum 1-1-2021)
+
+De ids komen uit AFWIJKINGEN_STEDEN in items/steden-nl.js; tools/topo/test-steden-nl.mjs controleert ze. Besluiten GPT 17-11-2026 (D6-a, D6-c, D6-d, D6-e tot D6-h).
+
+- steden-beperking-inwoners | onderzocht | het inwonertal is dat van de CBS-bevolkingskern (aaneengesloten bebouwd gebied met woongebied), niet dat van de gemeente of van een woonplaats; afgerond op vijftallen. Bij elke stad vastgelegd
+- steden-grootkernen | onderzocht | 15 Groot-kernen: de kern omvat meerdere plaatsen; inwonertal en vlak gelden voor de hele kern. Weergavenaam = de hoofdplaats uit de CBS-naam (Sittard-Geleen: beide), met de vlag grootKern; CBS-naam en kernnummer bewaard. Samenstelling alleen met een officiele bron (nu alleen Den Haag)
+- steden-niet-als-kern | onderzocht | Delft, Schiedam, Amstelveen en Zaandam komen niet als kernnaam voor. Alleen voor Delft noemt de CBS-toelichting de kern (Groot - 's-Gravenhage); voor de andere is dat niet aangetoond. Geen eigen record, geen geografische aanname op basis van de naam
+- steden-naam-almere | onderzocht | weergavenaam = CBS-naam Almere-Stad/Almere-Buiten (besluit D6-d); Almere-Haven is een aparte kern
+- steden-naam-ijmond | onderzocht | weergavenaam = CBS-naam IJmond, een regionaam; geen hoofdplaats verzonnen (besluit D6-d)
+- steden-naam-sittard-geleen | onderzocht | Groot - Sittard-Geleen: weergavenaam Sittard-Geleen, beide plaatsen behouden (besluit D6-d)
+- steden-naam-lelystad | onderzocht | weergavenaam Lelystad; CBS-naam Lelystad-Kern bewaard (besluit D6-d)
+- steden-naam-middelburg | onderzocht | weergavenaam Middelburg; CBS-naam Middelburg (Z.) bewaard (besluit D6-d)
+- steden-notitie-arnhem | onderzocht | Arnhem-Zuid (BK01057, 77.110 inwoners) is een aparte CBS-kern: geen eigen record, alleen een bronnotitie bij Arnhem. 113.565 is dus niet het inwonertal van de stad Arnhem (besluit D6-d)
+- steden-provinciehoofdstad-geen-rol | nog onbeslist | provinciehoofdstad is hier alleen een selectiereden (lijst T1 §2.1), geen bewezen rol. De relatie provinciehoofdstad-van, met een bron per feit, komt in een latere stap (besluit D6-g)
+- steden-bestandsdatum | onderzocht | het GeoPackage heeft als bestands- of wijzigingsdatum 25-08-2025 (gpkg_contents.last_change), later dan de toelichting (21-3-2024) en het erratum (3-6-2024); wat toen veranderde, staat niet in de bron. De peildatum blijft 1-1-2021
+- steden-onderdrukt | onderzocht | 3 kernen met de onderdrukte waarde -99997 (BK02922, BK02958, BK02998), niet als inwonertal gebruikt; alle drie buiten de selectie

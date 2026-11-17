@@ -42,5 +42,22 @@
       "peildatum": "geen versiedatum op de pagina",
       "sha256": "e5ea02c51e5fd34834bc0e46574788d35a80d0a179d8895bdc47811fa5789da5"
     }
+  },
+  "cbsBevolkingskernen2021": {
+    "bron": "CBS",
+    "titel": "CBS, Bevolkingskernen in Nederland, 2021 (GeoPackage)",
+    "pagina": "https://www.cbs.nl/nl-nl/dossier/nederland-regionaal/ruimtelijke-statistieken/bevolkingskernen-in-nederland-2021",
+    "url": "https://www.cbs.nl/-/media/_excel/2024/15/2024-cbs_bevolkingskernen_2021.zip",
+    "zip": { "bestand": "2024-CBS_bevolkingskernen_2021.zip", "grootte": 7647915, "sha256": "7da05363e18c0e4678f62e344877b3caad1bac2f6c1f6f3625a31d4c7d8c4836", "herkomst": "door Dick gedownload van de URL hierboven en in de chat toegevoegd" },
+    "gpkg": { "bestand": "CBS_bevolkingskernen_2021.gpkg", "grootte": 14602240, "sha256": "7dd619e822a50898ed3a64108458aac0b9788cb4dbeff4beab722c7662e71bfb", "laag": "bevolkingskernen", "crs": "EPSG:28992" },
+    "peildatum": "2021-01-01",
+    "peildatumBron": "CBS-toelichting: Het peilmoment van de gegevens is 1 januari 2021, tenzij anders aangegeven",
+    "toelichting": "https://www.cbs.nl/nl-nl/longread/diversen/2024/bevolkingskernen-in-nederland-2021?onepage=true",
+    "toelichtingGepubliceerd": "2024-03-21",
+    "bestandsdatum": "2025-08-25",
+    "bestandsdatumBron": "gpkg_contents.last_change van de laag (2025-08-25T14:24:04.273Z) en de datum in de zip; een bestands- of wijzigingsdatum, geen peildatum",
+    "gedownload": "2026-11-17",
+    "licentie": "CC BY 4.0 (PDOK, dataset CBS Bevolkingskernen 2021); CBS: publicatie van de digitale geometrie is toegestaan, mits het CBS als bron wordt vermeld",
+    "afronding": "aantallen afgerond op vijftallen; onderdrukt = -99997"
   }
 }

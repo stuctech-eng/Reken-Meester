@@ -1,0 +1,55 @@
+{
+  "toelichting": "De Nederlandse steden (plan T2b par. 1.4, D6). Selectieregel: elke CBS-bevolkingskern 2021 met aantal_inwoners van minstens 100.000 (onderdrukte waarde -99997 telt niet), plus de 12 provinciehoofdsteden (T1 par. 2.1). Per kernnummer: vaste id, weergavenaam en besluit. De CBS-naam staat hier alleen als controle; het script eist dat die letterlijk gelijk is aan het bronbestand. Besluiten GPT 17-11-2026 (D6-a, D6-c, D6-d, D6-e tot D6-h).",
+  "grens": 100000,
+  "controleband": [99000, 101000],
+  "onderdrukt": -99997,
+  "provinciehoofdsteden": {
+    "toelichting": "Selectiereden volgens de goedgekeurde lijst van T1 par. 2.1; geen bewezen rol. De relatie provinciehoofdstad-van, met een bron per feit, komt in een latere stap (D6-g). De koppeling hoofdstad aan kern is een besluit (D6-d), bijvoorbeeld Arnhem aan Groot - Arnhem en niet aan Arnhem-Zuid.",
+    "lijst": {
+      "Groningen": "BK01964", "Fryslân": "BK00152", "Drenthe": "BK00322", "Overijssel": "BK02023",
+      "Flevoland": "BK01955", "Gelderland": "BK01996", "Utrecht": "BK01991", "Noord-Holland": "BK01938",
+      "Zuid-Holland": "BK00987", "Zeeland": "BK01571", "Noord-Brabant": "BK01343", "Limburg": "BK01892"
+    }
+  },
+  "beperkingAlgemeen": "het inwonertal is dat van de CBS-bevolkingskern (aaneengesloten bebouwd gebied met woongebied), niet dat van de gemeente of van een woonplaats",
+  "beperkingGrootKern": "de kern omvat meerdere plaatsen; het inwonertal en het vlak gelden voor die hele kern, niet voor de plaats in de weergavenaam alleen",
+  "nietAlsKern": {
+    "toelichting": "Plaatsen die als kernnaam niet in het bronbestand voorkomen (het script controleert dat). Alleen bij Delft noemt een officiele bron de kern waar het deel van is.",
+    "namen": ["Delft", "Schiedam", "Amstelveen", "Zaandam"]
+  },
+  "steden": {
+    "BK01971": { "id": "stad-nl-amsterdam", "cbsNaam": "Groot - Amsterdam", "naam": "Amsterdam" },
+    "BK02002": { "id": "stad-nl-rotterdam", "cbsNaam": "Groot - Rotterdam", "naam": "Rotterdam" },
+    "BK00987": { "id": "stad-nl-den-haag", "cbsNaam": "Groot - 's-Gravenhage", "naam": "Den Haag", "varianten": ["'s-Gravenhage"],
+      "besluit": "T1 par. 2.1: Zuid-Holland - Den Haag; varianten 's-Gravenhage = Den Haag",
+      "samenstelling": { "tekst": "omvat onder andere Rijswijk (ZH), Den Haag, Voorburg, Loosduinen en Delft",
+        "bron": { "id": "CBS", "document": "CBS, Bevolkingskernen in Nederland 2021 (toelichting)", "url": "https://www.cbs.nl/nl-nl/longread/diversen/2024/bevolkingskernen-in-nederland-2021?onepage=true", "passage": "Zo maken de bebouwde gebieden van onder andere Rijswijk (ZH), Den Haag, Voorburg, Loosduinen en Delft onderdeel uit", "publicatiedatum": "2024-03-21", "geraadpleegd": "2026-11-17" } } },
+    "BK01991": { "id": "stad-nl-utrecht", "cbsNaam": "Groot - Utrecht", "naam": "Utrecht" },
+    "BK01939": { "id": "stad-nl-eindhoven", "cbsNaam": "Groot - Eindhoven", "naam": "Eindhoven" },
+    "BK01988": { "id": "stad-nl-leiden", "cbsNaam": "Groot - Leiden", "naam": "Leiden" },
+    "BK02547": { "id": "stad-nl-dordrecht", "cbsNaam": "Groot - Dordrecht", "naam": "Dordrecht" },
+    "BK01482": { "id": "stad-nl-tilburg", "cbsNaam": "Tilburg", "naam": "Tilburg" },
+    "BK01964": { "id": "stad-nl-groningen", "cbsNaam": "Groot - Groningen", "naam": "Groningen" },
+    "BK01938": { "id": "stad-nl-haarlem", "cbsNaam": "Groot - Haarlem", "naam": "Haarlem" },
+    "BK00704": { "id": "stad-nl-almere", "cbsNaam": "Almere-Stad/Almere-Buiten", "naam": "Almere-Stad/Almere-Buiten", "kwestie": "naam", "besluit": "GPT 17-11-2026 D6-d: CBS-naam ongewijzigd; Almere zelf is geen kernnaam, Almere-Haven is een aparte kern" },
+    "BK02022": { "id": "stad-nl-heerlen", "cbsNaam": "Groot - Heerlen", "naam": "Heerlen" },
+    "BK01343": { "id": "stad-nl-s-hertogenbosch", "cbsNaam": "Groot - 's-Hertogenbosch", "naam": "'s-Hertogenbosch", "varianten": ["Den Bosch"], "besluit": "T1 par. 2.1: varianten Den Bosch = 's-Hertogenbosch" },
+    "BK02010": { "id": "stad-nl-nijmegen", "cbsNaam": "Groot - Nijmegen", "naam": "Nijmegen" },
+    "BK01989": { "id": "stad-nl-amersfoort", "cbsNaam": "Amersfoort", "naam": "Amersfoort" },
+    "BK01459": { "id": "stad-nl-breda", "cbsNaam": "Breda", "naam": "Breda" },
+    "BK00803": { "id": "stad-nl-enschede", "cbsNaam": "Enschede", "naam": "Enschede" },
+    "BK00813": { "id": "stad-nl-apeldoorn", "cbsNaam": "Apeldoorn", "naam": "Apeldoorn" },
+    "BK00950": { "id": "stad-nl-zoetermeer", "cbsNaam": "Zoetermeer", "naam": "Zoetermeer" },
+    "BK02023": { "id": "stad-nl-zwolle", "cbsNaam": "Zwolle", "naam": "Zwolle" },
+    "BK01970": { "id": "stad-nl-ijmond", "cbsNaam": "IJmond", "naam": "IJmond", "kwestie": "naam", "besluit": "GPT 17-11-2026 D6-d: CBS-naam ongewijzigd; regionaam, geen hoofdplaats; welke plaatsen de kern omvat staat niet in de bron" },
+    "BK01892": { "id": "stad-nl-maastricht", "cbsNaam": "Maastricht", "naam": "Maastricht" },
+    "BK01996": { "id": "stad-nl-arnhem", "cbsNaam": "Groot - Arnhem", "naam": "Arnhem", "kwestie": "notitie", "besluit": "GPT 17-11-2026 D6-d: Arnhem-Zuid geen eigen record, alleen een bronnotitie bij Arnhem",
+      "notities": [ { "kernnummer": "BK01057", "cbsNaam": "Arnhem-Zuid", "tekst": "aparte CBS-kern, telt niet mee in het inwonertal van Groot - Arnhem; samen zijn ze dus niet het inwonertal van de stad Arnhem" } ] },
+    "BK01869": { "id": "stad-nl-sittard-geleen", "cbsNaam": "Groot - Sittard-Geleen", "naam": "Sittard-Geleen", "kwestie": "naam", "besluit": "GPT 17-11-2026 D6-d: beide plaatsnamen behouden, geen hoofdplaats gekozen" },
+    "BK01968": { "id": "stad-nl-alkmaar", "cbsNaam": "Groot - Alkmaar", "naam": "Alkmaar" },
+    "BK00152": { "id": "stad-nl-leeuwarden", "cbsNaam": "Leeuwarden", "naam": "Leeuwarden" },
+    "BK00322": { "id": "stad-nl-assen", "cbsNaam": "Assen", "naam": "Assen" },
+    "BK01955": { "id": "stad-nl-lelystad", "cbsNaam": "Lelystad-Kern", "naam": "Lelystad", "kwestie": "naam", "besluit": "GPT 17-11-2026 D6-d: weergavenaam Lelystad; CBS-naam Lelystad-Kern bewaard (er zijn ook kleinere Lelystad-kernen)" },
+    "BK01571": { "id": "stad-nl-middelburg", "cbsNaam": "Middelburg (Z.)", "naam": "Middelburg", "kwestie": "naam", "besluit": "GPT 17-11-2026 D6-d: weergavenaam Middelburg; CBS-naam Middelburg (Z.) bewaard" }
+  }
+}

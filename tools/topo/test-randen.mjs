@@ -292,9 +292,11 @@ R.AFWIJKINGEN.forEach(function(a) {
   eis(!!o, "op de open lijst: " + a.id);
   if (o) eis(STATUSSEN.indexOf(o.status) >= 0 && o.uitleg.length > 10, "geldige status en uitleg: " + a.id);
 });
-// de open lijst bevat ook de punten van de landen (test-landen.mjs); een id moet in een van beide voorkomen
+// de open lijst bevat ook de punten van de landen (test-landen.mjs) en de steden (test-steden-nl.mjs); een id moet in een van die lijsten voorkomen
 var landenIds = {};
 try { var LL = await import(pathToFileURL(path.join(ROOT, "src", "core", "topo", "items", "landen.js")).href); LL.AFWIJKINGEN_LANDEN.forEach(function(a) { landenIds[a.id] = 1; }); } catch (e) { landenIds = {}; }
+// en de punten van de Nederlandse steden (test-steden-nl.mjs)
+try { var SS = await import(pathToFileURL(path.join(ROOT, "src", "core", "topo", "items", "steden-nl.js")).href); SS.AFWIJKINGEN_STEDEN.forEach(function(a) { landenIds[a.id] = 1; }); } catch (e) { }
 // een punt dat niet meer voorkomt, blijft op de lijst staan met de status "gecorrigeerd" (niets stilzwijgend verwijderen)
 Object.keys(open).forEach(function(id) { eis(!!uitIds[id] || !!landenIds[id] || open[id].status === "gecorrigeerd", "open lijst noemt een afwijking die niet (meer) bestaat en niet gecorrigeerd is: " + id); });
 
