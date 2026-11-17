@@ -3,7 +3,7 @@
 
 import { maakDoelen, beslis, isKlein, STRAAL } from "./tikregel.js";
 
-var VERSIE = "T2a-proef-5";
+var VERSIE = "T2a-proef-6";
 var KAARTEN = [
   { id: "proef-nl", titel: "Nederland" },
   { id: "proef-europa", titel: "Europa (zuid)" },
@@ -14,10 +14,10 @@ var KAARTEN = [
 export var ZOOMSTAPPEN = [1, 2, 4, 8];
 export var SLEEPGRENS = 10;   // CSS-pixels: tot en met 10 is het een tik, daarboven slepen
 var NS = "http://www.w3.org/2000/svg";
-var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", opdracht: "#dc2626", lijn: "#1d4ed8", punt: "#1a1d3a" };
+var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", opdracht: "#dc2626", opdrachtRand: "#7f1d1d", stippel: "#451a03", lijn: "#1d4ed8", punt: "#1a1d3a" };
 
 var staat = { kaart: null, data: {}, laag: null, stand: "vrij", gekozen: null, doelen: [], opdracht: null, uitslag: {}, log: [], svg: null,
-  zoom: 1, ox: 0, oy: 0, aanraking: null, maxH: 0, alternatief: null };
+  zoom: 1, ox: 0, oy: 0, aanraking: null, maxH: 0, alternatief: null, vingers: {}, knijp: null, blok: false };
 
 function el(naam, attr) { var e = document.createElementNS(NS, naam); for (var k in attr) e.setAttribute(k, attr[k]); return e; }
 function $(id) { return document.getElementById(id); }
@@ -31,8 +31,10 @@ function laadKaart(id) {
 // De breedte van het beeld hangt alleen van de zoom af: k.beeld eenheden vullen de schermbreedte bij x1 (zonder beeld: de hele
 // kaartbreedte). Een kaart met een groter doek is breder dan het beeld. De hoogte is hoogstens de vrije schermhoogte (staat.maxH).
 function beeldBreedte(k) { return k.beeld || k.breedte; }
-function venster() {
-  var k = staat.kaart, w = beeldBreedte(k) / staat.zoom, h = k.hoogte / staat.zoom, b = $("kaartvak").clientWidth;
+function venster() { return vensterBij(staat.zoom); }
+// Het beeld bij een willekeurige zoom z (ook tussen de stappen, alleen tijdens het knijpen)
+function vensterBij(z) {
+  var k = staat.kaart, w = beeldBreedte(k) / z, h = k.hoogte / z, b = $("kaartvak").clientWidth;
   if (staat.maxH > 0 && b > 0) h = Math.min(h, staat.maxH * w / b);
   return { x: staat.ox, y: staat.oy, w: w, h: h };
 }
@@ -45,8 +47,9 @@ function pastBijEen() {
   return k.breedte <= beeldBreedte(k) && k.hoogte * b / beeldBreedte(k) <= vrij;
 }
 function schaal() { return staat.svg ? staat.svg.getBoundingClientRect().width / venster().w : 1; }
-function begrens() {
-  var k = staat.kaart, v = venster();
+function begrens() { begrensBij(staat.zoom); }
+function begrensBij(z) {
+  var k = staat.kaart, v = vensterBij(z);
   staat.ox = Math.min(Math.max(staat.ox, 0), k.breedte - v.w);
   staat.oy = Math.min(Math.max(staat.oy, 0), k.hoogte - v.h);
 }
@@ -99,6 +102,8 @@ function teken() {
   var s = schaal(), px = 1 / s;
   if (!(s > 0) || !isFinite(px)) { requestAnimationFrame(teken); return; }
   var groep = el("g", {}); svg.appendChild(groep);
+  // tikcirkels in een eigen laag bovenop alle vlakken, zodat een buurland (bijvoorbeeld Spanje over Andorra) ze niet bedekt
+  var cirkels = el("g", {});
   k.achtergrond.forEach(function(a) { groep.appendChild(el("path", { d: a.d, fill: KLEUR.land, stroke: KLEUR.landRand, "stroke-width": 0.8 * px, "fill-rule": "evenodd" })); });
   k.lagen.forEach(function(l) {
     if (l === staat.laag || l.soort !== "vlak") return;
@@ -111,7 +116,11 @@ function teken() {
     var item = staat.laag.items.filter(function(i) { return i.id === d.id; })[0];
     if (d.soort === "vlak") {
       if (d.ringen.length) groep.appendChild(el("path", { d: item.d, fill: kleur || KLEUR.doel, "fill-opacity": kleur ? 0.85 : 1, stroke: gek ? KLEUR.gekozenRand : KLEUR.doelRand, "stroke-width": (gek ? 3 : 1.2) * px, "fill-rule": "evenodd" }));
-      if (isKlein(d, s)) groep.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: kleur || "none", "fill-opacity": kleur ? 0.35 : 0, stroke: gek ? KLEUR.gekozenRand : (kleur || KLEUR.doelRand), "stroke-width": (gek ? 2.5 : 1.5) * px, "stroke-dasharray": (4 * px) + " " + (3 * px) }));
+      if (isKlein(d, s)) {
+        // tikcirkel (alleen tekenen; het tikgebied is de tikregel): witte ondergrond van 4 px, daarop een donkere stippellijn van 2,5 px
+        cirkels.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: kleur || "none", "fill-opacity": kleur ? 0.35 : 0, stroke: "#fff", "stroke-width": 4 * px }));
+        cirkels.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: "none", stroke: gek ? KLEUR.gekozenRand : (opd ? KLEUR.opdrachtRand : KLEUR.stippel), "stroke-width": 2.5 * px, "stroke-dasharray": (6 * px) + " " + (4 * px) }));
+      }
     } else if (d.soort === "lijn") {
       // gekozen: een witte lijn van 10 px onder een groene van 6 px (2x de gewone 3 px)
       if (gek) groep.appendChild(el("path", { d: item.d, fill: "none", stroke: "#fff", "stroke-width": 10 * px, "stroke-linecap": "round", "stroke-linejoin": "round" }));
@@ -121,23 +130,78 @@ function teken() {
       groep.appendChild(el("circle", { cx: d.x, cy: d.y, r: (gek ? 10 : kleur ? 7 : 5) * px, fill: kleur || KLEUR.punt, stroke: "#fff", "stroke-width": (gek ? 3 : 1.5) * px }));
     }
   });
+  groep.appendChild(cirkels);
   svg.addEventListener("pointerdown", neer);
   svg.addEventListener("pointermove", beweeg);
   svg.addEventListener("pointerup", op);
-  svg.addEventListener("pointercancel", function(e) { if (staat.aanraking && e.pointerId === staat.aanraking.id) staat.aanraking = null; });
+  svg.addEventListener("pointercancel", afgebroken);
   zoomKnoppen();
   $("info").textContent = "Kaartbreedte " + Math.round(svg.getBoundingClientRect().width) + " CSS-px, zoom x" + staat.zoom + ", schaal " + s.toFixed(3) + " px per eenheid, pixelratio " + window.devicePixelRatio + " (alleen ter informatie).";
 }
 
-// ── aanraking: één vinger; tot en met 10 CSS-px verplaatsing is een tik, daarboven slepen ──
+// ── aanraking (ronde 6) ──
+// Eén vinger: tot en met 10 CSS-px verplaatsing is een tik, daarboven slepen.
+// Twee vingers: knijpen. De kaart schaalt vloeiend rond het punt tussen de vingers (alleen de viewBox); bij loslaten springt de
+// zoom naar de dichtstbijzijnde stap. Een knijpgebaar kiest nooit iets. Laat één vinger los, dan doet de andere niets meer
+// tot alle vingers los zijn (Z2-a). Een derde vinger verandert het gebaar niet.
 function neer(e) {
-  if (staat.aanraking) return;                       // een tweede vinger wordt genegeerd
-  staat.aanraking = { id: e.pointerId, x: e.clientX, y: e.clientY, ox: staat.ox, oy: staat.oy, slepen: false };
-  if (staat.svg.setPointerCapture) { try { staat.svg.setPointerCapture(e.pointerId); } catch (x) { /* niet nodig voor de werking */ } }
+  staat.vingers[e.pointerId] = true;
+  if (staat.knijp || staat.blok) return;
+  var a = staat.aanraking;
+  if (a && e.pointerId !== a.id) { startKnijp(a, e); return; }
+  if (a) return;
+  staat.aanraking = { id: e.pointerId, x: e.clientX, y: e.clientY, cx: e.clientX, cy: e.clientY, ox: staat.ox, oy: staat.oy, slepen: false };
+  vang(e.pointerId);
+}
+function vang(id) { if (staat.svg.setPointerCapture) { try { staat.svg.setPointerCapture(id); } catch (x) { /* niet nodig voor de werking */ } } }
+function los(id) {
+  delete staat.vingers[id];
+  if (staat.blok && !Object.keys(staat.vingers).length) staat.blok = false;
+}
+function startKnijp(a, e) {
+  vang(e.pointerId);
+  var r = staat.svg.getBoundingClientRect(), s = schaal();
+  var p1 = [a.cx, a.cy], p2 = [e.clientX, e.clientY], mid = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+  staat.knijp = { ids: [a.id, e.pointerId], pos: {}, d0: Math.max(1, Math.hypot(p2[0] - p1[0], p2[1] - p1[1])), z0: staat.zoom, zv: staat.zoom,
+    // het kaartpunt (eenheden) onder het midden tussen de vingers, en waar dat midden nu is
+    kaartpunt: [staat.ox + (mid[0] - r.left) / s, staat.oy + (mid[1] - r.top) / s], mid: mid };
+  staat.knijp.pos[a.id] = p1; staat.knijp.pos[e.pointerId] = p2;
+  staat.aanraking = null;                            // de tik of sleep van de eerste vinger vervalt
+}
+function knijpBeweeg(e) {
+  var k = staat.knijp;
+  if (k.ids.indexOf(e.pointerId) < 0) return;        // een derde vinger telt niet mee
+  k.pos[e.pointerId] = [e.clientX, e.clientY];
+  var p1 = k.pos[k.ids[0]], p2 = k.pos[k.ids[1]], d = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+  k.mid = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+  k.zv = Math.min(ZOOMSTAPPEN[ZOOMSTAPPEN.length - 1], Math.max(ZOOMSTAPPEN[0], k.z0 * d / k.d0));
+  houdOnderVingers(k.zv);
+  var v = vensterBij(k.zv); staat.svg.setAttribute("viewBox", v.x + " " + v.y + " " + v.w + " " + v.h);
+}
+// het kaartpunt van het begin van het gebaar onder het huidige midden houden, bij zoom z (binnen de kaart)
+function houdOnderVingers(z) {
+  var k = staat.knijp, r = staat.svg.getBoundingClientRect(), sz = r.width / vensterBij(z).w;
+  staat.ox = k.kaartpunt[0] - (k.mid[0] - r.left) / sz; staat.oy = k.kaartpunt[1] - (k.mid[1] - r.top) / sz;
+  begrensBij(z);
+}
+// einde van het knijpen: naar de dichtstbijzijnde stap (op een log-schaal), rond het punt tussen de vingers
+function knijpEinde() {
+  var k = staat.knijp, beste = ZOOMSTAPPEN[0];
+  ZOOMSTAPPEN.forEach(function(z) { if (Math.abs(Math.log(z / k.zv)) < Math.abs(Math.log(beste / k.zv))) beste = z; });
+  staat.zoom = beste; houdOnderVingers(beste);
+  staat.knijp = null; staat.blok = Object.keys(staat.vingers).length > 0;
+  teken();
+}
+function afgebroken(e) {
+  if (staat.knijp && staat.knijp.ids.indexOf(e.pointerId) >= 0) { los(e.pointerId); knijpEinde(); return; }
+  if (staat.aanraking && e.pointerId === staat.aanraking.id) { staat.aanraking = null; teken(); }   // nooit een keuze
+  los(e.pointerId);
 }
 function beweeg(e) {
+  if (staat.knijp) { knijpBeweeg(e); return; }
   var a = staat.aanraking;
   if (!a || e.pointerId !== a.id) return;
+  a.cx = e.clientX; a.cy = e.clientY;
   var dx = e.clientX - a.x, dy = e.clientY - a.y;
   if (!a.slepen && Math.sqrt(dx * dx + dy * dy) > SLEEPGRENS) a.slepen = true;
   if (a.slepen) {                                   // begrens() houdt het beeld binnen de kaart
@@ -147,9 +211,10 @@ function beweeg(e) {
   }
 }
 function op(e) {
+  if (staat.knijp && staat.knijp.ids.indexOf(e.pointerId) >= 0) { los(e.pointerId); knijpEinde(); return; }
   var a = staat.aanraking;
-  if (!a || e.pointerId !== a.id) return;
-  staat.aanraking = null;
+  if (!a || e.pointerId !== a.id) { los(e.pointerId); return; }
+  staat.aanraking = null; los(e.pointerId);
   var dx = e.clientX - a.x, dy = e.clientY - a.y;
   if (a.slepen || Math.sqrt(dx * dx + dy * dy) > SLEEPGRENS) { teken(); return; }   // slepen: nooit een keuze
   var r = staat.svg.getBoundingClientRect();
@@ -289,6 +354,11 @@ $("kopieer").onclick = function() {
   else { $("debug").style.display = "block"; toonDebug(); }
 };
 window.addEventListener("resize", function() { if (staat.kaart) teken(); });
+// Safari: de eigen knijpzoom van de pagina boven de kaart onderdrukken (naast touch-action: none)
+// Boekhouding van de vingers ook buiten de kaart: na teken() is de svg vervangen, dan kan het loslaten elders aankomen
+window.addEventListener("pointerup", function(e) { los(e.pointerId); });
+window.addEventListener("pointercancel", function(e) { los(e.pointerId); });
+["gesturestart", "gesturechange", "gestureend"].forEach(function(n) { $("kaartvak").addEventListener(n, function(e) { e.preventDefault(); }); });
 
 // Testhaak (alleen voor de Chromium-tests): dezelfde tikregel als de pagina gebruikt
 window.__TOPO = {
