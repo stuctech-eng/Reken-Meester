@@ -1,0 +1,58 @@
+{
+  "toelichting": "De rollen van Nederland en Belgie uit de A6-bronnenronde (bouwplan T2b-2 fase 6.2 v3; besluiten GPT 18-11-2026 H1 a, H2 a, H3 c, K1 c, K2 a+b). Een rol zonder voldoende bewijs staat bij open en levert geen relatie en geen vraag op. Een rol bij zonderRelatie is bewezen, maar krijgt in fase 6.2 geen relatie.",
+  "geraadpleegd": "2026-11-18",
+  "rollen": {
+    "R1": {
+      "rol": "hoofdstad-van", "stad": "stad-nl-amsterdam", "doel": "NLD",
+      "bron": { "id": "OV", "uitgever": "Rijksoverheid", "document": "Grondwet, art. 32", "url": "https://wetten.overheid.nl/BWBR0001840/2023-02-22", "passage": "beëdigd en ingehuldigd in de hoofdstad Amsterdam" },
+      "koppeling": "het stad-item met de naam Amsterdam in Nederland (steden-nl.js); de rol staat ook in landen.js (NLD)"
+    },
+    "R3": {
+      "rol": "provinciehoofdstad-van", "land": "NLD",
+      "bron": { "id": "OV", "uitgever": "CBS", "document": "Provinciehoofdsteden op een rij (7-7-2003)", "url": "https://www.cbs.nl/nl-nl/achtergrond/2003/28/provinciehoofdsteden-op-een-rij", "passage": null, "beschrijving": "noemt Arnhem, Assen, 's-Hertogenbosch, Den Haag, Groningen, Haarlem, Leeuwarden, Lelystad, Maastricht, Middelburg, Utrecht en Zwolle als provinciehoofdsteden, zonder opsomming per provincie (A6 R3)" },
+      "steden": ["Arnhem", "Assen", "'s-Hertogenbosch", "Den Haag", "Groningen", "Haarlem", "Leeuwarden", "Lelystad", "Maastricht", "Middelburg", "Utrecht", "Zwolle"],
+      "koppeling": "afgeleid (H1 a): de provincie volgt uit het CBS-feit provincie van de kern (Bevolkingskernen 2021) en de tabel steden-nl.json; gecontroleerd tegen het provincievlak van CBS Gebiedsindelingen 2026"
+    },
+    "R4": {
+      "rol": "hoofdstad-van", "stad": "stad-be-brussel", "doel": "BEL",
+      "bron": { "id": "OV", "uitgever": "Belgische Senaat", "document": "Grondwet, art. 194 (gecoordineerde tekst, brochure 2025)", "url": "https://senaat.be/doc/20250625_GRONDWET.pdf", "passage": "De stad Brussel is de hoofdstad van België en de zetel van de federale Regering." }
+    },
+    "R5": {
+      "rol": "regeringszetel-van", "stad": "stad-be-brussel", "doel": "BEL",
+      "bron": { "id": "OV", "uitgever": "Belgische Senaat", "document": "Grondwet, art. 194 (gecoordineerde tekst, brochure 2025)", "url": "https://senaat.be/doc/20250625_GRONDWET.pdf", "passage": "De stad Brussel is de hoofdstad van België en de zetel van de federale Regering." }
+    },
+    "R6": {
+      "rol": "gewesthoofdstad-van", "stad": "stad-be-namen", "doel": "gewest-be-03000",
+      "bron": { "id": "OV", "uitgever": "Parlement de Wallonie", "document": "Decreet van 21-10-2010 instituant Namur comme capitale de la Wallonie, BS 03-11-2010, blz. 65954, art. 1", "url": "https://wallex.wallonie.be/contents/acts/10/10581/2.html", "passage": "Namur est: 1° la capitale de la Wallonie; 2° le siège du Parlement wallon; 3° le siège du Gouvernement wallon." }
+    },
+    "R9-VL": {
+      "rol": "provinciehoofdstad-van", "land": "BEL",
+      "bron": { "id": "OV", "uitgever": "Vlaamse overheid", "document": "Overzicht van Vlaamse steden en gemeenten", "url": "https://www.vlaanderen.be/gemeenten-en-provincies/overzicht" },
+      "passages": {
+        "10000": { "kop": "Provincie Antwerpen", "passage": "De hoofdplaats van de provincie is Antwerpen.", "stad": "stad-be-antwerpen" },
+        "70000": { "kop": "Provincie Limburg", "passage": "De hoofdplaats van de provincie is Hasselt.", "stad": "stad-be-hasselt" },
+        "40000": { "kop": "Provincie Oost-Vlaanderen", "passage": "De hoofdplaats van de provincie is Gent.", "stad": "stad-be-gent" },
+        "20001": { "kop": "Provincie Vlaams-Brabant", "passage": "De hoofdplaats van de provincie is Leuven.", "stad": "stad-be-leuven" },
+        "30000": { "kop": "Provincie West-Vlaanderen", "passage": "De hoofdplaats van de provincie is Brugge.", "stad": "stad-be-brugge" }
+      },
+      "koppeling": "bron-direct (H3 c, V1): de stad staat onder de kop van de provincie"
+    },
+    "R9-WA": {
+      "rol": "provinciehoofdstad-van", "land": "BEL",
+      "bron": { "id": "OV", "uitgever": "IWEPS", "document": "Fiche T010-ENT.ADMIN, dernieres donnees regionales disponibles au 01/12/2022", "url": "https://www.iweps.be/wp-content/uploads/2022/12/T010-ENT.ADMIN_.-122022_full1.pdf", "passage": "Chef-lieu de province", "beschrijving": "kaartlegenda bij Arlon, Mons, Wavre, Namur en Liège" },
+      "steden": { "stad-be-aarlen": "Arlon", "stad-be-bergen": "Mons", "stad-be-waver": "Wavre", "stad-be-namen": "Namur", "stad-be-luik": "Liège" },
+      "koppeling": "afgeleid (H3 c, V2): de provincie volgt uit Statbel REFNIS (gemeente, arrondissement, provincie), gecontroleerd tegen de statistische sectoren"
+    }
+  },
+  "zonderRelatie": {
+    "R7": {
+      "rol": "hoofdstad van de Vlaamse Gemeenschap", "stad": "stad-be-brussel",
+      "bron": { "id": "OV", "uitgever": "Vlaamse overheid", "document": "Vlaamse overheid in Brussel", "url": "https://www.vlaanderen.be/vlaamse-overheid-in-brussel", "passage": "De stad Brussel is de hoofdstad van België en van Vlaanderen." },
+      "reden": "GPT 18-11-2026 K1 c: bewezen, maar zonder item en relatie in fase 6.2; volgt in 6.4 met de gemeenschappen. Brussel ligt niet in het Vlaamse Gewest (H2 a)"
+    }
+  },
+  "open": {
+    "R2": { "rol": "regeringszetel-van", "stad": "stad-nl-den-haag", "doel": "NLD", "status": "niet aangetoond", "reden": "geen wet en geen officiele publicatie gevonden (T2b-1, ongewijzigd)" },
+    "R8": { "rol": "gewesthoofdstad-van", "doel": "gewest-be-04000", "status": "niet aangetoond", "reden": "geen handeling gevonden die het Brussels Hoofdstedelijk Gewest een hoofdstad geeft (A6 R8)" }
+  }
+}

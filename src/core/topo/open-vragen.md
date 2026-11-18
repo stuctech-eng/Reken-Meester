@@ -170,3 +170,18 @@ De ids komen uit AFWIJKINGEN_STEDEN in items/steden-nl.js; tools/topo/test-stede
 - steden-provinciehoofdstad-geen-rol | nog onbeslist | provinciehoofdstad is hier alleen een selectiereden (lijst T1 §2.1), geen bewezen rol. De relatie provinciehoofdstad-van, met een bron per feit, komt in een latere stap (besluit D6-g)
 - steden-bestandsdatum | onderzocht | het GeoPackage heeft als bestands- of wijzigingsdatum 25-08-2025 (gpkg_contents.last_change), later dan de toelichting (21-3-2024) en het erratum (3-6-2024); wat toen veranderde, staat niet in de bron. De peildatum blijft 1-1-2021
 - steden-onderdrukt | onderzocht | 3 kernen met de onderdrukte waarde -99997 (BK02922, BK02958, BK02998), niet als inwonertal gebruikt; alle drie buiten de selectie
+
+## Nederland en België, basisgegevens (T2b-2 fase 6.2, deel 1)
+
+- nlbe-refnis-2019 | onderzocht | Statbel REFNIS: de laatste wijziging in het bestand is van 2019-01-01; de fusies van Vlaamse gemeenten op 1-1-2025 staan er niet in (581 gemeenten geldig op 1-1-2026 volgens het bestand). Gebruikt op 2026-01-01; geen gevolg voor de 3 gewesten, de 10 provincies en de 11 steden
+- nlbe-sectoren-2022 | onderzocht | Statbel, statistische sectoren: situatie 2024-01-01, gemeentegrenzen 2022 (A3: de peildatum van het eigen bronbestand)
+- nlbe-provincie-gegeneraliseerd | onderzocht | CBS Gebiedsindelingen 2026: de provincielaag bestaat alleen gegeneraliseerd; de gemeentelaag ook niet gegeneraliseerd; de provincievlakken zijn de officiele gegeneraliseerde laag
+- nlbe-peildata-h1 | onderzocht | H1: de provincie van een hoofdstad komt uit de CBS-kern (2021-01-01) en is gecontroleerd tegen het provincievlak van CBS Gebiedsindelingen 2026 (A3: beide versies in de afleiding); alle 12 komen overeen
+- nlbe-r2-regeringszetel-nl | onderzocht | R2 Den Haag, regeringszetel van Nederland: niet aangetoond; geen wet en geen officiele publicatie gevonden (T2b-1, ongewijzigd). Geen relatie, geen vraag
+- nlbe-r8-hoofdstad-bhg | onderzocht | R8 hoofdstad van het Brussels Hoofdstedelijk Gewest: niet aangetoond; geen handeling gevonden die het Brussels Hoofdstedelijk Gewest een hoofdstad geeft (A6 R8). Geen relatie, geen vraag
+- nlbe-r7-vlaamse-gemeenschap | onderzocht | R7 Brussel, hoofdstad van de Vlaamse Gemeenschap: bewezen (Vlaamse overheid), GPT 18-11-2026 K1 c: bewezen, maar zonder item en relatie in fase 6.2; volgt in 6.4 met de gemeenschappen. Brussel ligt niet in het Vlaamse Gewest (H2 a)
+- nlbe-naam-limburg | nog onbeslist | Twee provincies met de voorkeursnaam Limburg (prov-be-70000, prov-nl-pv31): de namen zijn uniek per soort en land, niet per soort alleen (plan v2 par. 5.7); te beslissen hoe een vraag ze onderscheidt
+- nlbe-ne-kenmerken-hasselt | bevestigd verschil | Natural Earth (ne_id 1159120339): de kenmerken longitude/latitude (5.483998, 50.964003) liggen 10.9 km van de geometrie (5.338536, 50.928838); de geometrie is leidend (GPT 18-11-2026)
+- nlbe-punt-brussel | onderzocht | Brussel: geen punt. GPT 18-11-2026: geen punt; het Natural Earth-punt (ne_id 1159151465) ligt in Anderlecht (21001), niet in Brussel (21004)
+- nlbe-punt-leuven | onderzocht | Leuven: geen punt. GPT 18-11-2026 K6 c: geen punt in Natural Earth; open tot het historische centrum voldoende is onderbouwd; geen kunstmatig punt in het gemeentevlak
+- nlbe-punt-waver | onderzocht | Waver: geen punt. GPT 18-11-2026 K6 c: geen punt in Natural Earth; open tot het historische centrum voldoende is onderbouwd; geen kunstmatig punt in het gemeentevlak

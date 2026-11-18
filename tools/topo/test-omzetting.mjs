@@ -141,7 +141,8 @@ NS.STEDEN.forEach(function(r) {
 // ---- bronnen.json: de bestaande blokken ongewijzigd ----
 var bOud = JSON.parse(git(["show", OUD_COMMIT + ":tools/topo/bronnen.json"])), bNieuw = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
 Object.keys(bOud).forEach(function(k) { eis(JSON.stringify(bOud[k]) === JSON.stringify(bNieuw[k]), "bronnen.json: blok " + k + " ongewijzigd"); });
-eis(Object.keys(bNieuw).filter(function(k) { return !(k in bOud); }).join() === "register", "bronnen.json: alleen het blok register erbij");
+// fase 6.1 voegde het blok register toe; fase 6.2 (bouwplan v3, toestemming GPT 18-11-2026) alleen cbsGebiedsindelingen2026 en statbel
+eis(Object.keys(bNieuw).filter(function(k) { return !(k in bOud); }).sort().join() === "cbsGebiedsindelingen2026,register,statbel", "bronnen.json: alleen de blokken register, cbsGebiedsindelingen2026 en statbel erbij");
 
 console.log("vergelijking landen: " + tL.oud + " oude bladen, " + tL.gelijk + " gelijk, " + tL.toevoeging + " toegestane toevoegingen");
 console.log("vergelijking steden: " + tS.oud + " oude bladen, " + tS.gelijk + " gelijk, " + tS.toevoeging + " toegestane toevoegingen");

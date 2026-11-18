@@ -360,4 +360,112 @@ console.log("mutanten omzetting: " + omzGevangen + " van " + OMZ.length + " geva
 omzGemist.forEach(function(g) { console.log("  - GEMIST: " + g); });
 grensUit.forEach(function(g) { console.log("mutant grenscodes: " + g.naam + ": " + (g.ok ? "gevangen" : "GEMIST") + " (fout: " + g.fout + ")"); });
 var grensGemist = grensUit.filter(function(g) { return !g.ok; }).length;
+
+// ==== fase 6.2, deel 1: provincies, gewesten, Belgische steden en hoofdsteden (bouwplan T2b-2 fase 6.2 v3) ====
+// Een eigen blok: de controles en mutanten hierboven blijven ongewijzigd en gaan alleen over de items van fase 6.1.
+// De plaatsentabel van relatie-index.js kent feiten.land, feiten.code en feiten.refnis niet (dat bestand wijzigt in 6.2 niet);
+// voor die feiten wordt daarom direct gecontroleerd: herkomst, status, de combinatie, de volledige herkomst en een waarde.
+var P62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/provincies.js")).href);
+var G62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/gewesten.js")).href);
+var B62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/steden-be.js")).href);
+var H62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/afgeleid/hoofdsteden-nlbe.js")).href);
+function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE)), rel: kopie(H62.HOOFDSTEDEN_NLBE), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
+function controleer62(c) {
+  var fouten = [], n = 0;
+  function eis(ok, groep, tekst) { n++; if (!ok) fouten.push({ groep: groep, tekst: tekst }); }
+  var reg = c.register, perId = {};
+  function shaInReg(id, s) { var r = reg[id]; return !!r && Object.keys(r.bestanden).some(function(b) { return r.bestanden[b] === s; }); }
+  c.oud.concat(c.nieuw).forEach(function(it) { eis(!perId[it.id], "hergebruik", "id een keer in de kennisbank: " + it.id); perId[it.id] = it; });
+  ["NLD", "BEL", "DEU"].forEach(function(id) { eis(c.oud.concat(c.nieuw).filter(function(it) { return it.id === id; }).length === 1, "hergebruik", "land bestaat een keer: " + id); });
+  c.nieuw.forEach(function(it) {
+    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "stad"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2: " + it.id);
+    eis(gelijk(it.geometrie.kaart, {}), "georef", "nog geen kaartverwijzingen: " + it.id);
+    var g = it.geometrie.bron;
+    if (it.soort === "stad" && it.geometrie.punt.status !== "vastgesteld") eis(g === null, "georef", "open punt zonder GEOREF: " + it.id);
+    else eis(!!g && !!reg[g.bronId] && reg[g.bronId].bestanden[g.bestand] === g.sha256 && g.herkomst === undefined && g.status === undefined, "georef", "GEOREF in het register met dezelfde SHA, zonder herkomst en status: " + it.id);
+    var feiten = [["naam", it.naam]];
+    Object.keys(it.feiten).sort().forEach(function(k) { feiten.push(["feiten." + k, it.feiten[k]]); });
+    if (it.soort === "stad") feiten.push(["geometrie.punt", it.geometrie.punt]);
+    feiten.forEach(function(p) {
+      var f = p[1], wie = it.id + " " + p[0];
+      eis(IX.HERKOMSTEN.indexOf(f.herkomst) >= 0 && IX.STATUSSEN.indexOf(f.status) >= 0, "status", "herkomst en status geldig: " + wie);
+      eis(IX.combinatieToegestaan(f.herkomst, f.status), "bewijs", "toegestane combinatie herkomst x status: " + wie);
+      eis(IX.herkomstCompleet(f), "herkomst", "velden bij de herkomst compleet: " + wie);
+      var w = p[0] === "geometrie.punt" ? IX.waardeVan(f, "geometrie.punt") : f.waarde;
+      if (f.status === "vastgesteld") eis(!IX.isLeeg(w), "status", "vastgesteld heeft een waarde: " + wie);
+      if (p[0] === "naam" || p[0] === "geometrie.punt") eis(IX.bewezen(f, p[0]) === (f.status === "vastgesteld"), "vraagbaar", "bewezen alleen als vastgesteld: " + wie);
+      if (f.herkomst === "bron") eis(!!reg[f.bron.id] && (f.bron.sha256 === undefined || shaInReg(f.bron.id, f.bron.sha256)), "register", "bron-id en SHA in het register: " + wie);
+    });
+  });
+  // ---- namen: uniek per soort en land (twee provincies Limburg: nlbe-naam-limburg op de open lijst) ----
+  // ---- landrelatie (expliciet): elke provincie, elk gewest en elke Belgische stad heeft feiten.land met het juiste land ----
+  // NL-provincies (CBS-code PVnn) en de steden van fase 6.1 (CBS) liggen in NLD; Belgische provincies (NIS) en gewesten in BEL
+  function verwachtLand(it) {
+    if (it.soort === "provincie") return /^PV[0-9]{2}$/.test(it.feiten.code && it.feiten.code.waarde) ? "NLD" : /^[0-9]{5}$/.test(it.feiten.code && it.feiten.code.waarde) ? "BEL" : null;
+    if (it.soort === "gewest") return "BEL";
+    if (it.soort === "stad") return /^stad-be-/.test(it.id) ? "BEL" : null;
+    return null;
+  }
+  c.nieuw.forEach(function(it) {
+    var v = verwachtLand(it), f = it.feiten.land;
+    eis(v !== null && !!f && f.waarde === v && f.herkomst === "bron" && f.status === "vastgesteld" && !!perId[f.waarde] && perId[f.waarde].soort === "land", "land", "landrelatie aanwezig, juist en naar een bestaand land-item: " + it.id + " (" + (f ? f.waarde : "geen") + ", verwacht " + v + ")");
+  });
+  // het land voor de naamregel: alleen uit een expliciete bron, nooit een terugval op het eigen id
+  function landVan(it) {
+    if (it.soort === "land") return it.id;
+    if (it.feiten && it.feiten.land) return it.feiten.land.waarde;
+    if (it.soort === "stad" && it.feiten && it.feiten.cbs && it.feiten.cbs.herkomst === "bron") return "NLD";
+    return null;
+  }
+  var perNaam = {};
+  c.oud.concat(c.nieuw).forEach(function(it) { var l = landVan(it); if (c.nieuw.indexOf(it) >= 0) eis(l !== null, "namen", "land bekend voor de naamregel: " + it.id); var k = it.soort + "|" + l + "|" + it.naam.waarde; if (c.nieuw.indexOf(it) >= 0) eis(!perNaam[k], "namen", "voorkeursnaam uniek per soort en land: " + k); perNaam[k] = it.id; });
+  c.nieuw.forEach(function(it) { (it.naam.varianten || []).forEach(function(v) { var k = it.soort + "|" + landVan(it) + "|" + v; eis(!perNaam[k] || perNaam[k] === it.id, "namen", "variant is geen naam van een ander item: " + v); }); });
+  // ---- relaties ----
+  var alleItems = c.oud.concat(c.nieuw), idx = IX.bouwIndex(alleItems, c.rel, c.relaties, c.inverseFn), R = c.relaties || RELATIES;
+  eis(idx.dubbel.length === 0, "index", "geen dubbele relaties");
+  eis(idx.heen.length === 26, "index", "26 relaties: 24 uit hoofdsteden-nlbe.js en 2 van Brussel (" + idx.heen.length + ")");
+  eis(c.oud.every(function(it) { return it.relaties.length === 0; }), "index", "de items van fase 6.1 blijven zonder relaties");
+  idx.heen.forEach(function(r) {
+    var t = R[r.type], wie = r.type + " " + r.van + " " + r.naar;
+    eis(!!t, "relatiesoort", "relatietype bekend: " + wie);
+    if (!t) return;
+    eis(!!perId[r.van] && !!perId[r.naar] && t.bronSoorten.indexOf(perId[r.van].soort) >= 0 && t.doelSoorten.indexOf(perId[r.naar].soort) >= 0, "relatiesoort", "bron- en doelsoort toegestaan: " + wie);
+    eis(r.status === "vastgesteld" && IX.bewezen(r, "relatie"), "relatiestatus", "relatie vastgesteld en bewezen: " + wie);
+    if (r.herkomst === "afgeleid") eis(!!r.afleiding && Array.isArray(r.afleiding.invoer) && r.afleiding.invoer.every(function(x) { return shaInReg(x.bronId, x.sha256); }), "register", "invoer van de afleiding in het register: " + wie);
+    else eis(!!r.bron && !!reg[r.bron.id], "register", "bron-id in het register: " + wie);
+    var lijst = idx.perSleutel[t.inverse + "|" + r.naar + "|" + r.van] || [], inv = lijst.filter(function(x) { return x !== r; })[0];
+    eis(!!inv, "inverse", "inverse in de index: " + wie);
+    if (inv) ["status", "herkomst", "afleiding", "bron", "kwalificaties"].forEach(function(k) { eis(gelijk(inv[k], r[k]), "inverse", "inverse heeft dezelfde " + k + ": " + wie); });
+  });
+  return { fouten: fouten, n: n };
+}
+var uit62 = controleer62(basis62());
+console.log("fase 6.2 deel 1: " + (uit62.fouten.length ? "FOUT" : "GOED") + ": " + (uit62.n - uit62.fouten.length) + " controles geslaagd, " + uit62.fouten.length + " mislukt");
+uit62.fouten.slice(0, 20).forEach(function(f) { console.log("  - [" + f.groep + "] " + f.tekst); });
+function nieuw62(c, id) { return c.nieuw.filter(function(r) { return r.id === id; })[0]; }
+var MUT62 = [
+  ["provincie zonder landrelatie", "land", function(c) { delete nieuw62(c, "prov-nl-pv21").feiten.land; }],
+  ["Belgische provincie met land NLD", "land", function(c) { nieuw62(c, "prov-be-70000").feiten.land.waarde = "NLD"; }],
+  ["gewest zonder landrelatie", "land", function(c) { delete nieuw62(c, "gewest-be-04000").feiten.land; }],
+  ["landrelatie naar een niet-bestaand land", "land", function(c) { nieuw62(c, "prov-be-10000").feiten.land.waarde = "BLX"; }],
+  ["10 een tweede Nederland", "hergebruik", function(c) { c.nieuw.push(kopie(c.oud.filter(function(r) { return r.id === "NLD"; })[0])); }],
+  ["bron-id niet in het register", "register", function(c) { nieuw62(c, "prov-nl-pv20").naam.bron.id = "CBS2026"; }],
+  ["GEOREF met een andere SHA", "georef", function(c) { nieuw62(c, "prov-be-10000").geometrie.bron.sha256 = "3".repeat(64); }],
+  ["open punt met een GEOREF", "georef", function(c) { nieuw62(c, "stad-be-leuven").geometrie.bron = kopie(nieuw62(c, "stad-be-gent").geometrie.bron); }],
+  ["twee provincies Antwerpen in Belgie", "namen", function(c) { nieuw62(c, "prov-be-20001").naam.waarde = "Antwerpen"; }],
+  ["afgeleide relatie zonder afleiding", "relatiestatus", function(c) { delete c.rel[1].afleiding; }],
+  ["provinciehoofdstad-van naar een gewest", "relatiesoort", function(c) { c.rel.filter(function(r) { return r.van === "stad-be-antwerpen"; })[0].naar = "gewest-be-02000"; }],
+  ["open punt als vastgesteld met herkomst onderzoek", "bewijs", function(c) { nieuw62(c, "stad-be-waver").geometrie.punt.status = "vastgesteld"; }],
+  ["inverse zonder bron", "inverse", function(c) { c.inverseFn = function(r, rel) { var i = kopie(IX.inverseVan(r, rel)); delete i.bron; return i; }; }]
+];
+var gevangen62 = 0, gemist62 = [];
+MUT62.forEach(function(m) {
+  var c = basis62(); m[2](c);
+  var r = controleer62(c);
+  if (r.fouten.some(function(x) { return x.groep === m[1]; })) gevangen62++; else gemist62.push(m[0]);
+});
+console.log("mutanten fase 6.2 deel 1: " + gevangen62 + " van " + MUT62.length + " gevangen door de verwachte groep");
+gemist62.forEach(function(g) { console.log("  - GEMIST: " + g); });
+if (uit62.fouten.length || gemist62.length) process.exit(1);
+
 process.exit(uit.fouten.length || gemist.length || omzGemist.length || grensGemist ? 1 : 0);

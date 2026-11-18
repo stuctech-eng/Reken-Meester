@@ -297,6 +297,9 @@ var landenIds = {};
 try { var LL = await import(pathToFileURL(path.join(ROOT, "src", "core", "topo", "items", "landen.js")).href); LL.AFWIJKINGEN_LANDEN.forEach(function(a) { landenIds[a.id] = 1; }); } catch (e) { landenIds = {}; }
 // en de punten van de Nederlandse steden (test-steden-nl.mjs)
 try { var SS = await import(pathToFileURL(path.join(ROOT, "src", "core", "topo", "items", "steden-nl.js")).href); SS.AFWIJKINGEN_STEDEN.forEach(function(a) { landenIds[a.id] = 1; }); } catch (e) { }
+// en de punten van fase 6.2, deel 1: provincies en hoofdsteden (test-bestuur-nlbe.mjs) en de Belgische steden (test-steden-be.mjs)
+try { var PB = await import(pathToFileURL(path.join(ROOT, "src", "core", "topo", "items", "provincies.js")).href); PB.AFWIJKINGEN_BESTUUR.forEach(function(a) { landenIds[a.id] = 1; }); } catch (e) { }
+try { var SB = await import(pathToFileURL(path.join(ROOT, "src", "core", "topo", "items", "steden-be.js")).href); SB.AFWIJKINGEN_STEDEN_BE.forEach(function(a) { landenIds[a.id] = 1; }); } catch (e) { }
 // een punt dat niet meer voorkomt, blijft op de lijst staan met de status "gecorrigeerd" (niets stilzwijgend verwijderen)
 Object.keys(open).forEach(function(id) { eis(!!uitIds[id] || !!landenIds[id] || open[id].status === "gecorrigeerd", "open lijst noemt een afwijking die niet (meer) bestaat en niet gecorrigeerd is: " + id); });
 

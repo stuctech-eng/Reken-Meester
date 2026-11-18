@@ -60,6 +60,47 @@
     "licentie": "CC BY 4.0 (PDOK, dataset CBS Bevolkingskernen 2021); CBS: publicatie van de digitale geometrie is toegestaan, mits het CBS als bron wordt vermeld",
     "afronding": "aantallen afgerond op vijftallen; onderdrukt = -99997"
   },
+  "cbsGebiedsindelingen2026": {
+    "bron": "CBSGEB",
+    "titel": "CBS Gebiedsindelingen 2026 (GeoPackage), uit de zip CBS gebiedsindelingen 2016 - heden",
+    "pagina": "https://www.cbs.nl/nl-nl/dossier/nederland-regionaal/geografische-data/cbs-gebiedsindelingen",
+    "herkomst": "door Dick gedownload van de pagina hierboven (de zip 2016 - heden, 734 MB; de zip 2026 niet gegeneraliseerd stond er niet), op de iPhone uitgepakt; alleen het bestand van 2026 in de chat toegevoegd",
+    "gpkg": { "bestand": "cbsgebiedsindelingen2026.gpkg", "grootte": 250200064, "sha256": "158a414afb04a58fc796243b2399b0a52e94292ef11c1f99ad09ec10dfc21ce7", "crs": "EPSG:28992" },
+    "lagen": { "provincie_gegeneraliseerd": 12, "gemeente_niet_gegeneraliseerd": 342, "gebiedsindelingen_register": 342 },
+    "jaargang": "2026",
+    "jaargangBron": "jrstatcode van elk record (2026PV20 enzovoort); het bestand noemt geen peildatum op de dag",
+    "bestandsdatum": "2026-07-29",
+    "bestandsdatumBron": "gpkg_contents.last_change van de drie gebruikte lagen (2026-07-29); een bestands- of wijzigingsdatum, geen peildatum",
+    "gedownload": "2026-11-18",
+    "beperking": "de provincielaag bestaat alleen gegeneraliseerd; de gemeentelaag ook niet gegeneraliseerd",
+    "licentie": "niet vastgesteld in deze ronde (niet in het bestand)"
+  },
+  "statbel": {
+    "bron": "STB",
+    "refnis": {
+      "titel": "Statbel, Code REFNIS (gewesten, provincies, arrondissementen, gemeenten met geldigheidsperiode)",
+      "pagina": "https://statbel.fgov.be/en/open-data/code-refnis",
+      "zip": { "bestand": "TU_COM_REFNIS.zip", "grootte": 33983, "sha256": "98f867a1b2c4076828cd80917abf2fe09a85c12e4e35a635e0ce93026ab80b0c" },
+      "txt": { "bestand": "TU_COM_REFNIS.txt", "grootte": 192005, "sha256": "ebd05f9663eec01317062e6e70e7191989baaf670582df77b626639ccc2b8ad1", "scheiding": "|", "codering": "UTF-8 met BOM" },
+      "laatsteWijziging": "2019-01-01",
+      "laatsteWijzigingBron": "de hoogste DT_VLDT_START in het bestand",
+      "gebruiktOp": "2026-01-01",
+      "beperking": "de fusies van Vlaamse gemeenten op 1-1-2025 staan er niet in (581 gemeenten geldig op 1-1-2026 volgens het bestand)",
+      "gedownload": "2026-11-18"
+    },
+    "sectoren": {
+      "titel": "Statbel, statistische sectoren 2024 (GeoJSON, Belgian Lambert 2008)",
+      "pagina": "https://statbel.fgov.be/en/news/open-data-address-files-and-statistical-sectors-2024",
+      "zip": { "bestand": "sh_statbel_statistical_sectors_3812_20240101_geojson.zip", "grootte": 54691384, "sha256": "90d5d995e75f586d24fddc416f9aa3baafef794de8c2883af0054a03f958c6f8" },
+      "geojson": { "bestand": "sh_statbel_statistical_sectors_3812_20240101.geojson", "grootte": 204578332, "sha256": "5c67b3355992f72b0b4312ddb3ba35628280a6b868f680ac1d13b39ac4f81024", "crs": "EPSG:3812" },
+      "situatie": "2024-01-01",
+      "situatieBron": "dt_situation van elk record (2024/01/01)",
+      "gemeentegrenzen": "2022",
+      "gemeentegrenzenBron": "Statbel-pagina: The version of the municipality boundaries is the one from 2022",
+      "gedownload": "2026-11-18",
+      "licentie": "Statbel, Licentie open data (Licence open data_NL.pdf in de zip, SHA-256 aaf6847a894359bfc455d272673017248771137f7b502902debcbfbe6d784ae6): hergebruik toegestaan"
+    }
+  },
   "register": {
     "toelichting": "Register van de bron-ids (bouwplan T2b-2 fase 6.1 v1.9). Elk bron-id dat in een FEIT of afleiding voorkomt, staat hier expliciet; er wordt niets aangevuld. Bestanden met hun SHA-256; een webpagina heeft geen bestand en dus geen SHA.",
     "ids": {
@@ -148,6 +189,35 @@
         ],
         "bestanden": {
           "tools/topo/steden-nl.json": "fb099af72de070fcc05de57ac1222889d1468d20a12037e1a0eed216d5c7f3b0"
+        }
+      },
+      "CBSGEB": {
+        "titel": "CBS Gebiedsindelingen 2026",
+        "soort": [
+          "bestand"
+        ],
+        "bestanden": {
+          "cbsgebiedsindelingen2026.gpkg": "158a414afb04a58fc796243b2399b0a52e94292ef11c1f99ad09ec10dfc21ce7"
+        }
+      },
+      "STB": {
+        "titel": "Statbel (REFNIS en statistische sectoren 2024)",
+        "soort": [
+          "bestand"
+        ],
+        "bestanden": {
+          "TU_COM_REFNIS.txt": "ebd05f9663eec01317062e6e70e7191989baaf670582df77b626639ccc2b8ad1",
+          "sh_statbel_statistical_sectors_3812_20240101.geojson": "5c67b3355992f72b0b4312ddb3ba35628280a6b868f680ac1d13b39ac4f81024"
+        }
+      },
+      "tabellenNlbe": {
+        "titel": "Tabellen voor Nederland en Belgie in de repository (rollen met hun officiele passages; vaste ids van de Belgische steden)",
+        "soort": [
+          "bestand"
+        ],
+        "bestanden": {
+          "tools/topo/ov-rollen-nlbe.json": "440805cd7b401fd6f7c01dd97f69c474c9b2c1fcd013e2a326da41e02fabcf45",
+          "tools/topo/steden-be.json": "16c9ced441661752b4ab10a4e9390d3a461a1600b0d56d386fa276f953726770"
         }
       }
     }
