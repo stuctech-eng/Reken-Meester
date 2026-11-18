@@ -10,73 +10,73 @@
 
 import fs from "fs";
 import path from "path";
-import crypto from "crypto";
 import { createRequire } from "module";
 import { fileURLToPath } from "url";
-import initSqlJs from "sql.js";
 import proj4 from "proj4";
 import { pool, binnenVlak, getekendeAfstand, oppervlak } from "./vlakpunt.mjs";
+import { openBron, CRS } from "./bronnen/bron.mjs";
+import { leesGpkg, leesGeometrie, alleRingen } from "./bronnen/lees-gpkg.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var GPKG = process.argv[2];
 var UIT = process.argv[3];
 var require = createRequire(import.meta.url);
 var BRON = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8")).cbsBevolkingskernen2021;
-var TABEL = JSON.parse(fs.readFileSync(path.join(HIER, "steden-nl.json"), "utf8"));
+var TABEL_BRON = openBron(path.join(HIER, "steden-nl.json"), "besluiten", "tools/topo/steden-nl.json");
+var TABEL = JSON.parse(TABEL_BRON.buf.toString("utf8"));
+// besluitRegel: alleen bij een Groot-kern waarvan de weergavenaam afwijkt van de CBS-naam en die geen besluittekst heeft
+// (bouwplan T2b-2 fase 6.1 v1.9, par. 3.0); naam.besluit blijft letterlijk
+var BESLUITREGEL = "GPT 17-11-2026 D6-d: Groot-kern, weergavenaam = de hoofdplaats uit de CBS-naam";
 
-// EPSG:28992 (Amersfoort / RD New) met de 7-parametertransformatie naar WGS84, zoals EPSG die publiceert
-export var RD = "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m +no_defs";
+// de CRS-definities staan in de bronlaag (bronnen/bron.mjs)
+export var RD = CRS["EPSG:28992"];
 export var WGS84 = "EPSG:4326";
 export var PRECISIE_M = 1;
 
-function sha(buf) { return crypto.createHash("sha256").update(buf).digest("hex"); }
-
-// ---- GeoPackage-geometrie (OGC GeoPackage 1.x): kop "GP", versie, vlaggen, srs_id, envelop; daarna WKB ----
-export function leesGeometrie(b) {
-  if (b[0] !== 0x47 || b[1] !== 0x50) throw new Error("geen GeoPackage-geometrie (magic)");
-  var vlag = b[3], envelop = (vlag >> 1) & 7, leeg = (vlag >> 4) & 1;
-  if (leeg) throw new Error("lege geometrie");
-  var envLengte = [0, 32, 48, 48, 64][envelop];
-  if (envLengte === undefined) throw new Error("ongeldige envelop-indicator " + envelop);
-  var dv = new DataView(b.buffer, b.byteOffset, b.byteLength), o = 8 + envLengte;
-  function byteOrde() { var le = b[o] === 1; o += 1; return le; }
-  function u32(le) { var v = dv.getUint32(o, le); o += 4; return v; }
-  function f64(le) { var v = dv.getFloat64(o, le); o += 8; return v; }
-  function polygoon() {
-    var le = byteOrde(), t = u32(le);
-    if (t !== 3) throw new Error("verwacht Polygon (3), kreeg " + t);
-    var n = u32(le), ringen = [];
-    for (var i = 0; i < n; i++) {
-      var m = u32(le), r = [];
-      for (var j = 0; j < m; j++) { var x = f64(le), y = f64(le); r.push([x, y]); }
-      ringen.push(r);
-    }
-    return ringen;
-  }
-  var le = byteOrde(), type = u32(le);
-  var delen;
-  if (type === 6) { var k = u32(le); delen = []; for (var i = 0; i < k; i++) delen.push(polygoon()); }
-  else if (type === 3) { o -= 5; delen = [polygoon()]; }
-  else throw new Error("alleen 2D Polygon of MultiPolygon, kreeg type " + type);
-  if (o !== b.length) throw new Error("WKB niet volledig gelezen");
-  delen.forEach(function(d) { d.forEach(function(r) { var a = r[0], z = r[r.length - 1]; if (r.length < 4 || a[0] !== z[0] || a[1] !== z[1]) throw new Error("ring niet gesloten"); }); });
-  return delen;
-}
-// alle ringen van alle delen samen: even-oneven over het hele multivlak
-export function alleRingen(delen) { var a = []; delen.forEach(function(d) { d.forEach(function(r) { a.push(r); }); }); return a; }
-
 export async function leesKernen(gpkgPad) {
-  var buf = fs.readFileSync(gpkgPad);
-  if (sha(buf) !== BRON.gpkg.sha256) throw new Error("SHA-256 klopt niet voor " + gpkgPad);
-  var SQL = await initSqlJs();
-  var db = new SQL.Database(new Uint8Array(buf));
-  var inhoud = db.exec("select last_change, srs_id from gpkg_contents where table_name = 'bevolkingskernen'")[0].values[0];
-  var res = db.exec("select kernnummer, naam_2021, provincie, grootteklasse, aantal_inwoners, opp_land_ha, opp_water_ha, geom from bevolkingskernen order by kernnummer")[0];
-  var kernen = res.values.map(function(v) {
-    return { kernnummer: v[0], naam: v[1], provincie: v[2], grootteklasse: v[3], inwoners: v[4], oppLandHa: v[5], oppWaterHa: v[6], geom: v[7] };
+  var bron = openBron(gpkgPad, "CBS", BRON.gpkg.bestand);
+  if (bron.sha256 !== BRON.gpkg.sha256) throw new Error("SHA-256 van het register wijkt af van cbsBevolkingskernen2021");
+  var laag = await leesGpkg(bron.buf, "bevolkingskernen", ["kernnummer", "naam_2021", "provincie", "grootteklasse", "aantal_inwoners", "opp_land_ha", "opp_water_ha"], "geom", "kernnummer");
+  var kernen = laag.records.map(function(r) {
+    var v = r.kenmerken;
+    return { kernnummer: v.kernnummer, naam: v.naam_2021, provincie: v.provincie, grootteklasse: v.grootteklasse, inwoners: v.aantal_inwoners, oppLandHa: v.opp_land_ha, oppWaterHa: v.opp_water_ha, geom: r.geom };
   });
-  db.close();
-  return { lastChange: inhoud[0], srsId: inhoud[1], kernen: kernen };
+  return { lastChange: laag.lastChange, srsId: Number(laag.crs.split(":")[1]), kernen: kernen };
+}
+
+// ---- het itemmodel (bouwplan T2b-2 fase 6.1 v1.9, par. 3.0 en 3.2): dezelfde waarden, met herkomst en status per FEIT ----
+function metHS(feit, herkomst, status) { var x = {}; Object.keys(feit).forEach(function(k) { x[k] = feit[k]; }); x.herkomst = herkomst; x.status = status; return x; }
+function naarItem(r, cbsBron) {
+  var gpkgInvoer = { bronId: "CBS", sha256: BRON.gpkg.sha256 };
+  var naamWijkt = r.naam.waarde !== r.cbs.naam;
+  var naam = metHS(r.naam, naamWijkt ? "besluit" : "bron", "vastgesteld");
+  if (naamWijkt && !(typeof r.naam.besluit === "string" && r.naam.besluit.trim())) {
+    if (!r.naam.grootKern) throw new Error("afwijkende naam zonder besluit en geen Groot-kern: " + r.id);
+    naam.besluitRegel = BESLUITREGEL;
+  }
+  var feiten = {
+    selectie: { waarde: r.selectie, herkomst: "afgeleid", status: "vastgesteld", afleiding: { script: "tools/topo/maak-steden-nl.mjs", invoer: [gpkgInvoer, { bronId: "besluiten", sha256: TABEL_BRON.sha256 }], regel: "minstens " + TABEL.grens + " inwoners (" + TABEL.onderdrukt + " uitgesloten), plus de 12 provinciehoofdsteden" } },
+    cbs: { waarde: r.cbs, herkomst: "bron", status: "vastgesteld", bron: cbsBron },
+    inwoners: metHS(r.inwoners, "bron", "vastgesteld"),
+    provincie: metHS(r.provincie, "bron", "vastgesteld"),
+    beperking: r.beperking,
+    samenstelling: r.samenstelling ? { waarde: r.samenstelling.tekst, bron: r.samenstelling.bron, herkomst: "bron", status: "vastgesteld" } : r.samenstelling,
+    notities: r.notities
+  };
+  if (r.provinciehoofdstadSelectie) feiten.provinciehoofdstadSelectie = r.provinciehoofdstadSelectie;
+  var punt = {};
+  Object.keys(r.punt).forEach(function(k) { punt[k] = r.punt[k]; });
+  punt.herkomst = "afgeleid";
+  punt.status = "vastgesteld";
+  punt.afleiding = { script: r.punt.bron.script, invoer: [gpkgInvoer], regel: "pool van ontoegankelijkheid, " + PRECISIE_M + " m, RD naar WGS84" };
+  return {
+    id: r.id,
+    soort: r.soort,
+    naam: naam,
+    feiten: feiten,
+    geometrie: { punt: punt, bron: { bronId: "CBS", bestand: BRON.gpkg.bestand, sha256: BRON.gpkg.sha256, sleutel: "kernnummer", waarde: r.cbs.kernnummer, crs: "EPSG:28992" }, kaart: {} },
+    relaties: []
+  };
 }
 
 function rond5(v) { return Math.round(v * 1e5) / 1e5; }
@@ -163,7 +163,7 @@ async function hoofd() {
     "// Peildatum van de bevolking: " + BRON.peildatum + ". Inwonertallen zijn die van de bevolkingskern, niet van de gemeente of woonplaats.\n" +
     "// NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.\n" +
     regel("TELLING_STEDEN", TELLING) +
-    regel("STEDEN", STEDEN) +
+    regel("STEDEN", STEDEN.map(function(r) { return naarItem(r, cbsBron); })) +
     "// punten voor de open lijst (src/core/topo/open-vragen.md)\n" +
     regel("AFWIJKINGEN_STEDEN", AFW);
   fs.mkdirSync(UIT, { recursive: true });

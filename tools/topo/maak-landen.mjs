@@ -18,7 +18,9 @@ var HIER = path.dirname(fileURLToPath(import.meta.url));
 var WC_BESTAND = process.argv[2];
 var UIT = process.argv[3];
 var bronnen = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
-var VN = JSON.parse(fs.readFileSync(path.join(HIER, "vn-lidstaten.json"), "utf8"));
+var VN_BUF = fs.readFileSync(path.join(HIER, "vn-lidstaten.json"));
+if (crypto.createHash("sha256").update(VN_BUF).digest("hex") !== bronnen.register.ids.UN.bestanden["tools/topo/vn-lidstaten.json"]) throw new Error("SHA-256 klopt niet voor vn-lidstaten.json (register UN)");
+var VN = JSON.parse(VN_BUF.toString("utf8"));
 var OV = JSON.parse(fs.readFileSync(path.join(HIER, "ov-rollen.json"), "utf8"));
 
 function sha(buf) { return crypto.createHash("sha256").update(buf).digest("hex"); }
@@ -167,6 +169,34 @@ LANDEN.forEach(function(r) { (perNaam[r.naam.waarde] = perNaam[r.naam.waarde] ||
 Object.keys(perNaam).forEach(function(n) { if (perNaam[n].length > 1) throw new Error("dubbele getoonde naam: " + n); });
 AFWIJKINGEN.sort(function(x, y) { return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; });
 
+// ---- het itemmodel (bouwplan T2b-2 fase 6.1 v1.9, par. 3.0, 3.1, 3.6): dezelfde waarden, met herkomst en status per FEIT ----
+var NE_BESTAND = "ne_10m_admin_0_map_units.geojson";
+function metHS(feit, herkomst, status) { var x = {}; Object.keys(feit).forEach(function(k) { x[k] = feit[k]; }); x.herkomst = herkomst; x.status = status; return x; }
+function isoStatus(f) { return f.waarde === null ? "niet aangetoond" : "vastgesteld"; }
+function naarItem(r) {
+  var h = r.hoofdstad, hoofdstad;
+  if (h.bijzonder) {
+    hoofdstad = {};
+    Object.keys(h).forEach(function(k) { hoofdstad[k] = h[k]; });
+    hoofdstad.rollen = h.rollen.map(function(x) { return metHS(x, "bron", "vastgesteld"); });
+    hoofdstad.open = h.open.map(function(x) { var y = {}; Object.keys(x).forEach(function(k) { y[k] = x[k]; }); y.herkomst = "onderzoek"; return y; });
+  } else hoofdstad = metHS(h, "bron", h.teVerifieren ? "te verifiëren" : "vastgesteld");
+  return {
+    id: r.id,
+    soort: "land",
+    naam: metHS(r.naam, typeof r.naam.besluit === "string" && r.naam.besluit.trim() ? "besluit" : "bron", "vastgesteld"),
+    feiten: {
+      vn: metHS(r.vn, "bron", "vastgesteld"),
+      iso: { alpha3: metHS(r.iso.alpha3, "bron", isoStatus(r.iso.alpha3)), alpha2: metHS(r.iso.alpha2, "bron", isoStatus(r.iso.alpha2)), numeriek: metHS(r.iso.numeriek, "bron", isoStatus(r.iso.numeriek)) },
+      werelddeel: metHS(r.werelddeel, "bron", "vastgesteld"),
+      hoofdstad: hoofdstad,
+      modusEuropa: { waarde: r.modusEuropa, herkomst: "besluit", status: "vastgesteld", besluit: "plan T2b §0.2, D7-a" }
+    },
+    geometrie: { bron: { bronId: "NE", bestand: NE_BESTAND, sha256: bronnen.register.ids.NE.bestanden[NE_BESTAND], sleutel: "ADM0_A3", waarde: r.ne, crs: "EPSG:4326" }, kaart: {} },
+    relaties: []
+  };
+}
+
 var TELLING = {};
 LANDEN.forEach(function(r) { TELLING[r.werelddeel.waarde] = (TELLING[r.werelddeel.waarde] || 0) + 1; });
 
@@ -178,7 +208,7 @@ var tekst = "// GEGENEREERD door tools/topo/maak-landen.mjs uit tools/topo/bron/
   "// Per feit een bron: TU (namen, hoofdsteden, ISO-codes), M49 (werelddeel en groep), UN (de lijst). WC is alleen controle.\n" +
   "// NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.\n" +
   regel("TELLING", TELLING) +
-  regel("LANDEN", LANDEN) +
+  regel("LANDEN", LANDEN.map(naarItem)) +
   "// de rollen van de bijzondere gevallen met een vraag (plan T1 §3.6; bron per rol in LANDEN)\n" +
   regel("ROLLEN_MET_VRAAG", ROLLEN_MET_VRAAG) +
   "// verschillen met de controlebron en andere punten voor de open lijst (src/core/topo/open-vragen.md)\n" +

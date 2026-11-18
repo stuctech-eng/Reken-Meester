@@ -99,13 +99,13 @@ eis(grens.length === 25, "25 kernen met minstens 100.000 inwoners");
 var verwacht = grens.concat(Object.keys(hsKern).filter(function(n) { return grens.indexOf(n) < 0; }));
 eis(verwacht.length === 29 && S.STEDEN.length === 29, "29 steden");
 var perKern = {}, perId = {}, perNaam = {};
-S.STEDEN.forEach(function(r) { perKern[r.cbs.kernnummer] = r; perId[r.id] = (perId[r.id] || 0) + 1; perNaam[r.naam.waarde] = (perNaam[r.naam.waarde] || 0) + 1; });
+S.STEDEN.forEach(function(r) { perKern[r.feiten.cbs.waarde.kernnummer] = r; perId[r.id] = (perId[r.id] || 0) + 1; perNaam[r.naam.waarde] = (perNaam[r.naam.waarde] || 0) + 1; });
 eis(Object.keys(perKern).sort().join() === verwacht.slice().sort().join(), "precies de geselecteerde kernnummers");
 eis(Object.keys(perId).every(function(i) { return perId[i] === 1; }) && Object.keys(perNaam).every(function(n) { return perNaam[n] === 1; }) && Object.keys(perKern).length === 29, "geen dubbele id, naam of kernnummer");
 eis(S.TELLING_STEDEN.steden === 29 && S.TELLING_STEDEN.grens === 25 && S.TELLING_STEDEN.alleenProvinciehoofdstad === 4 && S.TELLING_STEDEN.grootKernen === 15, "TELLING_STEDEN");
 eis(rijen.filter(function(v) { return v[4] >= 99000 && v[4] <= 101000; }).length === 0, "de controleband 99.000 tot 101.000 is leeg");
 eis(rijen.filter(function(v) { return v[4] === -99997; }).length === 3, "3 onderdrukte waarden in de bron");
-var rdNaarWgs = proj4(S.STEDEN[0].punt.bron.rdDefinitie, "EPSG:4326");
+var rdNaarWgs = proj4(S.STEDEN[0].geometrie.punt.bron.rdDefinitie, "EPSG:4326");
 // referentiepunt: het RD-nulpunt Amersfoort, x 155000 y 463000 = 52,15517440 N, 5,38720621 O
 // (Schreutelkamp en Strang van Hees, Benaderingsformules voor de transformatie tussen RD- en WGS84-kaartcoordinaten)
 var ams = rdNaarWgs.forward([155000, 463000]);
@@ -123,35 +123,35 @@ fs.readFileSync(path.join(ROOT, "src", "core", "topo", "open-vragen.md"), "utf8"
 // ---- per stad ----
 var VAST = ["Groot - Amsterdam", "Groot - Rotterdam", "Groot - 's-Gravenhage", "Groot - Utrecht", "Groot - Eindhoven", "Groot - Leiden", "Groot - Dordrecht", "Groot - Groningen", "Groot - Haarlem", "Groot - Heerlen", "Groot - 's-Hertogenbosch", "Groot - Nijmegen", "Groot - Arnhem", "Groot - Sittard-Geleen", "Groot - Alkmaar"];
 S.STEDEN.forEach(function(r) {
-  var n = r.cbs.kernnummer, k = K[n];
+  var n = r.feiten.cbs.waarde.kernnummer, k = K[n];
   if (!k) { eis(false, "kern bestaat: " + n); return; }
-  eis(r.cbs.naam === k.naam && r.cbs.provincie === k.provincie && r.cbs.grootteklasse === k.grootteklasse, "CBS-naam, provincie en klasse letterlijk: " + r.id);
-  eis(r.inwoners.waarde === k.inwoners && r.inwoners.waarde > 0 && r.inwoners.waarde % 5 === 0 && r.inwoners.peildatum === "2021-01-01" && r.inwoners.eenheid === "bevolkingskern" && !!r.inwoners.beperking, "inwonertal ongewijzigd, peildatum en beperking: " + r.id);
-  eis(r.provincie.waarde === k.provincie, "provincie uit CBS: " + r.id);
-  [r.naam.bron, r.inwoners.bron, r.provincie.bron].forEach(function(b) { eis(b.id === "CBS" && b.sha256 === B.gpkg.sha256 && b.peildatum === "2021-01-01", "CBS-bron per feit: " + r.id); });
+  eis(r.feiten.cbs.waarde.naam === k.naam && r.feiten.cbs.waarde.provincie === k.provincie && r.feiten.cbs.waarde.grootteklasse === k.grootteklasse, "CBS-naam, provincie en klasse letterlijk: " + r.id);
+  eis(r.feiten.inwoners.waarde === k.inwoners && r.feiten.inwoners.waarde > 0 && r.feiten.inwoners.waarde % 5 === 0 && r.feiten.inwoners.peildatum === "2021-01-01" && r.feiten.inwoners.eenheid === "bevolkingskern" && !!r.feiten.inwoners.beperking, "inwonertal ongewijzigd, peildatum en beperking: " + r.id);
+  eis(r.feiten.provincie.waarde === k.provincie, "provincie uit CBS: " + r.id);
+  [r.naam.bron, r.feiten.inwoners.bron, r.feiten.provincie.bron].forEach(function(b) { eis(b.id === "CBS" && b.sha256 === B.gpkg.sha256 && b.peildatum === "2021-01-01", "CBS-bron per feit: " + r.id); });
   eis(r.id === (T.steden[n] || {}).id && /^stad-nl-[a-z-]+$/.test(r.id), "vaste id uit de tabel: " + r.id);
   var sel = [];
   if (k.inwoners >= 100000) sel.push("grens");
   if (hsKern[n]) sel.push("provinciehoofdstad");
-  eis(r.selectie.join() === sel.join(), "selectiereden: " + r.id);
-  if (hsKern[n]) eis(r.provinciehoofdstadSelectie && r.provinciehoofdstadSelectie.rol === false && r.provinciehoofdstadSelectie.provincie === hsKern[n], "provinciehoofdstad alleen als selectiereden, geen rol: " + r.id);
-  else eis(!r.provinciehoofdstadSelectie, "geen hoofdstadvermelding: " + r.id);
+  eis(r.feiten.selectie.waarde.join() === sel.join(), "selectiereden: " + r.id);
+  if (hsKern[n]) eis(r.feiten.provinciehoofdstadSelectie && r.feiten.provinciehoofdstadSelectie.rol === false && r.feiten.provinciehoofdstadSelectie.provincie === hsKern[n], "provinciehoofdstad alleen als selectiereden, geen rol: " + r.id);
+  else eis(!r.feiten.provinciehoofdstadSelectie, "geen hoofdstadvermelding: " + r.id);
   // Groot-kern uit de CBS-naam, niet uit de weergavenaam
   var gk = /^Groot - /.test(k.naam);
-  eis(r.naam.grootKern === gk && (gk ? r.beperking === T.beperkingGrootKern : r.beperking === null), "grootKern en beperking volgens de CBS-naam: " + r.id);
+  eis(r.naam.grootKern === gk && (gk ? r.feiten.beperking === T.beperkingGrootKern : r.feiten.beperking === null), "grootKern en beperking volgens de CBS-naam: " + r.id);
   // samenstelling alleen met een officiele bron
-  if (r.samenstelling) eis(r.samenstelling.bron && r.samenstelling.bron.id === "CBS" && /^https:\/\//.test(r.samenstelling.bron.url) && r.samenstelling.bron.passage.length > 20 && !!r.samenstelling.bron.publicatiedatum, "samenstelling met bron: " + r.id);
+  if (r.feiten.samenstelling) eis(r.feiten.samenstelling.bron && r.feiten.samenstelling.bron.id === "CBS" && /^https:\/\//.test(r.feiten.samenstelling.bron.url) && r.feiten.samenstelling.bron.passage.length > 20 && !!r.feiten.samenstelling.bron.publicatiedatum, "samenstelling met bron: " + r.id);
   // varianten zijn geen naam van een ander record
   r.naam.varianten.forEach(function(v) { eis(!perNaam[v], "variant is geen naam van een andere stad: " + v); });
   // het punt: RD binnen het eigen vlak, met afstand tot de rand groter dan 0
-  var g = opp[n].g, x = r.punt.rd[0], y = r.punt.rd[1];
+  var g = opp[n].g, x = r.geometrie.punt.rd[0], y = r.geometrie.punt.rd[1];
   eis(Number.isInteger(x) && Number.isInteger(y) && inVlak(x, y, g.polygonen) && randAfst(x, y, g.polygonen) > 0, "RD-punt binnen het eigen CBS-vlak: " + r.id);
   // het grootste deel (plan par. 3.4)
   if (g.polygonen.length > 1) { var gr = g.polygonen.slice().sort(function(a, b) { return polyOpp(b) - polyOpp(a); })[0]; eis(inVlak(x, y, [gr]), "punt in het grootste deel: " + r.id); }
   // WGS84 reproduceerbaar uit RD, volgorde [lon, lat]
   var ll = rdNaarWgs.forward([x, y]);
-  eis(r.punt.lon === Math.round(ll[0] * 1e5) / 1e5 && r.punt.lat === Math.round(ll[1] * 1e5) / 1e5, "WGS84 reproduceerbaar uit RD: " + r.id);
-  eis(r.punt.lon > 3.3 && r.punt.lon < 7.3 && r.punt.lat > 50.7 && r.punt.lat < 53.6, "volgorde lon, lat en binnen Nederland: " + r.id);
+  eis(r.geometrie.punt.lon === Math.round(ll[0] * 1e5) / 1e5 && r.geometrie.punt.lat === Math.round(ll[1] * 1e5) / 1e5, "WGS84 reproduceerbaar uit RD: " + r.id);
+  eis(r.geometrie.punt.lon > 3.3 && r.geometrie.punt.lon < 7.3 && r.geometrie.punt.lat > 50.7 && r.geometrie.punt.lat < 53.6, "volgorde lon, lat en binnen Nederland: " + r.id);
   // oppervlakte van de 29 strenger
   eis(Math.abs(opp[n].a - k.oppHa) <= Math.max(1, 0.001 * k.oppHa), "oppervlakte binnen max(1 ha, 0,1%): " + r.id);
   // provincie volgens Natural Earth (aanvullende controle; afwijking moet op de open lijst)
@@ -159,23 +159,23 @@ S.STEDEN.forEach(function(r) {
     var nm = { "Fryslân": "Friesland" }[k.provincie] || k.provincie;
     var raak = ne.filter(function(f) {
       var polys = f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
-      return inVlak(r.punt.lon, r.punt.lat, polys);
+      return inVlak(r.geometrie.punt.lon, r.geometrie.punt.lat, polys);
     }).map(function(f) { return f.properties.name; });
     eis((raak.length === 1 && raak[0] === nm) || !!open["steden-provincie-ne-" + r.id.replace("stad-nl-", "")], "punt in de eigen provincie volgens Natural Earth, of op de open lijst: " + r.id + " (" + raak.join(", ") + ")");
   }
 });
 // ---- de vijf naamkwesties en de notitie (D6-d) ----
 function st(id) { return S.STEDEN.filter(function(r) { return r.id === id; })[0] || { naam: {}, cbs: {}, notities: [] }; }
-eis(st("stad-nl-ijmond").naam.waarde === "IJmond" && st("stad-nl-ijmond").cbs.naam === "IJmond", "IJmond: CBS-naam, geen hoofdplaats");
-eis(st("stad-nl-almere").naam.waarde === "Almere-Stad/Almere-Buiten" && st("stad-nl-almere").cbs.naam === "Almere-Stad/Almere-Buiten", "Almere-Stad/Almere-Buiten: CBS-naam");
+eis(st("stad-nl-ijmond").naam.waarde === "IJmond" && st("stad-nl-ijmond").feiten.cbs.waarde.naam === "IJmond", "IJmond: CBS-naam, geen hoofdplaats");
+eis(st("stad-nl-almere").naam.waarde === "Almere-Stad/Almere-Buiten" && st("stad-nl-almere").feiten.cbs.waarde.naam === "Almere-Stad/Almere-Buiten", "Almere-Stad/Almere-Buiten: CBS-naam");
 eis(st("stad-nl-sittard-geleen").naam.waarde === "Sittard-Geleen" && st("stad-nl-sittard-geleen").naam.grootKern === true, "Sittard-Geleen: beide plaatsen, Groot-kern");
-eis(st("stad-nl-lelystad").naam.waarde === "Lelystad" && st("stad-nl-lelystad").cbs.naam === "Lelystad-Kern", "Lelystad, CBS-naam bewaard");
-eis(st("stad-nl-middelburg").naam.waarde === "Middelburg" && st("stad-nl-middelburg").cbs.naam === "Middelburg (Z.)", "Middelburg, CBS-naam bewaard");
-var az = st("stad-nl-arnhem").notities.filter(function(x) { return x.kernnummer === "BK01057"; })[0];
+eis(st("stad-nl-lelystad").naam.waarde === "Lelystad" && st("stad-nl-lelystad").feiten.cbs.waarde.naam === "Lelystad-Kern", "Lelystad, CBS-naam bewaard");
+eis(st("stad-nl-middelburg").naam.waarde === "Middelburg" && st("stad-nl-middelburg").feiten.cbs.waarde.naam === "Middelburg (Z.)", "Middelburg, CBS-naam bewaard");
+var az = st("stad-nl-arnhem").feiten.notities.filter(function(x) { return x.kernnummer === "BK01057"; })[0];
 eis(!!az && az.cbsNaam === K.BK01057.naam && az.inwoners === K.BK01057.inwoners && !perKern.BK01057, "Arnhem-Zuid: alleen notitie bij Arnhem, met inwonertal uit de bron");
-eis(st("stad-nl-den-haag").naam.waarde === "Den Haag" && st("stad-nl-den-haag").naam.varianten.indexOf("'s-Gravenhage") >= 0 && !!st("stad-nl-den-haag").samenstelling, "Den Haag: variant 's-Gravenhage en samenstelling met bron");
-eis(S.STEDEN.filter(function(r) { return r.samenstelling; }).length === 1, "samenstelling alleen bij Den Haag (de enige met een officiele bron)");
-eis(S.STEDEN.filter(function(r) { return r.naam.grootKern; }).map(function(r) { return r.cbs.naam; }).sort().join() === VAST.slice().sort().join(), "precies de 15 Groot-kernen");
+eis(st("stad-nl-den-haag").naam.waarde === "Den Haag" && st("stad-nl-den-haag").naam.varianten.indexOf("'s-Gravenhage") >= 0 && !!st("stad-nl-den-haag").feiten.samenstelling, "Den Haag: variant 's-Gravenhage en samenstelling met bron");
+eis(S.STEDEN.filter(function(r) { return r.feiten.samenstelling; }).length === 1, "samenstelling alleen bij Den Haag (de enige met een officiele bron)");
+eis(S.STEDEN.filter(function(r) { return r.naam.grootKern; }).map(function(r) { return r.feiten.cbs.waarde.naam; }).sort().join() === VAST.slice().sort().join(), "precies de 15 Groot-kernen");
 T.nietAlsKern.namen.forEach(function(nm) { eis(!rijen.some(function(v) { return v[1] === nm; }), "komt niet als kernnaam voor: " + nm); });
 // ---- open lijst ----
 var afwIds = {};
