@@ -185,3 +185,10 @@ De ids komen uit AFWIJKINGEN_STEDEN in items/steden-nl.js; tools/topo/test-stede
 - nlbe-punt-brussel | onderzocht | Brussel: geen punt. GPT 18-11-2026: geen punt; het Natural Earth-punt (ne_id 1159151465) ligt in Anderlecht (21001), niet in Brussel (21004)
 - nlbe-punt-leuven | onderzocht | Leuven: geen punt. GPT 18-11-2026 K6 c: geen punt in Natural Earth; open tot het historische centrum voldoende is onderbouwd; geen kunstmatig punt in het gemeentevlak
 - nlbe-punt-waver | onderzocht | Waver: geen punt. GPT 18-11-2026 K6 c: geen punt in Natural Earth; open tot het historische centrum voldoende is onderbouwd; geen kunstmatig punt in het gemeentevlak
+
+## Nederland en België, basisgegevens (T2b-2 fase 6.2, deel 2)
+
+- nlbe-w1-noordzee-waddenzee | onderzocht | W1: de grens met de Waddenzee is niet betrouwbaar; het vlak omvat mogelijk water dat geografisch tot de Waddenzee behoort. Geen aanwijsvraag voordat de waterronde (6.4) die grens met een officiele bron vastlegt. Gemeten: het NE-vlak North Sea omvat het water bij Lauwersoog en voor de Groninger kust; het NE-vlak Waddenzee houdt op bij lengte 6,09 (bouwplan v2 par. 7)
+- nlbe-w2-ne-rivieren | nog onbeslist | W2, geconstateerd en nog nader te onderzoeken: Natural Earth knipt de rivieren anders dan de Nederlandse indeling; het stuk Rhine loopt tot lengte 4,99 (bij Gorinchem), het stuk Waal begint daar. Vastgesteld in de brondata (omhullende), nog niet op een kaart nagekeken; aandachtspunt voor 6.3 en 6.4
+- nlbe-namen-woordenlijst | onderzocht | D1 b: Waal, Nederrijn, Lek, IJssel, Maas en Waddeneilanden staan niet bij de Taalunie (die noemt alleen exoniemen) en hebben de naam als besluit (T1 par. 2.1); de Woordenlijst was niet toegankelijk vanuit de bouwomgeving, dus niet vastgesteld of ze daar staan. Rijn en Noordzee: Taalunie, Overige namen (Europa)
+- nlbe-eilanden-kleine-delen | onderzocht | Waddeneilanden: het eilandvlak is het grootste component van de CBS-gemeente; de kleinere delen (Texel 12, Vlieland 4, Terschelling 11, Ameland 3, Schiermonnikoog 2, onder andere Griend en Noorderhaaks) horen niet bij het eiland en volgen eventueel in Gevorderd

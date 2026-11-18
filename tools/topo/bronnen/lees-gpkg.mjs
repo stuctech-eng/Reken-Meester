@@ -16,22 +16,25 @@ export function leesGeometrie(b) {
   function byteOrde() { var le = b[o] === 1; o += 1; return le; }
   function u32(le) { var v = dv.getUint32(o, le); o += 4; return v; }
   function f64(le) { var v = dv.getFloat64(o, le); o += 8; return v; }
-  function polygoon() {
-    var le = byteOrde(), t = u32(le);
-    if (t !== 3) throw new Error("verwacht Polygon (3), kreeg " + t);
+  // z: ISO-WKB met Z (Polygon Z 1003, MultiPolygon Z 1006; fase 6.2 D4): Z wordt gelezen en overgeslagen
+  function polygoon(z) {
+    var le = byteOrde(), t = u32(le), verwacht = z ? 1003 : 3;
+    if (t !== verwacht) throw new Error("verwacht Polygon (" + verwacht + "), kreeg " + t);
     var n = u32(le), ringen = [];
     for (var i = 0; i < n; i++) {
       var m = u32(le), r = [];
-      for (var j = 0; j < m; j++) { var x = f64(le), y = f64(le); r.push([x, y]); }
+      for (var j = 0; j < m; j++) { var x = f64(le), y = f64(le); if (z) f64(le); r.push([x, y]); }
       ringen.push(r);
     }
     return ringen;
   }
   var le = byteOrde(), type = u32(le);
   var delen;
-  if (type === 6) { var k = u32(le); delen = []; for (var i = 0; i < k; i++) delen.push(polygoon()); }
-  else if (type === 3) { o -= 5; delen = [polygoon()]; }
-  else throw new Error("alleen 2D Polygon of MultiPolygon, kreeg type " + type);
+  if (type === 6) { var k = u32(le); delen = []; for (var i = 0; i < k; i++) delen.push(polygoon(false)); }
+  else if (type === 3) { o -= 5; delen = [polygoon(false)]; }
+  else if (type === 1006) { var kz = u32(le); delen = []; for (var iz = 0; iz < kz; iz++) delen.push(polygoon(true)); }
+  else if (type === 1003) { o -= 5; delen = [polygoon(true)]; }
+  else throw new Error("alleen Polygon of MultiPolygon (2D, of ISO-WKB Z 1003/1006), kreeg type " + type);
   if (o !== b.length) throw new Error("WKB niet volledig gelezen");
   delen.forEach(function(d) { d.forEach(function(r) { var a = r[0], z = r[r.length - 1]; if (r.length < 4 || a[0] !== z[0] || a[1] !== z[1]) throw new Error("ring niet gesloten"); }); });
   return delen;

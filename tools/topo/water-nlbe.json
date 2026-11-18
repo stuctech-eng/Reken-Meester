@@ -1,0 +1,29 @@
+{
+  "toelichting": "Water en Waddeneilanden voor Basis (bouwplan T2b-2 fase 6.2 deel 2, versie 2; besluiten GPT 18-11-2026 K5 A, K7 B, D1 tot en met D4). Per item de vaste id, de sleutel in de bron en de naambron. Natural Earth is nooit een naambron (T1 par. 1.3).",
+  "geraadpleegd": "2026-11-18",
+  "naamTU": { "id": "TU", "url": "https://namen.taalunie.org/continent/eu", "tabel": "Overige namen (Nederlandse naam, Plaatselijke naam)" },
+  "naamBesluit": "GPT 18-11-2026 D1 b: naam volgens T1 par. 2.1; de Woordenlijst was vanuit de bouwomgeving niet toegankelijk, er is dus niet vastgesteld of de naam daar staat",
+  "zeeen": {
+    "zee-noordzee": { "naam": "Noordzee", "naambron": "TU", "neBestand": "ne_10m_geography_marine_polys.geojson", "neId": 1159115879, "neNaam": "North Sea",
+      "aanwijzen": { "toegestaan": false, "reden": "W1: de grens met de Waddenzee is niet betrouwbaar; het vlak omvat mogelijk water dat geografisch tot de Waddenzee behoort. Geen aanwijsvraag voordat de waterronde (6.4) die grens met een officiele bron vastlegt" } }
+  },
+  "rivieren": {
+    "rivier-rijn": { "naam": "Rijn", "naambron": "TU", "neNaam": "Rhine", "features": 1 },
+    "rivier-waal": { "naam": "Waal", "naambron": "besluit", "neNaam": "Waal", "features": 1 },
+    "rivier-nederrijn": { "naam": "Nederrijn", "naambron": "besluit", "neNaam": "Nederrijn", "features": 1 },
+    "rivier-lek": { "naam": "Lek", "naambron": "besluit", "neNaam": "Lek", "features": 1 },
+    "rivier-ijssel": { "naam": "IJssel", "naambron": "besluit", "neNaam": "IJssel", "features": 1 },
+    "rivier-maas": { "naam": "Maas", "naambron": "besluit", "neNaam": "Maas", "features": 3 }
+  },
+  "eilanden": {
+    "groep": { "id": "eilandengroep-nl-waddeneilanden", "naam": "Waddeneilanden", "naambron": "besluit", "geometrie": "geen (D3 a)" },
+    "volgorde": ["eiland-nl-texel", "eiland-nl-vlieland", "eiland-nl-terschelling", "eiland-nl-ameland", "eiland-nl-schiermonnikoog"],
+    "lid": {
+      "eiland-nl-texel": { "statcode": "GM0448" },
+      "eiland-nl-vlieland": { "statcode": "GM0096" },
+      "eiland-nl-terschelling": { "statcode": "GM0093" },
+      "eiland-nl-ameland": { "statcode": "GM0060" },
+      "eiland-nl-schiermonnikoog": { "statcode": "GM0088" }
+    }
+  }
+}

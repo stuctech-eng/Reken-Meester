@@ -101,6 +101,18 @@
       "licentie": "Statbel, Licentie open data (Licence open data_NL.pdf in de zip, SHA-256 aaf6847a894359bfc455d272673017248771137f7b502902debcbfbe6d784ae6): hergebruik toegestaan"
     }
   },
+  "naturalEarthMarine": {
+    "bron": "NE",
+    "versie": "v5.1.2",
+    "commit": "f1890d9f152c896d250a77557a5751a93d494776",
+    "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/f1890d9f152c896d250a77557a5751a93d494776/geojson/ne_10m_geography_marine_polys.geojson",
+    "bestand": "ne_10m_geography_marine_polys.geojson",
+    "grootte": 1692635,
+    "sha256": "53f865e8ffa966cdd402145c82c5cd14ee7ce974cd0eb9a3f59f03a4cfd2d66c",
+    "features": 306,
+    "gedownload": "2026-11-18",
+    "gebruik": "alleen het vlak North Sea (ne_id 1159115879), als geometrie; niet als naambron (T1 par. 1.3)"
+  },
   "register": {
     "toelichting": "Register van de bron-ids (bouwplan T2b-2 fase 6.1 v1.9). Elk bron-id dat in een FEIT of afleiding voorkomt, staat hier expliciet; er wordt niets aangevuld. Bestanden met hun SHA-256; een webpagina heeft geen bestand en dus geen SHA.",
     "ids": {
@@ -155,7 +167,8 @@
           "ne_10m_ocean.geojson": "f9696a1337c746a0f6c8c13bc60d0f230d2ef8d105198d5657726c8f8e763fc2",
           "ne_10m_populated_places_simple.geojson": "fd3fa867a320cbd5c5b6bb5bc550afeec2939fb2cef688e508007282a55ac42f",
           "ne_10m_rivers_lake_centerlines.geojson": "bb854a900ecbd3b408df46d5e16e3e0f974ba55993f9d8b5c26e855273c0905a",
-          "ne_50m_admin_0_map_units.geojson": "b8d421aca6e9e08e8cdf09cc26af111cc3e0deba4fe915611d58ade71e8a4db0"
+          "ne_50m_admin_0_map_units.geojson": "b8d421aca6e9e08e8cdf09cc26af111cc3e0deba4fe915611d58ade71e8a4db0",
+          "ne_10m_geography_marine_polys.geojson": "53f865e8ffa966cdd402145c82c5cd14ee7ce974cd0eb9a3f59f03a4cfd2d66c"
         }
       },
       "CBS": {
@@ -217,7 +230,8 @@
         ],
         "bestanden": {
           "tools/topo/ov-rollen-nlbe.json": "440805cd7b401fd6f7c01dd97f69c474c9b2c1fcd013e2a326da41e02fabcf45",
-          "tools/topo/steden-be.json": "16c9ced441661752b4ab10a4e9390d3a461a1600b0d56d386fa276f953726770"
+          "tools/topo/steden-be.json": "16c9ced441661752b4ab10a4e9390d3a461a1600b0d56d386fa276f953726770",
+          "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }
       }
     }

@@ -369,7 +369,10 @@ var P62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/provin
 var G62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/gewesten.js")).href);
 var B62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/steden-be.js")).href);
 var H62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/afgeleid/hoofdsteden-nlbe.js")).href);
-function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE)), rel: kopie(H62.HOOFDSTEDEN_NLBE), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
+// fase 6.2, deel 2: water (Noordzee, 6 rivieren) en de Waddeneilanden
+var W62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/water-nlbe.js")).href);
+var E62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/eilanden-nl.js")).href);
+function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE), kopie(W62.WATER_NLBE), kopie(E62.EILANDEN_NL)), rel: kopie(H62.HOOFDSTEDEN_NLBE), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
 function controleer62(c) {
   var fouten = [], n = 0;
   function eis(ok, groep, tekst) { n++; if (!ok) fouten.push({ groep: groep, tekst: tekst }); }
@@ -378,10 +381,11 @@ function controleer62(c) {
   c.oud.concat(c.nieuw).forEach(function(it) { eis(!perId[it.id], "hergebruik", "id een keer in de kennisbank: " + it.id); perId[it.id] = it; });
   ["NLD", "BEL", "DEU"].forEach(function(id) { eis(c.oud.concat(c.nieuw).filter(function(it) { return it.id === id; }).length === 1, "hergebruik", "land bestaat een keer: " + id); });
   c.nieuw.forEach(function(it) {
-    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "stad"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2: " + it.id);
+    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "stad", "zee", "rivier", "eiland", "eilandengroep"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2: " + it.id);
     eis(gelijk(it.geometrie.kaart, {}), "georef", "nog geen kaartverwijzingen: " + it.id);
     var g = it.geometrie.bron;
     if (it.soort === "stad" && it.geometrie.punt.status !== "vastgesteld") eis(g === null, "georef", "open punt zonder GEOREF: " + it.id);
+    else if (it.soort === "eilandengroep") eis(g === null && /D3 a/.test(it.geometrie.geen || ""), "georef", "eilandengroep zonder eigen vlak (D3 a): " + it.id);
     else eis(!!g && !!reg[g.bronId] && reg[g.bronId].bestanden[g.bestand] === g.sha256 && g.herkomst === undefined && g.status === undefined, "georef", "GEOREF in het register met dezelfde SHA, zonder herkomst en status: " + it.id);
     var feiten = [["naam", it.naam]];
     Object.keys(it.feiten).sort().forEach(function(k) { feiten.push(["feiten." + k, it.feiten[k]]); });
@@ -404,15 +408,20 @@ function controleer62(c) {
     if (it.soort === "provincie") return /^PV[0-9]{2}$/.test(it.feiten.code && it.feiten.code.waarde) ? "NLD" : /^[0-9]{5}$/.test(it.feiten.code && it.feiten.code.waarde) ? "BEL" : null;
     if (it.soort === "gewest") return "BEL";
     if (it.soort === "stad") return /^stad-be-/.test(it.id) ? "BEL" : null;
+    if (it.soort === "eiland" || it.soort === "eilandengroep") return "NLD";
     return null;
   }
+  // zee en rivier: internationaal water, zonder landrelatie (deel 2); alle andere nieuwe soorten moeten er een hebben
+  var WATERSOORTEN = ["zee", "rivier"];
   c.nieuw.forEach(function(it) {
-    var v = verwachtLand(it), f = it.feiten.land;
-    eis(v !== null && !!f && f.waarde === v && f.herkomst === "bron" && f.status === "vastgesteld" && !!perId[f.waarde] && perId[f.waarde].soort === "land", "land", "landrelatie aanwezig, juist en naar een bestaand land-item: " + it.id + " (" + (f ? f.waarde : "geen") + ", verwacht " + v + ")");
+    if (WATERSOORTEN.indexOf(it.soort) >= 0) { eis(it.feiten.land === undefined, "land", "water zonder landrelatie: " + it.id); return; }
+    var v = verwachtLand(it), f = it.feiten.land, hk = it.soort === "eilandengroep" ? "besluit" : "bron";
+    eis(v !== null && !!f && f.waarde === v && f.herkomst === hk && f.status === "vastgesteld" && !!perId[f.waarde] && perId[f.waarde].soort === "land", "land", "landrelatie aanwezig, juist en naar een bestaand land-item: " + it.id + " (" + (f ? f.waarde : "geen") + ", verwacht " + v + ")");
   });
   // het land voor de naamregel: alleen uit een expliciete bron, nooit een terugval op het eigen id
   function landVan(it) {
     if (it.soort === "land") return it.id;
+    if (WATERSOORTEN.indexOf(it.soort) >= 0) return "internationaal";
     if (it.feiten && it.feiten.land) return it.feiten.land.waarde;
     if (it.soort === "stad" && it.feiten && it.feiten.cbs && it.feiten.cbs.herkomst === "bron") return "NLD";
     return null;
@@ -423,7 +432,10 @@ function controleer62(c) {
   // ---- relaties ----
   var alleItems = c.oud.concat(c.nieuw), idx = IX.bouwIndex(alleItems, c.rel, c.relaties, c.inverseFn), R = c.relaties || RELATIES;
   eis(idx.dubbel.length === 0, "index", "geen dubbele relaties");
-  eis(idx.heen.length === 26, "index", "26 relaties: 24 uit hoofdsteden-nlbe.js en 2 van Brussel (" + idx.heen.length + ")");
+  eis(idx.heen.length === 31, "index", "31 relaties: 24 uit hoofdsteden-nlbe.js, 2 van Brussel en 5 hoort-bij van de Waddeneilanden (" + idx.heen.length + ")");
+  // nb01 (deel 2): Nederland, Belgie, Duitsland en de Noordzee bestaan elk een keer; geen Waddenzee (K7 B)
+  ["NLD", "BEL", "DEU", "zee-noordzee"].forEach(function(id) { eis(alleItems.filter(function(it) { return it.id === id; }).length === 1, "nb01", "nb01-item bestaat een keer: " + id); });
+  eis(!alleItems.some(function(it) { return /wadden/i.test(it.naam.waarde) && it.soort !== "eiland" && it.soort !== "eilandengroep"; }) && !idx.heen.some(function(r) { return /waddenzee/.test(r.naar + r.van); }), "nb01", "geen Waddenzee-item en geen relatie naar een Waddenzee");
   eis(c.oud.every(function(it) { return it.relaties.length === 0; }), "index", "de items van fase 6.1 blijven zonder relaties");
   idx.heen.forEach(function(r) {
     var t = R[r.type], wie = r.type + " " + r.van + " " + r.naar;
@@ -432,6 +444,7 @@ function controleer62(c) {
     eis(!!perId[r.van] && !!perId[r.naar] && t.bronSoorten.indexOf(perId[r.van].soort) >= 0 && t.doelSoorten.indexOf(perId[r.naar].soort) >= 0, "relatiesoort", "bron- en doelsoort toegestaan: " + wie);
     eis(r.status === "vastgesteld" && IX.bewezen(r, "relatie"), "relatiestatus", "relatie vastgesteld en bewezen: " + wie);
     if (r.herkomst === "afgeleid") eis(!!r.afleiding && Array.isArray(r.afleiding.invoer) && r.afleiding.invoer.every(function(x) { return shaInReg(x.bronId, x.sha256); }), "register", "invoer van de afleiding in het register: " + wie);
+    else if (r.herkomst === "besluit") eis(IX.besluitVerwijzing(r) !== null, "register", "besluitverwijzing geldig: " + wie);
     else eis(!!r.bron && !!reg[r.bron.id], "register", "bron-id in het register: " + wie);
     var lijst = idx.perSleutel[t.inverse + "|" + r.naar + "|" + r.van] || [], inv = lijst.filter(function(x) { return x !== r; })[0];
     eis(!!inv, "inverse", "inverse in de index: " + wie);
@@ -440,7 +453,7 @@ function controleer62(c) {
   return { fouten: fouten, n: n };
 }
 var uit62 = controleer62(basis62());
-console.log("fase 6.2 deel 1: " + (uit62.fouten.length ? "FOUT" : "GOED") + ": " + (uit62.n - uit62.fouten.length) + " controles geslaagd, " + uit62.fouten.length + " mislukt");
+console.log("fase 6.2 (deel 1 en 2): " + (uit62.fouten.length ? "FOUT" : "GOED") + ": " + (uit62.n - uit62.fouten.length) + " controles geslaagd, " + uit62.fouten.length + " mislukt");
 uit62.fouten.slice(0, 20).forEach(function(f) { console.log("  - [" + f.groep + "] " + f.tekst); });
 function nieuw62(c, id) { return c.nieuw.filter(function(r) { return r.id === id; })[0]; }
 var MUT62 = [
@@ -448,6 +461,11 @@ var MUT62 = [
   ["Belgische provincie met land NLD", "land", function(c) { nieuw62(c, "prov-be-70000").feiten.land.waarde = "NLD"; }],
   ["gewest zonder landrelatie", "land", function(c) { delete nieuw62(c, "gewest-be-04000").feiten.land; }],
   ["landrelatie naar een niet-bestaand land", "land", function(c) { nieuw62(c, "prov-be-10000").feiten.land.waarde = "BLX"; }],
+  ["deel 2: een Waddenzee-item", "nb01", function(c) { var z = kopie(nieuw62(c, "zee-noordzee")); z.id = "zee-waddenzee"; z.naam.waarde = "Waddenzee"; c.nieuw.push(z); }],
+  ["deel 2: hoort-bij zonder inverse", "inverse", function(c) { var R = maakRelaties(kopie(RELATIES_HEEN)); delete R["hoort-bij"].inverse; c.relaties = R; }],
+  ["deel 2: eiland zonder landrelatie", "land", function(c) { delete nieuw62(c, "eiland-nl-texel").feiten.land; }],
+  ["deel 2: rivier met een landrelatie", "land", function(c) { nieuw62(c, "rivier-maas").feiten.land = { waarde: "NLD", herkomst: "bron", status: "vastgesteld", bron: { id: "TU" } }; }],
+  ["deel 2: eilandengroep met een vlak", "georef", function(c) { nieuw62(c, "eilandengroep-nl-waddeneilanden").geometrie.bron = kopie(nieuw62(c, "eiland-nl-texel").geometrie.bron); }],
   ["10 een tweede Nederland", "hergebruik", function(c) { c.nieuw.push(kopie(c.oud.filter(function(r) { return r.id === "NLD"; })[0])); }],
   ["bron-id niet in het register", "register", function(c) { nieuw62(c, "prov-nl-pv20").naam.bron.id = "CBS2026"; }],
   ["GEOREF met een andere SHA", "georef", function(c) { nieuw62(c, "prov-be-10000").geometrie.bron.sha256 = "3".repeat(64); }],
@@ -461,10 +479,11 @@ var MUT62 = [
 var gevangen62 = 0, gemist62 = [];
 MUT62.forEach(function(m) {
   var c = basis62(); m[2](c);
-  var r = controleer62(c);
+  var r;
+  try { r = controleer62(c); } catch (e) { r = { fouten: [{ groep: /^geen inverse voor: /.test(e.message) ? "inverse" : "uitzondering", tekst: e.message }] }; }
   if (r.fouten.some(function(x) { return x.groep === m[1]; })) gevangen62++; else gemist62.push(m[0]);
 });
-console.log("mutanten fase 6.2 deel 1: " + gevangen62 + " van " + MUT62.length + " gevangen door de verwachte groep");
+console.log("mutanten fase 6.2 (deel 1 en 2): " + gevangen62 + " van " + MUT62.length + " gevangen door de verwachte groep");
 gemist62.forEach(function(g) { console.log("  - GEMIST: " + g); });
 if (uit62.fouten.length || gemist62.length) process.exit(1);
 
