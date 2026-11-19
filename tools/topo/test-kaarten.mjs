@@ -394,7 +394,8 @@ async function tik(schermen, hard) {
   });
 }
 if (DELEN.indexOf("tik428") >= 0) await tik([428], true);
-if (DELEN.indexOf("tikrest") >= 0) await tik([320, 375, 390], false);
+// tikrest: alleen gemeld; met SCHERMEN (bijvoorbeeld SCHERMEN=320) een deel van de breedtes
+if (DELEN.indexOf("tikrest") >= 0) await tik((process.env.SCHERMEN || "320,375,390").split(",").map(Number), false);
 
 console.log("test-kaarten (" + DELEN.join(",") + "): " + (n - fouten.length) + "/" + n + " controles goed");
 if (fouten.length) { console.log("FOUTEN:\n- " + fouten.join("\n- ")); process.exit(1); }
