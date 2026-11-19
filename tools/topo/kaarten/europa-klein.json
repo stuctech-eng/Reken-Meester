@@ -1,0 +1,103 @@
+{
+  "id": "europa-klein",
+  "toelichting": "Kaart Europa, kleine staten (bouwplan T2b-2 fase 6.3; besluit GPT B8 a): de configuratie van T2a-proef-europa met kennisbank-ids (FXX wordt FRA, NLX wordt NLD); GGY en JEY zijn achtergrond. Geen namen of tekst.",
+  "projectie": {
+    "naam": "azimuthalEqualArea",
+    "rotate": [
+      -6.5,
+      -43.5
+    ]
+  },
+  "lon": [
+    -3.5,
+    16.5
+  ],
+  "lat": [
+    35,
+    51.5
+  ],
+  "doek": {
+    "rand": 20
+  },
+  "tolerantiePx": 0.5,
+  "afronding": 0.1,
+  "conventies": {
+    "marokkoGrens": 27.666666666666668,
+    "verreDelen": {
+      "landen": [
+        "ESP",
+        "GBR",
+        "PRT"
+      ],
+      "lonMin": -12
+    }
+  },
+  "achtergrond": [
+    {
+      "bron": "ne-land-overig",
+      "uitgezonderd": [
+        "AND",
+        "AUT",
+        "BEL",
+        "BIH",
+        "CHE",
+        "CZE",
+        "DEU",
+        "DZA",
+        "ESP",
+        "FRA",
+        "GBR",
+        "HRV",
+        "HUN",
+        "ITA",
+        "LIE",
+        "LUX",
+        "MAR",
+        "MCO",
+        "MLT",
+        "NLD",
+        "POL",
+        "SMR",
+        "SVK",
+        "SVN",
+        "TUN",
+        "VAT"
+      ]
+    }
+  ],
+  "lagen": [
+    {
+      "id": "landen",
+      "soort": "vlak",
+      "bron": "ne-land",
+      "items": [
+        "AND",
+        "AUT",
+        "BEL",
+        "BIH",
+        "CHE",
+        "CZE",
+        "DEU",
+        "DZA",
+        "ESP",
+        "FRA",
+        "GBR",
+        "HRV",
+        "HUN",
+        "ITA",
+        "LIE",
+        "LUX",
+        "MAR",
+        "MCO",
+        "MLT",
+        "NLD",
+        "POL",
+        "SMR",
+        "SVK",
+        "SVN",
+        "TUN",
+        "VAT"
+      ]
+    }
+  ]
+}

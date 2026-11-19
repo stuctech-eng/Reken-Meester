@@ -1,0 +1,231 @@
+{
+  "id": "nlbe",
+  "toelichting": "Kaart Nederland en Belgie (bouwplan T2b-2 fase 6.3; besluiten GPT B3 c, B4 a, B5 a, optie a, A1). Geen namen of tekst: de items zijn kennisbank-id's.",
+  "projectie": {
+    "naam": "transverseMercator",
+    "rotate": [
+      -4.9,
+      -51.55
+    ]
+  },
+  "lon": [
+    2.5,
+    7.3
+  ],
+  "lat": [
+    49.45,
+    53.65
+  ],
+  "doek": null,
+  "tolerantiePx": 0.0625,
+  "afronding": 0.01,
+  "achtergrond": [
+    {
+      "bron": "ne-land-overig",
+      "uitgezonderd": [
+        "NLD",
+        "BEL"
+      ]
+    },
+    {
+      "bron": "noordzee",
+      "id": "zee-noordzee"
+    }
+  ],
+  "lagen": [
+    {
+      "id": "provincies-nl",
+      "soort": "vlak",
+      "bron": "cbs-provincie",
+      "items": [
+        "prov-nl-pv20",
+        "prov-nl-pv21",
+        "prov-nl-pv22",
+        "prov-nl-pv23",
+        "prov-nl-pv24",
+        "prov-nl-pv25",
+        "prov-nl-pv26",
+        "prov-nl-pv27",
+        "prov-nl-pv28",
+        "prov-nl-pv29",
+        "prov-nl-pv30",
+        "prov-nl-pv31"
+      ]
+    },
+    {
+      "id": "provincies-be",
+      "soort": "vlak",
+      "bron": "stb-provincie",
+      "items": [
+        "prov-be-10000",
+        "prov-be-20001",
+        "prov-be-20002",
+        "prov-be-30000",
+        "prov-be-40000",
+        "prov-be-50000",
+        "prov-be-60000",
+        "prov-be-70000",
+        "prov-be-80000",
+        "prov-be-90000"
+      ],
+      "laagAchtergrond": [
+        {
+          "bron": "stb-gewest",
+          "id": "gewest-be-04000"
+        }
+      ]
+    },
+    {
+      "id": "gewesten",
+      "soort": "vlak",
+      "bron": "stb-gewest",
+      "items": [
+        "gewest-be-02000",
+        "gewest-be-03000",
+        "gewest-be-04000"
+      ]
+    },
+    {
+      "id": "steden",
+      "soort": "punt",
+      "bron": "kb-punt",
+      "items": [
+        "stad-nl-amsterdam",
+        "stad-nl-rotterdam",
+        "stad-nl-den-haag",
+        "stad-nl-utrecht",
+        "stad-nl-eindhoven",
+        "stad-nl-leiden",
+        "stad-nl-dordrecht",
+        "stad-nl-tilburg",
+        "stad-nl-groningen",
+        "stad-nl-haarlem",
+        "stad-nl-almere",
+        "stad-nl-heerlen",
+        "stad-nl-s-hertogenbosch",
+        "stad-nl-nijmegen",
+        "stad-nl-amersfoort",
+        "stad-nl-breda",
+        "stad-nl-enschede",
+        "stad-nl-apeldoorn",
+        "stad-nl-zoetermeer",
+        "stad-nl-zwolle",
+        "stad-nl-ijmond",
+        "stad-nl-maastricht",
+        "stad-nl-arnhem",
+        "stad-nl-sittard-geleen",
+        "stad-nl-alkmaar",
+        "stad-nl-leeuwarden",
+        "stad-nl-lelystad",
+        "stad-nl-assen",
+        "stad-nl-middelburg",
+        "stad-be-aarlen",
+        "stad-be-antwerpen",
+        "stad-be-bergen",
+        "stad-be-brugge",
+        "stad-be-gent",
+        "stad-be-hasselt",
+        "stad-be-luik",
+        "stad-be-namen"
+      ]
+    },
+    {
+      "id": "rivieren",
+      "soort": "lijn",
+      "bron": "ne-rivier",
+      "items": [
+        "rivier-rijn",
+        "rivier-waal",
+        "rivier-nederrijn",
+        "rivier-lek",
+        "rivier-ijssel",
+        "rivier-maas"
+      ]
+    },
+    {
+      "id": "waddeneilanden",
+      "soort": "vlak",
+      "bron": "cbs-eiland",
+      "items": [
+        "eiland-nl-texel",
+        "eiland-nl-vlieland",
+        "eiland-nl-terschelling",
+        "eiland-nl-ameland",
+        "eiland-nl-schiermonnikoog"
+      ]
+    },
+    {
+      "id": "landen",
+      "soort": "vlak",
+      "bron": "land-nlbe",
+      "items": [
+        "NLD",
+        "BEL",
+        "DEU"
+      ]
+    }
+  ],
+  "grensMelden": [
+    {
+      "id": "nlbe-grens-zandvliet-berendrecht",
+      "lon": [
+        4.2,
+        4.275
+      ],
+      "lat": [
+        51.345,
+        51.39
+      ],
+      "toelichting": "G1 b (GPT 18-11-2026): bevestigd verschil tussen CBS en Statbel bij Zandvliet en Berendrecht, tot 1,15 km. De afstand NL-BE in deze zone wordt gemeld, niet getoetst. Zone: de omhullende van de punten (om de 10 m) waar de Statbel-rand meer dan 52 m (0,5 px bij x8) van de CBS-gemeentegrens (niet gegeneraliseerd) ligt, en waar de buitenrand van de CBS-gemeenten 52 m tot 1,2 km van de Statbel-rand ligt, gezocht in 4,05 tot 4,45 O en 51,25 tot 51,50 N; naar buiten afgerond op 0,005 graad"
+    },
+    {
+      "id": "nlbe-grens-zwin",
+      "lon": [
+        3.36,
+        3.38
+      ],
+      "lat": [
+        51.345,
+        51.38
+      ],
+      "toelichting": "Bevestigd verschil tussen CBS (gemeente, niet gegeneraliseerd) en Statbel langs het Zwin, van de monding tot 1,5 km landinwaarts: tot 0,6 km bij de geul en de monding en tot 220 m in het binnenland in de brondata (V3 a en b); daartussen rond 51 m. Op de kaart na V4 b tot 6,9 px bij x8. Eén aaneengesloten grensstuk, dus één zone: de omhullende van de grensstukken boven 52 m aan beide kanten (3,3633 tot 3,3772 O, 51,348 tot 51,3751 N), zonder de kust, naar buiten afgerond op 0,005 graad"
+    },
+    {
+      "id": "nlbe-grens-vaals",
+      "lon": [
+        6.01,
+        6.03
+      ],
+      "lat": [
+        50.745,
+        50.765
+      ],
+      "toelichting": "Bevestigd verschil tussen CBS (provincie gegeneraliseerd en gemeente niet gegeneraliseerd liggen gelijk) en Statbel bij Vaals, vlak bij het Drielandenpunt: 187 tot 221 m in de brondata, 1,7 tot 2,0 px bij x8 op de kaart na V4 b. Zone om de getoetste punten (6,0204 O 50,7563 N en 6,0230 O 50,7527 N), naar buiten afgerond op 0,005 graad, met 0,005 graad marge"
+    }
+  ],
+  "grensBehoud": {
+    "landen": [
+      "NLD",
+      "BEL"
+    ],
+    "zonePx": 2,
+    "toelichting": "Punten binnen zonePx (CSS-px bij x8, op 428 px) van de onvereenvoudigde rand van beide landen worden niet vereenvoudigd, alleen afgerond: de grenslijnen van NL (CBS) en BE (Statbel) zijn verschillende bogen; elk tot 0,5 px vereenvoudigen kan samen 1 px geven, terwijl de grenseis 0,5 px is (besluit Claude 19-11-2026)"
+  },
+  "afwijkingen": [
+    {
+      "id": "kaarten-t2a-code-herhaling",
+      "soort": "code",
+      "tekst": "maak-kaarten.mjs herhaalt de projectie, de afronding en het pad van maak-proefkaarten.mjs (T2a), omdat dat bestand niets exporteert, bij het importeren draait en niet mag wijzigen; dezelfde regels, met per kaart de tolerantie en afronding uit de configuratie"
+    },
+    {
+      "id": "kaarten-methode-6-3",
+      "soort": "methode",
+      "tekst": "Afwijkingen van de T2a-methode in 6.3 (besluiten 18 en 19-11-2026): het gewicht van de vereenvoudiging per boog in plaats van een gewicht per kaart; punten bij de grens NL-BE (grensBehoud) niet vereenvoudigd, alleen afgerond; naaldregel na een merge (exact heen en terug, geen tolerantie); de vlakbewerkingen van de grensmeting met Clipper (gehele honderdsten, gelijk-oneven) in plaats van polygon-clipping; geen ring weglaten na het afronden (een samengevallen ring blijft als afgeronde oorspronkelijke ring, zonder oppervlakte)"
+    },
+    {
+      "id": "nlbe-omvang",
+      "soort": "omvang",
+      "tekst": "nlbe is groter dan het projectdoel van 40 kB gzip (T2 par. 5, B11 a): de niet-gegeneraliseerde CBS-gemeenten en de Statbel-sectoren bij een tolerantie van 0,5 px bij x8; gemeten en gemeld in het bouwrapport, met een voorstel"
+    }
+  ]
+}

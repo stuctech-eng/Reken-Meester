@@ -303,6 +303,7 @@ try { var SB = await import(pathToFileURL(path.join(ROOT, "src", "core", "topo",
 // en de punten van fase 6.2, deel 2: water (test-water-nlbe.mjs) en de Waddeneilanden (test-eilanden-nl.mjs)
 try { var WB = await import(pathToFileURL(path.join(ROOT, "src", "core", "topo", "items", "water-nlbe.js")).href); WB.AFWIJKINGEN_WATER.forEach(function(a) { landenIds[a.id] = 1; }); } catch (e) { }
 try { var EB = await import(pathToFileURL(path.join(ROOT, "src", "core", "topo", "items", "eilanden-nl.js")).href); EB.AFWIJKINGEN_EILANDEN.forEach(function(a) { landenIds[a.id] = 1; }); } catch (e) { }
+try { for (var kf of fs.readdirSync(path.join(ROOT, "src", "core", "topo", "kaarten")).filter(function(f) { return /\.js$/.test(f); }).sort()) (await import(pathToFileURL(path.join(ROOT, "src", "core", "topo", "kaarten", kf)).href)).AFWIJKINGEN_KAART.forEach(function(a) { landenIds[a.id] = 1; }); } catch (e) { }   // fase 6.3: de afwijkingen van de kaarten
 // een punt dat niet meer voorkomt, blijft op de lijst staan met de status "gecorrigeerd" (niets stilzwijgend verwijderen)
 Object.keys(open).forEach(function(id) { eis(!!uitIds[id] || !!landenIds[id] || open[id].status === "gecorrigeerd", "open lijst noemt een afwijking die niet (meer) bestaat en niet gecorrigeerd is: " + id); });
 

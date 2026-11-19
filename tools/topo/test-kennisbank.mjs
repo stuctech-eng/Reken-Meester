@@ -487,4 +487,42 @@ console.log("mutanten fase 6.2 (deel 1 en 2): " + gevangen62 + " van " + MUT62.l
 gemist62.forEach(function(g) { console.log("  - GEMIST: " + g); });
 if (uit62.fouten.length || gemist62.length) process.exit(1);
 
+// ==== fase 6.3: kaartdekking (bouwplan T2b-2 fase 6.3 par. 5, C1 a) ====
+// Elk kaartitem bestaat in de kennisbank met de juiste soort per laag; elk item van de afgesproken lagen staat op zijn kaart;
+// geen namen in de kaarten; de items zelf hebben nog geen kaartverwijzing (geometrie.kaart blijft {}, B1 a).
+var KD = { fouten: [], n: 0 };
+function eisKD(ok, tekst) { KD.n++; if (!ok) KD.fouten.push(tekst); }
+var KB63 = {};
+[L.LANDEN, S.STEDEN, P62.PROVINCIES, G62.GEWESTEN, B62.STEDEN_BE, W62.WATER_NLBE, E62.EILANDEN_NL].forEach(function(lijst) { lijst.forEach(function(it) { KB63[it.id] = it; }); });
+var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
+var VERWACHT63 = {
+  nlbe: {
+    "provincies-nl": P62.PROVINCIES.filter(function(p) { return p.feiten.land.waarde === "NLD"; }).map(function(p) { return p.id; }),
+    "provincies-be": P62.PROVINCIES.filter(function(p) { return p.feiten.land.waarde === "BEL"; }).map(function(p) { return p.id; }),
+    "gewesten": G62.GEWESTEN.map(function(g) { return g.id; }),
+    "steden": S.STEDEN.map(function(x) { return x.id; }).concat(B62.STEDEN_BE.filter(function(x) { return x.geometrie.punt && x.geometrie.punt.status === "vastgesteld"; }).map(function(x) { return x.id; })),
+    "rivieren": W62.WATER_NLBE.filter(function(w) { return w.soort === "rivier"; }).map(function(w) { return w.id; }),
+    "waddeneilanden": E62.EILANDEN_NL.filter(function(e) { return e.soort === "eiland"; }).map(function(e) { return e.id; })
+  }
+};
+var kaartMap = path.join(ROOT, "src/core/topo/kaarten"), kaartBestanden = fs.existsSync(kaartMap) ? fs.readdirSync(kaartMap).filter(function(f) { return /\.js$/.test(f); }).sort() : [];
+for (var kb of kaartBestanden) {
+  var KM = (await import(pathToFileURL(path.join(kaartMap, kb)).href)).default, kid = kb.replace(/\.js$/, "");
+  eisKD(KM.id === kid, kb + ": id van de kaart");
+  eisKD(!/"naam"|"label"|"tekst"/.test(JSON.stringify(KM)), kb + ": geen namen of tekst in de kaart");
+  KM.lagen.forEach(function(laag) {
+    laag.items.forEach(function(x) {
+      var it = KB63[x.id];
+      eisKD(!!it, kb + " " + laag.id + ": " + x.id + " bestaat in de kennisbank");
+      if (it) eisKD(it.soort === SOORT63[laag.bron], kb + " " + laag.id + ": " + x.id + " heeft soort " + it.soort + ", de laag vraagt " + SOORT63[laag.bron]);
+    });
+    var v = (VERWACHT63[kid] || {})[laag.id];
+    if (v) { var op = {}; laag.items.forEach(function(x) { op[x.id] = 1; }); v.forEach(function(id) { eisKD(!!op[id], kb + " " + laag.id + ": " + id + " staat op de kaart"); }); }
+  });
+}
+Object.keys(KB63).forEach(function(id) { eisKD(JSON.stringify(KB63[id].geometrie.kaart) === "{}", "geometrie.kaart van " + id + " blijft leeg (KAARTREF alleen in het kaartbestand)"); });
+console.log("fase 6.3 kaartdekking: " + kaartBestanden.length + " kaart(en); " + (KD.fouten.length ? "FOUT" : "GOED") + ": " + (KD.n - KD.fouten.length) + " controles geslaagd, " + KD.fouten.length + " mislukt");
+KD.fouten.slice(0, 20).forEach(function(f) { console.log("  - " + f); });
+if (KD.fouten.length) process.exit(1);
+
 process.exit(uit.fouten.length || gemist.length || omzGemist.length || grensGemist ? 1 : 0);
