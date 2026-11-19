@@ -1,0 +1,52 @@
+{
+  "id": "europa-noordoost",
+  "toelichting": "Kaart Europa, regio noordoost (Baltische staten) (bouwplan T2b-2 fase 6.3; besluit Claude 19-11-2026): een uitsnede zoals europa-klein, zodat ook de middelgrote landen binnen x4 tikbaar zijn. Geen namen of tekst.",
+  "projectie": {
+    "naam": "azimuthalEqualArea",
+    "rotate": [
+      -26.25,
+      -55.5
+    ]
+  },
+  "lon": [
+    20.0,
+    32.5
+  ],
+  "lat": [
+    51.0,
+    60.0
+  ],
+  "doek": {
+    "rand": 20
+  },
+  "tolerantiePx": 0.5,
+  "afronding": 0.1,
+  "conventies": {
+    "marokkoGrens": 27.666666666666668,
+    "verreDelen": null
+  },
+  "achtergrond": [
+    {
+      "bron": "ne-land-overig",
+      "uitgezonderd": [
+        "BLR",
+        "EST",
+        "LTU",
+        "LVA"
+      ]
+    }
+  ],
+  "lagen": [
+    {
+      "id": "landen",
+      "soort": "vlak",
+      "bron": "ne-land",
+      "items": [
+        "BLR",
+        "EST",
+        "LTU",
+        "LVA"
+      ]
+    }
+  ]
+}

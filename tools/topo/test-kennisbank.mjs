@@ -520,6 +520,10 @@ for (var kb of kaartBestanden) {
     if (v) { var op = {}; laag.items.forEach(function(x) { op[x.id] = 1; }); v.forEach(function(id) { eisKD(!!op[id], kb + " " + laag.id + ": " + id + " staat op de kaart"); }); }
   });
 }
+// de 50 landen van Europa (T1): elk is doel op minstens een van de Europakaarten (overzicht of regio)
+var EU50 = "ALB AND ARM AUT AZE BEL BGR BIH BLR CHE CYP CZE DEU DNK ESP EST FIN FRA GBR GEO GRC HRV HUN IRL ISL ITA KAZ LIE LTU LUX LVA MCO MDA MKD MLT MNE NLD NOR POL PRT ROU RUS SMR SRB SVK SVN SWE TUR UKR VAT".split(" "), euDoel = {};
+for (var kb2 of kaartBestanden.filter(function(f) { return /^europa/.test(f); })) (await import(pathToFileURL(path.join(kaartMap, kb2)).href)).default.lagen.forEach(function(l) { l.items.forEach(function(x) { euDoel[x.id] = 1; }); });
+if (kaartBestanden.some(function(f) { return /^europa/.test(f); })) EU50.forEach(function(id) { eisKD(!!euDoel[id], "Europa: " + id + " is doel op een Europakaart"); });
 Object.keys(KB63).forEach(function(id) { eisKD(JSON.stringify(KB63[id].geometrie.kaart) === "{}", "geometrie.kaart van " + id + " blijft leeg (KAARTREF alleen in het kaartbestand)"); });
 console.log("fase 6.3 kaartdekking: " + kaartBestanden.length + " kaart(en); " + (KD.fouten.length ? "FOUT" : "GOED") + ": " + (KD.n - KD.fouten.length) + " controles geslaagd, " + KD.fouten.length + " mislukt");
 KD.fouten.slice(0, 20).forEach(function(f) { console.log("  - " + f); });

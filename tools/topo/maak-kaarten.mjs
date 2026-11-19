@@ -37,10 +37,10 @@ var NEB = BRONNEN.naturalEarth.bestanden;
 export var BREEDTE = 1000;
 export var WEERGAVE = 428 - 2 * 16;
 export var EENHEID_PX = WEERGAVE / BREEDTE;
-export var KAARTIDS = ["nlbe", "europa", "europa-klein"];
+export var KAARTIDS = ["nlbe", "europa", "europa-klein", "europa-zuidoost", "europa-noordoost", "europa-kaukasus"];
 export var GRENS_MIN_STUK_PX2 = 0.01, GRENS_ZONE_PX = 2, GRENS_EIS_PX = 0.5, GRENS_MEETFOUT_PX = 0.05, GRENS_STAP_PX = 0.1, ZOOM_GRENS = 8;
 export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
-export var GZIP_DOEL = { nlbe: 40 * 1024, "europa-klein": 40 * 1024, europa: 120 * 1024 };
+export var GZIP_DOEL = { nlbe: 40 * 1024, "europa-klein": 40 * 1024, europa: 120 * 1024, "europa-zuidoost": 40 * 1024, "europa-noordoost": 40 * 1024, "europa-kaukasus": 40 * 1024 };
 
 function fout(t) { throw new Error(t); }
 function sha(b) { return crypto.createHash("sha256").update(b).digest("hex"); }
@@ -174,6 +174,10 @@ function maakProjectie(cfg, doelDelen) {
   var b = geoPath(pr).bounds(mp), hoogte = Math.ceil(b[1][1]);
   if (!cfg.doek) { pr.clipExtent([[0, 0], [BREEDTE, hoogte]]); return { pr: pr, breedte: BREEDTE, hoogte: hoogte, start: [0, 0] }; }
   var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  // het doek omvat alleen de delen van de doelen die in de uitsnede liggen (het midden van de buitenring binnen lon en lat van de
+  // configuratie): zo tellen overzeese delen (Frans-Guyana bij FRA, Caribisch Nederland bij NLD) niet mee (besluit Claude 19-11-2026)
+  function inUitsnede(p) { var r = p[0], x = 0, y = 0; for (var i = 0; i < r.length - 1; i++) { x += r[i][0]; y += r[i][1]; } x /= r.length - 1; y /= r.length - 1; return x >= cfg.lon[0] && x <= cfg.lon[1] && y >= cfg.lat[0] && y <= cfg.lat[1]; }
+  doelDelen = doelDelen.map(function(d) { return d.filter(inUitsnede); }).filter(function(d) { return d.length; });
   doelDelen.forEach(function(d) { var bb = geoPath(pr).bounds(multi(d)); x0 = Math.min(x0, bb[0][0]); y0 = Math.min(y0, bb[0][1]); x1 = Math.max(x1, bb[1][0]); y1 = Math.max(y1, bb[1][1]); });
   x0 = Math.floor(x0 - cfg.doek.rand); y0 = Math.floor(y0 - cfg.doek.rand); x1 = Math.ceil(x1 + cfg.doek.rand); y1 = Math.ceil(y1 + cfg.doek.rand);
   var t = pr.translate(); pr.translate([t[0] - x0, t[1] - y0]);

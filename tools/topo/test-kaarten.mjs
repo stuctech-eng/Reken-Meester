@@ -28,7 +28,7 @@ var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
 var PADEN = { ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4] }, WERK = process.argv[5];
 var DELEN = (process.env.DELEN || "inhoud").split(",");
-var IDS = (process.env.KAARTEN || "nlbe,europa,europa-klein").split(",");
+var IDS = (process.env.KAARTEN || "nlbe,europa,europa-klein,europa-zuidoost,europa-noordoost,europa-kaukasus").split(",");
 var BRONNEN = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
 var fouten = [], n = 0;
 function eis(ok, tekst) { n++; if (!ok) fouten.push(tekst); }
@@ -39,9 +39,11 @@ fs.mkdirSync(WERK, { recursive: true });
 
 // eigen tabellen (los van maak-kaarten.mjs)
 var SOORT = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
+var REGIO = ["europa-zuidoost", "europa-noordoost", "europa-kaukasus"];
 var TOL_PX = { nlbe: 0.0625, europa: 0.5, "europa-klein": 0.5 };
 var AFRONDING = { nlbe: 0.01, europa: 0.1, "europa-klein": 0.1 };
 var GZIP = { nlbe: 40 * 1024, europa: 120 * 1024, "europa-klein": 40 * 1024 };
+REGIO.forEach(function(r) { TOL_PX[r] = 0.5; AFRONDING[r] = 0.1; GZIP[r] = 40 * 1024; });   // de regiokaarten zoals europa-klein
 var EENHEID = (428 - 32) / 1000, PX8 = EENHEID * 8;
 var SLEUTELS_ITEM = { id: 1, d: 1, opp: 1, mx: 1, my: 1, ir: 1, x: 1, y: 1 };
 var SLEUTELS_KAART = { id: 1, kaartVersie: 1, invoer: 1, breedte: 1, hoogte: 1, beeld: 1, start: 1, achtergrond: 1, lagen: 1 };

@@ -1,6 +1,6 @@
 {
   "id": "europa-klein",
-  "toelichting": "Kaart Europa, kleine staten (bouwplan T2b-2 fase 6.3; besluit GPT B8 a): de configuratie van T2a-proef-europa met kennisbank-ids (FXX wordt FRA, NLX wordt NLD); GGY en JEY zijn achtergrond. Geen namen of tekst.",
+  "toelichting": "Kaart Europa, kleine staten (bouwplan T2b-2 fase 6.3; besluit GPT B8 a): de configuratie van T2a-proef-europa met kennisbank-ids (FXX wordt FRA, NLX wordt NLD); GGY en JEY zijn achtergrond, en MAR ook (op deze uitsnede alleen een smal randje; besluit Claude 19-11-2026). Geen namen of tekst.",
   "projectie": {
     "naam": "azimuthalEqualArea",
     "rotate": [
@@ -52,7 +52,6 @@
         "ITA",
         "LIE",
         "LUX",
-        "MAR",
         "MCO",
         "MLT",
         "NLD",
@@ -87,7 +86,6 @@
         "ITA",
         "LIE",
         "LUX",
-        "MAR",
         "MCO",
         "MLT",
         "NLD",
