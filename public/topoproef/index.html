@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Topografieproef</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body { overscroll-behavior: none; }
+      body { font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f4ff; color: #1a1d3a;
+        padding: calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 16px) 0 calc(env(safe-area-inset-left) + 16px); }
+      .rij { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; align-items: center; }
+      button, select { font-family: inherit; font-weight: 700; font-size: 16px; min-height: 44px; min-width: 44px; border-radius: 12px; border: 2px solid #c7d2fe; background: #fff; color: #1a1d3a; }
+      button { padding: 0 10px; font-size: 15px; }
+      button.aan { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+      select { flex: 1 1 0; min-width: 0; padding: 0 30px 0 10px; -webkit-appearance: none; appearance: none;
+        background: #fff url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 fill=%27none%27 stroke=%27%231a1d3a%27 stroke-width=%272%27/%3E%3C/svg%3E") no-repeat right 10px center; }
+      #zoomwaarde { font-weight: 800; min-width: 28px; text-align: center; }
+      #opdracht { font-size: 15px; font-weight: 800; line-height: 22px; height: 44px; overflow: hidden; margin-bottom: 6px; }
+      #kaartvak { width: 100%; background: #dbeafe; border-radius: 12px; overflow: hidden; }
+      #kaartvak svg { touch-action: none; }
+      #kaartvak svg { display: block; width: 100%; height: auto; }
+      #balk { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 2px solid #c7d2fe; padding: 8px calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 8px) calc(env(safe-area-inset-left) + 16px); }
+      #balk .tekst { font-weight: 800; font-size: 15px; line-height: 20px; height: 20px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-bottom: 6px; }
+      #balk .rij { margin-bottom: 0; }
+      #bevestig { flex: 1 1 auto; }
+      #alternatief { position: fixed; left: 0; right: 0; display: none; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.95); border-top: 3px solid #16a34a;
+        padding: 6px calc(env(safe-area-inset-right) + 16px) 6px calc(env(safe-area-inset-left) + 16px); font-weight: 800; font-size: 15px; line-height: 20px; pointer-events: none; }
+      #alttekst { flex: 1 1 auto; }
+      #altknop { flex: 0 0 auto; pointer-events: auto; background: #16a34a; border-color: #16a34a; color: #fff; }
+      .blad { position: fixed; inset: 0; background: rgba(26, 29, 58, 0.45); display: none; align-items: flex-end; }
+      .blad .vel { background: #fff; width: 100%; max-height: 75vh; overflow-y: auto; border-radius: 16px 16px 0 0; padding: 16px 16px calc(env(safe-area-inset-bottom) + 16px); }
+      #lijst .vel button { display: block; width: 100%; text-align: left; margin-bottom: 6px; }
+      #debug { margin-top: 12px; font-size: 12px; font-family: ui-monospace, Menlo, monospace; white-space: pre-wrap; background: #f0f4ff; border-radius: 12px; padding: 8px; display: none; }
+      .klein { font-size: 13px; color: #4a5068; margin-bottom: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="rij">
+      <select id="kaartkeuze" aria-label="Kaart"></select>
+      <select id="laagkeuze" aria-label="Laag"></select>
+      <button id="meer">Uitslag</button>
+    </div>
+    <div class="rij">
+      <button id="stand" aria-pressed="false">Opdracht</button>
+      <button id="zoomuit" aria-label="Uitzoomen">−</button>
+      <span id="zoomwaarde"></span>
+      <button id="zoomin" aria-label="Inzoomen">+</button>
+      <button id="heel">Zoom x1</button>
+    </div>
+    <div id="opdracht"></div>
+    <div id="kaartvak"></div>
+    <div id="balk">
+      <div class="tekst" id="gekozen">Tik op de kaart.</div>
+      <div class="rij">
+        <button id="bevestig" class="aan" disabled>Dit is mijn antwoord</button>
+        <button id="anders">Iets anders kiezen</button>
+      </div>
+    </div>
+    <div id="alternatief" role="status"><span id="alttekst"></span><button id="altknop"></button></div>
+    <div id="lijst" class="blad" role="dialog" aria-label="Keuzelijst"><div class="vel" id="lijstvel"></div></div>
+    <div id="paneel" class="blad" role="dialog" aria-label="Uitslag">
+      <div class="vel">
+        <div class="klein" id="info"></div>
+        <div class="rij">
+          <button id="kopieer">Kopieer uitslag</button>
+          <button id="toondebug">Debugpaneel</button>
+          <button id="sluit">Sluiten</button>
+        </div>
+        <div id="debug"></div>
+      </div>
+    </div>
+    <script type="module" src="./topoproef.js"></script>
+  </body>
+</html>

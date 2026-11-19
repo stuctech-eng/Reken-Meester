@@ -316,7 +316,7 @@ if (!MUTANT) {
   });
   var git = function(a) { return execFileSync("git", a, { cwd: ROOT }).toString(); };
   var anders = git(["diff", "--name-only", "main"]).split("\n").concat(git(["ls-files", "--others", "--exclude-standard"]).split("\n")).filter(Boolean);
-  anders.forEach(function(f) { eis(/^(tools\/topo\/|src\/core\/topo\/|public\/kaartproef\/)/.test(f), "buiten de toegestane mappen gewijzigd: " + f); });
+  anders.forEach(function(f) { eis(/^(tools\/topo\/|src\/core\/topo\/|public\/kaartproef\/|public\/topoproef\/)/.test(f), "buiten de toegestane mappen gewijzigd: " + f); });   // fase 6.3: public/topoproef (de iPhone-proef)
   eis(git(["diff", "--name-only", "8cc2fef", "--", "public/kaartproef"]).trim() === "", "public/kaartproef gelijk aan T2a-proef-6 (8cc2fef)");
   var grep = ""; try { grep = git(["grep", "--untracked", "-l", "core/topo", "--", "src", "public", "index.html"]); } catch (e) { grep = ""; }
   var verwijzers = grep.split("\n").filter(Boolean).filter(function(f) { return f.indexOf("src/core/topo/") !== 0; });
