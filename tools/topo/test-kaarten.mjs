@@ -28,7 +28,7 @@ var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
 var PADEN = { ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4] }, WERK = process.argv[5];
 var DELEN = (process.env.DELEN || "inhoud").split(",");
-var IDS = (process.env.KAARTEN || "nlbe,europa,europa-klein,europa-zuidoost,europa-noordoost,europa-kaukasus").split(",");
+var IDS = (process.env.KAARTEN || "nlbe,europa").split(",");
 var BRONNEN = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
 var fouten = [], n = 0;
 function eis(ok, tekst) { n++; if (!ok) fouten.push(tekst); }
@@ -39,14 +39,12 @@ fs.mkdirSync(WERK, { recursive: true });
 
 // eigen tabellen (los van maak-kaarten.mjs)
 var SOORT = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
-var REGIO = ["europa-zuidoost", "europa-noordoost", "europa-kaukasus"];
-var TOL_PX = { nlbe: 0.0625, europa: 0.5, "europa-klein": 0.5 };
-var AFRONDING = { nlbe: 0.01, europa: 0.1, "europa-klein": 0.1 };
-var GZIP = { nlbe: 40 * 1024, europa: 120 * 1024, "europa-klein": 40 * 1024 };
-REGIO.forEach(function(r) { TOL_PX[r] = 0.5; AFRONDING[r] = 0.1; GZIP[r] = 40 * 1024; });   // de regiokaarten zoals europa-klein
+var TOL_PX = { nlbe: 0.0625, europa: 0.125 };
+var AFRONDING = { nlbe: 0.01, europa: 0.1 };
+var GZIP = { nlbe: 40 * 1024, europa: 120 * 1024 };
 var EENHEID = (428 - 32) / 1000, PX8 = EENHEID * 8;
 var SLEUTELS_ITEM = { id: 1, d: 1, opp: 1, mx: 1, my: 1, ir: 1, x: 1, y: 1 };
-var SLEUTELS_KAART = { id: 1, kaartVersie: 1, invoer: 1, breedte: 1, hoogte: 1, beeld: 1, start: 1, achtergrond: 1, lagen: 1 };
+var SLEUTELS_KAART = { id: 1, kaartVersie: 1, invoer: 1, breedte: 1, hoogte: 1, beeld: 1, start: 1, achtergrond: 1, lagen: 1, startbeelden: 1 };
 var SLEUTELS_LAAG = { id: 1, soort: 1, bron: 1, items: 1, achtergrond: 1 };
 
 async function kennisbank() {
@@ -89,6 +87,15 @@ export function controleer(K, cfg) {
     if (la !== lk) f.push("laag " + l.id + ": achtergrond niet volgens de configuratie");
   });
   K.achtergrond.forEach(function(a) { Object.keys(a).forEach(function(k) { if (!SLEUTELS_ITEM[k]) f.push("achtergrond " + a.id + " heeft sleutel " + k); }); });
+  // startbeelden: volgens de configuratie; elk doel hoogstens in een startbeeld en een doel op de kaart; het beeld binnen de kaart
+  if ((cfg.startbeelden || []).length !== (K.startbeelden || []).length) f.push("startbeelden niet volgens de configuratie");
+  var inBeeld = {}, opKaart = {}; K.lagen.forEach(function(l) { l.items.forEach(function(x) { opKaart[x.id] = 1; }); });
+  (K.startbeelden || []).forEach(function(sb, i) {
+    var sc = (cfg.startbeelden || [])[i] || {};
+    if (sb.id !== sc.id || JSON.stringify(sb.doelen) !== JSON.stringify(sc.doelen)) f.push("startbeeld " + sb.id + " niet volgens de configuratie");
+    if (!(sb.w > 0 && sb.h > 0 && sb.x >= 0 && sb.y >= 0 && sb.x + sb.w <= K.breedte + 0.1 && sb.y + sb.h <= K.hoogte + 0.1)) f.push("startbeeld " + sb.id + " valt buiten de kaart");
+    sb.doelen.forEach(function(id) { if (inBeeld[id]) f.push(id + " staat in twee startbeelden"); inBeeld[id] = 1; if (!opKaart[id]) f.push("startbeeld " + sb.id + ": " + id + " is geen doel"); });
+  });
   if (/"naam"|"label"|"tekst"/.test(JSON.stringify(K))) f.push("de kaart bevat een naam of tekst");
   return f;
 }
@@ -384,7 +391,24 @@ async function tik(schermen, hard) {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
   schermen.forEach(function(scherm) {
-    var t1 = Date.now(), res = meetKaarten(KAARTEN, scherm, 0);
+    // een doel met een startbeeld wordt gemeten vanaf dat beeld: x1 = de breedte van het startbeeld (meetKaarten ongewijzigd; de
+    // kaart krijgt alleen beeld = de breedte van het startbeeld); de andere doelen vanaf de hele kaart
+    // Per startbeeld alleen de doelen die in beeld kunnen komen (de omhullende ruim om het startbeeld: een breedte opzij en anderhalve
+    // breedte boven en onder); andere doelen kunnen een tik in beeld niet beinvloeden. De beeldhoogte begrensd op MAXH_SB CSS-px,
+    // zoals de pagina het scherm vult (iets krapper dan een iPhone, dus aan de veilige kant). Het overzicht zonder grens (C2 a).
+    var MAXH_SB = 560;
+    var meetLijst = [], sbLijst = [], hoort = {};
+    KAARTEN.forEach(function(k) {
+      meetLijst.push(k);
+      (k.K.startbeelden || []).forEach(function(sb) {
+        var x0 = sb.x - sb.w, x1 = sb.x + 2 * sb.w, y0 = sb.y - 1.5 * sb.w, y1 = sb.y + sb.h + 1.5 * sb.w;
+        var lagen = k.K.lagen.map(function(l) { var bb = {}; IND.doelenVan(l).forEach(function(d) { bb[d.id] = d.bb; }); return Object.assign({}, l, { items: l.items.filter(function(it) { var b = bb[it.id]; return b[2] >= x0 && b[0] <= x1 && b[3] >= y0 && b[1] <= y1; }) }); });
+        sbLijst.push({ naam: k.naam + "@" + sb.id, K: Object.assign({}, k.K, { beeld: sb.w, lagen: lagen }) });
+        sb.doelen.forEach(function(id) { hoort[k.naam + "|" + id] = k.naam + "@" + sb.id; });
+      });
+    });
+    var t1 = Date.now(), alle = meetKaarten(meetLijst, scherm, 0).concat(sbLijst.length ? meetKaarten(sbLijst, scherm, MAXH_SB) : []);
+    var res = alle.filter(function(r) { var basis = r.kaart.split("@")[0], sb = hoort[basis + "|" + r.id]; return sb ? r.kaart === sb : r.kaart === basis; });
     fs.writeFileSync(path.join(WERK, "tik-kaarten-" + scherm + ".json"), JSON.stringify(res));
     var niet = res.filter(function(r) { return !["x1", "x2", "x4"].some(function(z) { return r.per[z].oordeel !== "fout"; }); });
     var perZoom = { x1: 0, x2: 0, x4: 0, x8: 0, nooit: 0 };

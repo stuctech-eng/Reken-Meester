@@ -13,12 +13,9 @@ var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
 var KAARTEN = [
   { id: "nlbe", titel: "Nederland en België" },
-  { id: "europa", titel: "Europa (overzicht)" },
-  { id: "europa-klein", titel: "Europa: west en midden" },
-  { id: "europa-zuidoost", titel: "Europa: zuidoost" },
-  { id: "europa-noordoost", titel: "Europa: noordoost" },
-  { id: "europa-kaukasus", titel: "Europa: Kaukasus" }
+  { id: "europa", titel: "Europa" }
 ];
+var BEELDTITEL = { west: "West en midden", zuidoost: "Zuidoost", noordoost: "Noordoost", kaukasus: "Kaukasus" };
 var LAAGTITEL = { "provincies-nl": "Provincies (Nederland)", "provincies-be": "Provincies (België)", gewesten: "Gewesten (België)", steden: "Steden", rivieren: "Rivieren", waddeneilanden: "Waddeneilanden", landen: "Landen" };
 var ITEMS = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js"];
 
@@ -34,6 +31,7 @@ for (var j = 0; j < KAARTEN.length; j++) {
   var k = KAARTEN[j], bron = path.join(ROOT, "src/core/topo/kaarten", k.id + ".js");
   var K = JSON.parse(JSON.stringify((await import(pathToFileURL(bron).href)).default));
   K.titel = k.titel;
+  (K.startbeelden || []).forEach(function(sb) { sb.titel = BEELDTITEL[sb.id] || fout("geen titel voor startbeeld " + sb.id); });
   K.lagen.forEach(function(l) {
     l.titel = LAAGTITEL[l.id] || fout("geen laagtitel voor " + l.id);
     l.items.forEach(function(x) { var it = KB[x.id] || fout("KAARTREF: " + x.id + " niet in de kennisbank"); x.naam = it.naam.waarde; });

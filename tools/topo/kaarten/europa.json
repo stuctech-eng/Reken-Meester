@@ -1,6 +1,6 @@
 {
   "id": "europa",
-  "toelichting": "Kaart Europa, overzicht (bouwplan T2b-2 fase 6.3; besluit Claude 19-11-2026): doel zijn de 31 landen die op deze kaart binnen x4 tikbaar zijn. De andere 19 van de 50 zijn hier achtergrond en doel op een regiokaart (europa-klein, europa-zuidoost, europa-noordoost, europa-kaukasus). Geen namen of tekst.",
+  "toelichting": "Kaart Europa: een kaart met alle 50 landen van Europa (T1), met startbeelden per regio (besluit Claude 19-11-2026, na de iPhone-proef: een Europa in plaats van regiokaarten). Een doel met een startbeeld opent daar ingezoomd; de tikbaarheid wordt gemeten vanaf het startbeeld. Geen namen of tekst.",
   "projectie": {
     "naam": "azimuthalEqualArea",
     "rotate": [
@@ -17,7 +17,7 @@
     72
   ],
   "doek": null,
-  "tolerantiePx": 0.5,
+  "tolerantiePx": 0.125,
   "afronding": 0.1,
   "conventies": {
     "marokkoGrens": 27.666666666666668,
@@ -27,26 +27,42 @@
     {
       "bron": "ne-land-overig",
       "uitgezonderd": [
+        "ALB",
         "AND",
+        "ARM",
+        "AUT",
         "AZE",
+        "BEL",
         "BGR",
+        "BIH",
         "BLR",
+        "CHE",
         "CYP",
         "CZE",
         "DEU",
         "DNK",
         "ESP",
+        "EST",
         "FIN",
         "FRA",
         "GBR",
+        "GEO",
+        "GRC",
+        "HRV",
+        "HUN",
         "IRL",
         "ISL",
         "ITA",
         "KAZ",
         "LIE",
+        "LTU",
+        "LUX",
+        "LVA",
         "MCO",
         "MDA",
+        "MKD",
         "MLT",
+        "MNE",
         "NLD",
         "NOR",
         "POL",
@@ -54,6 +70,9 @@
         "ROU",
         "RUS",
         "SMR",
+        "SRB",
+        "SVK",
+        "SVN",
         "SWE",
         "TUR",
         "UKR",
@@ -67,26 +86,42 @@
       "soort": "vlak",
       "bron": "ne-land",
       "items": [
+        "ALB",
         "AND",
+        "ARM",
+        "AUT",
         "AZE",
+        "BEL",
         "BGR",
+        "BIH",
         "BLR",
+        "CHE",
         "CYP",
         "CZE",
         "DEU",
         "DNK",
         "ESP",
+        "EST",
         "FIN",
         "FRA",
         "GBR",
+        "GEO",
+        "GRC",
+        "HRV",
+        "HUN",
         "IRL",
         "ISL",
         "ITA",
         "KAZ",
         "LIE",
+        "LTU",
+        "LUX",
+        "LVA",
         "MCO",
         "MDA",
+        "MKD",
         "MLT",
+        "MNE",
         "NLD",
         "NOR",
         "POL",
@@ -94,6 +129,9 @@
         "ROU",
         "RUS",
         "SMR",
+        "SRB",
+        "SVK",
+        "SVN",
         "SWE",
         "TUR",
         "UKR",
@@ -105,7 +143,87 @@
     {
       "id": "europa-regiokaarten",
       "soort": "methode",
-      "tekst": "De tikmeting op 428 px gaf op de overzichtskaart Europa 19 van de 50 landen niet binnen x4 (16 pas bij x8, LUX, MNE en SVN nooit). Besluit Claude 19-11-2026 (tussenweg): het overzicht houdt de 31 landen die binnen x4 tikbaar zijn als doel; de andere 19 zijn daar achtergrond en doel op een regiokaart (europa-klein, europa-zuidoost, europa-noordoost, europa-kaukasus). MAR is op europa-klein achtergrond (alleen een smal randje). Elk van de 50 is op minstens een Europakaart doel; alle doelen binnen x4, geen uitzondering"
+      "tekst": "Op de overzichtskaart Europa waren 19 van de 50 landen niet binnen x4 tikbaar op 428 px. Eerst regiokaarten (6.3 deel 2); na de iPhone-proef (Dick, 19-11-2026: niet overzichtelijk) een kaart Europa met alle 50 landen en startbeelden per regio (west, zuidoost, noordoost, Kaukasus): een doel met een startbeeld opent daar ingezoomd, en moet vanaf dat beeld binnen x4 tikbaar zijn. Tolerantie 0,5 px bij x4 (dieper zoomen); bewuste afwijking van T2a"
+    }
+  ],
+  "toelichtingTolerantie": "0,5 px bij x4 (0,125 px bij x1): op deze ene kaart wordt dieper ingezoomd dan op de overzichtskaart van T2a; bewuste afwijking van de tolerantie van T2a (0,5 px bij x1)",
+  "startbeelden": [
+    {
+      "id": "west",
+      "lon": [
+        -3.5,
+        16.5
+      ],
+      "lat": [
+        35.0,
+        51.5
+      ],
+      "doelen": [
+        "AND",
+        "AUT",
+        "BEL",
+        "CHE",
+        "HUN",
+        "LIE",
+        "LUX",
+        "MCO",
+        "MLT",
+        "SMR",
+        "SVK",
+        "VAT"
+      ]
+    },
+    {
+      "id": "zuidoost",
+      "lon": [
+        13.0,
+        30.0
+      ],
+      "lat": [
+        36.0,
+        47.5
+      ],
+      "doelen": [
+        "ALB",
+        "BIH",
+        "GRC",
+        "HRV",
+        "MKD",
+        "MNE",
+        "SRB",
+        "SVN"
+      ]
+    },
+    {
+      "id": "noordoost",
+      "lon": [
+        20.0,
+        32.5
+      ],
+      "lat": [
+        51.0,
+        60.0
+      ],
+      "doelen": [
+        "EST",
+        "LTU",
+        "LVA"
+      ]
+    },
+    {
+      "id": "kaukasus",
+      "lon": [
+        39.5,
+        50.5
+      ],
+      "lat": [
+        38.5,
+        44.0
+      ],
+      "doelen": [
+        "ARM",
+        "GEO"
+      ]
     }
   ]
 }

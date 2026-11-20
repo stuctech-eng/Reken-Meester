@@ -37,10 +37,10 @@ var NEB = BRONNEN.naturalEarth.bestanden;
 export var BREEDTE = 1000;
 export var WEERGAVE = 428 - 2 * 16;
 export var EENHEID_PX = WEERGAVE / BREEDTE;
-export var KAARTIDS = ["nlbe", "europa", "europa-klein", "europa-zuidoost", "europa-noordoost", "europa-kaukasus"];
+export var KAARTIDS = ["nlbe", "europa"];
 export var GRENS_MIN_STUK_PX2 = 0.01, GRENS_ZONE_PX = 2, GRENS_EIS_PX = 0.5, GRENS_MEETFOUT_PX = 0.05, GRENS_STAP_PX = 0.1, ZOOM_GRENS = 8;
 export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
-export var GZIP_DOEL = { nlbe: 40 * 1024, "europa-klein": 40 * 1024, europa: 120 * 1024, "europa-zuidoost": 40 * 1024, "europa-noordoost": 40 * 1024, "europa-kaukasus": 40 * 1024 };
+export var GZIP_DOEL = { nlbe: 40 * 1024, europa: 120 * 1024 };
 
 function fout(t) { throw new Error(t); }
 function sha(b) { return crypto.createHash("sha256").update(b).digest("hex"); }
@@ -393,6 +393,13 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
   var kaart = { id: cfg.id, kaartVersie: kaartVersie, invoer: inv, breedte: P.breedte, hoogte: P.hoogte };
   if (cfg.doek) { kaart.beeld = BREEDTE; kaart.start = P.start; }
   kaart.achtergrond = achter; kaart.lagen = lagen;
+  // startbeelden: per regio het beeld (eenheden) waarin een doel opent; uit de lon/lat-uitsnede van de configuratie, zoals het doek
+  if (cfg.startbeelden) kaart.startbeelden = cfg.startbeelden.map(function(sb) {
+    var pts = []; for (var a = 0; a <= 8; a++) for (var b = 0; b <= 8; b++) pts.push([sb.lon[0] + (sb.lon[1] - sb.lon[0]) * a / 8, sb.lat[0] + (sb.lat[1] - sb.lat[0]) * b / 8]);
+    var bb = geoPath(pr).bounds({ type: "MultiPoint", coordinates: pts }), x = Math.max(0, bb[0][0]), y = Math.max(0, bb[0][1]);
+    sb.doelen.forEach(function(id) { if (!lagen.some(function(l) { return l.items.some(function(it) { return it.id === id; }); })) fout("startbeeld " + sb.id + ": " + id + " is geen doel op de kaart"); });
+    return { id: sb.id, x: rond(x), y: rond(y), w: rond(Math.min(P.breedte, bb[1][0]) - x), h: rond(Math.min(P.hoogte, bb[1][1]) - y), doelen: sb.doelen.slice() };
+  });
   var afwijkingen = (cfg.grensMelden || []).map(function(z) { return { id: z.id, soort: "grens", tekst: z.toelichting }; }).concat(cfg.afwijkingen || []);
   return { kaart: kaart, afwijkingen: afwijkingen, ruw: ruw, pr: pr, meting: { maxAfwijkingPx: Math.round(v.max * EENHEID_PX * 10000) / 10000, gewicht: v.gewicht, tolerantiePx: cfg.tolerantiePx } };
 }

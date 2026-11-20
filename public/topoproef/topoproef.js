@@ -5,19 +5,16 @@
 
 import { maakDoelen, beslis, isKlein, STRAAL } from "../kaartproef/tikregel.js";
 
-var VERSIE = "T2b-proef-1";
+var VERSIE = "T2b-proef-2";
 var KAARTEN = [
   { id: "nlbe", titel: "Nederland en België" },
-  { id: "europa", titel: "Europa (overzicht)" },
-  { id: "europa-klein", titel: "Europa: west en midden" },
-  { id: "europa-zuidoost", titel: "Europa: zuidoost" },
-  { id: "europa-noordoost", titel: "Europa: noordoost" },
-  { id: "europa-kaukasus", titel: "Europa: Kaukasus" }
+  { id: "europa", titel: "Europa" }
 ];
-export var ZOOMSTAPPEN = [1, 2, 4, 8];
+// T2b: dieper zoomen (Europa met startbeelden); een startbeeld kan een zoom tussen de stappen geven
+export var ZOOMSTAPPEN = [1, 2, 4, 8, 16, 32];
 export var SLEEPGRENS = 10;   // CSS-pixels: tot en met 10 is het een tik, daarboven slepen
 var NS = "http://www.w3.org/2000/svg";
-var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", opdracht: "#dc2626", opdrachtRand: "#7f1d1d", stippel: "#451a03", lijn: "#1d4ed8", punt: "#1a1d3a" };
+var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", opdracht: "#dc2626", opdrachtRand: "#7f1d1d", stippel: "#451a03", stip: "#b45309", lijn: "#1d4ed8", punt: "#1a1d3a" };
 
 var staat = { kaart: null, data: {}, laag: null, stand: "vrij", gekozen: null, doelen: [], opdracht: null, uitslag: {}, log: [], svg: null,
   zoom: 1, ox: 0, oy: 0, aanraking: null, maxH: 0, alternatief: null, vingers: {}, knijp: null, blok: false };
@@ -38,7 +35,9 @@ function venster() { return vensterBij(staat.zoom); }
 // Het beeld bij een willekeurige zoom z (ook tussen de stappen, alleen tijdens het knijpen)
 function vensterBij(z) {
   var k = staat.kaart, w = beeldBreedte(k) / z, h = k.hoogte / z, b = $("kaartvak").clientWidth;
-  if (staat.maxH > 0 && b > 0) h = Math.min(h, staat.maxH * w / b);
+  // T2b: ingezoomd gebruikt het beeld de vrije schermhoogte (tot de hele kaarthoogte); de tikmeting rekent met hoogte / zoom, en een
+  // hoger beeld geeft alleen meer ruimte rond een doel, nooit minder
+  if (staat.maxH > 0 && b > 0) h = z > 1 ? Math.min(k.hoogte, staat.maxH * w / b) : Math.min(h, staat.maxH * w / b);
   return { x: staat.ox, y: staat.oy, w: w, h: h };
 }
 // Vrije hoogte voor de kaart: van de bovenkant van het kaartvak tot de onderste balk, met 8 px ruimte
@@ -74,14 +73,34 @@ function knoppen() {
   if (staat.kaart) staat.kaart.lagen.forEach(function(l) { optie(lv, l.id, l.titel); });
   if (staat.laag) lv.value = staat.laag.id;
   lv.style.display = staat.kaart && staat.kaart.lagen.length > 1 ? "" : "none";
+  var bv = $("beeldkeuze"), sbs = staat.kaart && staat.kaart.startbeelden || []; bv.innerHTML = "";
+  if (sbs.length) { optie(bv, "", "Heel " + staat.kaart.titel); sbs.forEach(function(b) { optie(bv, b.id, b.titel || b.id); }); }
+  bv.style.display = sbs.length ? "" : "none";
   var sb = $("stand"); sb.className = staat.stand === "opdracht" ? "aan" : ""; sb.setAttribute("aria-pressed", staat.stand === "opdracht" ? "true" : "false");
 }
+function volgendeStap(z) { for (var i = 0; i < ZOOMSTAPPEN.length; i++) if (ZOOMSTAPPEN[i] > z * 1.0001) return ZOOMSTAPPEN[i]; return null; }
+function vorigeStap(z) { for (var i = ZOOMSTAPPEN.length - 1; i >= 0; i--) if (ZOOMSTAPPEN[i] < z / 1.0001) return ZOOMSTAPPEN[i]; return null; }
+function zoomTekst(z) { return "x" + (Math.round(z * 10) / 10); }
 function zoomKnoppen() {
-  var i = ZOOMSTAPPEN.indexOf(staat.zoom);
-  $("zoomin").disabled = i === ZOOMSTAPPEN.length - 1;
-  $("zoomuit").disabled = i === 0;
+  $("zoomin").disabled = volgendeStap(staat.zoom) === null;
+  $("zoomuit").disabled = vorigeStap(staat.zoom) === null;
   $("heel").disabled = staat.zoom === 1;
-  $("zoomwaarde").textContent = "x" + staat.zoom;
+  $("zoomwaarde").textContent = zoomTekst(staat.zoom);
+}
+// T2b: startbeelden (Europa). Een doel met een startbeeld opent daar; "Heel Europa" is het beeld bij x1.
+function startbeeldVan(id) { var sb = (staat.kaart.startbeelden || []).filter(function(b) { return b.doelen.indexOf(id) >= 0; }); return sb[0] || null; }
+function naarBeeld(sb) {
+  var k = staat.kaart;
+  $("beeldkeuze").value = sb ? sb.id : "";
+  if (!sb) { staat.zoom = 1; staat.ox = k.start ? k.start[0] : 0; staat.oy = k.start ? k.start[1] : 0; }
+  else {
+    staat.zoom = beeldBreedte(k) / sb.w; meetRuimte();
+    var v = venster(), d = staat.opdracht && staat.opdracht.huidig, c = [sb.x + sb.w / 2, sb.y + sb.h / 2];
+    // gecentreerd op het startbeeld; in de opdracht op het gevraagde doel als dat anders buiten beeld zou vallen
+    if (d && d.soort === "vlak" && (Math.abs(d.mx - c[0]) > v.w * 0.4 || Math.abs(d.my - c[1]) > v.h * 0.4)) c = [d.mx, d.my];
+    staat.ox = c[0] - v.w / 2; staat.oy = c[1] - v.h / 2;
+  }
+  begrens(); teken();
 }
 
 function kiesKaart(id) {
@@ -120,9 +139,10 @@ function teken() {
     if (d.soort === "vlak") {
       if (d.ringen.length) groep.appendChild(el("path", { d: item.d, fill: kleur || KLEUR.doel, "fill-opacity": kleur ? 0.85 : 1, stroke: gek ? KLEUR.gekozenRand : KLEUR.doelRand, "stroke-width": (gek ? 3 : 1.2) * px, "fill-rule": "evenodd" }));
       if (isKlein(d, s)) {
-        // tikcirkel (alleen tekenen; het tikgebied is de tikregel): witte ondergrond van 4 px, daarop een donkere stippellijn van 2,5 px
-        cirkels.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: kleur || "none", "fill-opacity": kleur ? 0.35 : 0, stroke: "#fff", "stroke-width": 4 * px }));
-        cirkels.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: "none", stroke: gek ? KLEUR.gekozenRand : (opd ? KLEUR.opdrachtRand : KLEUR.stippel), "stroke-width": 2.5 * px, "stroke-dasharray": (6 * px) + " " + (4 * px) }));
+        // T2b: het tikgebied (44 px rond het middelpunt, de tikregel) is onzichtbaar; zichtbaar is een rustige stip. Alleen bij het
+        // gekozen of het gevraagde doel een zachte kring van 44 px, zodat je ziet wat telt.
+        if (kleur) cirkels.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: kleur, "fill-opacity": 0.16, stroke: kleur, "stroke-opacity": 0.7, "stroke-width": 1.5 * px }));
+        cirkels.appendChild(el("circle", { cx: d.mx, cy: d.my, r: (kleur ? 6 : 4.5) * px, fill: kleur || KLEUR.stip, stroke: "#fff", "stroke-width": 1.5 * px }));
       }
     } else if (d.soort === "lijn") {
       // gekozen: een witte lijn van 10 px onder een groene van 6 px (2x de gewone 3 px)
@@ -262,7 +282,7 @@ function kies(doel, hoe) {
 function toonAlternatief() {
   var m = $("alternatief"), a = staat.alternatief;
   if (!a || !staat.gekozen) { m.style.display = "none"; return; }
-  $("alttekst").textContent = "Je tikte in de stippellijn van " + staat.gekozen.naam + ". Bedoelde je " + a.naam + "?";
+  $("alttekst").textContent = "Je tikte bij de stip van " + staat.gekozen.naam + ". Bedoelde je " + a.naam + "?";
   $("altknop").textContent = a.naam;
   m.style.bottom = $("balk").offsetHeight + "px";
   m.style.display = "flex";
@@ -293,13 +313,14 @@ function startOpdracht() {
   staat.opdracht = { rij: rij, nr: 0, huidig: rij[0], keuzelijst: false, melding: false };
   staat.uitslag[sleutel()] = { doelen: rij.length, gedaan: 0, inEenKeer: 0, metLijst: 0, metMelding: 0, fout: [], zoom: {} };
   staat.gekozen = null; staat.alternatief = null; toonAlternatief(); toonOpdracht();
+  if (staat.kaart.startbeelden) naarBeeld(startbeeldVan(rij[0].id));
 }
 // Uitleg bij de opdracht: de stippellijn als het doel bij deze zoom een tikcirkel heeft; slepen als de kaart bij x1 niet past.
 // Elke extra zin krijgt een regel van 22 px erbij (44, 66 of 88 px).
 function toonOpdracht() {
   var o = staat.opdracht, extra = [];
   if (o && o.huidig) {
-    if (o.huidig.soort === "vlak" && isKlein(o.huidig, $("kaartvak").clientWidth / venster().w)) extra.push("Je mag overal binnen de stippellijn tikken.");
+    if (o.huidig.soort === "vlak" && isKlein(o.huidig, $("kaartvak").clientWidth / venster().w)) extra.push("Een klein gebied is een stip: tik op of vlak bij de stip.");
     if (!pastBijEen()) extra.push("Staat het rode doel buiten beeld? Sleep de kaart.");
   }
   $("opdracht").style.height = extra.length ? (44 + 22 * extra.length) + "px" : "";
@@ -320,6 +341,7 @@ function bevestig() {
     staat.log.push({ t: new Date().toISOString().slice(11, 19), kaart: staat.kaart.id, laag: staat.laag.id, x: "", y: "", zoom: staat.zoom, uitkomst: "bevestigd " + staat.gekozen.id + (goed ? " (goed)" : " (FOUT, gevraagd " + o.huidig.id + ")"), kandidaten: "" });
     o.nr++; o.huidig = o.rij[o.nr] || null; o.keuzelijst = false; o.melding = false;
     toonOpdracht();
+    if (o.huidig && staat.kaart.startbeelden) { staat.gekozen = null; staat.alternatief = null; toonGekozen(); toonAlternatief(); naarBeeld(startbeeldVan(o.huidig.id)); toonDebug(); return; }
   }
   staat.gekozen = null; staat.alternatief = null; toonGekozen(); toonAlternatief(); teken(); toonDebug();
 }
@@ -348,8 +370,9 @@ $("meer").onclick = function() { toonDebug(); $("paneel").style.display = "flex"
 $("sluit").onclick = function() { $("paneel").style.display = "none"; };
 $("paneel").onclick = function(e) { if (e.target.id === "paneel") $("paneel").style.display = "none"; };
 $("toondebug").onclick = function() { var d = $("debug"); d.style.display = d.style.display === "block" ? "none" : "block"; toonDebug(); };
-$("zoomin").onclick = function() { var i = ZOOMSTAPPEN.indexOf(staat.zoom); if (i < ZOOMSTAPPEN.length - 1) zetZoom(ZOOMSTAPPEN[i + 1]); };
-$("zoomuit").onclick = function() { var i = ZOOMSTAPPEN.indexOf(staat.zoom); if (i > 0) zetZoom(ZOOMSTAPPEN[i - 1]); };
+$("zoomin").onclick = function() { var z = volgendeStap(staat.zoom); if (z) zetZoom(z); };
+$("zoomuit").onclick = function() { var z = vorigeStap(staat.zoom); if (z) zetZoom(z); };
+$("beeldkeuze").onchange = function() { var id = this.value; naarBeeld((staat.kaart.startbeelden || []).filter(function(b) { return b.id === id; })[0] || null); };
 $("heel").onclick = function() { zetZoom(1); };
 $("kopieer").onclick = function() {
   var t = uitslagTekst();
