@@ -1,16 +1,15 @@
 // Sjabloon S2 wijs-aan (plan T1 par. 1.5; plan T3 par. 3.4): naam gegeven, tik het gebied aan op de kaart.
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
-// Vaardigheid (vaardigheden-nlbe.js): { id, kaart, laag, prefix, soortwoord }. De vraag:
+// Onderdeel van een vaardigheid (vaardigheden-nlbe.js): { sjabloon: "wijs-aan", kaart, laag, prefix, soortwoord }. De vraag:
 //   question   "Tik de provincie Utrecht aan."
 //   answer     de naam van het gevraagde gebied (naamVan, uit de kennisbank)
-//   choices    hoogstens 4 namen uit dezelfde vraagset (de terugval op kiezen, plan T3 par. 3.2)
+//   choices    hoogstens 4 namen uit dezelfde vraagset (alleen als het oefenscherm de kaart niet kan tonen; resolveInput)
 //   kaart      { kaart, laag, antwoordId, focus }: het oefenscherm toont de kaart als invoer (inputType "kaart"); focus is de
-//              omhullende van de hele vraagset (bij elke vraag van de vaardigheid dezelfde, dus geen hint): het beginbeeld
+//              omhullende van de hele vraagset (bij elke vraag van het onderdeel dezelfde, dus geen hint): het beginbeeld
 //   tekstVraag true: een hele zin (de bestaande weergave van het oefenscherm)
-// Elk item komt een keer langs voordat de ronde opnieuw begint (deckPick).
+// Welk gebied gevraagd wordt, kiest data.js (een ronde langs alle gebieden en onderdelen van de vaardigheid).
 
-import { deckPick } from "../../skills/flow.js";
 import { shuffle } from "../../skills/helpers.js";
 
 export function vraagIds(laagObj, prefix) {
@@ -18,17 +17,19 @@ export function vraagIds(laagObj, prefix) {
 }
 
 export function maakWijsAan(bron) {
-  return function(v) {
-    var l = bron.laag(v.kaart, v.laag), ids = vraagIds(l, v.prefix);
-    if (ids.length < 2) throw new Error("te weinig gebieden voor " + v.id + ": " + ids.length);
-    var id = deckPick(v.id, ids), naam = bron.naamVan(id);
-    var anderen = shuffle(ids.filter(function(x) { return x !== id; })).slice(0, 3).map(bron.naamVan);
+  return function(o, id) {
+    var ids = vraagIds(bron.laag(o.kaart, o.laag), o.prefix);
+    if (ids.indexOf(id) < 0) throw new Error("gebied " + id + " hoort niet bij de laag " + o.laag);
+    var naam = bron.naamVan(id);
+    var anderen = shuffle(ids.filter(function(x) { return x !== id; })).slice(0, 3).map(function(x) { return bron.naamVan(x); });
     return {
-      question: "Tik " + v.soortwoord + " " + naam + " aan.",
+      question: "Tik " + o.soortwoord + " " + naam + " aan.",
       answer: naam,
       choices: shuffle([naam].concat(anderen)),
       tekstVraag: true,
-      kaart: { kaart: v.kaart, laag: v.laag, antwoordId: id, focus: bron.omhulling(v.kaart, v.laag, ids) },
+      inputType: "kaart",
+      gradingRule: "kaart_item",
+      kaart: { kaart: o.kaart, laag: o.laag, antwoordId: id, focus: bron.omhulling(o.kaart, o.laag, ids) },
     };
   };
 }

@@ -34,11 +34,12 @@ async function inBeeld(p, id) {
   await p.evaluate(function(id) { var h = window.__TOPO_APP, d = h.doelen.filter(function(x) { return x.id === (id || h.antwoordId); })[0]; h.zet(1, d.soort === "punt" ? d.x : d.mx, d.soort === "punt" ? d.y : d.my); }, id || null);
   await p.waitForTimeout(100);
 }
-async function naarModus(p, url) {
+// Naar een vaardigheid (los oefenen); zonder naam: "Provincies aanwijzen" (nb02, alleen aanwijzen)
+async function naarModus(p, url, vaardigheid) {
   await p.goto(url); await p.waitForTimeout(800);
   await p.getByText(/Topografie/).first().click(); await p.waitForTimeout(200);
   await p.getByText(/Nederland en België/).first().click(); await p.waitForTimeout(300);
-  await p.getByText("Start nieuwe vaardigheid").click(); await p.waitForTimeout(1200);
+  await p.getByText(vaardigheid || "Provincies aanwijzen", { exact: true }).click(); await p.waitForTimeout(1200);
 }
 function balk(p) { return p.evaluate(function() { var b = document.querySelector("[aria-live=polite]"); return b ? b.innerText : ""; }); }
 

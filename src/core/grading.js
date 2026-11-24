@@ -80,6 +80,50 @@ export function gradeTyped(gradingRule, invoer, vraag, inputConfig) {
     }
     return { geldig: true, goed: pw === vraag.answer, waarde: pw };
   }
+  // Naam (Topografie, plan T3 par. 3.3): naamNakijken hieronder; bijna: "bijna goed, let op de spelling" (telt als fout)
+  if (gradingRule === "naam_varianten") return naamNakijken(invoer, vraag);
   // Onbekende regel: nooit goed rekenen; resolveInput laat zo'n vraag niet typen
   return { geldig: false, goed: false, waarde: null };
+}
+
+// ── Namen nakijken (Topografie, plan T3 par. 3.3) ────────────────
+// vraag.namen = { juist: [voorkeursnaam, varianten...], anderen: [[naam, varianten...], ...] } (de andere gebieden van de laag).
+// Normaliseren: kleine letters, accenten weg, spaties, koppeltekens, apostrofs en punten weg ("'s-Hertogenbosch" = "s hertogenbosch").
+// Volgorde, het eerste dat past beslist:
+//   1. leeg: geen antwoord (geldig false, er gebeurt niets);
+//   2. goed: gelijk aan de voorkeursnaam of een variant;
+//   3. een ander gebied: gelijk aan een naam van een ander gebied van de laag: fout, zonder melding;
+//   4. bijna goed: precies een bewerking (een letter anders, erbij of weg, of twee buurletters omgewisseld) van een juiste naam,
+//      alleen bij een naam van minstens 5 letters en alleen als de invoer niet ook zo dicht bij een ander gebied ligt: fout, met bijna;
+//   5. anders: fout.
+// waarde: bij goed het antwoord zelf; anders de invoer (zonder spaties aan de randen; nooit gelijk aan het antwoord, want dat is goed).
+export function naamNorm(s) {
+  return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[\s\-'\u2018\u2019\u0060\u00b4.]/g, "");
+}
+// Precies een bewerking (beperkte Damerau-Levenshtein-afstand 1)
+export function eenBewerking(a, b) {
+  if (a === b) return false;
+  var la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > 1) return false;
+  if (la === lb) {
+    var v = [];
+    for (var i = 0; i < la; i++) if (a.charAt(i) !== b.charAt(i)) v.push(i);
+    if (v.length === 1) return true;
+    return v.length === 2 && v[1] === v[0] + 1 && a.charAt(v[0]) === b.charAt(v[1]) && a.charAt(v[1]) === b.charAt(v[0]);
+  }
+  var k = la > lb ? a : b, c = la > lb ? b : a, j = 0;
+  while (j < c.length && k.charAt(j) === c.charAt(j)) j++;
+  return k.slice(j + 1) === c.slice(j);
+}
+export function naamNakijken(invoer, vraag) {
+  var n = naamNorm(invoer || "");
+  if (n === "") return { geldig: false, goed: false, waarde: null };
+  var namen = vraag.namen || { juist: [vraag.answer], anderen: [] };
+  var juist = namen.juist.map(naamNorm), anderen = [];
+  namen.anderen.forEach(function(g) { g.forEach(function(x) { anderen.push(naamNorm(x)); }); });
+  var ruw = String(invoer).trim();
+  if (juist.indexOf(n) >= 0) return { geldig: true, goed: true, waarde: vraag.answer };
+  if (anderen.indexOf(n) >= 0) return { geldig: true, goed: false, waarde: ruw, bijna: false };
+  var bijna = naamNorm(vraag.answer).length >= 5 && juist.some(function(x) { return eenBewerking(x, n); }) && !anderen.some(function(x) { return eenBewerking(x, n); });
+  return { geldig: true, goed: false, waarde: ruw, bijna: bijna };
 }

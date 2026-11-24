@@ -16,7 +16,11 @@ import { EILANDEN_NL } from "./items/eilanden-nl.js";
 import { pakUit } from "./kaart/bogen.js";
 import { maakDoelen } from "./kaart/tikregel.js";
 import { ringDelen } from "./kaart/beeld.js";
-import { maakWijsAan } from "./sjablonen/wijs-aan.js";
+import { HOOFDSTEDEN_NLBE } from "./afgeleid/hoofdsteden-nlbe.js";
+import { maakWijsAan, vraagIds } from "./sjablonen/wijs-aan.js";
+import { maakBenoem } from "./sjablonen/benoem.js";
+import { maakRelatie, genoemdeIds } from "./sjablonen/relatie.js";
+import { deckPick } from "../skills/flow.js";
 
 var KB = {};
 [LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL].forEach(function(lijst) {
@@ -24,6 +28,21 @@ var KB = {};
 });
 
 export function item(id) { return KB[id] || null; }
+
+// De voorkeursnaam en de goedgekeurde varianten (voor typen, plan T3 par. 3.3)
+export function namenVan(id) {
+  var it = KB[id];
+  return [naamVan(id)].concat(((it && it.naam && it.naam.varianten) || []).map(function(v) { return typeof v === "string" ? v : v.waarde; }));
+}
+
+// Kennisbank-items van een soort, eventueel met een voorvoegsel van de id (voor de foute keuzes van S3)
+export function ids(soort, prefix) {
+  return Object.keys(KB).filter(function(id) { return KB[id].soort === soort && (!prefix || id.indexOf(prefix) === 0); }).sort();
+}
+
+// Vastgestelde relaties van een soort (nu: de hoofdstadrelaties van Nederland en Belgie, fase 6.2)
+var RELATIES = HOOFDSTEDEN_NLBE.filter(function(r) { return r.status === "vastgesteld"; });
+export function relaties(type) { return RELATIES.filter(function(r) { return r.type === type; }); }
 
 export function naamVan(id) {
   var it = KB[id];
@@ -78,5 +97,26 @@ export function omhulling(kaartId, laagId, ids) {
   return OMHULLING[sleutel];
 }
 
-// S2 wijs-aan (plan T3 par. 3.4)
-export var wijsAan = maakWijsAan({ laag: laag, naamVan: naamVan, omhulling: omhulling });
+// De sjablonen (plan T3 par. 3.4)
+var BRON = { laag: laag, naamVan: naamVan, namenVan: namenVan, omhulling: omhulling, relaties: relaties, ids: ids };
+var SJABLONEN = { "wijs-aan": maakWijsAan(BRON), "benoem": maakBenoem(BRON), "relatie": maakRelatie(BRON) };
+
+// De gevraagde items van een onderdeel
+export function onderdeelIds(o) {
+  if (o.sjabloon === "relatie") return genoemdeIds(BRON, o);
+  return vraagIds(laag(o.kaart, o.laag), o.prefix);
+}
+
+// Alle combinaties (onderdeel, item) van een vaardigheid
+export function combinaties(def) {
+  var uit = [];
+  def.onderdelen.forEach(function(o, i) { onderdeelIds(o).forEach(function(id) { uit.push({ o: i, id: id }); }); });
+  return uit;
+}
+
+// Een vraag van een vaardigheid: een ronde langs alle combinaties (deckPick), daarna het sjabloon van het onderdeel
+export function maak(def) {
+  var c = deckPick(def.id, combinaties(def)), o = def.onderdelen[c.o];
+  return SJABLONEN[o.sjabloon](o, c.id);
+}
+export function maakMet(def, o, id) { return SJABLONEN[o.sjabloon](o, id); }

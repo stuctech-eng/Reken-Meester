@@ -156,6 +156,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var setFbLevel  = fbLvlState[1];
 
   // uitlegVisible: kaart zichtbaar na fout (blijft staan tot "Volgende vraag" getikt)
+  // Bijna goed (namen typen, Topografie): de melding "let op de spelling" bij deze vraag (telt als fout)
+  var spelState = useState(false), spelMelding = spelState[0], setSpelMelding = spelState[1];
   var uitlegVisState = useState(false);
   var uitlegVisible  = uitlegVisState[0];
   var setUitlegVisible = uitlegVisState[1];
@@ -305,6 +307,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setFeedback(null);
     setFbLevel(0);
     setUitlegVisible(false);
+    setSpelMelding(false);
     timeRef.current = Date.now();
   }
 
@@ -408,6 +411,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     if (selected !== null) return;
     var res = gradeTyped(inputInfo.gradingRule, ruw, currentQuestion, inputInfo.inputConfig);
     if (!res.geldig) return;
+    if (res.bijna) setSpelMelding(true);
     handleChoice(res.goed ? currentQuestion.answer : res.waarde);
   }
   function handleTypedSubmit() {
@@ -579,7 +583,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes).
   // Past het cijferblok niet op het scherm, dan toont deze vraag toch de keuzes (typeFit).
   var inputInfo   = resolveInput(subjectId, currentQuestion.skillId, currentQuestion);
-  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent" || inputInfo.inputType === "quantity" || inputInfo.inputType === "fraction" || inputInfo.inputType === "pair");
+  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent" || inputInfo.inputType === "quantity" || inputInfo.inputType === "fraction" || inputInfo.inputType === "pair" || inputInfo.inputType === "naam");
   var typeMode    = typeAllowed && typeFit !== "kiezen";
   var kpBase      = KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"];
   var kpSize      = (typeFit && typeFit !== "kiezen") ? typeFit : kpBase;
@@ -978,6 +982,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
                 ? ("✓ Goed zo!")
                 : ("✖  Antwoord: " + toonGelijkheid(currentQuestion.answer))
               }
+              {feedback === "wrong" && spelMelding && (
+                <div style={{ fontSize: T.md, fontWeight: 700, marginTop: 4 }}>{"Bijna goed, let op de spelling."}</div>
+              )}
             </div>
           )}
         </div>

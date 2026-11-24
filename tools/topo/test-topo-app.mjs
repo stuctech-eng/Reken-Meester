@@ -1,4 +1,4 @@
-// Test van Topografie in de app, stap T3b (plan T3 par. 3.1 tot en met 3.4 en par. 5). Alleen bouwomgeving, in Node.
+// Test van Topografie in de app, stappen T3b en T3c (plan T3 par. 3.1 tot en met 3.4 en par. 5). Alleen bouwomgeving, in Node.
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
 // Gebruik (vanuit de hoofdmap van de repo): node tools/topo/test-topo-app.mjs
@@ -6,9 +6,10 @@
 // - laden: laadTopo(["nlbe"]) zet de kaart klaar; topo() werkt pas daarna;
 // - identiteit: binnen elke laag geen twee gebieden met dezelfde naam, ook niet na normalisatie; elke naam komt uit de kennisbank;
 //   de volgorde van de items doet er niet toe (raster van tikken met de omgekeerde volgorde: dezelfde uitkomst);
-// - S2 wijs-aan: per vaardigheid 2.000 vragen, elk opnieuw nagerekend: het antwoord is naamVan(antwoordId), het gebied hoort bij
-//   de vraagset, de keuzes zijn verschillend, bevatten het antwoord en komen uit de vraagset; elk gebied komt in de eerste ronde langs;
-// - invoer: resolveInput geeft "kaart" bij een volledige vraag en Kiezen zonder antwoordId;
+// - vaardigheden (S1 benoem, S2 wijs-aan, S3 relatie): per vaardigheid 2.000 vragen, elk opnieuw nagerekend op de kennisbank: het
+//   antwoord, de vraagset, de vraagtekst, de keuzes (verschillend, met het antwoord, uit de toegestane namen; bij S3 nooit een ander
+//   juist antwoord), de invoer (resolveInput); elke combinatie van onderdeel en item komt in de eerste ronde langs; minCorrect;
+// - namen: geen normalisatiebotsing per laag, ook niet met de varianten;
 // - rand: ringen kleiner dan 1 px2 op het scherm krijgen geen rand (gemeld per laag bij x1); het vlak houdt alle ringen.
 // Mutanten: een andere naam dan de kennisbank, een antwoordId buiten de laag, een dubbele keuze en een naam die twee keer in een
 // laag staat moeten gevangen worden.
@@ -38,7 +39,8 @@ var V = await import(bron("src/core/topo/vaardigheden-nlbe.js"));
 var IR = await import(bron("src/core/inputResolve.js"));
 var K = D.kaart("nlbe");
 
-function norm(s) { return String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[\s\-'’.]/g, ""); }
+var GR = await import(bron("src/core/grading.js"));
+function norm(s) { return GR.naamNorm(s); }
 
 // identiteit: namen per laag
 function namenUniek(laag) {
@@ -72,51 +74,112 @@ eis(namenUniek(mutLaag).length > 0, "mutant dubbele naam in een laag gevangen");
   eis(versch === 0, "laag " + lid + ": omgekeerde volgorde geeft dezelfde uitkomst bij " + tikken + " tikken (" + versch + " verschillen)");
 });
 
-// S2 wijs-aan: 2.000 vragen per vaardigheid
-function controleerVraag(def, q, ids) {
-  var f = [];
-  try { if (q.answer !== D.naamVan(q.kaart.antwoordId)) f.push("antwoord is niet naamVan(antwoordId)"); } catch (e) { f.push("antwoordId niet in de kennisbank"); }
-  if (ids.indexOf(q.kaart.antwoordId) < 0) f.push("antwoordId buiten de vraagset");
-  if (q.kaart.kaart !== def.kaart || q.kaart.laag !== def.laag) f.push("kaart of laag past niet");
-  if (q.question !== "Tik " + def.soortwoord + " " + q.answer + " aan.") f.push("vraagtekst");
-  var namen = ids.map(D.naamVan);
-  if (q.choices.length !== Math.min(4, ids.length)) f.push("aantal keuzes");
+// De vaardigheden: per vaardigheid 2.000 vragen, elk opnieuw nagerekend op de kennisbank (per sjabloon)
+var VS = await import(bron("src/core/topo/sjablonen/wijs-aan.js"));
+var RS = await import(bron("src/core/topo/sjablonen/relatie.js"));
+var RBRON = { relaties: D.relaties, ids: D.ids, naamVan: D.naamVan };
+function sleutel(q) {
+  if (q.relatie) return "relatie|" + q.relatie.relatie + "|" + q.relatie.gevraagd + "|" + q.relatie.genoemd;
+  return (q.kaart.stand === "toon" ? "benoem|" : "wijs-aan|") + q.kaart.laag + "|" + q.kaart.antwoordId;
+}
+function onderdeelVan(def, q) {
+  return def.onderdelen.filter(function(o) {
+    if (q.relatie) return o.sjabloon === "relatie" && o.relatie === q.relatie.relatie && o.gevraagd === q.relatie.gevraagd;
+    return o.sjabloon === (q.kaart.stand === "toon" ? "benoem" : "wijs-aan") && o.laag === q.kaart.laag && (!o.prefix || q.kaart.antwoordId.indexOf(o.prefix) === 0);
+  })[0];
+}
+function controleerKeuzes(q, toegestaan, f) {
   if (q.choices.indexOf(q.answer) < 0) f.push("het antwoord staat niet bij de keuzes");
   if (new Set(q.choices).size !== q.choices.length) f.push("dubbele keuze");
-  if (q.choices.some(function(c) { return namen.indexOf(c) < 0; })) f.push("keuze buiten de vraagset");
+  if (q.choices.some(function(c) { return toegestaan.indexOf(c) < 0; })) f.push("keuze buiten de toegestane namen");
+}
+function controleerVraag(def, q) { try { return controleerVraagRuw(def, q); } catch (e) { return ["fout: " + e.message]; } }
+function controleerVraagRuw(def, q) {
+  var f = [], o = onderdeelVan(def, q);
+  if (!o) return ["geen onderdeel van " + def.id];
   if (!q.tekstVraag) f.push("geen tekstVraag");
-  if (JSON.stringify(q.kaart.focus) !== JSON.stringify(D.omhulling(def.kaart, def.laag, ids))) f.push("focus is niet de omhullende van de vraagset");
+  if (o.sjabloon === "relatie") {
+    var juist = RS.juisteIds(RBRON, o, q.relatie.genoemd);
+    if (juist.indexOf(q.relatie.antwoordId) < 0) f.push("antwoord staat niet in de relatie");
+    try { if (q.answer !== D.naamVan(q.relatie.antwoordId)) f.push("antwoord is niet naamVan(antwoordId)"); } catch (e) { f.push("antwoordId niet in de kennisbank"); }
+    if (q.question !== o.tekst(D.naamVan(q.relatie.genoemd))) f.push("vraagtekst");
+    var pool = D.ids(o.pool.soort, o.pool.prefix).filter(function(x) { return juist.indexOf(x) < 0; }).map(D.naamVan);
+    var andereJuiste = juist.filter(function(x) { return x !== q.relatie.antwoordId; }).map(D.naamVan);
+    if (q.choices.some(function(c) { return andereJuiste.indexOf(c) >= 0; })) f.push("een ander juist antwoord staat bij de keuzes");
+    controleerKeuzes(q, pool.concat([q.answer]), f);
+    if (q.choices.length !== Math.min(4, pool.length + 1)) f.push("aantal keuzes");
+    if (q.kaart || q.inputType) f.push("relatievraag met kaart of invoer");
+    return f;
+  }
+  var ids = VS.vraagIds(D.laag(o.kaart, o.laag), o.prefix), namen = ids.map(D.naamVan);
+  try { if (q.answer !== D.naamVan(q.kaart.antwoordId)) f.push("antwoord is niet naamVan(antwoordId)"); } catch (e) { f.push("antwoordId niet in de kennisbank"); }
+  if (ids.indexOf(q.kaart.antwoordId) < 0) f.push("antwoordId buiten de vraagset");
+  if (q.kaart.kaart !== o.kaart || q.kaart.laag !== o.laag) f.push("kaart of laag past niet");
+  if (JSON.stringify(q.kaart.focus) !== JSON.stringify(D.omhulling(o.kaart, o.laag, ids))) f.push("focus is niet de omhullende van de vraagset");
+  controleerKeuzes(q, namen, f);
+  if (q.choices.length !== Math.min(4, ids.length)) f.push("aantal keuzes");
+  if (o.sjabloon === "wijs-aan") {
+    if (q.question !== "Tik " + o.soortwoord + " " + q.answer + " aan.") f.push("vraagtekst");
+    if (q.inputType !== "kaart" || q.gradingRule !== "kaart_item") f.push("invoer is niet aanwijzen");
+  } else {
+    if (q.question !== o.vraag) f.push("vraagtekst");
+    if (q.kaart.stand !== "toon") f.push("kaart niet als figuur");
+    if (o.typen) {
+      if (q.inputType !== "naam" || q.gradingRule !== "naam_varianten") f.push("typen zonder naaminvoer");
+      if (JSON.stringify(q.namen.juist) !== JSON.stringify(D.namenVan(q.kaart.antwoordId))) f.push("namen.juist is niet de naam met varianten");
+      var l = D.laag(o.kaart, o.laag);
+      if (q.namen.anderen.length !== l.items.length - 1) f.push("namen.anderen niet alle andere gebieden van de laag");
+    } else if (q.inputType) f.push("kiezen met een invoertype");
+  }
   return f;
 }
 for (var def of V.TOPO_NLBE_DEFS) {
-  var l = D.laag(def.kaart, def.laag), ids = l.items.filter(function(it) { return !def.prefix || it.id.indexOf(def.prefix) === 0; }).map(function(it) { return it.id; });
-  var skill = V.TOPO_NLBE_SKILLS.filter(function(x) { return x.id === def.id; })[0], gezien = {}, slecht = [], eersteRonde = {};
+  var skill = V.TOPO_NLBE_SKILLS.filter(function(x) { return x.id === def.id; })[0], slecht = [], eersteRonde = {}, soorten = {};
+  var combos = D.combinaties(def), verwacht = {};
+  combos.forEach(function(c) { var o = def.onderdelen[c.o]; verwacht[o.sjabloon === "relatie" ? "relatie|" + o.relatie + "|" + o.gevraagd + "|" + c.id : o.sjabloon + "|" + o.laag + "|" + c.id] = 1; });
+  eis(def.minCorrect === combos.length, def.id + ": minCorrect " + def.minCorrect + " is het aantal combinaties " + combos.length);
   for (var i = 0; i < 2000; i++) {
     await Promise.resolve();   // een nieuw rekenmoment: elke aanroep is een getoonde vraag (flow.js, currentTick)
-    var q = skill.generate();
-    if (i < ids.length) eersteRonde[q.kaart.antwoordId] = 1;
-    gezien[q.kaart.antwoordId] = 1;
-    var f = controleerVraag(def, q, ids);
-    if (f.length && slecht.length < 3) slecht.push(i + ": " + f.join("; "));
+    var q = skill.generate(), k = sleutel(q);
+    if (i < combos.length) eersteRonde[k] = 1;
+    soorten[k.split("|")[0]] = 1;
+    var f = controleerVraag(def, q);
+    if (f.length && slecht.length < 3) slecht.push(i + " (" + k + "): " + f.join("; "));
+    var r = IR.resolveInput("topo_nlbe", def.id, q);
+    var verwachtInvoer = q.relatie ? "choice" : q.kaart.stand === "toon" ? (q.inputType === "naam" ? "naam" : "choice") : "kaart";
+    if (r.inputType !== verwachtInvoer && slecht.length < 3) slecht.push(i + " (" + k + "): resolveInput " + r.inputType + " in plaats van " + verwachtInvoer);
   }
   eis(slecht.length === 0, def.id + ": 2000 vragen kloppen (" + slecht.join(" | ") + ")");
-  eis(Object.keys(eersteRonde).length === ids.length, def.id + ": elk van de " + ids.length + " gebieden komt in de eerste ronde langs (" + Object.keys(eersteRonde).length + ")");
-  eis(skill.inputType === "kaart" && skill.gradingRule === "kaart_item", def.id + ": invoer aanwijzen");
+  eis(Object.keys(eersteRonde).length === combos.length && Object.keys(eersteRonde).every(function(k) { return verwacht[k]; }), def.id + ": elke combinatie komt in de eerste ronde langs (" + Object.keys(eersteRonde).length + " van " + combos.length + ")");
+  eis(def.onderdelen.every(function(o) { return soorten[o.sjabloon]; }), def.id + ": elk sjabloon komt voor");
   eis(["strategy", "tip", "uitleg", "voorbeeld", "label", "desc"].every(function(k) { return typeof skill[k] === "string" && skill[k].length > 3; }), def.id + ": label, desc, strategy, tip, uitleg en voorbeeld (het oefenscherm toont ze)");
-  console.log(def.id + ": " + ids.length + " gebieden, minCorrect " + def.minCorrect);
+  eis(!!skill.typenNaam === def.onderdelen.some(function(o) { return o.typen; }), def.id + ": typenNaam (de schakelaar Kiezen | Typen) volgt de onderdelen");
+  console.log(def.id + ": " + combos.length + " combinaties (" + def.onderdelen.map(function(o) { return o.sjabloon; }).join(", ") + ")");
   // mutanten van de vraagcontrole
   await Promise.resolve();
   var q0 = skill.generate();
-  var m1 = Object.assign({}, q0, { answer: q0.answer + "x" }), m2 = Object.assign({}, q0, { kaart: Object.assign({}, q0.kaart, { antwoordId: "prov-nl-pv99" }) }), m3 = Object.assign({}, q0, { choices: [q0.answer, q0.answer].concat(q0.choices.slice(2)) });
-  eis(controleerVraag(def, m1, ids).length > 0, def.id + ": mutant andere naam gevangen");
-  eis(controleerVraag(def, m2, ids).length > 0, def.id + ": mutant antwoordId buiten de laag gevangen");
-  eis(controleerVraag(def, m3, ids).length > 0, def.id + ": mutant dubbele keuze gevangen");
-  // invoer
-  var r1 = IR.resolveInput("topo_nlbe", def.id, Object.assign({ inputType: "kaart" }, q0));
-  eis(r1.inputType === "kaart" && r1.gradingRule === "kaart_item", def.id + ": resolveInput geeft aanwijzen");
-  var r2 = IR.resolveInput("topo_nlbe", def.id, Object.assign({ inputType: "kaart" }, q0, { kaart: { kaart: "nlbe", laag: def.laag } }));
-  eis(r2.inputType === "choice", def.id + ": zonder antwoordId Kiezen");
+  var m1 = Object.assign({}, q0, { answer: q0.answer + "x" }), m3 = Object.assign({}, q0, { choices: [q0.answer, q0.answer].concat(q0.choices.slice(2)) });
+  var m4 = Object.assign({}, q0, { choices: q0.choices.slice(0, -1).concat(q0.choices[q0.choices.length - 1] === q0.answer ? [q0.choices[0] + "?"] : ["Parijs"]) });
+  eis(controleerVraag(def, m1).length > 0, def.id + ": mutant andere naam gevangen");
+  eis(controleerVraag(def, m3).length > 0, def.id + ": mutant dubbele keuze gevangen");
+  eis(controleerVraag(def, m4).length > 0, def.id + ": mutant keuze van buiten gevangen");
+  if (q0.kaart) {
+    var m2 = Object.assign({}, q0, { kaart: Object.assign({}, q0.kaart, { antwoordId: "prov-nl-pv99" }) });
+    eis(controleerVraag(def, m2).length > 0, def.id + ": mutant antwoordId buiten de laag gevangen");
+    var r2 = IR.resolveInput("topo_nlbe", def.id, Object.assign({}, q0, { inputType: "kaart", kaart: { kaart: "nlbe", laag: q0.kaart.laag } }));
+    eis(r2.inputType === "choice", def.id + ": aanwijzen zonder antwoordId wordt Kiezen");
+  }
 }
+// relatie: een bekend geval, en een mutant met een verkeerd antwoord
+var nb04 = V.TOPO_NLBE_DEFS.filter(function(d) { return d.id === "nb04"; })[0], qr = D.maakMet(nb04, nb04.onderdelen[0], "prov-nl-pv23");
+eis(qr.answer === "Zwolle" && controleerVraag(nb04, Object.assign({}, qr, { answer: "Arnhem", relatie: Object.assign({}, qr.relatie, { antwoordId: "stad-nl-arnhem" }) })).length > 0, "relatie: Overijssel heeft Zwolle als hoofdstad; een ander antwoord wordt gevangen");
+
+// namen per laag, met de varianten: geen botsing na normalisatie (plan T3 par. 3.3)
+K.lagen.forEach(function(l) {
+  var gezien = {}, botsing = [];
+  l.items.forEach(function(it) { D.namenVan(it.id).forEach(function(nm) { var k = GR.naamNorm(nm); if (gezien[k] && gezien[k] !== it.id) botsing.push(nm); gezien[k] = it.id; }); });
+  eis(botsing.length === 0, "laag " + l.id + ": geen normalisatiebotsing tussen gebieden (" + botsing.join(", ") + ")");
+});
 
 // rand: ringen zonder oppervlakte krijgen geen rand
 var s1 = 396 / K.breedte, regels = [];

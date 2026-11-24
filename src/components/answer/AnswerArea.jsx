@@ -5,6 +5,8 @@ import FractionAnswer from "./FractionAnswer.jsx";
 import PairAnswer from "./PairAnswer.jsx";
 import { readAnswerQuantity, quantityMaxDecimals } from "../../core/answerCheck.js";
 import KaartGrens from "./KaartGrens.jsx";
+import NaamAnswer from "./NaamAnswer.jsx";
+import { toonHoogte } from "./kaartMaat.js";
 
 // Aanwijzen op de kaart (Topografie, plan T3 par. 3.2): pas geladen als een vraag de kaart nodig heeft, zodat de kaart en zijn
 // code niet in de standaardbundel staan (plan T3 par. 3.1)
@@ -17,7 +19,7 @@ var KaartAntwoord = lazy(function() { return import("./KaartAntwoord.jsx"); });
 // "\u20ac" voor het getal; "percent" is het gewone cijferblok met "%" achter het getal; "quantity" is het
 // cijferblok met de eenheid van het antwoord achter het getal (kommatoets alleen met allowDecimal); "fraction"
 // is het breukvak (FractionAnswer: teller, noemer en bij inputConfig.gemengd een geheel); "pair" zijn twee
-// vakjes naast elkaar met inputConfig.tussen ertussen ("rest" of ":"; PairAnswer); "kaart" is aanwijzen op de kaart
+// vakjes naast elkaar met inputConfig.tussen ertussen ("rest" of ":"; PairAnswer); "naam" is een tekstvak (NaamAnswer); "kaart" is aanwijzen op de kaart
 // (KaartAntwoord, pas geladen bij gebruik; bij een fout een melding). Al het andere,
 // ook een onbekend type, toont de vier keuzes.
 // Of een vraag getypt wordt (voorkeur, resolveInput, past het op het scherm) beslist het
@@ -30,7 +32,30 @@ var KaartAntwoord = lazy(function() { return import("./KaartAntwoord.jsx"); });
 //   - props: vraag, size (normal / compact / tiny), fit, feedback, selected, disabled,
 //     inputConfig (bijvoorbeeld allowNegative: tekentoets in het antwoordvak),
 //     formuleEenRegel (keuzes: formules op één regel als dat past; alleen Algebra, Algebra 2 en Functies).
+// Benoemen met de kaart (Topografie, S1): vraag.kaart met stand "toon" zet de kaart als figuur boven de invoer (keuzes of tekstvak),
+// met het gebied gemarkeerd; tikken op de kaart kiest daar niets. Een vaste hoogte (toonHoogte), ook tijdens het laden.
 var AnswerArea = forwardRef(function AnswerArea(props, ref) {
+  var kq = props.vraag && props.vraag.kaart;
+  if (props.inputType === "kaart" || !kq || kq.stand !== "toon") return antwoordInvoer(props, ref);
+  // onder de kaart de kleinste stand van de keuzes, zodat kaart en keuzes samen op het scherm passen
+  var invoer = antwoordInvoer(Object.assign({}, props, { size: "tiny" }), ref);
+  return (
+    <div>
+      <KaartGrens>
+        <Suspense fallback={<div role="status" style={{ height: toonHoogte(), display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{"Kaart laden\u2026"}</div>}>
+          <KaartAntwoord key={"toon-" + props.breukKey} vraag={props.vraag} feedback={props.feedback} selected={props.selected} disabled={true} toon={true} />
+        </Suspense>
+      </KaartGrens>
+      <div style={{ marginTop: 10 }}>{invoer}</div>
+    </div>
+  );
+});
+
+function antwoordInvoer(props, ref) {
+  if (props.inputType === "naam") {
+    // per getoonde vraag nieuw (key), zodat het tekstvak leeg begint
+    return <NaamAnswer key={props.breukKey} ref={ref} feedback={props.feedback} disabled={props.disabled} onSubmit={props.onSubmitBreuk} />;
+  }
   if (props.inputType === "kaart") {
     // Gaat het laden of tekenen van de kaart mis, dan een zichtbare melding met "Opnieuw laden"; nooit de keuzes, want die
     // verraden het antwoord van een aanwijsvraag (besluit 24-11-2026)
@@ -106,6 +131,6 @@ var AnswerArea = forwardRef(function AnswerArea(props, ref) {
       formuleEenRegel={props.formuleEenRegel}
     />
   );
-});
+}
 
 export default AnswerArea;

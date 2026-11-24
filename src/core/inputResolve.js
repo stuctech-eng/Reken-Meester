@@ -25,8 +25,9 @@ var PASSEND = {
   pair:    { pair_exact: true },
   choice:  { choice_exact: true },
   kaart:   { kaart_item: true },
+  naam:    { naam_varianten: true },
 };
-var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", money: "money_value_equal", percent: "percent_value_equal", quantity: "quantity_value_equal", fraction: "fraction_exact", pair: "pair_exact", choice: "choice_exact", kaart: "kaart_item" };
+var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", money: "money_value_equal", percent: "percent_value_equal", quantity: "quantity_value_equal", fraction: "fraction_exact", pair: "pair_exact", choice: "choice_exact", kaart: "kaart_item", naam: "naam_varianten" };
 
 var KIEZEN = { inputType: "choice", gradingRule: "choice_exact", inputConfig: {} };
 
@@ -138,6 +139,11 @@ export function resolveInput(subjectId, skillId, question) {
   // Aanwijzen op de kaart (Topografie, plan T3 par. 3.2): de vraag noemt de kaart, de laag en de kennisbank-id van het juiste
   // gebied; het antwoord is de naam (tekst). De kaart zet een tik om naar de naam via de id (naamVan), en geeft die aan het
   // oefenscherm zoals een keuze. Zonder die gegevens: Kiezen
+  // Naam typen (Topografie, plan T3 par. 3.3): de vraag geeft de juiste namen (met het antwoord erbij) en die van de andere gebieden
+  if (r.inputType === "naam") {
+    var nm = question.namen;
+    if (!nm || !nm.juist || nm.juist.indexOf(question.answer) < 0 || !nm.anderen) return metBron(KIEZEN, "terugval");
+  }
   if (r.inputType === "kaart") {
     var kq = question.kaart;
     if (!kq || !kq.kaart || !kq.laag || !kq.antwoordId || typeof question.answer !== "string" || !question.answer) return metBron(KIEZEN, "terugval");
@@ -146,10 +152,11 @@ export function resolveInput(subjectId, skillId, question) {
 }
 
 // Heeft deze modus Typen (de schakelaar Kiezen | Typen)? Ja als de modus in de vaste regels
-// staat (answerCheck.js), of als minstens één vaardigheid getypt wordt (inputType "number", "decimal", "money", "percent", "quantity", "fraction" of "pair").
+// staat (answerCheck.js), of als minstens één vaardigheid getypt wordt (inputType "number", "decimal", "money", "percent", "quantity", "fraction" of "pair"),
+// of (Topografie) een vaardigheid namen laat typen (typenNaam; de vraag zelf zegt inputType "naam").
 export function typingAvailableFor(subjectId) {
   if (typingAvailable(subjectId)) return true;
   var lijst = getSkillList(subjectId) || [];
-  for (var i = 0; i < lijst.length; i++) { if (lijst[i].inputType === "number" || lijst[i].inputType === "decimal" || lijst[i].inputType === "money" || lijst[i].inputType === "percent" || lijst[i].inputType === "quantity" || lijst[i].inputType === "fraction" || lijst[i].inputType === "pair") return true; }
+  for (var i = 0; i < lijst.length; i++) { if (lijst[i].inputType === "number" || lijst[i].inputType === "decimal" || lijst[i].inputType === "money" || lijst[i].inputType === "percent" || lijst[i].inputType === "quantity" || lijst[i].inputType === "fraction" || lijst[i].inputType === "pair" || lijst[i].typenNaam) return true; }
   return false;
 }

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { A } from "../../styles/tokens.js";
 import { topo } from "../../core/topo/laden.js";
 import { beslis, isKlein, STRAAL } from "../../core/topo/kaart/tikregel.js";
+import { toonHoogte } from "./kaartMaat.js";
 import { randPad, volgendeStap, vorigeStap, dichtsteStap, venster, begrens, ZOOMSTAPPEN, SLEEPGRENS } from "../../core/topo/kaart/beeld.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
@@ -22,9 +23,11 @@ import { randPad, volgendeStap, vorigeStap, dichtsteStap, venster, begrens, ZOOM
 // Rand (T3a, de spikkels): het vlak tekent alle ringen, de rand alleen de ringen van minstens 1 px2 op het scherm (beeld.js).
 //
 // Contract (AnswerArea): props vraag (met vraag.kaart = { kaart, laag, antwoordId, focus }), feedback, selected, disabled, onChoice.
+// Met props.toon (benoemen, S1): alleen de kaart, met het gevraagde gebied oranje gemarkeerd, in een vaste hoogte (toonHoogte); geen
+// balk en geen knoppen behalve zoomen; tikken kiest niets. Het antwoord geeft de leerling onder de kaart (keuzes of tekstvak).
 
 var NS = "http://www.w3.org/2000/svg";
-var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", goed: "#16a34a", goedRand: "#14532d", fout: "#dc2626", foutRand: "#7f1d1d", stip: "#b45309", lijn: "#1d4ed8", punt: "#1a1d3a" };
+var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", goed: "#16a34a", goedRand: "#14532d", fout: "#dc2626", foutRand: "#7f1d1d", gemarkeerd: "#f97316", gemarkeerdRand: "#9a3412", stip: "#b45309", lijn: "#1d4ed8", punt: "#1a1d3a" };
 var BALK_RUIMTE = 8, MIN_H = 160;
 
 function el(naam, attr) { var e = document.createElementNS(NS, naam); for (var k in attr) e.setAttribute(k, attr[k]); return e; }
@@ -48,6 +51,7 @@ export default function KaartAntwoord(props) {
   var tekenState = useState(0), tekenNr = tekenState[0], setTekenNr = tekenState[1];
 
   var klaar = !!props.feedback;
+  var toon = !!props.toon;
   var gekozenNaam = props.selected;
 
   function breedte() { return vakRef.current ? vakRef.current.clientWidth : 0; }
@@ -56,6 +60,7 @@ export default function KaartAntwoord(props) {
   function zetBegrensd() { var n = begrens(K, v()); S.ox = n.x; S.oy = n.y; }
   function meetRuimte() {
     if (!vakRef.current) return;
+    if (toon) { S.maxH = toonHoogte(); return; }
     var top = vakRef.current.getBoundingClientRect().top, balk = balkRef.current ? balkRef.current.offsetHeight : 0;
     S.maxH = Math.max(MIN_H, Math.floor(window.innerHeight - top - balk - BALK_RUIMTE));
   }
@@ -81,6 +86,14 @@ export default function KaartAntwoord(props) {
       var w0 = v(), f = spec.focus;
       var cx = f ? (f[0] + f[2]) / 2 : K.breedte / 2, cy = f ? (f[1] + f[3]) / 2 : K.hoogte / 2;
       S.ox = cx - w0.w / 2; S.oy = cy - w0.h / 2; S.begonnen = true;
+      // Benoemen: het gemarkeerde gebied moet in beeld staan; valt zijn midden erbuiten, dan het beeld op dat midden
+      if (toon) {
+        var dt = doelen.filter(function(x) { return x.id === spec.antwoordId; })[0];
+        var tx = dt.soort === "punt" ? dt.x : dt.mx, ty = dt.soort === "punt" ? dt.y : dt.my;
+        if (dt.soort === "lijn") { var rr = dt.ringen[0], mid = rr[Math.floor(rr.length / 2)]; tx = mid[0]; ty = mid[1]; }
+        var nb = begrens(K, v());
+        if (tx < nb.x || tx > nb.x + nb.w || ty < nb.y || ty > nb.y + nb.h) { S.ox = tx - w0.w / 2; S.oy = ty - w0.h / 2; }
+      }
     }
     zetBegrensd();
     var w = v();
@@ -106,12 +119,14 @@ export default function KaartAntwoord(props) {
     var foutId = klaar && gekozenD && gekozenD.id !== spec.antwoordId ? gekozenD.id : null;
     L.items.forEach(function(item, i) {
       var d = doelen[i];
-      var kleur = d.id === goedId ? KLEUR.goed : d.id === foutId ? KLEUR.fout : (!klaar && gekozenD && gekozenD.id === d.id) ? KLEUR.gekozen : null;
-      var randKleur = d.id === goedId ? KLEUR.goedRand : d.id === foutId ? KLEUR.foutRand : kleur ? KLEUR.gekozenRand : KLEUR.doelRand;
+      var kleur = toon ? (d.id === spec.antwoordId ? KLEUR.gemarkeerd : null)
+        : d.id === goedId ? KLEUR.goed : d.id === foutId ? KLEUR.fout : (!klaar && gekozenD && gekozenD.id === d.id) ? KLEUR.gekozen : null;
+      var randKleur = toon ? (kleur ? KLEUR.gemarkeerdRand : KLEUR.doelRand)
+        : d.id === goedId ? KLEUR.goedRand : d.id === foutId ? KLEUR.foutRand : kleur ? KLEUR.gekozenRand : KLEUR.doelRand;
       if (d.soort === "vlak") {
         if (d.ringen.length) vlakPad(item, kleur || KLEUR.doel, randKleur, kleur ? 3 : 1.2, kleur ? 0.85 : 1);
         if (isKlein(d, s)) {
-          if (kleur) cirkels.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: kleur, "fill-opacity": 0.16, stroke: kleur, "stroke-opacity": 0.7, "stroke-width": 1.5 * px }));
+          if (kleur && !toon) cirkels.appendChild(el("circle", { cx: d.mx, cy: d.my, r: STRAAL * px, fill: kleur, "fill-opacity": 0.16, stroke: kleur, "stroke-opacity": 0.7, "stroke-width": 1.5 * px }));
           cirkels.appendChild(el("circle", { cx: d.mx, cy: d.my, r: (kleur ? 6 : 4.5) * px, fill: kleur || KLEUR.stip, stroke: "#fff", "stroke-width": 1.5 * px }));
         }
       } else if (d.soort === "lijn") {
@@ -268,27 +283,27 @@ export default function KaartAntwoord(props) {
           van T2 (396 px op 428 px; test: tools/topo/test-topo-chromium) */}
       {/* De zoomknoppen liggen op de kaart (linksboven, bij Nederland en Belgie de zee), zodat de kaart de hele vrije hoogte krijgt */}
       <div style={{ position: "relative", margin: "0 -4px" }}>
-        <div ref={vakRef} style={{ background: KLEUR.zee, borderRadius: 12, overflow: "hidden" }} />
+        <div ref={vakRef} style={{ background: KLEUR.zee, borderRadius: 12, overflow: "hidden", minHeight: toon ? toonHoogte() : undefined }} />
         <div style={{ position: "absolute", top: 6, left: 6, display: "flex", flexDirection: "column", gap: 6 }}>
           <button type="button" aria-label="Inzoomen" style={ZOOMKNOP} disabled={volgendeStap(zoomNu) === null} onClick={function() { var z = volgendeStap(S.zoom); if (z) zetZoom(z); }}>{"+"}</button>
           <button type="button" aria-label="Uitzoomen" style={ZOOMKNOP} disabled={vorigeStap(zoomNu) === null} onClick={function() { var z = vorigeStap(S.zoom); if (z) zetZoom(z); }}>{"\u2212"}</button>
           <button type="button" aria-label="Zoom x1" style={Object.assign({}, ZOOMKNOP, { fontSize: 14 })} disabled={zoomNu === 1} onClick={function() { zetZoom(1); }}>{"x" + (Math.round(zoomNu * 10) / 10)}</button>
         </div>
       </div>
-      {alternatief && gekozen && !klaar && (
+      {!toon && alternatief && gekozen && !klaar && (
         <div role="status" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, fontWeight: 800, fontSize: 15, lineHeight: "20px" }}>
           <span style={{ flex: "1 1 auto" }}>{"Je tikte op een stip. Bedoelde je het gebied eromheen?"}</span>
           <button type="button" style={Object.assign({}, knopStijl, { background: KLEUR.gekozen, borderColor: KLEUR.gekozen, color: "#fff" })} onClick={kiesEromheen}>{"Het gebied eromheen"}</button>
         </div>
       )}
-      <div ref={balkRef} style={{ marginTop: 6 }}>
+      {!toon && <div ref={balkRef} style={{ marginTop: 6 }}>
         <div aria-live="polite" style={{ fontWeight: 800, fontSize: 15, lineHeight: "20px", minHeight: 20, marginBottom: 6 }}>{tekst}</div>
         {!klaar && (
           <div style={{ display: "flex", gap: 6 }}>
             <button type="button" style={Object.assign({}, knopStijl, { flex: "1 1 auto", background: gekozen ? A.primary : A.bgCard, color: gekozen ? "#fff" : A.textSoft, borderColor: gekozen ? A.primary : A.border })} disabled={!gekozen || props.disabled} onClick={bevestig}>{"Dit is mijn antwoord"}</button>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
