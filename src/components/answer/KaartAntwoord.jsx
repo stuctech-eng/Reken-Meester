@@ -21,7 +21,8 @@ import { randPad, volgendeStap, vorigeStap, dichtsteStap, venster, begrens, ZOOM
 // Na het antwoord: het juiste gebied groen, een foute keuze rood; tikken kiest dan niets meer, zoomen en slepen blijven.
 // Rand (T3a, de spikkels): het vlak tekent alle ringen, de rand alleen de ringen van minstens 1 px2 op het scherm (beeld.js).
 //
-// Contract (AnswerArea): props vraag (met vraag.kaart = { kaart, laag, antwoordId }), feedback, selected, disabled, onChoice.
+// Contract (AnswerArea): props vraag (met vraag.kaart = { kaart, laag, antwoordId, focus }), feedback, selected, disabled, onChoice,
+// onNext (na een fout: naar de volgende vraag).
 
 var NS = "http://www.w3.org/2000/svg";
 var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", goed: "#16a34a", goedRand: "#14532d", fout: "#dc2626", foutRand: "#7f1d1d", stip: "#b45309", lijn: "#1d4ed8", punt: "#1a1d3a" };
@@ -274,6 +275,11 @@ export default function KaartAntwoord(props) {
       )}
       <div ref={balkRef} style={{ marginTop: 6 }}>
         <div aria-live="polite" style={{ fontWeight: 800, fontSize: 15, lineHeight: "20px", minHeight: 20, marginBottom: 6 }}>{tekst}</div>
+        {/* Na een fout: "Volgende vraag" op de plek van "Dit is mijn antwoord", zodat je niet hoeft te scrollen (Dick, 24-11-2026);
+            de tip en dezelfde knop van het oefenscherm staan eronder */}
+        {klaar && props.feedback === "wrong" && props.onNext && (
+          <button type="button" style={Object.assign({}, knopStijl, { width: "100%", background: A.primary, color: "#fff", borderColor: A.primary })} onClick={props.onNext}>{"Volgende vraag \u2192"}</button>
+        )}
         {!klaar && (
           <div style={{ display: "flex", gap: 6 }}>
             <button type="button" style={Object.assign({}, knopStijl, { flex: "1 1 auto", background: gekozen ? A.primary : A.bgCard, color: gekozen ? "#fff" : A.textSoft, borderColor: gekozen ? A.primary : A.border })} disabled={!gekozen || props.disabled} onClick={bevestig}>{"Dit is mijn antwoord"}</button>

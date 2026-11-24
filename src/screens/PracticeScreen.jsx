@@ -1006,6 +1006,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           inputConfig={inputInfo.inputConfig}
           canSubmit={/^-?\d+(,\d+)?$/.test(typed)}
           onChoice={handleChoice}
+          onNext={handleNextQuestion}
           onSubmitBreuk={handleBreukSubmit}
           breukKey={"vraag-" + vraagNr}
           formuleEenRegel={subjectId === "wiskunde_algebra" || subjectId === "wiskunde_algebra2" || subjectId === "wiskunde_functies"}

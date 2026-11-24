@@ -29,7 +29,8 @@ var KaartAntwoord = lazy(function() { return import("./KaartAntwoord.jsx"); });
 //     het oefenscherm of het antwoordgebied op het scherm past);
 //   - props: vraag, size (normal / compact / tiny), fit, feedback, selected, disabled,
 //     inputConfig (bijvoorbeeld allowNegative: tekentoets in het antwoordvak),
-//     formuleEenRegel (keuzes: formules op één regel als dat past; alleen Algebra, Algebra 2 en Functies).
+//     formuleEenRegel (keuzes: formules op één regel als dat past; alleen Algebra, Algebra 2 en Functies),
+//     onNext (alleen de kaart: "Volgende vraag" na een fout, op de plek van "Dit is mijn antwoord").
 var AnswerArea = forwardRef(function AnswerArea(props, ref) {
   if (props.inputType === "kaart") {
     // Gaat het laden of tekenen van de kaart mis, dan een zichtbare melding met "Opnieuw laden"; nooit de keuzes, want die
@@ -37,7 +38,7 @@ var AnswerArea = forwardRef(function AnswerArea(props, ref) {
     return (
       <KaartGrens>
         <Suspense fallback={<div role="status" style={{ padding: 16, textAlign: "center", fontWeight: 800 }}>{"Kaart laden…"}</div>}>
-          <KaartAntwoord key={props.breukKey} vraag={props.vraag} feedback={props.feedback} selected={props.selected} disabled={props.disabled} onChoice={props.onChoice} />
+          <KaartAntwoord key={props.breukKey} vraag={props.vraag} feedback={props.feedback} selected={props.selected} disabled={props.disabled} onChoice={props.onChoice} onNext={props.onNext} />
         </Suspense>
       </KaartGrens>
     );
