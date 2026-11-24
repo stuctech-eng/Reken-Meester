@@ -27,6 +27,12 @@ var SESSION_ACC = 0.70;
 // Uniek kenmerk per oefensessie (voor de concept-sessie in App); geen Math.random
 var CONCEPT_COUNTER = 0;
 
+// Naar de bovenkant van de pagina (kaartvragen, zie handleNextQuestion)
+function bovenaan() {
+  window.scrollTo(0, 0);
+  if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+}
+
 // Kleinste aantal goede sommen dat nog nodig is om aan de sessievoorwaarden te voldoen
 // Kleinste lettergrootte voor de vraagtekst wanneer die niet in de kaart past (zie vraaggrootte)
 var Q_FONT_MIN = 28;
@@ -275,6 +281,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   }
 
   function advanceToNext(nextSkillId) {
+    // Kaartvraag (Topografie): de volgende vraag begint bovenaan, ook als de pagina naar beneden gescrold staat (na een fout: de
+    // tip en "Volgende vraag"; na een goed antwoord: als de leerling gescrold heeft). Hier, meteen bij de tik of de timer, en nog
+    // eens in KaartAntwoord na het tekenen. Andere vragen: ongewijzigd
+    if (currentQuestion && currentQuestion.kaart) bovenaan();
     setHelpOpen(false);
     setTheorieOpen(false);
     var nextQ;

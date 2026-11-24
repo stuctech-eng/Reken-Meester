@@ -232,7 +232,13 @@ export default function KaartAntwoord(props) {
   // Een nieuwe vraag (dit onderdeel begint per vraag opnieuw) begint bovenaan: na een fout scrolt de leerling naar de tip en
   // "Volgende vraag"; de volgende vraag moet dan weer in beeld staan (Dick, 24-11-2026). Alleen bij de kaart, zodat de andere
   // modi precies gelijk blijven.
-  useEffect(function() { if (window.scrollY > 0) window.scrollTo(0, 0); }, []);
+  // Het oefenscherm scrolt al bij de tik op "Volgende vraag"; dit is de tweede vangst, ook na het tekenen (requestAnimationFrame).
+  useEffect(function() {
+    function boven() { if (window.scrollY > 0) { window.scrollTo(0, 0); if (document.scrollingElement) document.scrollingElement.scrollTop = 0; } }
+    boven();
+    var r = requestAnimationFrame(boven);
+    return function() { cancelAnimationFrame(r); };
+  }, []);
   useEffect(function() {
     function opnieuw() { setTekenNr(function(t) { return t + 1; }); }
     window.addEventListener("resize", opnieuw);
