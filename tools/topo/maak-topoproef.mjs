@@ -8,6 +8,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
+import { pakUit } from "../../src/core/topo/kaart/bogen.js";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
@@ -29,7 +30,7 @@ var uit = path.join(ROOT, "public/topoproef/data");
 fs.mkdirSync(uit, { recursive: true });
 for (var j = 0; j < KAARTEN.length; j++) {
   var k = KAARTEN[j], bron = path.join(ROOT, "src/core/topo/kaarten", k.id + ".js");
-  var K = JSON.parse(JSON.stringify((await import(pathToFileURL(bron).href)).default));
+  var K = pakUit((await import(pathToFileURL(bron).href)).default);   // plan T3 par. 3.5: de proef krijgt de T2a-vorm
   K.titel = k.titel;
   (K.startbeelden || []).forEach(function(sb) { sb.titel = BEELDTITEL[sb.id] || fout("geen titel voor startbeeld " + sb.id); });
   K.lagen.forEach(function(l) {

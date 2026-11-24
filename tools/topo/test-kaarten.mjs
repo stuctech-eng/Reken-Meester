@@ -21,6 +21,7 @@ import ClipperLib from "clipper-lib";
 import { geoTransverseMercator } from "d3-geo";
 import * as IND from "./tik-onafhankelijk.mjs";
 import * as TR from "../../public/kaartproef/tikregel.js";
+import { pakUit } from "../../src/core/topo/kaart/bogen.js";
 import { meetKaarten } from "./tik-meet.mjs";
 import * as MK from "./maak-kaarten.mjs";
 
@@ -57,7 +58,7 @@ async function kennisbank() {
 }
 var KB = await kennisbank();
 function cfgVan(id) { return JSON.parse(fs.readFileSync(path.join(HIER, "kaarten", id + ".json"), "utf8")); }
-async function laadBestand(id) { return (await import(pathToFileURL(path.join(ROOT, "src/core/topo/kaarten", id + ".js")).href + "?t=" + Date.now())).default; }
+async function laadBestand(id) { return pakUit((await import(pathToFileURL(path.join(ROOT, "src/core/topo/kaarten", id + ".js")).href + "?t=" + Date.now())).default); }   // plan T3 par. 3.5: uitgepakt naar de T2a-vorm
 
 // ---- structuur, KAARTREF, kaartVersie (geeft een lijst met fouten; leeg = goed) ----
 export function controleer(K, cfg) {
@@ -270,6 +271,7 @@ if (DELEN.indexOf("inhoud") >= 0) {
     var u = GEBOUWD[i], id = u.cfg.id, op = fs.readFileSync(path.join(ROOT, "src/core/topo/kaarten", id + ".js"), "utf8");
     eis(op === u.tekst, id + ": de tweede run is byte-gelijk met het kaartbestand");
     var K = await laadBestand(id), cfg = cfgVan(id);
+    eis(JSON.stringify(K) === JSON.stringify(u.res.kaart), id + ": uitgepakt (pakUit) gelijk aan de kaart van de pijplijn (plan T3 par. 3.5)");
     controleer(K, cfg).forEach(function(f) { eis(false, id + ": " + f); }); n++;
     eis(cfg.tolerantiePx === TOL_PX[id] && cfg.afronding === AFRONDING[id], id + ": tolerantie en afronding volgens het plan");
     var v = meetVereenvoudiging(K, u.res.ruw);

@@ -8,8 +8,9 @@
 // - projecteert, knipt, maakt een topologie, vereenvoudigt en rondt af met dezelfde regels als maak-proefkaarten.mjs (T2a).
 //   Die code staat hier bewust opnieuw (open lijst): maak-proefkaarten.mjs exporteert niets, draait bij het importeren en
 //   mag niet wijzigen. Per kaart de tolerantie en de afronding uit de configuratie (nlbe: 0,0625 px bij x1 en 0,01; A1);
-// - schrijft src/core/topo/kaarten/<kaartId>.js in dezelfde vorm als de T2a-kaarten, zodat tik-meet.mjs ze ongewijzigd
-//   meet; per item alleen de kennisbank-id (KAARTREF), geen naam (B1 a, B2 a);
+// - schrijft src/core/topo/kaarten/<kaartId>.js met gedeelde bogen (plan T3 par. 3.5, bogen.mjs); uitgepakt met pakUit
+//   (src/core/topo/kaart/bogen.js) is dat byte-gelijk de vorm van de T2a-kaarten, zodat tik-meet.mjs ze ongewijzigd meet;
+//   per item alleen de kennisbank-id (KAARTREF), geen naam (B1 a, B2 a);
 // - de grensmeting NL-BE op de uiteindelijke kaartgeometrie (bouwplan par. 1, optie a); stopt bij elke overschrijding.
 
 import fs from "fs";
@@ -18,6 +19,7 @@ import crypto from "crypto";
 import zlib from "zlib";
 import { fileURLToPath, pathToFileURL } from "url";
 import proj4 from "proj4";
+import { pakIn } from "./bogen.mjs";
 import ClipperLib from "clipper-lib";
 import { geoPath, geoTransverseMercator, geoAzimuthalEqualArea } from "d3-geo";
 import { topology } from "topojson-server";
@@ -582,11 +584,11 @@ export function grensMeting(kaart, terug, melden) {
   return uit;
 }
 
-export function tekst(res) {
+export function tekst(res, afronding) {
   return "// GEGENEREERD door tools/topo/maak-kaarten.mjs uit tools/topo/kaarten/" + res.kaart.id + ".json en de bronnen (SHA-256 in tools/topo/bronnen.json); niet met de hand bewerken.\n" +
     "// Eenheden: " + BREEDTE + " eenheden = de schermbreedte bij x1; afwijking door vereenvoudiging hoogstens " + res.meting.tolerantiePx + " CSS-pixel bij " + WEERGAVE + " CSS-pixels breed bij x1 (gemeten: " + res.meting.maxAfwijkingPx + "). Items zijn kennisbank-id's; geen namen.\n" +
     "// NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.\n" +
-    "export default " + JSON.stringify(res.kaart) + ";\n" +
+    "export default " + JSON.stringify(pakIn(res.kaart, afronding)) + ";\n" +
     "export var AFWIJKINGEN_KAART = " + JSON.stringify(res.afwijkingen) + ";\n";
 }
 
@@ -606,7 +608,7 @@ export async function bouwAlles(paden, ids) {
     var cfg = JSON.parse(fs.readFileSync(path.join(HIER, "kaarten", ids[i] + ".json"), "utf8"));
     var res = await maakKaart(cfg, KB, B, gedeeld);
     if (res.meting.maxAfwijkingPx > cfg.tolerantiePx) fout("vereenvoudiging " + cfg.id + " boven de tolerantie: " + res.meting.maxAfwijkingPx);
-    var t = tekst(res), gz = zlib.gzipSync(Buffer.from(t), { level: 9 }).length;
+    var t = tekst(res, cfg.afronding), gz = zlib.gzipSync(Buffer.from(t), { level: 9 }).length;
     res.omvang = { bytes: Buffer.byteLength(t), gzip: gz, doel: GZIP_DOEL[cfg.id] };
     if (cfg.id === "nlbe") { res.grens = grensMeting(res.kaart, function(q) { return res.pr.invert(q); }, cfg.grensMelden); }
     uit.push({ cfg: cfg, res: res, tekst: t });
