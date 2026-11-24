@@ -5,7 +5,8 @@
 //   question   "Tik de provincie Utrecht aan."
 //   answer     de naam van het gevraagde gebied (naamVan, uit de kennisbank)
 //   choices    hoogstens 4 namen uit dezelfde vraagset (de terugval op kiezen, plan T3 par. 3.2)
-//   kaart      { kaart, laag, antwoordId }: het oefenscherm toont de kaart als invoer (inputType "kaart")
+//   kaart      { kaart, laag, antwoordId, focus }: het oefenscherm toont de kaart als invoer (inputType "kaart"); focus is de
+//              omhullende van de hele vraagset (bij elke vraag van de vaardigheid dezelfde, dus geen hint): het beginbeeld
 //   tekstVraag true: een hele zin (de bestaande weergave van het oefenscherm)
 // Elk item komt een keer langs voordat de ronde opnieuw begint (deckPick).
 
@@ -27,7 +28,7 @@ export function maakWijsAan(bron) {
       answer: naam,
       choices: shuffle([naam].concat(anderen)),
       tekstVraag: true,
-      kaart: { kaart: v.kaart, laag: v.laag, antwoordId: id },
+      kaart: { kaart: v.kaart, laag: v.laag, antwoordId: id, focus: bron.omhulling(v.kaart, v.laag, ids) },
     };
   };
 }

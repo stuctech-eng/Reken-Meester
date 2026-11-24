@@ -85,6 +85,7 @@ function controleerVraag(def, q, ids) {
   if (new Set(q.choices).size !== q.choices.length) f.push("dubbele keuze");
   if (q.choices.some(function(c) { return namen.indexOf(c) < 0; })) f.push("keuze buiten de vraagset");
   if (!q.tekstVraag) f.push("geen tekstVraag");
+  if (JSON.stringify(q.kaart.focus) !== JSON.stringify(D.omhulling(def.kaart, def.laag, ids))) f.push("focus is niet de omhullende van de vraagset");
   return f;
 }
 for (var def of V.TOPO_NLBE_DEFS) {

@@ -29,6 +29,7 @@ var BALK_RUIMTE = 8, MIN_H = 160;
 
 function el(naam, attr) { var e = document.createElementNS(NS, naam); for (var k in attr) e.setAttribute(k, attr[k]); return e; }
 
+var ZOOMKNOP = { fontFamily: "inherit", fontWeight: 800, fontSize: 18, width: 44, height: 44, borderRadius: 12, border: "2px solid " + A.border, background: "rgba(255, 255, 255, 0.92)", color: "#1a1d3a", cursor: "pointer", padding: 0 };
 var knopStijl = { fontFamily: "inherit", fontWeight: 800, fontSize: 15, minHeight: 44, minWidth: 44, borderRadius: 12, border: "2px solid " + A.border, background: A.bgCard, color: A.text, padding: "0 10px", cursor: "pointer" };
 
 export default function KaartAntwoord(props) {
@@ -74,8 +75,13 @@ export default function KaartAntwoord(props) {
     var vak = vakRef.current;
     if (!vak) return;
     meetRuimte();
-    // Bij het begin het midden van de kaart in beeld (bij x1 past de hoogte van nlbe niet altijd op het scherm; slepen toont de rest)
-    if (!S.begonnen && breedte() > 0) { var w0 = v(); S.ox = (K.breedte - w0.w) / 2; S.oy = (K.hoogte - w0.h) / 2; S.begonnen = true; }
+    // Beginbeeld (bij elke vraag hetzelfde voor een vaardigheid): het midden van de omhullende van de vraagset (spec.focus), anders
+    // het midden van de kaart. Zo staat bij "Provincies aanwijzen" heel Nederland in beeld, ook als de kaart niet helemaal past
+    if (!S.begonnen && breedte() > 0) {
+      var w0 = v(), f = spec.focus;
+      var cx = f ? (f[0] + f[2]) / 2 : K.breedte / 2, cy = f ? (f[1] + f[3]) / 2 : K.hoogte / 2;
+      S.ox = cx - w0.w / 2; S.oy = cy - w0.h / 2; S.begonnen = true;
+    }
     zetBegrensd();
     var w = v();
     vak.innerHTML = "";
@@ -216,7 +222,7 @@ export default function KaartAntwoord(props) {
   useEffect(function() {
     if (window.__TOPO_TEST !== true) return;
     window.__TOPO_APP = {
-      schaal: schaal, venster: v, breedte: breedte, doelen: doelen, antwoordId: spec.antwoordId,
+      schaal: schaal, venster: v, breedte: breedte, doelen: doelen, antwoordId: spec.antwoordId, focus: spec.focus,
       tik: tik, zet: function(z, cx, cy) { zetZoom(z, cx, cy); return v(); },
       uitkomst: function(x, y) { var s = schaal(); return beslis(doelen, s, S.ox * s + x, S.oy * s + y).uitkomst; },
     };
@@ -239,15 +245,17 @@ export default function KaartAntwoord(props) {
 
   return (
     <div data-tekennr={tekenNr} style={{ position: "relative" }}>
-      <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-        <button type="button" aria-label="Uitzoomen" style={knopStijl} disabled={vorigeStap(zoomNu) === null} onClick={function() { var z = vorigeStap(S.zoom); if (z) zetZoom(z); }}>{"−"}</button>
-        <span style={{ fontWeight: 800, minWidth: 28, textAlign: "center" }}>{"x" + (Math.round(zoomNu * 10) / 10)}</span>
-        <button type="button" aria-label="Inzoomen" style={knopStijl} disabled={volgendeStap(zoomNu) === null} onClick={function() { var z = volgendeStap(S.zoom); if (z) zetZoom(z); }}>{"+"}</button>
-        <button type="button" style={knopStijl} disabled={zoomNu === 1} onClick={function() { zetZoom(1); }}>{"Zoom x1"}</button>
-      </div>
       {/* De kaart is 4 px aan elke kant breder dan het antwoordgebied (dat 20 px van de rand staat): schermbreedte min 32 px, precies de maat van de iPhone-proef en de tikmeting
           van T2 (396 px op 428 px; test: tools/topo/test-topo-chromium) */}
-      <div ref={vakRef} style={{ margin: "0 -4px", background: KLEUR.zee, borderRadius: 12, overflow: "hidden" }} />
+      {/* De zoomknoppen liggen op de kaart (linksboven, bij Nederland en Belgie de zee), zodat de kaart de hele vrije hoogte krijgt */}
+      <div style={{ position: "relative", margin: "0 -4px" }}>
+        <div ref={vakRef} style={{ background: KLEUR.zee, borderRadius: 12, overflow: "hidden" }} />
+        <div style={{ position: "absolute", top: 6, left: 6, display: "flex", flexDirection: "column", gap: 6 }}>
+          <button type="button" aria-label="Inzoomen" style={ZOOMKNOP} disabled={volgendeStap(zoomNu) === null} onClick={function() { var z = volgendeStap(S.zoom); if (z) zetZoom(z); }}>{"+"}</button>
+          <button type="button" aria-label="Uitzoomen" style={ZOOMKNOP} disabled={vorigeStap(zoomNu) === null} onClick={function() { var z = vorigeStap(S.zoom); if (z) zetZoom(z); }}>{"\u2212"}</button>
+          <button type="button" aria-label="Zoom x1" style={Object.assign({}, ZOOMKNOP, { fontSize: 14 })} disabled={zoomNu === 1} onClick={function() { zetZoom(1); }}>{"x" + (Math.round(zoomNu * 10) / 10)}</button>
+        </div>
+      </div>
       {alternatief && gekozen && !klaar && (
         <div role="status" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, fontWeight: 800, fontSize: 15, lineHeight: "20px" }}>
           <span style={{ flex: "1 1 auto" }}>{"Je tikte op een stip. Bedoelde je het gebied eromheen?"}</span>

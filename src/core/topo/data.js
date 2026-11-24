@@ -62,5 +62,21 @@ export function laag(kaartId, laagId) {
   return l;
 }
 
+// De omhullende (viewBox-eenheden) van een reeks gebieden van een laag: [x0, y0, x1, y1]; het beginbeeld van een vraag
+var OMHULLING = {};
+export function omhulling(kaartId, laagId, ids) {
+  var sleutel = kaartId + "/" + laagId + "/" + ids.join(",");
+  if (OMHULLING[sleutel]) return OMHULLING[sleutel];
+  var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, wel = {};
+  ids.forEach(function(id) { wel[id] = 1; });
+  laag(kaartId, laagId).doelen.forEach(function(d) {
+    if (!wel[d.id]) return;
+    var pts = d.soort === "punt" ? [[d.x, d.y]] : [].concat.apply([], d.ringen);
+    pts.forEach(function(p) { if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0]; if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1]; });
+  });
+  OMHULLING[sleutel] = [x0, y0, x1, y1];
+  return OMHULLING[sleutel];
+}
+
 // S2 wijs-aan (plan T3 par. 3.4)
-export var wijsAan = maakWijsAan({ laag: laag, naamVan: naamVan });
+export var wijsAan = maakWijsAan({ laag: laag, naamVan: naamVan, omhulling: omhulling });

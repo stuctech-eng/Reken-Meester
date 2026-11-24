@@ -81,7 +81,7 @@ function balk(p) { return p.evaluate(function() { var b = document.querySelector
   await q.getByText(/Volgende vraag/).click(); await q.waitForTimeout(500);
   await q.getByRole("button", { name: "Inzoomen" }).click(); await q.waitForTimeout(150);
   eis(await q.evaluate(function() { return document.body.innerText.indexOf("x2") >= 0; }), "inzoomen naar x2");
-  await q.getByText("Zoom x1").click(); await q.waitForTimeout(150);
+  await q.getByRole("button", { name: "Zoom x1" }).click(); await q.waitForTimeout(150);
   eis(await q.evaluate(function() { return document.body.innerText.indexOf("x1") >= 0; }), "terug naar x1");
   await q.close();
 
@@ -106,6 +106,25 @@ function balk(p) { return p.evaluate(function() { var b = document.querySelector
     if (MAP) await t.screenshot({ path: MAP + "/t3b-twijfel.png" });
   }
   await t.close();
+
+  // beginbeeld: bij "Provincies aanwijzen" staat heel de vraagset (Nederland) in beeld, bij elke vraag hetzelfde (428 x 746)
+  var bb = await nieuw(428, 746);
+  await bb.goto(PREVIEW); await bb.waitForTimeout(800);
+  await bb.getByText(/Topografie/).first().click(); await bb.waitForTimeout(200);
+  await bb.getByText(/Nederland en België/).first().click(); await bb.waitForTimeout(300);
+  await bb.getByText("Provincies aanwijzen", { exact: true }).click(); await bb.waitForTimeout(1500);
+  function beeldInfo() { return bb.evaluate(function() { var v = window.__TOPO_APP.venster(); return { x: v.x, y: v.y, w: v.w, h: v.h }; }); }
+  var focus = await bb.evaluate(function() { var h = window.__TOPO_APP; return h.focus; });
+  var b1 = await beeldInfo();
+  eis(focus && b1.y <= focus[1] + 0.5 && b1.y + b1.h >= focus[3] - 0.5 && b1.x <= focus[0] + 0.5 && b1.x + b1.w >= focus[2] - 0.5, "beginbeeld: heel Nederland in beeld (" + JSON.stringify(b1) + " om " + JSON.stringify(focus) + ")");
+  if (MAP) await bb.screenshot({ path: MAP + "/t3b-provincies.png" });
+  var pb = await doelPunt(bb); await inBeeld(bb); pb = await doelPunt(bb);
+  await bb.touchscreen.tap(pb.x, pb.y); await bb.waitForTimeout(150);
+  await bb.getByText("Dit is mijn antwoord").click(); await bb.waitForTimeout(300);
+  await bb.getByText(/Volgende vraag/).click(); await bb.waitForTimeout(500);
+  var b2 = await beeldInfo();
+  eis(JSON.stringify(b1) === JSON.stringify(b2), "beginbeeld: de volgende vraag begint met hetzelfde beeld");
+  await bb.close();
 
   // zonder de testhaak: de pagina bevat het antwoord niet
   var z = await b.newPage({ viewport: { width: 428, height: 746 }, isMobile: true, hasTouch: true });
