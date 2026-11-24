@@ -316,10 +316,12 @@ if (!MUTANT) {
   });
   var git = function(a) { return execFileSync("git", a, { cwd: ROOT }).toString(); };
   var anders = git(["diff", "--name-only", "main"]).split("\n").concat(git(["ls-files", "--others", "--exclude-standard"]).split("\n")).filter(Boolean);
-  anders.forEach(function(f) { eis(/^(tools\/topo\/|src\/core\/topo\/|public\/kaartproef\/|public\/topoproef\/)/.test(f), "buiten de toegestane mappen gewijzigd: " + f); });   // fase 6.3: public/topoproef (de iPhone-proef)
+  // plan T3: de app koppelt Topografie, en alleen via deze bestanden (de rest van de app blijft onaangeroerd)
+  var APP_T3 = ["src/core/subjects.js", "src/core/inputResolve.js", "src/screens/PracticeScreen.jsx", "src/screens/HomeScreen.jsx", "src/App.jsx", "src/components/ModusLader.jsx", "src/components/answer/AnswerArea.jsx", "src/components/answer/KaartAntwoord.jsx", "src/components/answer/KaartGrens.jsx", "vite.config.js"];
+  anders.forEach(function(f) { eis(/^(tools\/topo\/|src\/core\/topo\/|public\/kaartproef\/|public\/topoproef\/)/.test(f) || APP_T3.indexOf(f) >= 0, "buiten de toegestane mappen gewijzigd: " + f); });   // fase 6.3: public/topoproef (de iPhone-proef)
   eis(git(["diff", "--name-only", "8cc2fef", "--", "public/kaartproef"]).trim() === "", "public/kaartproef gelijk aan T2a-proef-6 (8cc2fef)");
   var grep = ""; try { grep = git(["grep", "--untracked", "-l", "core/topo", "--", "src", "public", "index.html"]); } catch (e) { grep = ""; }
-  var verwijzers = grep.split("\n").filter(Boolean).filter(function(f) { return f.indexOf("src/core/topo/") !== 0; });
+  var verwijzers = grep.split("\n").filter(Boolean).filter(function(f) { return f.indexOf("src/core/topo/") !== 0 && APP_T3.indexOf(f) < 0; });
   eis(verwijzers.length === 0, "geen bestand buiten de kennisbank verwijst naar src/core/topo: " + verwijzers.join(", "));
 }
 

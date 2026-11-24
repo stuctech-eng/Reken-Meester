@@ -977,10 +977,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           <VraagFiguur figuur={currentQuestion.figuur} hoogte={figPlek.h} />
         )}
 
-        {/* Antwoordgebied: cijferblok als deze vraag getypt wordt, anders de vier keuzes */}
+        {/* Antwoordgebied: cijferblok als deze vraag getypt wordt, de kaart bij aanwijzen (Topografie), anders de vier keuzes */}
         <AnswerArea
           ref={kpWrapRef}
-          inputType={typeMode ? inputInfo.inputType : "choice"}
+          inputType={inputInfo.inputType === "kaart" ? "kaart" : typeMode ? inputInfo.inputType : "choice"}
           vraag={currentQuestion}
           size={tiny ? "tiny" : compact ? "compact" : "normal"}
           fit={kpSize}

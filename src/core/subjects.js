@@ -18,6 +18,8 @@ import { WISK_ALGEBRA2_SKILLS, WISK_ALGEBRA2_ORDER } from "./skills/wiskunde-alg
 import { WISK_MEETKUNDE_SKILLS, WISK_MEETKUNDE_ORDER } from "./skills/wiskunde-meetkunde.js";
 import { WISK_STATISTIEK_SKILLS, WISK_STATISTIEK_ORDER } from "./skills/wiskunde-statistiek.js";
 import { WISK_FUNCTIES_SKILLS, WISK_FUNCTIES_ORDER } from "./skills/wiskunde-functies.js";
+import { TOPO_NLBE_SKILLS, TOPO_NLBE_ORDER, TOPO_NLBE_KAARTEN } from "./topo/vaardigheden-nlbe.js";
+import { TOPO_ZICHTBAAR } from "./topo/zichtbaar.js";
 
 // group: de hoofdgroep op Home ("rekenen" of "wiskunde"). sub: het tussenkopje binnen Rekenen
 // ("basis", "getallen", "praktisch"); alleen voor de weergave op Home, niet voor opslag of voortgang.
@@ -222,6 +224,23 @@ export var SUBJECTS = [
   },
 ];
 
+// Topografie (plan T3): alleen zichtbaar in een preview (zichtbaar.js). kaarten: de kaarten die de app laadt voordat het
+// oefenscherm opent (laden.js, ModusLader in App.jsx).
+if (TOPO_ZICHTBAAR) {
+  SUBJECTS.push({
+    id: "topo_nlbe",
+    label: "Nederland en België",
+    icon: "NL",
+    color: "#15803d",
+    lightColor: "#f0fdf4",
+    description: "Provincies, steden en buren aanwijzen op de kaart",
+    available: true,
+    levels: 10,
+    group: "topografie",
+    kaarten: TOPO_NLBE_KAARTEN,
+  });
+}
+
 export function getSubject(id) {
   return SUBJECTS.find(function(s) { return s.id === id; }) || SUBJECTS[0];
 }
@@ -253,6 +272,7 @@ export var SUBJECT_SKILLS = {
   wiskunde_statistiek: { skills: WISK_STATISTIEK_SKILLS, order: WISK_STATISTIEK_ORDER },
   wiskunde_functies: { skills: WISK_FUNCTIES_SKILLS, order: WISK_FUNCTIES_ORDER },
 };
+if (TOPO_ZICHTBAAR) SUBJECT_SKILLS.topo_nlbe = { skills: TOPO_NLBE_SKILLS, order: TOPO_NLBE_ORDER };
 
 function getSubjectSkills(subjectId) {
   if (Object.prototype.hasOwnProperty.call(SUBJECT_SKILLS, subjectId)) {

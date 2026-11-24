@@ -15,6 +15,7 @@ import { T, D } from "./styles/tokens.js";
 import HomeScreen        from "./screens/HomeScreen.jsx";
 import SubjectScreen     from "./screens/SubjectScreen.jsx";
 import PracticeScreen    from "./screens/PracticeScreen.jsx";
+import ModusLader       from "./components/ModusLader.jsx";
 import ResultScreen      from "./screens/ResultScreen.jsx";
 import LeaderboardScreen from "./screens/LeaderboardScreen.jsx";
 import SettingsScreen    from "./screens/SettingsScreen.jsx";
@@ -1186,6 +1187,7 @@ export default function App() {
     var fixedSubjData = (save.subjects && save.subjects[subjectId]) || {};
     var leaveFixed    = function() { setFixedSkillId(null); setScreen("subject"); };
     return metMelding(
+      <ModusLader kaarten={getSubject(subjectId).kaarten} onBack={leaveFixed}>
       <PracticeScreen
         key={subjectId + "-los-" + fixedSkillId}
         subjectId={subjectId}
@@ -1196,6 +1198,7 @@ export default function App() {
         onBack={leaveFixed}
         onFinish={leaveFixed}
       />
+      </ModusLader>
     );
   }
 
@@ -1215,6 +1218,7 @@ export default function App() {
       };
     }
     return metMelding(
+      <ModusLader kaarten={getSubject(subjectId).kaarten} onBack={function() { handlePracticeBack(null); }}>
       <PracticeScreen
         key={subjectId + "-" + autoKey}
         subjectId={subjectId}
@@ -1227,6 +1231,7 @@ export default function App() {
         onProgress={handleProgress}
         answerMode={answerModeFor(subjectId)}
       />
+      </ModusLader>
     );
   }
 

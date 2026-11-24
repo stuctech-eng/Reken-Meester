@@ -28,6 +28,7 @@ function boxTotals(save, subjects) {
 var BOXES = [
   { id: "rekenen",   title: "Rekenen",           auto: true  },
   { id: "wiskunde",  title: "Wiskunde",          auto: false },
+  { id: "topografie", title: "Topografie",       auto: false },
 ];
 var ACC_GROUPS = ["rekenen"];
 

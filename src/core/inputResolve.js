@@ -24,8 +24,9 @@ var PASSEND = {
   fraction: { fraction_exact: true },
   pair:    { pair_exact: true },
   choice:  { choice_exact: true },
+  kaart:   { kaart_item: true },
 };
-var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", money: "money_value_equal", percent: "percent_value_equal", quantity: "quantity_value_equal", fraction: "fraction_exact", pair: "pair_exact", choice: "choice_exact" };
+var STANDAARD_REGEL = { number: "numeric_equal", decimal: "decimal_value_equal", money: "money_value_equal", percent: "percent_value_equal", quantity: "quantity_value_equal", fraction: "fraction_exact", pair: "pair_exact", choice: "choice_exact", kaart: "kaart_item" };
 
 var KIEZEN = { inputType: "choice", gradingRule: "choice_exact", inputConfig: {} };
 
@@ -133,6 +134,13 @@ export function resolveInput(subjectId, skillId, question) {
   if (r.inputType === "pair") {
     var pr = readAnswerPair(question.answer, r.inputConfig.tussen);
     if (pr === null || writeAnswerPair(pr, r.inputConfig.tussen) !== question.answer) return metBron(KIEZEN, "terugval");
+  }
+  // Aanwijzen op de kaart (Topografie, plan T3 par. 3.2): de vraag noemt de kaart, de laag en de kennisbank-id van het juiste
+  // gebied; het antwoord is de naam (tekst). De kaart zet een tik om naar de naam via de id (naamVan), en geeft die aan het
+  // oefenscherm zoals een keuze. Zonder die gegevens: Kiezen
+  if (r.inputType === "kaart") {
+    var kq = question.kaart;
+    if (!kq || !kq.kaart || !kq.laag || !kq.antwoordId || typeof question.answer !== "string" || !question.answer) return metBron(KIEZEN, "terugval");
   }
   return metBron(r, bron);
 }
