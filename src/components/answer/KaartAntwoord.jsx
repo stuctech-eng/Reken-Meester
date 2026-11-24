@@ -229,6 +229,10 @@ export default function KaartAntwoord(props) {
   });
 
   useLayoutEffect(function() { teken(); });
+  // Een nieuwe vraag (dit onderdeel begint per vraag opnieuw) begint bovenaan: na een fout scrolt de leerling naar de tip en
+  // "Volgende vraag"; de volgende vraag moet dan weer in beeld staan (Dick, 24-11-2026). Alleen bij de kaart, zodat de andere
+  // modi precies gelijk blijven.
+  useEffect(function() { if (window.scrollY > 0) window.scrollTo(0, 0); }, []);
   useEffect(function() {
     function opnieuw() { setTekenNr(function(t) { return t + 1; }); }
     window.addEventListener("resize", opnieuw);

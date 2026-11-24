@@ -78,7 +78,10 @@ function balk(p) { return p.evaluate(function() { var b = document.querySelector
   var tekst = await balk(q);
   eis(tekst === "Jij koos " + pa.naam + ". Groen is " + juist.naam + ".", "fout antwoord: de balk noemt het juiste gebied (" + tekst + ")");
   if (MAP) await q.screenshot({ path: MAP + "/t3b-fout.png" });
+  await q.evaluate(function() { window.scrollTo(0, document.body.scrollHeight); }); await q.waitForTimeout(200);
+  eis((await q.evaluate(function() { return window.scrollY; })) > 0, "na een fout: de pagina is naar beneden gescrold (naar Volgende vraag)");
   await q.getByText(/Volgende vraag/).click(); await q.waitForTimeout(500);
+  eis((await q.evaluate(function() { return window.scrollY; })) === 0, "volgende vraag: de pagina staat weer bovenaan, de vraag in beeld");
   await q.getByRole("button", { name: "Inzoomen" }).click(); await q.waitForTimeout(150);
   eis(await q.evaluate(function() { return document.body.innerText.indexOf("x2") >= 0; }), "inzoomen naar x2");
   await q.getByRole("button", { name: "Zoom x1" }).click(); await q.waitForTimeout(150);
