@@ -40,8 +40,12 @@ export function ids(soort, prefix) {
   return Object.keys(KB).filter(function(id) { return KB[id].soort === soort && (!prefix || id.indexOf(prefix) === 0); }).sort();
 }
 
-// Vastgestelde relaties van een soort (nu: de hoofdstadrelaties van Nederland en Belgie, fase 6.2)
-var RELATIES = HOOFDSTEDEN_NLBE.filter(function(r) { return r.status === "vastgesteld"; });
+// Vastgestelde relaties van een soort: de afgeleide hoofdstadrelaties van Nederland en Belgie (fase 6.2) en de relaties die in de
+// items zelf staan (bijvoorbeeld Brussel: hoofdstad en zetel van de federale regering van Belgie, Grondwet art. 194), zoals de index
+// van de kennisbank ze leest (relatie-index.js, bouwIndex)
+var RELATIES = HOOFDSTEDEN_NLBE.slice();
+Object.keys(KB).sort().forEach(function(id) { (KB[id].relaties || []).forEach(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = id; RELATIES.push(x); }); });
+RELATIES = RELATIES.filter(function(r) { return r.status === "vastgesteld"; });
 export function relaties(type) { return RELATIES.filter(function(r) { return r.type === type; }); }
 
 export function naamVan(id) {
@@ -104,7 +108,7 @@ var SJABLONEN = { "wijs-aan": maakWijsAan(BRON), "benoem": maakBenoem(BRON), "re
 // De gevraagde items van een onderdeel
 export function onderdeelIds(o) {
   if (o.sjabloon === "relatie") return genoemdeIds(BRON, o);
-  return vraagIds(laag(o.kaart, o.laag), o.prefix);
+  return vraagIds(laag(o.kaart, o.laag), o.prefix, o.zonder);
 }
 
 // Alle combinaties (onderdeel, item) van een vaardigheid

@@ -16,7 +16,7 @@ import { vraagIds } from "./wijs-aan.js";
 
 export function maakBenoem(bron) {
   return function(o, id) {
-    var l = bron.laag(o.kaart, o.laag), ids = vraagIds(l, o.prefix);
+    var l = bron.laag(o.kaart, o.laag), ids = vraagIds(l, o.prefix, o.zonder);
     if (ids.indexOf(id) < 0) throw new Error("gebied " + id + " hoort niet bij de laag " + o.laag);
     var naam = bron.naamVan(id);
     var anderen = shuffle(ids.filter(function(x) { return x !== id; })).slice(0, 3).map(function(x) { return bron.naamVan(x); });

@@ -6,7 +6,8 @@
 //   gevraagd  "van": de vraag noemt het doel en vraagt de bron ("Wat is de hoofdstad van de provincie Overijssel?");
 //             "naar": de vraag noemt de bron en vraagt het doel ("Van welke provincie is Zwolle de hoofdstad?")
 //   prefix    welke genoemde items gevraagd worden (op de id)
-//   pool      { soort, prefix }: waar de foute keuzes vandaan komen (kennisbank-items van die soort)
+//   pool      { soort, prefix }: waar de foute keuzes vandaan komen (kennisbank-items van die soort), of { ids: [...] }: een vaste
+//             lijst, of een functie(genoemde id) die een van beide geeft (bijvoorbeeld per land andere steden)
 //   tekst     functie(naam van het genoemde item) -> de vraag
 // Selectieregel: het antwoord is een van de juiste items; de foute keuzes staan aantoonbaar niet in de relatie tot het genoemde item
 // (niet in de kennisbank). Andere juiste items komen nooit als foute keuze.
@@ -26,12 +27,17 @@ export function juisteIds(bron, o, id) {
   return bron.relaties(o.relatie).filter(function(r) { return (o.gevraagd === "van" ? r.naar : r.van) === id; }).map(function(r) { return o.gevraagd === "van" ? r.van : r.naar; });
 }
 
+export function poolIds(bron, o, id) {
+  var p = typeof o.pool === "function" ? o.pool(id) : o.pool;
+  return p.ids ? p.ids.slice() : bron.ids(p.soort, p.prefix);
+}
+
 export function maakRelatie(bron) {
   return function(o, id) {
     var juist = juisteIds(bron, o, id);
     if (!juist.length) throw new Error("geen relatie " + o.relatie + " voor " + id);
     var antwoordId = shuffle(juist.slice())[0];
-    var fout = shuffle(bron.ids(o.pool.soort, o.pool.prefix).filter(function(x) { return juist.indexOf(x) < 0; })).slice(0, 3);
+    var fout = shuffle(poolIds(bron, o, id).filter(function(x) { return juist.indexOf(x) < 0; })).slice(0, 3);
     var naam = bron.naamVan(antwoordId);
     return {
       question: o.tekst(bron.naamVan(id)),

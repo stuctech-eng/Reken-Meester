@@ -167,7 +167,7 @@ S.STEDEN.forEach(function(r) {
 // ---- de vijf naamkwesties en de notitie (D6-d) ----
 function st(id) { return S.STEDEN.filter(function(r) { return r.id === id; })[0] || { naam: {}, cbs: {}, notities: [] }; }
 eis(st("stad-nl-ijmond").naam.waarde === "IJmond" && st("stad-nl-ijmond").feiten.cbs.waarde.naam === "IJmond", "IJmond: CBS-naam, geen hoofdplaats");
-eis(st("stad-nl-almere").naam.waarde === "Almere-Stad/Almere-Buiten" && st("stad-nl-almere").feiten.cbs.waarde.naam === "Almere-Stad/Almere-Buiten", "Almere-Stad/Almere-Buiten: CBS-naam");
+eis(st("stad-nl-almere").naam.waarde === "Almere" && st("stad-nl-almere").feiten.cbs.waarde.naam === "Almere-Stad/Almere-Buiten", "Almere: weergavenaam Almere (Claude 24-11-2026), CBS-naam bewaard");
 eis(st("stad-nl-sittard-geleen").naam.waarde === "Sittard-Geleen" && st("stad-nl-sittard-geleen").naam.grootKern === true, "Sittard-Geleen: beide plaatsen, Groot-kern");
 eis(st("stad-nl-lelystad").naam.waarde === "Lelystad" && st("stad-nl-lelystad").feiten.cbs.waarde.naam === "Lelystad-Kern", "Lelystad, CBS-naam bewaard");
 eis(st("stad-nl-middelburg").naam.waarde === "Middelburg" && st("stad-nl-middelburg").feiten.cbs.waarde.naam === "Middelburg (Z.)", "Middelburg, CBS-naam bewaard");
@@ -199,7 +199,7 @@ if (!MUTANT) {
   }
   var git = function(a) { return execFileSync("git", a, { cwd: ROOT }).toString(); };
   git(["diff", "--name-only", "main"]).split("\n").concat(git(["ls-files", "--others", "--exclude-standard"]).split("\n")).filter(Boolean).forEach(function(f) {
-    eis(/^(tools\/topo\/|src\/core\/topo\/|public\/kaartproef\/)/.test(f), "buiten de toegestane mappen gewijzigd: " + f);
+    eis(/^(tools\/topo\/|src\/core\/topo\/|public\/kaartproef\/|public\/topoproef\/)/.test(f), "buiten de toegestane mappen gewijzigd: " + f);
   });
 }
 

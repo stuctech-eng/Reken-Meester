@@ -50,7 +50,8 @@ export function waardeVan(feit, plaats) {
   if (veld === "lon-lat") return Number.isFinite(feit.lon) && Number.isFinite(feit.lat) ? [feit.lon, feit.lat] : undefined;
   return feit[veld];
 }
-var BESLUITVORM = /^(GPT [0-9]{2}-[0-9]{2}-[0-9]{4}|T1 par\. |plan T2b )/;
+// Sinds 18-11-2026 (de tussenweg) beslist Claude over de techniek en de uitvoering; ook die besluiten hebben een herkenbaar begin
+var BESLUITVORM = /^(GPT [0-9]{2}-[0-9]{2}-[0-9]{4}|Claude [0-9]{2}-[0-9]{2}-[0-9]{4}|T1 par\. |plan T2b )/;
 export function besluitVerwijzing(feit) {
   var a = typeof feit.besluit === "string" && !isLeeg(feit.besluit), b = typeof feit.besluitRegel === "string" && !isLeeg(feit.besluitRegel);
   if (a === b) return null;

@@ -161,8 +161,8 @@ De ids komen uit AFWIJKINGEN_STEDEN in items/steden-nl.js; tools/topo/test-stede
 - steden-beperking-inwoners | onderzocht | het inwonertal is dat van de CBS-bevolkingskern (aaneengesloten bebouwd gebied met woongebied), niet dat van de gemeente of van een woonplaats; afgerond op vijftallen. Bij elke stad vastgelegd
 - steden-grootkernen | onderzocht | 15 Groot-kernen: de kern omvat meerdere plaatsen; inwonertal en vlak gelden voor de hele kern. Weergavenaam = de hoofdplaats uit de CBS-naam (Sittard-Geleen: beide), met de vlag grootKern; CBS-naam en kernnummer bewaard. Samenstelling alleen met een officiele bron (nu alleen Den Haag)
 - steden-niet-als-kern | onderzocht | Delft, Schiedam, Amstelveen en Zaandam komen niet als kernnaam voor. Alleen voor Delft noemt de CBS-toelichting de kern (Groot - 's-Gravenhage); voor de andere is dat niet aangetoond. Geen eigen record, geen geografische aanname op basis van de naam
-- steden-naam-almere | onderzocht | weergavenaam = CBS-naam Almere-Stad/Almere-Buiten (besluit D6-d); Almere-Haven is een aparte kern
-- steden-naam-ijmond | onderzocht | weergavenaam = CBS-naam IJmond, een regionaam; geen hoofdplaats verzonnen (besluit D6-d)
+- steden-naam-almere | onderzocht | weergavenaam Almere (Claude 24-11-2026, T3, wijzigt D6-d): de naam van de woonplaats; de CBS-kern Almere-Stad/Almere-Buiten is het grootste deel ervan, Almere-Haven is een aparte kern; de CBS-naam blijft in cbsNaam
+- steden-naam-ijmond | onderzocht | weergavenaam = CBS-naam IJmond, een regionaam; geen hoofdplaats verzonnen (besluit D6-d). Claude 24-11-2026 (T3): geen woonplaats, dus niet gevraagd in nb06; blijft als stip op de kaart
 - steden-naam-sittard-geleen | onderzocht | Groot - Sittard-Geleen: weergavenaam Sittard-Geleen, beide plaatsen behouden (besluit D6-d)
 - steden-naam-lelystad | onderzocht | weergavenaam Lelystad; CBS-naam Lelystad-Kern bewaard (besluit D6-d)
 - steden-naam-middelburg | onderzocht | weergavenaam Middelburg; CBS-naam Middelburg (Z.) bewaard (besluit D6-d)

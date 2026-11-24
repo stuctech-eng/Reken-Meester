@@ -31,7 +31,7 @@
     "BK01482": { "id": "stad-nl-tilburg", "cbsNaam": "Tilburg", "naam": "Tilburg" },
     "BK01964": { "id": "stad-nl-groningen", "cbsNaam": "Groot - Groningen", "naam": "Groningen" },
     "BK01938": { "id": "stad-nl-haarlem", "cbsNaam": "Groot - Haarlem", "naam": "Haarlem" },
-    "BK00704": { "id": "stad-nl-almere", "cbsNaam": "Almere-Stad/Almere-Buiten", "naam": "Almere-Stad/Almere-Buiten", "kwestie": "naam", "besluit": "GPT 17-11-2026 D6-d: CBS-naam ongewijzigd; Almere zelf is geen kernnaam, Almere-Haven is een aparte kern" },
+    "BK00704": { "id": "stad-nl-almere", "cbsNaam": "Almere-Stad/Almere-Buiten", "naam": "Almere", "kwestie": "naam", "besluit": "Claude 24-11-2026 (T3, nb06), wijzigt GPT 17-11-2026 D6-d: weergavenaam Almere, de naam van de woonplaats; de CBS-kern Almere-Stad/Almere-Buiten is het grootste deel ervan (Almere-Haven is een aparte kern). De CBS-naam blijft in cbsNaam" },
     "BK02022": { "id": "stad-nl-heerlen", "cbsNaam": "Groot - Heerlen", "naam": "Heerlen" },
     "BK01343": { "id": "stad-nl-s-hertogenbosch", "cbsNaam": "Groot - 's-Hertogenbosch", "naam": "'s-Hertogenbosch", "varianten": ["Den Bosch"], "besluit": "T1 par. 2.1: varianten Den Bosch = 's-Hertogenbosch" },
     "BK02010": { "id": "stad-nl-nijmegen", "cbsNaam": "Groot - Nijmegen", "naam": "Nijmegen" },

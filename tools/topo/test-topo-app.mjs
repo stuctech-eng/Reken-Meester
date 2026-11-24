@@ -85,7 +85,7 @@ function sleutel(q) {
 function onderdeelVan(def, q) {
   return def.onderdelen.filter(function(o) {
     if (q.relatie) return o.sjabloon === "relatie" && o.relatie === q.relatie.relatie && o.gevraagd === q.relatie.gevraagd;
-    return o.sjabloon === (q.kaart.stand === "toon" ? "benoem" : "wijs-aan") && o.laag === q.kaart.laag && (!o.prefix || q.kaart.antwoordId.indexOf(o.prefix) === 0);
+    return o.sjabloon === (q.kaart.stand === "toon" ? "benoem" : "wijs-aan") && o.laag === q.kaart.laag && (!o.prefix || q.kaart.antwoordId.indexOf(o.prefix) === 0) && !(o.zonder && o.zonder.indexOf(q.kaart.antwoordId) >= 0);
   })[0];
 }
 function controleerKeuzes(q, toegestaan, f) {
@@ -103,7 +103,7 @@ function controleerVraagRuw(def, q) {
     if (juist.indexOf(q.relatie.antwoordId) < 0) f.push("antwoord staat niet in de relatie");
     try { if (q.answer !== D.naamVan(q.relatie.antwoordId)) f.push("antwoord is niet naamVan(antwoordId)"); } catch (e) { f.push("antwoordId niet in de kennisbank"); }
     if (q.question !== o.tekst(D.naamVan(q.relatie.genoemd))) f.push("vraagtekst");
-    var pool = D.ids(o.pool.soort, o.pool.prefix).filter(function(x) { return juist.indexOf(x) < 0; }).map(D.naamVan);
+    var pool = RS.poolIds(RBRON, o, q.relatie.genoemd).filter(function(x) { return juist.indexOf(x) < 0; }).map(function(x) { return D.naamVan(x); });
     var andereJuiste = juist.filter(function(x) { return x !== q.relatie.antwoordId; }).map(D.naamVan);
     if (q.choices.some(function(c) { return andereJuiste.indexOf(c) >= 0; })) f.push("een ander juist antwoord staat bij de keuzes");
     controleerKeuzes(q, pool.concat([q.answer]), f);
@@ -111,7 +111,7 @@ function controleerVraagRuw(def, q) {
     if (q.kaart || q.inputType) f.push("relatievraag met kaart of invoer");
     return f;
   }
-  var ids = VS.vraagIds(D.laag(o.kaart, o.laag), o.prefix), namen = ids.map(D.naamVan);
+  var ids = VS.vraagIds(D.laag(o.kaart, o.laag), o.prefix, o.zonder), namen = ids.map(function(x) { return D.naamVan(x); });
   try { if (q.answer !== D.naamVan(q.kaart.antwoordId)) f.push("antwoord is niet naamVan(antwoordId)"); } catch (e) { f.push("antwoordId niet in de kennisbank"); }
   if (ids.indexOf(q.kaart.antwoordId) < 0) f.push("antwoordId buiten de vraagset");
   if (q.kaart.kaart !== o.kaart || q.kaart.laag !== o.laag) f.push("kaart of laag past niet");
@@ -173,6 +173,15 @@ for (var def of V.TOPO_NLBE_DEFS) {
 // relatie: een bekend geval, en een mutant met een verkeerd antwoord
 var nb04 = V.TOPO_NLBE_DEFS.filter(function(d) { return d.id === "nb04"; })[0], qr = D.maakMet(nb04, nb04.onderdelen[0], "prov-nl-pv23");
 eis(qr.answer === "Zwolle" && controleerVraag(nb04, Object.assign({}, qr, { answer: "Arnhem", relatie: Object.assign({}, qr.relatie, { antwoordId: "stad-nl-arnhem" }) })).length > 0, "relatie: Overijssel heeft Zwolle als hoofdstad; een ander antwoord wordt gevangen");
+
+// besluiten 24-11-2026: Almere heet in de vragen Almere; IJmond wordt niet gevraagd; nb05 vraagt alleen de officiele rollen
+eis(D.naamVan("stad-nl-almere") === "Almere", "Almere heet Almere");
+var nb06 = V.TOPO_NLBE_DEFS.filter(function(d) { return d.id === "nb06"; })[0];
+eis(D.combinaties(nb06).every(function(c) { return c.id !== "stad-nl-ijmond"; }) && D.laag("nlbe", "steden").items.some(function(it) { return it.id === "stad-nl-ijmond"; }), "IJmond staat op de kaart, maar wordt niet gevraagd");
+var nb05 = V.TOPO_NLBE_DEFS.filter(function(d) { return d.id === "nb05"; })[0];
+eis(D.maakMet(nb05, nb05.onderdelen[0], "NLD").answer === "Amsterdam" && D.maakMet(nb05, nb05.onderdelen[0], "BEL").answer === "Brussel" && D.maakMet(nb05, nb05.onderdelen[1], "BEL").answer === "Brussel" && D.maakMet(nb05, nb05.onderdelen[2], "stad-be-brussel").answer === "België", "nb05: Amsterdam, Brussel, de zetel van de Belgische regering en terug");
+eis(D.relaties("regeringszetel-van").every(function(r) { return r.naar !== "NLD"; }), "geen regeringszetel van Nederland (niet officieel vastgelegd)");
+eis(D.maakMet(nb05, nb05.onderdelen[0], "NLD").choices.indexOf("Den Haag") >= 0, "nb05: Den Haag staat bij de keuzes voor de hoofdstad van Nederland");
 
 // namen per laag, met de varianten: geen botsing na normalisatie (plan T3 par. 3.3)
 K.lagen.forEach(function(l) {

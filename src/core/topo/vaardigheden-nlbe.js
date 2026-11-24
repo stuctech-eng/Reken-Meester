@@ -8,7 +8,9 @@
 //   benoem (S1)    kaart, laag, prefix, vraag, typen (mag met Typen; anders alleen kiezen)
 //   relatie (S3)   relatie, gevraagd ("van" of "naar"), prefix, pool (de foute keuzes), tekst
 // Een ronde gaat langs alle combinaties van onderdeel en item (data.maak); minCorrect is het aantal combinaties (test-topo-app).
-// nb05 (hoofdstad en regeringszetel) ontbreekt nog: de regeringszetel Den Haag staat nog niet als relatie in de kennisbank.
+// nb05 vraagt alleen officieel vastgelegde rollen (T1 par. 3.6): Amsterdam (Grondwet, art. 32) en Brussel (Belgische Grondwet,
+// art. 194). Den Haag als regeringszetel is niet officieel vastgelegd en staat alleen in de uitleg (besluit 24-11-2026).
+// IJmond (een CBS-kern met een regionaam, geen woonplaats) blijft op de kaart, maar wordt niet gevraagd (besluit 24-11-2026).
 
 import { createSkills } from "../skills/flow.js";
 import { topo } from "./laden.js";
@@ -16,8 +18,8 @@ import { topo } from "./laden.js";
 export var TOPO_NLBE_KAARTEN = ["nlbe"];
 
 var K = "nlbe";
-function wijsAan(laag, prefix, soortwoord) { return { sjabloon: "wijs-aan", kaart: K, laag: laag, prefix: prefix, soortwoord: soortwoord }; }
-function benoem(laag, prefix, vraag, typen) { return { sjabloon: "benoem", kaart: K, laag: laag, prefix: prefix, vraag: vraag, typen: !!typen }; }
+function wijsAan(laag, prefix, soortwoord, zonder) { return { sjabloon: "wijs-aan", kaart: K, laag: laag, prefix: prefix, soortwoord: soortwoord, zonder: zonder || [] }; }
+function benoem(laag, prefix, vraag, typen) { return { sjabloon: "benoem", kaart: K, laag: laag, prefix: prefix, vraag: vraag, typen: !!typen, zonder: [] }; }
 function relatie(rel, gevraagd, prefix, pool, tekst) { return { sjabloon: "relatie", relatie: rel, gevraagd: gevraagd, prefix: prefix, pool: pool, tekst: tekst }; }
 
 var DEFS = [
@@ -30,8 +32,12 @@ var DEFS = [
   { id: "nb04", label: "Provinciehoofdsteden", desc: "De hoofdsteden van de 12 provincies, in beide richtingen", minCorrect: 24, onderdelen: [
     relatie("provinciehoofdstad-van", "van", "prov-nl-", { soort: "stad", prefix: "stad-nl-" }, function(n) { return "Wat is de hoofdstad van de provincie " + n + "?"; }),
     relatie("provinciehoofdstad-van", "naar", "stad-nl-", { soort: "provincie", prefix: "prov-nl-" }, function(n) { return "Van welke provincie is " + n + " de hoofdstad?"; }) ] },
-  { id: "nb06", label: "Steden aanwijzen", desc: "De grote steden van Nederland", minCorrect: 29, onderdelen: [
-    wijsAan("steden", "stad-nl-", "de stad") ] },
+  { id: "nb05", label: "Hoofdsteden van Nederland en België", desc: "Amsterdam en Brussel, en de zetel van de Belgische regering", minCorrect: 5, onderdelen: [
+    relatie("hoofdstad-van", "van", "", function(id) { return { ids: id === "NLD" ? ["stad-nl-den-haag", "stad-nl-rotterdam", "stad-nl-utrecht"] : ["stad-be-antwerpen", "stad-be-gent", "stad-be-luik"] }; }, function(n) { return "Wat is de hoofdstad van " + n + "?"; }),
+    relatie("regeringszetel-van", "van", "BEL", { ids: ["stad-be-antwerpen", "stad-be-gent", "stad-be-luik"] }, function(n) { return "In welke stad zetelt de federale regering van " + n + "?"; }),
+    relatie("hoofdstad-van", "naar", "", { ids: ["NLD", "BEL", "DEU"] }, function(n) { return "Van welk land is " + n + " de hoofdstad?"; }) ] },
+  { id: "nb06", label: "Steden aanwijzen", desc: "De grote steden van Nederland", minCorrect: 28, onderdelen: [
+    wijsAan("steden", "stad-nl-", "de stad", ["stad-nl-ijmond"]) ] },
   { id: "nb07", label: "Waddeneilanden", desc: "De vijf bewoonde Waddeneilanden benoemen en aanwijzen", minCorrect: 10, onderdelen: [
     benoem("waddeneilanden", "", "Welk Waddeneiland is oranje?", false), wijsAan("waddeneilanden", "", "het Waddeneiland") ] },
   { id: "nb08", label: "De grote rivieren", desc: "Rijn, Waal, Nederrijn, Lek, IJssel en Maas", minCorrect: 12, onderdelen: [
@@ -75,6 +81,12 @@ var HULP = {
     tip: "Twee provincies hebben een hoofdstad met dezelfde naam: Groningen en Utrecht.",
     uitleg: "Groningen – Groningen; Friesland – Leeuwarden; Drenthe – Assen; Overijssel – Zwolle; Flevoland – Lelystad; Gelderland – Arnhem; Utrecht – Utrecht; Noord-Holland – Haarlem; Zuid-Holland – Den Haag; Zeeland – Middelburg; Noord-Brabant – 's-Hertogenbosch; Limburg – Maastricht.",
     voorbeeld: "De hoofdstad van Noord-Holland is Haarlem, niet Amsterdam. Amsterdam is wel de hoofdstad van Nederland.",
+  },
+  nb05: {
+    strategy: "Hoofdsteden",
+    tip: "Pas op: de hoofdstad van Nederland is Amsterdam, niet Den Haag.",
+    uitleg: "Volgens de Grondwet is Amsterdam de hoofdstad van Nederland. De regering zetelt in Den Haag, maar Den Haag is niet de hoofdstad. In België is Brussel de hoofdstad, en daar zetelt ook de federale regering.",
+    voorbeeld: "Van welk land is Brussel de hoofdstad? Van België.",
   },
   nb06: {
     strategy: "Stip zoeken",
