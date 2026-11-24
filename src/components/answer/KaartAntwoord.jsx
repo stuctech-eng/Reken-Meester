@@ -21,8 +21,7 @@ import { randPad, volgendeStap, vorigeStap, dichtsteStap, venster, begrens, ZOOM
 // Na het antwoord: het juiste gebied groen, een foute keuze rood; tikken kiest dan niets meer, zoomen en slepen blijven.
 // Rand (T3a, de spikkels): het vlak tekent alle ringen, de rand alleen de ringen van minstens 1 px2 op het scherm (beeld.js).
 //
-// Contract (AnswerArea): props vraag (met vraag.kaart = { kaart, laag, antwoordId, focus }), feedback, selected, disabled, onChoice,
-// onNext (na een fout: naar de volgende vraag).
+// Contract (AnswerArea): props vraag (met vraag.kaart = { kaart, laag, antwoordId, focus }), feedback, selected, disabled, onChoice.
 
 var NS = "http://www.w3.org/2000/svg";
 var KLEUR = { zee: "#dbeafe", land: "#e5e7eb", landRand: "#9ca3af", doel: "#fef3c7", doelRand: "#92400e", gekozen: "#16a34a", gekozenRand: "#14532d", goed: "#16a34a", goedRand: "#14532d", fout: "#dc2626", foutRand: "#7f1d1d", stip: "#b45309", lijn: "#1d4ed8", punt: "#1a1d3a" };
@@ -233,15 +232,14 @@ export default function KaartAntwoord(props) {
   // Een nieuwe vraag (dit onderdeel begint per vraag opnieuw) begint bovenaan: na een fout scrolt de leerling naar de tip en
   // "Volgende vraag"; de volgende vraag moet dan weer in beeld staan (Dick, 24-11-2026). Alleen bij de kaart, zodat de andere
   // modi precies gelijk blijven.
-  // Na het antwoord blijft de pagina bovenaan: de vraag, de kaart en "Volgende vraag" staan zonder scrollen in beeld. Safari op de
-  // iPhone schoof de pagina bij een fout naar beneden (de tip verschijnt eronder); dit zet hem terug, ook na het tekenen en na
-  // het korte inschuiven van de tip (Dick, 24-11-2026)
+  // Na een fout scrolt de pagina naar beneden: de kaart met groen en rood, de tip en onderaan "Volgende vraag" in beeld (Dick,
+  // 24-11-2026, foto 2). Na het inschuiven van de tip (de animatie van het oefenscherm), daarom met een korte wachttijd.
+  // "Volgende vraag" brengt de volgende vraag weer bovenaan (PracticeScreen.advanceToNext en het effect hieronder)
   useEffect(function() {
-    if (!klaar) return undefined;
-    function boven() { if (window.scrollY > 0) { window.scrollTo(0, 0); if (document.scrollingElement) document.scrollingElement.scrollTop = 0; } }
-    boven();
-    var r = requestAnimationFrame(boven), t1 = setTimeout(boven, 120), t2 = setTimeout(boven, 300);
-    return function() { cancelAnimationFrame(r); clearTimeout(t1); clearTimeout(t2); };
+    if (!klaar || props.feedback !== "wrong") return undefined;
+    function onder() { var h = document.scrollingElement ? document.scrollingElement.scrollHeight : document.body.scrollHeight; window.scrollTo({ top: h, behavior: "smooth" }); }
+    var t = setTimeout(onder, 250);
+    return function() { clearTimeout(t); };
   }, [klaar]);
   // Het oefenscherm scrolt al bij de tik op "Volgende vraag"; dit is de tweede vangst, ook na het tekenen (requestAnimationFrame).
   useEffect(function() {
@@ -285,11 +283,6 @@ export default function KaartAntwoord(props) {
       )}
       <div ref={balkRef} style={{ marginTop: 6 }}>
         <div aria-live="polite" style={{ fontWeight: 800, fontSize: 15, lineHeight: "20px", minHeight: 20, marginBottom: 6 }}>{tekst}</div>
-        {/* Na een fout: "Volgende vraag" op de plek van "Dit is mijn antwoord", zodat je niet hoeft te scrollen (Dick, 24-11-2026);
-            de tip en dezelfde knop van het oefenscherm staan eronder */}
-        {klaar && props.feedback === "wrong" && props.onNext && (
-          <button type="button" style={Object.assign({}, knopStijl, { width: "100%", background: A.primary, color: "#fff", borderColor: A.primary })} onClick={props.onNext}>{"Volgende vraag \u2192"}</button>
-        )}
         {!klaar && (
           <div style={{ display: "flex", gap: 6 }}>
             <button type="button" style={Object.assign({}, knopStijl, { flex: "1 1 auto", background: gekozen ? A.primary : A.bgCard, color: gekozen ? "#fff" : A.textSoft, borderColor: gekozen ? A.primary : A.border })} disabled={!gekozen || props.disabled} onClick={bevestig}>{"Dit is mijn antwoord"}</button>

@@ -1006,7 +1006,6 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
           inputConfig={inputInfo.inputConfig}
           canSubmit={/^-?\d+(,\d+)?$/.test(typed)}
           onChoice={handleChoice}
-          onNext={handleNextQuestion}
           onSubmitBreuk={handleBreukSubmit}
           breukKey={"vraag-" + vraagNr}
           formuleEenRegel={subjectId === "wiskunde_algebra" || subjectId === "wiskunde_algebra2" || subjectId === "wiskunde_functies"}
@@ -1077,8 +1076,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
               )}
             </div>
 
-            {/* Volgende vraag knop. Bij een kaartvraag staat hij al direct onder de kaart (KaartAntwoord), dus hier niet nog eens */}
-            {!currentQuestion.kaart && <button
+            {/* Volgende vraag knop */}
+            <button
               onClick={handleNextQuestion}
               style={{
                 marginTop: 12,
@@ -1097,7 +1096,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
               }}
             >
               {"Volgende vraag →"}
-            </button>}
+            </button>
           </div>
         )}
 
