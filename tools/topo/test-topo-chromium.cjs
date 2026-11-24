@@ -7,10 +7,12 @@
 // Controles:
 //   - op 320, 375, 390 en 428 px is de kaart de schermbreedte min 32 px (de maat van de iPhone-proef en de tikmeting van T2);
 //   - goed: tik op het gevraagde gebied, bevestig: "Goed zo"; het gebied staat groen;
+//   - geen naam vóór het bevestigen (besluit 24-11-2026): de balk noemt geen naam, de naam van het antwoord staat alleen in de
+//     vraag, er is geen lijst met namen en geen knop "Iets anders kiezen";
 //   - fout: tik op een ander gebied, bevestig: fout, en de balk noemt het juiste gebied;
-//   - keuzelijst: "Iets anders kiezen" toont alle gebieden van de laag; kiezen en bevestigen werkt;
+//   - twijfel (steden): de kaart zoomt in rond de tik, zonder namen;
 //   - zoomen met + en terug met Zoom x1;
-//   - laadfout: als het kaartbestand niet laadt, een zichtbare melding met Opnieuw en Terug;
+//   - laadfout: als het kaartbestand of de code van de kaart niet laadt, een zichtbare melding met Opnieuw en Terug;
 //   - productie: Topografie staat niet op Home;
 //   - geen fout van de pagina (pageerror) in de hele test.
 
@@ -43,7 +45,9 @@ function balk(p) { return p.evaluate(function() { var b = document.querySelector
 (async function() {
   var b = await playwright.chromium.launch();
   var paginaFouten = [];
-  async function nieuw(w, h) { var p = await b.newPage({ viewport: { width: w, height: h || 746 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 }); p.on("pageerror", function(e) { paginaFouten.push(e.message); }); return p; }
+  async function nieuw(w, h) { var p = await b.newPage({ viewport: { width: w, height: h || 746 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 }); await p.addInitScript(function() { window.__TOPO_TEST = true; }); p.on("pageerror", function(e) { paginaFouten.push(e.message); }); return p; }
+  // hoe vaak de naam in het kaartgedeelte staat (de kaart, de balk en de knoppen; de vraag en de kop van de vaardigheid niet)
+  function telNaam(p, naam) { return p.evaluate(function(naam) { var root = document.querySelector("svg[aria-label^='Kaart']").parentElement.parentElement; return root.innerText.split(naam).length - 1 + (root.innerHTML.indexOf(naam) >= 0 ? 1 : 0); }, naam); }
 
   for (var w of [320, 375, 390, 428]) {
     var p = await nieuw(w);
@@ -54,14 +58,16 @@ function balk(p) { return p.evaluate(function() { var b = document.querySelector
     // goed
     await inBeeld(p); pt = await doelPunt(p);
     await p.touchscreen.tap(pt.x, pt.y); await p.waitForTimeout(150);
-    eis((await balk(p)) === "Gekozen: " + pt.naam, w + " px: na de tik is " + pt.naam + " gekozen (" + (await balk(p)) + ")");
+    eis((await balk(p)) === "Gekozen: het groene gebied", w + " px: na de tik zegt de balk alleen het groene gebied (" + (await balk(p)) + ")");
+    eis((await telNaam(p, pt.naam)) === 0, w + " px: de naam " + pt.naam + " staat niet in het kaartgedeelte (tekst en HTML)");
+    eis((await p.getByText("Iets anders kiezen").count()) === 0 && (await p.locator("[role=dialog]").count()) === 0, w + " px: geen lijst met namen");
     await p.getByText("Dit is mijn antwoord").click(); await p.waitForTimeout(300);
     eis((await p.evaluate(function() { return document.body.innerText; })).indexOf("Goed zo") >= 0, w + " px: goed antwoord geeft Goed zo");
     if (w === 428 && MAP) await p.screenshot({ path: MAP + "/t3b-goed.png" });
     await p.close();
   }
 
-  // fout, keuzelijst en zoom (428 px)
+  // fout en zoom (428 px)
   var q = await nieuw(428);
   await naarModus(q, PREVIEW);
   var ander = await q.evaluate(function() { var h = window.__TOPO_APP; return h.doelen.filter(function(d) { return d.id !== h.antwoordId; })[0].id; });
@@ -73,21 +79,51 @@ function balk(p) { return p.evaluate(function() { var b = document.querySelector
   eis(tekst === "Jij koos " + pa.naam + ". Groen is " + juist.naam + ".", "fout antwoord: de balk noemt het juiste gebied (" + tekst + ")");
   if (MAP) await q.screenshot({ path: MAP + "/t3b-fout.png" });
   await q.getByText(/Volgende vraag/).click(); await q.waitForTimeout(500);
-  var aantal = await q.evaluate(function() { return window.__TOPO_APP.doelen.length; });
-  await q.getByText("Iets anders kiezen").click(); await q.waitForTimeout(200);
-  var lijst = await q.evaluate(function() { var d = document.querySelector("[role=dialog][aria-label=Keuzelijst]"); return d ? d.querySelectorAll("button").length - 1 : -1; });
-  eis(lijst === aantal, "keuzelijst toont alle " + aantal + " gebieden (" + lijst + ")");
-  if (MAP) await q.screenshot({ path: MAP + "/t3b-lijst.png" });
-  var naam = (await doelPunt(q)).naam;
-  await q.locator("[role=dialog][aria-label=Keuzelijst] button", { hasText: naam }).first().click(); await q.waitForTimeout(150);
-  eis((await balk(q)) === "Gekozen: " + naam, "keuzelijst: " + naam + " gekozen");
-  await q.getByText("Dit is mijn antwoord").click(); await q.waitForTimeout(300);
-  eis((await q.evaluate(function() { return document.body.innerText; })).indexOf("Goed zo") >= 0, "keuzelijst: bevestigen geeft Goed zo");
   await q.getByRole("button", { name: "Inzoomen" }).click(); await q.waitForTimeout(150);
   eis(await q.evaluate(function() { return document.body.innerText.indexOf("x2") >= 0; }), "inzoomen naar x2");
   await q.getByText("Zoom x1").click(); await q.waitForTimeout(150);
   eis(await q.evaluate(function() { return document.body.innerText.indexOf("x1") >= 0; }), "terug naar x1");
   await q.close();
+
+  // twijfel: los oefenen "Steden aanwijzen" (nb06); een tik waar de tikregel niet kiest zoomt in, zonder namen
+  var t = await nieuw(428);
+  await t.goto(PREVIEW); await t.waitForTimeout(800);
+  await t.getByText(/Topografie/).first().click(); await t.waitForTimeout(200);
+  await t.getByText(/Nederland en België/).first().click(); await t.waitForTimeout(300);
+  await t.getByText("Steden aanwijzen", { exact: true }).click(); await t.waitForTimeout(1500);
+  var plek = await t.evaluate(function() {
+    var h = window.__TOPO_APP, r = document.querySelector("svg[aria-label^='Kaart']").getBoundingClientRect();
+    for (var y = 2; y < r.height; y += 2) for (var x = 2; x < r.width; x += 2) if (h.uitkomst(x, y) === "twijfel") return { x: r.left + x, y: r.top + y };
+    return null;
+  });
+  eis(!!plek, "twijfel: er is een plek op de kaart van de steden waar de tikregel niet kiest");
+  if (plek) {
+    await t.touchscreen.tap(plek.x, plek.y); await t.waitForTimeout(300);
+    var tb = await balk(t);
+    eis(tb.indexOf("Niet duidelijk") === 0, "twijfel: de balk zegt dat het niet duidelijk was (" + tb + ")");
+    eis(await t.evaluate(function() { return document.body.innerText.indexOf("x2") >= 0; }), "twijfel: de kaart is ingezoomd naar x2");
+    eis((await t.locator("[role=dialog]").count()) === 0, "twijfel: geen lijst met namen");
+    if (MAP) await t.screenshot({ path: MAP + "/t3b-twijfel.png" });
+  }
+  await t.close();
+
+  // zonder de testhaak: de pagina bevat het antwoord niet
+  var z = await b.newPage({ viewport: { width: 428, height: 746 }, isMobile: true, hasTouch: true });
+  await naarModus(z, PREVIEW);
+  eis(await z.evaluate(function() { return window.__TOPO_APP === undefined; }), "zonder test geen testhaak met het antwoord");
+  await z.close();
+
+  // laadfout: de code van de kaart wordt geweigerd
+  var c2 = await b.newContext({ viewport: { width: 428, height: 746 }, isMobile: true, hasTouch: true });
+  await c2.route(/\/assets\/KaartAntwoord-.*\.js$/, function(r) { r.abort(); });
+  var f2 = await c2.newPage();
+  await f2.goto(PREVIEW); await f2.waitForTimeout(800);
+  await f2.getByText(/Topografie/).first().click(); await f2.waitForTimeout(200);
+  await f2.getByText(/Nederland en België/).first().click(); await f2.waitForTimeout(300);
+  await f2.getByText("Start nieuwe vaardigheid").click(); await f2.waitForTimeout(1500);
+  var ft2 = await f2.evaluate(function() { var a = document.querySelector("[role=alert]"); return a ? a.innerText : ""; });
+  eis(ft2.indexOf("De kaart kon niet laden") >= 0 && ft2.indexOf("Terug") >= 0, "laadfout van de kaartcode: zichtbare melding met Opnieuw en Terug (" + ft2.replace(/\n/g, " ") + ")");
+  await c2.close();
 
   // laadfout: het kaartbestand wordt geweigerd
   var c = await b.newContext({ viewport: { width: 428, height: 746 }, isMobile: true, hasTouch: true });

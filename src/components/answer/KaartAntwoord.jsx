@@ -7,8 +7,13 @@ import { randPad, volgendeStap, vorigeStap, dichtsteStap, venster, begrens, ZOOM
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
 // Aanwijzen op de kaart (Topografie, plan T3 par. 3.2), in het oefenscherm. Dezelfde bediening als de iPhone-proef van T2
-// (public/topoproef/topoproef.js): tikken, slepen, knijpen, zoomknoppen, de tikregel met de keuzelijst bij twijfel en de melding
-// bij een ingesloten doel, en bevestigen met "Dit is mijn antwoord". "Iets anders kiezen" opent altijd de lijst met alle gebieden.
+// (public/topoproef/topoproef.js): tikken, slepen, knijpen, zoomknoppen, de tikregel en bevestigen met "Dit is mijn antwoord".
+// Geen naam vóór het bevestigen (besluit 24-11-2026, na de iPhone-test van Dick): een naam zou het antwoord verraden. Dus:
+// - de balk zegt alleen "Gekozen: het groene gebied / de groene stip / de groene lijn";
+// - bij twijfel (de tikregel kiest niet) geen lijst met namen, maar de kaart zoomt in rond de tik: "zoom in en tik iets verder";
+//   de tikmeting van T2 bewijst dat elk doel binnen x4 een plek heeft waar een tik het meteen kiest;
+// - bij een stip in een groter vlak (ingesloten) de knop "Het gebied eromheen", zonder naam;
+// - geen lijst met alle gebieden (dat is benoemen, S1). Afwijking van T1 par. 5.3 ("keuzelijst altijd"), op de open lijst.
 //
 // Identiteit: een tik levert via de tikregel een kennisbank-id op (nooit een plek in het kaartbestand of een tikpositie); de naam
 // komt uit de kennisbank (naamVan, data.js) en gaat naar het oefenscherm via onChoice, zoals een keuze. Daarna is alles gelijk aan
@@ -37,7 +42,7 @@ export default function KaartAntwoord(props) {
 
   var gekState = useState(null), gekozen = gekState[0], setGekozen = gekState[1];        // het gekozen doel (vóór bevestigen)
   var altState = useState(null), alternatief = altState[0], setAlternatief = altState[1]; // het vlak onder een ingesloten tik
-  var lijstState = useState(null), lijst = lijstState[0], setLijst = lijstState[1];       // { kop, doelen } of null
+  var twijfelState = useState(false), twijfel = twijfelState[0], setTwijfel = twijfelState[1]; // de laatste tik was onduidelijk
   var zoomState = useState(1), zoomNu = zoomState[0], setZoomNu = zoomState[1];
   var tekenState = useState(0), tekenNr = tekenState[0], setTekenNr = tekenState[1];
 
@@ -189,24 +194,31 @@ export default function KaartAntwoord(props) {
   function tik(x, y) {
     if (klaar || props.disabled) return;
     var s = schaal(), b = beslis(doelen, s, S.ox * s + x, S.oy * s + y);
-    setAlternatief(null);
+    setAlternatief(null); setTwijfel(false);
     if (b.uitkomst === "geen") { setGekozen(null); return; }
-    if (b.uitkomst === "twijfel") { setLijst({ kop: "Welke bedoel je?", doelen: b.kandidaten.map(function(c) { return c.doel; }) }); return; }
+    if (b.uitkomst === "twijfel") {
+      setGekozen(null); setTwijfel(true);
+      var z = volgendeStap(S.zoom);
+      if (z) zetZoom(z, S.ox + x / s, S.oy + y / s);
+      return;
+    }
     if (b.regel === "ingesloten") {
       var onder = b.kandidaten.filter(function(c) { return c.doel !== b.doel && c.doel.soort === "vlak" && c.afstand === 0; });
       setAlternatief(onder.length ? onder[0].doel : null);
     }
     setGekozen(b.doel);
   }
-  function kiesUitLijst(d) { setLijst(null); setAlternatief(null); setGekozen(d); }
+  function kiesEromheen() { setAlternatief(null); setGekozen(alternatief); }
   function bevestig() { if (gekozen && !klaar && !props.disabled) props.onChoice(naamVan(gekozen.id)); }
-  function alleGebieden() { setLijst({ kop: "Kies uit de lijst", doelen: doelen.slice().sort(function(a, b) { return a.naam < b.naam ? -1 : a.naam > b.naam ? 1 : 0; }) }); }
 
-  // Testhaak voor de Chromium-tests (alleen lezen en tikken; zoals window.__TOPO in de proef)
+  // Testhaak voor de Chromium-tests (lezen en tikken; zoals window.__TOPO in de proef). Alleen als de test hem aanzet
+  // (window.__TOPO_TEST), want hij bevat het antwoord
   useEffect(function() {
+    if (window.__TOPO_TEST !== true) return;
     window.__TOPO_APP = {
       schaal: schaal, venster: v, breedte: breedte, doelen: doelen, antwoordId: spec.antwoordId,
       tik: tik, zet: function(z, cx, cy) { zetZoom(z, cx, cy); return v(); },
+      uitkomst: function(x, y) { var s = schaal(); return beslis(doelen, s, S.ox * s + x, S.oy * s + y).uitkomst; },
     };
   });
 
@@ -221,7 +233,9 @@ export default function KaartAntwoord(props) {
   }, []);
 
   var tekst = klaar ? (props.feedback === "correct" ? "Goed: " + gekozenNaam : "Jij koos " + (gekozenNaam || "niets") + ". Groen is " + naamVan(spec.antwoordId) + ".")
-    : gekozen ? "Gekozen: " + gekozen.naam : "Tik op de kaart.";
+    : gekozen ? "Gekozen: " + (gekozen.soort === "punt" ? "de groene stip" : gekozen.soort === "lijn" ? "de groene lijn" : "het groene gebied")
+    : twijfel ? "Niet duidelijk: hier liggen stippen of lijnen dicht bij elkaar. Tik iets verder van de andere."
+    : "Tik op de kaart.";
 
   return (
     <div data-tekennr={tekenNr} style={{ position: "relative" }}>
@@ -236,8 +250,8 @@ export default function KaartAntwoord(props) {
       <div ref={vakRef} style={{ margin: "0 -4px", background: KLEUR.zee, borderRadius: 12, overflow: "hidden" }} />
       {alternatief && gekozen && !klaar && (
         <div role="status" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, fontWeight: 800, fontSize: 15, lineHeight: "20px" }}>
-          <span style={{ flex: "1 1 auto" }}>{"Je tikte bij de stip van " + gekozen.naam + ". Bedoelde je " + alternatief.naam + "?"}</span>
-          <button type="button" style={Object.assign({}, knopStijl, { background: KLEUR.gekozen, borderColor: KLEUR.gekozen, color: "#fff" })} onClick={function() { kiesUitLijst(alternatief); }}>{alternatief.naam}</button>
+          <span style={{ flex: "1 1 auto" }}>{"Je tikte op een stip. Bedoelde je het gebied eromheen?"}</span>
+          <button type="button" style={Object.assign({}, knopStijl, { background: KLEUR.gekozen, borderColor: KLEUR.gekozen, color: "#fff" })} onClick={kiesEromheen}>{"Het gebied eromheen"}</button>
         </div>
       )}
       <div ref={balkRef} style={{ marginTop: 6 }}>
@@ -245,21 +259,9 @@ export default function KaartAntwoord(props) {
         {!klaar && (
           <div style={{ display: "flex", gap: 6 }}>
             <button type="button" style={Object.assign({}, knopStijl, { flex: "1 1 auto", background: gekozen ? A.primary : A.bgCard, color: gekozen ? "#fff" : A.textSoft, borderColor: gekozen ? A.primary : A.border })} disabled={!gekozen || props.disabled} onClick={bevestig}>{"Dit is mijn antwoord"}</button>
-            <button type="button" style={knopStijl} disabled={props.disabled} onClick={alleGebieden}>{"Iets anders kiezen"}</button>
           </div>
         )}
       </div>
-      {lijst && (
-        <div role="dialog" aria-label="Keuzelijst" onClick={function(e) { if (e.target === e.currentTarget) setLijst(null); }} style={{ position: "fixed", inset: 0, background: "rgba(26, 29, 58, 0.45)", display: "flex", alignItems: "flex-end", zIndex: 50 }}>
-          <div style={{ background: A.bgCard, width: "100%", maxHeight: "75vh", overflowY: "auto", borderRadius: "16px 16px 0 0", padding: "16px 16px calc(env(safe-area-inset-bottom) + 16px)" }}>
-            <div style={{ fontWeight: 800, marginBottom: 8, color: A.text }}>{lijst.kop}</div>
-            {lijst.doelen.map(function(d) {
-              return <button type="button" key={d.id} style={Object.assign({}, knopStijl, { display: "block", width: "100%", textAlign: "left", marginBottom: 6 })} onClick={function() { kiesUitLijst(d); }}>{d.naam}</button>;
-            })}
-            <button type="button" style={Object.assign({}, knopStijl, { display: "block", width: "100%", textAlign: "left" })} onClick={function() { setLijst(null); }}>{"Annuleren"}</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

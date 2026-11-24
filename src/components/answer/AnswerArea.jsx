@@ -18,7 +18,7 @@ var KaartAntwoord = lazy(function() { return import("./KaartAntwoord.jsx"); });
 // cijferblok met de eenheid van het antwoord achter het getal (kommatoets alleen met allowDecimal); "fraction"
 // is het breukvak (FractionAnswer: teller, noemer en bij inputConfig.gemengd een geheel); "pair" zijn twee
 // vakjes naast elkaar met inputConfig.tussen ertussen ("rest" of ":"; PairAnswer); "kaart" is aanwijzen op de kaart
-// (KaartAntwoord, pas geladen bij gebruik; bij een fout de keuzes met een melding). Al het andere,
+// (KaartAntwoord, pas geladen bij gebruik; bij een fout een melding). Al het andere,
 // ook een onbekend type, toont de vier keuzes.
 // Of een vraag getypt wordt (voorkeur, resolveInput, past het op het scherm) beslist het
 // oefenscherm; dat geeft hier het type door dat getoond moet worden.
@@ -32,12 +32,10 @@ var KaartAntwoord = lazy(function() { return import("./KaartAntwoord.jsx"); });
 //     formuleEenRegel (keuzes: formules op één regel als dat past; alleen Algebra, Algebra 2 en Functies).
 var AnswerArea = forwardRef(function AnswerArea(props, ref) {
   if (props.inputType === "kaart") {
-    var keuzes = (
-      <ChoiceGrid vraag={props.vraag} size={props.size} feedback={props.feedback} selected={props.selected} onChoice={props.onChoice} />
-    );
-    // Gaat het laden of tekenen van de kaart mis, dan een zichtbare melding en de keuzes (plan T3 par. 3.1)
+    // Gaat het laden of tekenen van de kaart mis, dan een zichtbare melding met "Opnieuw laden"; nooit de keuzes, want die
+    // verraden het antwoord van een aanwijsvraag (besluit 24-11-2026)
     return (
-      <KaartGrens terugval={keuzes}>
+      <KaartGrens>
         <Suspense fallback={<div role="status" style={{ padding: 16, textAlign: "center", fontWeight: 800 }}>{"Kaart laden…"}</div>}>
           <KaartAntwoord key={props.breukKey} vraag={props.vraag} feedback={props.feedback} selected={props.selected} disabled={props.disabled} onChoice={props.onChoice} />
         </Suspense>

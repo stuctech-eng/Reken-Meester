@@ -18,7 +18,8 @@ export default function ModusLader({ kaarten, onBack, children }) {
     if (!nodig) return undefined;
     var weg = false;
     setStand("laden"); setFout(null);
-    laadTopo(kaarten).then(function() { if (!weg) setStand("klaar"); }, function(e) { if (!weg) { setFout(e && e.message ? e.message : String(e)); setStand("fout"); } });
+    // ook de code van de kaart (KaartAntwoord) meteen: een laadfout komt dan hier, met Opnieuw en Terug, en niet midden in een vraag
+    Promise.all([laadTopo(kaarten), import("./answer/KaartAntwoord.jsx")]).then(function() { if (!weg) setStand("klaar"); }, function(e) { if (!weg) { setFout(e && e.message ? e.message : String(e)); setStand("fout"); } });
     return function() { weg = true; };
   }, [nodig, poging]);
 
