@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { Screen, Card, Btn, ProgressBar, Badge, Heading } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { SUBJECTS } from "../core/subjects.js";
@@ -21,7 +22,9 @@ function boxTotals(save, subjects) {
 }
 
 // onAuto: start de Auto-modus; null als geen enkele modus nog een level kan opleveren
-// openBoxes / onToggleBox: open of dicht per vak ({ rekenen: true, ... }), stand bewaard in App
+// openBoxes / onToggleBox: open of dicht per vak ({ rekenen: true, ... }), stand bewaard in App; één vak tegelijk open.
+// Een vak dat je opent, schuift naar de bovenkant van het scherm (schermvullend). Onderaan "Naar boven" als de pagina langer
+// is dan het scherm (Dick, 24-11-2026).
 // Vakken op Home. Elke modus hoort bij één vak via subject.group. Alleen Rekenen heeft Auto.
 // Een vak zonder zichtbare modus wordt niet getoond. Wiskunde (volwassenen) telt niet mee in
 // de nauwkeurigheid bovenaan (alleen de rekenmodi, zoals vóór Wiskunde).
@@ -63,6 +66,28 @@ function autoTekst(autoStap, onAuto) {
 }
 
 export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, autoStap, openBoxes, onToggleBox }) {
+  // Net geopend vak: na het tekenen naar boven schuiven (alleen bij openen door een tik, niet bij terugkeren naar Home)
+  var geopendRef = useRef(null);
+  useEffect(function() {
+    var id = geopendRef.current;
+    geopendRef.current = null;
+    if (!id || !openBoxes || !openBoxes[id]) return;
+    var el = document.querySelector("[data-vak=\"" + id + "\"]");
+    if (el) window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - 12), behavior: "smooth" });
+  }, [openBoxes]);
+  function tikVak(id) {
+    if (!(openBoxes && openBoxes[id])) geopendRef.current = id;
+    onToggleBox(id);
+  }
+  // "Naar boven": alleen als de pagina langer is dan het scherm
+  var langState = useState(false), lang = langState[0], setLang = langState[1];
+  useEffect(function() {
+    function meet() { setLang(document.documentElement.scrollHeight > window.innerHeight + 40); }
+    meet();
+    var t = setTimeout(meet, 400);
+    window.addEventListener("resize", meet);
+    return function() { clearTimeout(t); window.removeEventListener("resize", meet); };
+  }, [openBoxes]);
   // Bovenste kaart: de laatst geoefende modus (lastSubjectId); zonder die waarde de eerste modus
   var availSubjects = SUBJECTS.filter(function(s) { return s.available; });
   var heroSubject   = availSubjects.filter(function(s) { return s.id === save.lastSubjectId; })[0] || availSubjects[0];
@@ -278,7 +303,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
           // Groene totaalbalk: alleen de zichtbare modi van dit vak
           var totals   = boxTotals(save, visible);
           return (
-          <div key={bx.id}>
+          <div key={bx.id} data-vak={bx.id}>
             <div style={{
               background: A.bgCardHigh,
               border: "1.5px solid " + A.border,
@@ -287,7 +312,7 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: isOpen ? "0 4px 12px" : "0 4px" }}>
                 <button
-                  onClick={function() { onToggleBox(bx.id); }}
+                  onClick={function() { tikVak(bx.id); }}
                   aria-expanded={isOpen}
                   style={{
                     flex: 1,
@@ -450,6 +475,16 @@ export default function HomeScreen({ save, uid, onSubject, onSettings, onAuto, a
         })}
         </div>
         </div>
+
+        {lang && (
+          <button
+            type="button"
+            onClick={function() { window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            style={{ alignSelf: "center", minHeight: 44, padding: "0 20px", background: A.bgCard, color: A.text, border: "1.5px solid " + A.border, borderRadius: A.r16, fontFamily: "inherit", fontSize: T.sm, fontWeight: 800, cursor: "pointer", boxShadow: A.shadow }}
+          >
+            {"\u2191 Naar boven"}
+          </button>
+        )}
 
       </div>
     </Screen>

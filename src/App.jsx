@@ -283,8 +283,9 @@ export default function App() {
   var openBoxes       = openBoxesState[0];
   var setOpenBoxes    = openBoxesState[1];
 
+  // Eén vak tegelijk open (Dick, 24-11-2026): openen klapt de andere dicht; nog eens tikken klapt het dicht
   function toggleBox(id) {
-    setOpenBoxes(function(prev) { var next = Object.assign({}, prev); next[id] = !prev[id]; return next; });
+    setOpenBoxes(function(prev) { var next = {}; if (!prev[id]) next[id] = true; return next; });
   }
 
   var sheetTabState = useState("leaderboard");
