@@ -1077,8 +1077,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
               )}
             </div>
 
-            {/* Volgende vraag knop */}
-            <button
+            {/* Volgende vraag knop. Bij een kaartvraag staat hij al direct onder de kaart (KaartAntwoord), dus hier niet nog eens */}
+            {!currentQuestion.kaart && <button
               onClick={handleNextQuestion}
               style={{
                 marginTop: 12,
@@ -1097,7 +1097,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
               }}
             >
               {"Volgende vraag →"}
-            </button>
+            </button>}
           </div>
         )}
 

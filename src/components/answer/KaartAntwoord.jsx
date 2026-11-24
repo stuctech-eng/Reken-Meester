@@ -233,6 +233,16 @@ export default function KaartAntwoord(props) {
   // Een nieuwe vraag (dit onderdeel begint per vraag opnieuw) begint bovenaan: na een fout scrolt de leerling naar de tip en
   // "Volgende vraag"; de volgende vraag moet dan weer in beeld staan (Dick, 24-11-2026). Alleen bij de kaart, zodat de andere
   // modi precies gelijk blijven.
+  // Na het antwoord blijft de pagina bovenaan: de vraag, de kaart en "Volgende vraag" staan zonder scrollen in beeld. Safari op de
+  // iPhone schoof de pagina bij een fout naar beneden (de tip verschijnt eronder); dit zet hem terug, ook na het tekenen en na
+  // het korte inschuiven van de tip (Dick, 24-11-2026)
+  useEffect(function() {
+    if (!klaar) return undefined;
+    function boven() { if (window.scrollY > 0) { window.scrollTo(0, 0); if (document.scrollingElement) document.scrollingElement.scrollTop = 0; } }
+    boven();
+    var r = requestAnimationFrame(boven), t1 = setTimeout(boven, 120), t2 = setTimeout(boven, 300);
+    return function() { cancelAnimationFrame(r); clearTimeout(t1); clearTimeout(t2); };
+  }, [klaar]);
   // Het oefenscherm scrolt al bij de tik op "Volgende vraag"; dit is de tweede vangst, ook na het tekenen (requestAnimationFrame).
   useEffect(function() {
     function boven() { if (window.scrollY > 0) { window.scrollTo(0, 0); if (document.scrollingElement) document.scrollingElement.scrollTop = 0; } }

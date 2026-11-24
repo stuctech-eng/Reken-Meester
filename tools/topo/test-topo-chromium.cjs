@@ -84,14 +84,14 @@ function balk(p) { return p.evaluate(function() { var b = document.querySelector
   var vraag1 = await q.evaluate(function() { return window.__TOPO_APP.antwoordId; });
   await q.getByRole("button", { name: /^Volgende vraag/ }).first().click(); await q.waitForTimeout(500);
   eis((await q.evaluate(function() { return document.body.innerText.indexOf("Dit is mijn antwoord") >= 0 && window.scrollY === 0; })), "Volgende vraag op de kaart: een nieuwe vraag, bovenaan");
-  // en vanaf onderaan (de knop van het oefenscherm onder de tip): ook dan begint de volgende vraag bovenaan
+  // na een fout precies één knop "Volgende vraag" (die onder de kaart), en de pagina blijft bovenaan, ook als hij was gescrold
   var ander2 = await q.evaluate(function() { var h = window.__TOPO_APP; return h.doelen.filter(function(d) { return d.id !== h.antwoordId; })[0].id; });
   await inBeeld(q, ander2); var pa2 = await doelPunt(q, ander2);
   await q.touchscreen.tap(pa2.x, pa2.y); await q.waitForTimeout(150);
-  await q.getByText("Dit is mijn antwoord").click(); await q.waitForTimeout(300);
-  await q.evaluate(function() { window.scrollTo(0, document.body.scrollHeight); }); await q.waitForTimeout(200);
-  await q.getByRole("button", { name: /^\u2192|Volgende vraag/ }).last().click(); await q.waitForTimeout(500);
-  eis((await q.evaluate(function() { return window.scrollY; })) === 0, "Volgende vraag onderaan: de volgende vraag begint bovenaan");
+  await q.evaluate(function() { window.scrollTo(0, 200); });
+  await q.getByText("Dit is mijn antwoord").click(); await q.waitForTimeout(500);
+  var na = await q.evaluate(function() { return { scroll: window.scrollY, knoppen: Array.prototype.filter.call(document.querySelectorAll("button"), function(x) { return x.innerText.indexOf("Volgende vraag") === 0; }).length }; });
+  eis(na.scroll === 0 && na.knoppen === 1, "na een fout: de pagina blijft bovenaan en er is precies een knop Volgende vraag (" + JSON.stringify(na) + ")");
   await q.getByRole("button", { name: "Inzoomen" }).click(); await q.waitForTimeout(150);
   eis(await q.evaluate(function() { return document.body.innerText.indexOf("x2") >= 0; }), "inzoomen naar x2");
   await q.getByRole("button", { name: "Zoom x1" }).click(); await q.waitForTimeout(150);
