@@ -1,13 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// __TOPO__: Topografie alleen in een Vercel-preview en bij "npm run dev", nooit in productie (plan T3 par. 2;
-// src/core/topo/zichtbaar.js). Ontbreekt VERCEL_ENV bij een build, dan is Topografie dus niet zichtbaar.
-export default defineConfig(function(env) {
+// __TOPO__: Topografie is zichtbaar in elke build, ook in productie (besluit 25-11-2026, na T4; src/core/topo/zichtbaar.js).
+// Verbergen zonder codewijziging: de omgevingsvariabele TOPO_UIT=1 in Vercel en opnieuw bouwen (deploy).
+export default defineConfig(function() {
   return {
     plugins: [react()],
     define: {
-      __TOPO__: JSON.stringify(process.env.VERCEL_ENV === "preview" || env.mode === "development"),
+      __TOPO__: JSON.stringify(process.env.TOPO_UIT !== "1"),
     },
   };
 });

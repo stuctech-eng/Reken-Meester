@@ -224,7 +224,7 @@ export var SUBJECTS = [
   },
 ];
 
-// Topografie (plan T3): alleen zichtbaar in een preview (zichtbaar.js). kaarten: de kaarten die de app laadt voordat het
+// Topografie (plan T3): zichtbaar volgens zichtbaar.js (sinds 25-11-2026 ook in productie). kaarten: de kaarten die de app laadt voordat het
 // oefenscherm opent (laden.js, ModusLader in App.jsx).
 if (TOPO_ZICHTBAAR) {
   SUBJECTS.push({

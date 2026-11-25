@@ -7,8 +7,8 @@
 //   - de standaardbundel (de bundel die index.html laadt, met alles wat die statisch importeert) bevat niets uit
 //     src/core/topo/ behalve beheersing.js (T4), laden.js, vaardigheden-nlbe.js en zichtbaar.js, en niet KaartAntwoord.jsx of een kaartbestand;
 //   - de kennisbank, de sjablonen, de tikregel, de kaarten en KaartAntwoord.jsx zitten in een bundel die pas met import() laadt;
-//   - productie: Topografie staat niet in de app (de modus is weggelaten bij het bouwen);
-//   - preview: de modus topo_nlbe staat er wel in;
+//   - productie en preview: de modus topo_nlbe staat in de app (sinds 25-11-2026, na T4);
+//   - met TOPO_UIT=1: Topografie staat niet in de app (de modus is weggelaten bij het bouwen);
 //   - de groei van de standaardbundel tegen de vorige commit (BASIS, optioneel: een map met een build van die commit) in bytes.
 // Mutant: een statische import van KaartAntwoord in het oefenscherm moet de eerste eis laten falen.
 
@@ -23,10 +23,11 @@ var TOEGESTAAN = ["src/core/topo/beheersing.js", "src/core/topo/laden.js", "src/
 var n = 0, fouten = [];
 function eis(ok, tekst) { n++; if (!ok) fouten.push(tekst); }
 
-async function bouw(vercelEnv, mutant) {
+async function bouw(vercelEnv, mutant, uit) {
   var chunks = null;
-  var oud = process.env.VERCEL_ENV;
+  var oud = process.env.VERCEL_ENV, oudUit = process.env.TOPO_UIT;
   if (vercelEnv) process.env.VERCEL_ENV = vercelEnv; else delete process.env.VERCEL_ENV;
+  if (uit) process.env.TOPO_UIT = "1"; else delete process.env.TOPO_UIT;
   var plugins = [{
     name: "bundel-meting",
     generateBundle: function(o, bundel) { chunks = Object.keys(bundel).map(function(k) { return bundel[k]; }).filter(function(c) { return c.type === "chunk"; }); },
@@ -40,6 +41,7 @@ async function bouw(vercelEnv, mutant) {
   });
   await build({ root: ROOT, logLevel: "silent", configFile: path.join(ROOT, "vite.config.js"), build: { write: false }, plugins: plugins });
   if (oud === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = oud;
+  if (oudUit === undefined) delete process.env.TOPO_UIT; else process.env.TOPO_UIT = oudUit;
   return chunks;
 }
 
@@ -70,9 +72,12 @@ var stdCode = r.std.map(function(c) { return c.code; }).join("\n");
 eis(stdCode.indexOf("topo_nlbe") >= 0, "preview: de modus topo_nlbe staat in de app");
 
 var prod = await bouw(undefined, false), p = controleer("productie", prod);
-eis(p.verboden.length === 0, "productie: niets van Topografie in de standaardbundel: " + p.verboden.join(", "));
+eis(p.verboden.length === 0, "productie: niets uit src/core/topo/ (behalve de toegestane) of KaartAntwoord in de standaardbundel: " + p.verboden.join(", "));
 var prodCode = p.std.map(function(c) { return c.code; }).join("\n");
-eis(prodCode.indexOf("Provincies, steden en buren aanwijzen op de kaart") < 0, "productie: de modus topo_nlbe is weggelaten");
+eis(prodCode.indexOf("Provincies, steden en buren aanwijzen op de kaart") >= 0, "productie: de modus topo_nlbe staat in de app");
+var uitB = await bouw(undefined, false, true), u = controleer("uit", uitB);
+var uitCode = u.std.map(function(c) { return c.code; }).join("\n");
+eis(uitCode.indexOf("Provincies, steden en buren aanwijzen op de kaart") < 0, "TOPO_UIT=1: de modus topo_nlbe is weggelaten");
 
 var mut = await bouw("preview", true), m = controleer("mutant", mut);
 eis(m.verboden.length > 0, "mutant statische import van KaartAntwoord gevangen");

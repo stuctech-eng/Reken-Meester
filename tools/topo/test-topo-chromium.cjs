@@ -2,8 +2,9 @@
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
 // Gebruik: twee builds serveren, dan
-//   NODE_PATH=$(npm root -g) node tools/topo/test-topo-chromium.cjs <url preview-build> <url productie-build> [map voor schermafbeeldingen]
-// (preview: VERCEL_ENV=preview npx vite build; productie: npx vite build; elk met npx vite preview --outDir ...)
+//   NODE_PATH=$(npm root -g) node tools/topo/test-topo-chromium.cjs <url build> <url build met TOPO_UIT=1> [map voor schermafbeeldingen]
+// (build: npx vite build, preview en productie zijn sinds 25-11-2026 gelijk; uit: TOPO_UIT=1 npx vite build; elk met npx vite
+// preview --outDir ...)
 // Controles:
 //   - op 320, 375, 390 en 428 px is de kaart de schermbreedte min 32 px (de maat van de iPhone-proef en de tikmeting van T2);
 //   - goed: tik op het gevraagde gebied, bevestig: "Goed zo"; het gebied staat groen;
@@ -13,7 +14,7 @@
 //   - twijfel (steden): de kaart zoomt in rond de tik, zonder namen;
 //   - zoomen met + en terug met Zoom x1;
 //   - laadfout: als het kaartbestand of de code van de kaart niet laadt, een zichtbare melding met Opnieuw en Terug;
-//   - productie: Topografie staat niet op Home;
+//   - met TOPO_UIT=1: Topografie staat niet op Home;
 //   - geen fout van de pagina (pageerror) in de hele test.
 
 var playwright = require("playwright");
@@ -164,11 +165,11 @@ function balk(p) { return p.evaluate(function() { var b = document.querySelector
   if (MAP) await f.screenshot({ path: MAP + "/t3b-laadfout.png" });
   await c.close();
 
-  // productie: geen Topografie
+  // TOPO_UIT=1: geen Topografie
   var pr = await nieuw(428);
   await pr.goto(PROD); await pr.waitForTimeout(1000);
   var home = await pr.evaluate(function() { return document.body.innerText; });
-  eis(home.indexOf("Rekenen") >= 0 && home.indexOf("Topografie") < 0 && home.indexOf("Nederland en België") < 0, "productie: Topografie staat niet op Home");
+  eis(home.indexOf("Rekenen") >= 0 && home.indexOf("Topografie") < 0 && home.indexOf("Nederland en België") < 0, "TOPO_UIT=1: Topografie staat niet op Home");
   await pr.close();
 
   eis(paginaFouten.length === 0, "geen fouten van de pagina: " + paginaFouten.join(" | "));
