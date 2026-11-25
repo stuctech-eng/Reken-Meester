@@ -41,7 +41,7 @@ export var WEERGAVE = 428 - 2 * 16;
 export var EENHEID_PX = WEERGAVE / BREEDTE;
 export var KAARTIDS = ["nlbe", "europa"];
 export var GRENS_MIN_STUK_PX2 = 0.01, GRENS_ZONE_PX = 2, GRENS_EIS_PX = 0.5, GRENS_MEETFOUT_PX = 0.05, GRENS_STAP_PX = 0.1, ZOOM_GRENS = 8;
-export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
+export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
 export var GZIP_DOEL = { nlbe: 40 * 1024, europa: 120 * 1024 };
 
 function fout(t) { throw new Error(t); }
@@ -49,7 +49,7 @@ function sha(b) { return crypto.createHash("sha256").update(b).digest("hex"); }
 
 // ---- de kennisbank (alleen lezen) ----
 async function kennisbank() {
-  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js"];
+  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js"];
   var perId = {};
   for (var i = 0; i < bestanden.length; i++) {
     var m = await import(pathToFileURL(path.join(ROOT, "src/core/topo", bestanden[i])).href);
@@ -333,6 +333,14 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
       var rv7 = gedeeld.rvo(), g7 = it.geometrie.bron;
       if (it.soort !== "streek" || g7.bronId !== "RVO" || g7.sha256 !== rv7.sha || g7.sleutel !== "naam" || !rv7.per[g7.waarde]) fout("GEOREF van " + id + " past niet bij een streek uit RVO");
       gebruik("RVO", rv7.sha); return zetOm(ontNaald(rv7.per[g7.waarde], id, []), rdNaarLl());
+    }
+    if (bron === "stb-enclaves") {
+      // T5b (plan par. 3.6): de Belgische enclaves = de delen van Belgie buiten het hoofdgebied, alleen de buitenrand
+      var st8 = gedeeld.stb(), g8 = it.geometrie.bron;
+      if (it.soort !== "bijzonder-gebied" || g8.bronId !== "STB" || g8.sha256 !== st8.sha || g8.sleutel !== "cd_munty_refnis" || g8.waarde !== "13002") fout("GEOREF van " + id + " past niet bij stb-enclaves");
+      var alle8 = st8.samen(function() { return true; }, id), groot8 = -1, gi8 = -1;
+      alle8.forEach(function(p, i) { var a = Math.abs(oppDelen([[p[0]]])); if (a > groot8) { groot8 = a; gi8 = i; } });
+      gebruik("STB", st8.sha); return zetOm(alle8.filter(function(p, i) { return i !== gi8; }).map(function(p) { return [p[0]]; }), lambertNaarLl());
     }
     if (bron === "stb-taalgebied") {
       // T5b (plan par. 3.8): de sectoren van de gemeenten van het taalgebied (maak-taalgebieden-be.mjs)

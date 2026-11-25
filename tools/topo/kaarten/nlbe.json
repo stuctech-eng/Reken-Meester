@@ -184,6 +184,22 @@
       ]
     },
     {
+      "id": "baarle",
+      "soort": "vlak",
+      "bron": "stb-enclaves",
+      "items": [
+        "gebied-baarle"
+      ]
+    },
+    {
+      "id": "grenspunten",
+      "soort": "punt",
+      "bron": "kb-grenspunt",
+      "items": [
+        "grenspunt-drielandenpunt"
+      ]
+    },
+    {
       "id": "steden",
       "soort": "punt",
       "bron": "kb-punt",

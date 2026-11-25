@@ -17,8 +17,8 @@ var KAARTEN = [
   { id: "europa", titel: "Europa" }
 ];
 var BEELDTITEL = { west: "West en midden", zuidoost: "Zuidoost", noordoost: "Noordoost", kaukasus: "Kaukasus" };
-var LAAGTITEL = { "provincies-nl": "Provincies (Nederland)", "provincies-be": "Provincies (België)", gewesten: "Gewesten (België)", taalgebieden: "Taalgebieden (België)", grensgemeenten: "Grensgemeenten (Nederland)", streken: "Streken (Nederland)", steden: "Steden", rivieren: "Rivieren", waddeneilanden: "Waddeneilanden", landen: "Landen" };
-var ITEMS = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js"];
+var LAAGTITEL = { "provincies-nl": "Provincies (Nederland)", "provincies-be": "Provincies (België)", gewesten: "Gewesten (België)", taalgebieden: "Taalgebieden (België)", grensgemeenten: "Grensgemeenten (Nederland)", streken: "Streken (Nederland)", grenspunten: "Grenspunten", baarle: "Enclavegebied Baarle", steden: "Steden", rivieren: "Rivieren", waddeneilanden: "Waddeneilanden", landen: "Landen" };
+var ITEMS = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js"];
 
 function fout(t) { throw new Error(t); }
 var KB = {};
