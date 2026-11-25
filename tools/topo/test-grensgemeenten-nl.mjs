@@ -59,6 +59,10 @@ g.records.forEach(function(rec) {
 });
 eis(GG.GEMEENTEN_NL.every(function(it) { return !!naar[it.id]; }) && Object.keys(naar).every(function(id) { return GG.GEMEENTEN_NL.some(function(it) { return it.id === id; }); }), "items en relaties horen bij elkaar");
 eis(!naar["gem-nl-gm1979"], "Eemsdelta is uitgezonderd");
+// bekende gevallen (plan T5b par. 3.1): Vaals (beide), Baarle-Nassau en Sluis (Belgie) wel; Utrecht niet
+eis((naar["gem-nl-gm0981"] || []).slice().sort().join() === "BEL,DEU", "Vaals grenst aan Belgie en Duitsland");
+eis((naar["gem-nl-gm0744"] || []).join() === "BEL" && (naar["gem-nl-gm1714"] || []).join() === "BEL", "Baarle-Nassau en Sluis grenzen aan Belgie");
+eis(!naar["gem-nl-gm0344"], "Utrecht is geen grensgemeente");
 // de open lijst
 var open = fs.readFileSync(path.join(ROOT, "src/core/topo/open-vragen.md"), "utf8");
 GG.AFWIJKINGEN_GRENS.forEach(function(a) { eis(open.indexOf("- " + a.id + " | ") >= 0 && open.indexOf(a.tekst) >= 0, "open lijst: " + a.id); });

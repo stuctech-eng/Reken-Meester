@@ -2,7 +2,7 @@
 // Een meting in Node vervangt de iPhone-controle niet (plan v2 par. 5.6).
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
-// Gebruik: node --max-old-space-size=8000 test-kaarten.mjs <map NE> <cbsgebiedsindelingen2026.gpkg> <sectoren.geojson> <werkmap>
+// Gebruik: node --max-old-space-size=8000 test-kaarten.mjs <map NE> <cbsgebiedsindelingen2026.gpkg> <sectoren.geojson> <werkmap> <natpark.gpkg>
 // Met KAARTEN kies je de kaarten (standaard alle drie, bijvoorbeeld KAARTEN=nlbe); met DELEN de delen (standaard "inhoud"):
 //   inhoud  - opnieuw bouwen (byte-gelijk met de bestanden), structuur, KAARTREF, eigen meting van de vereenvoudiging,
 //             eigen grensmeting NL-BE (met de toetszone), omvang (gemeld tegen het doel, geen fout: B11 a),
@@ -27,7 +27,7 @@ import * as MK from "./maak-kaarten.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
-var PADEN = { ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4] }, WERK = process.argv[5];
+var PADEN = { ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[6] }, WERK = process.argv[5];
 var DELEN = (process.env.DELEN || "inhoud").split(",");
 var IDS = (process.env.KAARTEN || "nlbe,europa").split(",");
 var BRONNEN = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
@@ -39,7 +39,7 @@ if (!PADEN.ne || !PADEN.gpkg || !PADEN.sectoren || !WERK) stop("gebruik: node te
 fs.mkdirSync(WERK, { recursive: true });
 
 // eigen tabellen (los van maak-kaarten.mjs)
-var SOORT = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
+var SOORT = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
 var TOL_PX = { nlbe: 0.0625, europa: 0.125 };
 var AFRONDING = { nlbe: 0.01, europa: 0.1 };
 var GZIP = { nlbe: 40 * 1024, europa: 120 * 1024 };
@@ -49,7 +49,7 @@ var SLEUTELS_KAART = { id: 1, kaartVersie: 1, invoer: 1, breedte: 1, hoogte: 1, 
 var SLEUTELS_LAAG = { id: 1, soort: 1, bron: 1, items: 1, achtergrond: 1 };
 
 async function kennisbank() {
-  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js"], perId = {};
+  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js"], perId = {};
   for (var i = 0; i < bestanden.length; i++) {
     var m = await import(pathToFileURL(path.join(ROOT, "src/core/topo", bestanden[i])).href);
     Object.keys(m).forEach(function(k) { if (Array.isArray(m[k])) m[k].forEach(function(it) { if (it && it.geometrie) perId[it.id] = it; }); });

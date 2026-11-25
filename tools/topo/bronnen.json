@@ -113,6 +113,23 @@
     "gedownload": "2026-11-18",
     "gebruik": "alleen het vlak North Sea (ne_id 1159115879), als geometrie; niet als naambron (T1 par. 1.3)"
   },
+  "rvoNationaleParken": {
+    "bron": "RVO",
+    "titel": "RVO, Nationale Parken (de begrenzing per park; PDOK-dataset nationale-parken)",
+    "pagina": "https://api.pdok.nl/rvo/nationale-parken/ogc/v1",
+    "gpkg": {
+      "bestand": "natpark.gpkg",
+      "grootte": 3252224,
+      "sha256": "9a406c04ad98aa9033e3cd50009e8aec2d42c5617abcfe64d2a91372c81e10a6",
+      "laag": "natpark",
+      "crs": "EPSG:28992",
+      "features": 22
+    },
+    "laatsteWijziging": "2026-06-19",
+    "laatsteWijzigingBron": "gpkg_contents.last_change (2026-06-19T07:46:01Z)",
+    "gedownload": "2026-11-25",
+    "opmerking": "door Dick toegevoegd vanaf zijn iPhone (PDOK-download); twee parken met nr 22 (Van Gogh, zonder datum, en Hollandse Duinen, 2026-04-19)"
+  },
   "register": {
     "toelichting": "Register van de bron-ids (bouwplan T2b-2 fase 6.1 v1.9). Elk bron-id dat in een FEIT of afleiding voorkomt, staat hier expliciet; er wordt niets aangevuld. Bestanden met hun SHA-256; een webpagina heeft geen bestand en dus geen SHA.",
     "ids": {
@@ -226,6 +243,15 @@
           "sh_statbel_statistical_sectors_3812_20240101.geojson": "5c67b3355992f72b0b4312ddb3ba35628280a6b868f680ac1d13b39ac4f81024"
         }
       },
+      "RVO": {
+        "titel": "RVO, Nationale Parken (PDOK, GeoPackage)",
+        "soort": [
+          "bestand"
+        ],
+        "bestanden": {
+          "natpark.gpkg": "9a406c04ad98aa9033e3cd50009e8aec2d42c5617abcfe64d2a91372c81e10a6"
+        }
+      },
       "tabellenNlbe": {
         "titel": "Tabellen voor Nederland en Belgie in de repository (rollen met hun officiele passages; vaste ids van de Belgische steden)",
         "soort": [
@@ -235,6 +261,7 @@
           "tools/topo/ov-rollen-nlbe.json": "440805cd7b401fd6f7c01dd97f69c474c9b2c1fcd013e2a326da41e02fabcf45",
           "tools/topo/steden-be.json": "c22314805ea75a3abd2017de7a00e2c6befe89e8f96ecf6303b57d748ad3324e",
           "tools/topo/grensgemeenten-nl.json": "33bc4b4a86ce62de28d96b52c74f8518064bea1da4d1c88591b57b402bfaf538",
+          "tools/topo/streken-nl.json": "cb866b6d3b486ce9c536286afef997b6179e535214f52f49d849e381cf56d797",
           "tools/topo/taalgebieden-be.json": "487d86af0a35f1508a207e4eb7d007093267f65202b94e5ee618394e46515c35",
           "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }

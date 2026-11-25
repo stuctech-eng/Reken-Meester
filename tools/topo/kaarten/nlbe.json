@@ -165,6 +165,25 @@
       ]
     },
     {
+      "id": "streken",
+      "soort": "vlak",
+      "bron": "streek",
+      "items": [
+        "streek-nl-achterhoek",
+        "streek-nl-biesbosch",
+        "streek-nl-de-kempen",
+        "streek-nl-flevopolder",
+        "streek-nl-noordoostpolder",
+        "streek-nl-salland",
+        "streek-nl-twente",
+        "streek-nl-utrechtse-heuvelrug",
+        "streek-nl-veluwe",
+        "streek-nl-westland",
+        "streek-nl-zeeuws-vlaanderen",
+        "streek-nl-zuid-limburg"
+      ]
+    },
+    {
       "id": "steden",
       "soort": "punt",
       "bron": "kb-punt",

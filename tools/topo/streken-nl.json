@@ -1,0 +1,18 @@
+{
+  "toelichting": "De Nederlandse streken met een officiele grens (plan T1 par. 2.1; plan T5b par. 3.4, B2). Per streek een officiele indeling met dezelfde naam: een COROP-gebied, een landbouwgebied of een gemeente (CBS Gebiedsindelingen 2026, als vereniging van de niet-gegeneraliseerde gemeenten volgens het register), of een Nationaal Park (RVO). De Flevopolder: de provincie Flevoland zonder Noordoostpolder en Urk. De Peel, Betuwe en Het Gooi (globaal) en Randstad en Groene Hart (alleen uitleg) staan hier niet in.",
+  "besluit": "Claude 25-11-2026: de indeling per streek volgens plan T5b par. 3.4, met akkoord van Dick op 25-11-2026 (11 streken als vlak; de Flevopolder als Flevoland zonder Noordoostpolder en Urk). Twente als landbouwgebied (LB2303) en niet als COROP-gebied (CR12): het COROP-gebied bevat ook Rijssen-Holten, dat in het landbouwgebied Salland ligt; zo overlappen Twente en Salland niet (Rijssen-Holten hoort bij Salland)",
+  "streken": {
+    "streek-nl-achterhoek": { "naam": "Achterhoek", "varianten": [], "indeling": { "kolom": "cr_code", "code": "CR14", "cbsNaam": "Achterhoek", "soort": "COROP-gebied" } },
+    "streek-nl-twente": { "naam": "Twente", "varianten": [], "indeling": { "kolom": "lb_code", "code": "LB2303", "cbsNaam": "Twente", "soort": "landbouwgebied" } },
+    "streek-nl-veluwe": { "naam": "Veluwe", "varianten": [], "indeling": { "kolom": "cr_code", "code": "CR13", "cbsNaam": "Veluwe", "soort": "COROP-gebied" } },
+    "streek-nl-zuid-limburg": { "naam": "Zuid-Limburg", "varianten": ["Heuvelland"], "indeling": { "kolom": "cr_code", "code": "CR39", "cbsNaam": "Zuid-Limburg", "soort": "COROP-gebied" } },
+    "streek-nl-zeeuws-vlaanderen": { "naam": "Zeeuws-Vlaanderen", "varianten": ["Zeeuwsch-Vlaanderen"], "indeling": { "kolom": "cr_code", "code": "CR31", "cbsNaam": "Zeeuwsch-Vlaanderen", "soort": "COROP-gebied" } },
+    "streek-nl-westland": { "naam": "Westland", "varianten": [], "indeling": { "kolom": "gm_code", "code": "GM1783", "cbsNaam": "Westland", "soort": "gemeente" } },
+    "streek-nl-noordoostpolder": { "naam": "Noordoostpolder", "varianten": [], "indeling": { "kolom": "gm_code", "code": "GM0171", "cbsNaam": "Noordoostpolder", "soort": "gemeente" } },
+    "streek-nl-salland": { "naam": "Salland", "varianten": [], "indeling": { "kolom": "lb_code", "code": "LB2304", "cbsNaam": "Salland", "soort": "landbouwgebied" } },
+    "streek-nl-de-kempen": { "naam": "De Kempen", "varianten": ["Kempen"], "indeling": { "kolom": "lb_code", "code": "LB3007", "cbsNaam": "De Kempen", "soort": "landbouwgebied" } },
+    "streek-nl-flevopolder": { "naam": "Flevopolder", "varianten": [], "indeling": { "kolom": "pv_code", "code": "PV24", "cbsNaam": "Flevoland", "soort": "provincie", "zonder": { "GM0171": "Noordoostpolder", "GM0184": "Urk" } } },
+    "streek-nl-utrechtse-heuvelrug": { "naam": "Utrechtse Heuvelrug", "varianten": [], "park": { "naam": "Utrechtse Heuvelrug", "nr": 16 } },
+    "streek-nl-biesbosch": { "naam": "Biesbosch", "varianten": ["De Biesbosch"], "park": { "naam": "De Biesbosch", "nr": 6 } }
+  }
+}
