@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Screen, TopBar, Card, Btn, ProgressBar, Badge } from "../components/UI.jsx";
 import { A, T } from "../styles/tokens.js";
 import { getSubject, getSkillList, getSkillOrder, getNextSkill } from "../core/subjects.js";
 import { getAccuracy } from "../core/save.js";
 import { typeHint } from "../core/answerCheck.js";
 import { typingAvailableFor } from "../core/inputResolve.js";
+import { laadTopo } from "../core/topo/laden.js";
+import { telling } from "../core/topo/beheersing.js";
 
 // NO BACKTICKS / TEMPLATE LITERALS anywhere. String concatenation only.
 
@@ -26,6 +28,19 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
   var answerMode    = (save.answerModes && save.answerModes[subjectId] === "typen") ? "typen" : "kiezen";
   var totalMastered = data.totalSkillsMastered || 0;
   var acc           = getAccuracy(data);
+
+  // Topografie (plan T4 par. 7): de kennisitems van een vaardigheid komen uit de kaart; die laadt hier alvast op de achtergrond
+  // (dan begint de sessie ook sneller). Tot hij er is, de balk van voor T4. Een laadfout: ook de balk van voor T4 (het oefenscherm
+  // toont de fout, met Opnieuw).
+  var kaarten = subject && subject.kaarten;
+  var tkState = useState(false), topoKlaar = tkState[0], setTopoKlaar = tkState[1];
+  useEffect(function() {
+    if (!kaarten || !kaarten.length) return undefined;
+    var weg = false;
+    laadTopo(kaarten).then(function() { if (!weg) setTopoKlaar(true); }, function() {});
+    return function() { weg = true; };
+  }, [subjectId]);
+  var topoItems = (save.topo && save.topo.items) || {};
 
   var nextSkillInfo = getNextSkill(subjectId, skillStats);
   var activeSkillId = nextSkillInfo.skillId;
@@ -257,6 +272,15 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
               var progress = mastered ? 1
                 : (skill.minCorrect > 0 ? Math.min((stats.correct || 0) / skill.minCorrect, 0.99) : 0);
 
+              // Topografie: de balk is het aandeel gekende (beheerste) kennisitems; een regel met hoeveel gekend en hoeveel nog nieuw
+              var items = topoKlaar && skill.itemVoorwaarde && skill.kennisSleutels ? telling(topoItems, skill.kennisSleutels(), false) : null;
+              var itemRegel = null;
+              if (items) {
+                started  = started || items.nieuw < items.totaal;
+                progress = items.totaal ? items.beheerst / items.totaal : 0;
+                itemRegel = items.beheerst + " van " + items.totaal + " gekend" + (items.nieuw > 0 && started ? " · nog " + items.nieuw + " nieuw" : "");
+              }
+
               var cardBg = mastered
                 ? A.successBg
                 : active
@@ -323,10 +347,15 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
                           <Badge label={"Beheerst"} color={A.successTxt} bg={A.successBg} />
                         )}
                       </div>
-                      <div style={{ fontSize: 11, color: A.textSoft, marginBottom: started && !mastered ? 6 : 0, fontWeight: 500 }}>
+                      <div style={{ fontSize: 11, color: A.textSoft, marginBottom: (started && !mastered) || itemRegel ? 6 : 0, fontWeight: 500 }}>
                         {skill.desc}
                       </div>
-                      {started && !mastered && (
+                      {itemRegel && (
+                        <div data-itemregel={skill.id} style={{ fontSize: 11, color: A.text, marginBottom: 4, fontWeight: 700 }}>
+                          {itemRegel}
+                        </div>
+                      )}
+                      {((started && !mastered) || (items && started)) && (
                         <div style={{
                           height: 4,
                           background: A.border,

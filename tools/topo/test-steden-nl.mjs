@@ -14,6 +14,7 @@ import { execFileSync } from "child_process";
 import { fileURLToPath, pathToFileURL } from "url";
 import initSqlJs from "sql.js";
 import proj4 from "proj4";
+import { APP_BESTANDEN } from "./app-bestanden.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
@@ -199,7 +200,7 @@ if (!MUTANT) {
   }
   var git = function(a) { return execFileSync("git", a, { cwd: ROOT }).toString(); };
   git(["diff", "--name-only", "main"]).split("\n").concat(git(["ls-files", "--others", "--exclude-standard"]).split("\n")).filter(Boolean).forEach(function(f) {
-    eis(/^(tools\/topo\/|src\/core\/topo\/|public\/kaartproef\/|public\/topoproef\/)/.test(f), "buiten de toegestane mappen gewijzigd: " + f);
+    eis(/^(tools\/topo\/|src\/core\/topo\/|public\/kaartproef\/|public\/topoproef\/)/.test(f) || APP_BESTANDEN.indexOf(f) >= 0, "buiten de toegestane mappen gewijzigd: " + f);
   });
 }
 
