@@ -14,11 +14,13 @@ import { STEDEN_BE } from "./items/steden-be.js";
 import { WATER_NLBE } from "./items/water-nlbe.js";
 import { EILANDEN_NL } from "./items/eilanden-nl.js";
 import { TAALGEBIEDEN } from "./items/taalgebieden.js";
+import { GEMEENTEN_NL } from "./items/gemeenten-nl.js";
 import { pakUit } from "./kaart/bogen.js";
 import { maakDoelen } from "./kaart/tikregel.js";
 import { ringDelen } from "./kaart/beeld.js";
 import { HOOFDSTEDEN_NLBE } from "./afgeleid/hoofdsteden-nlbe.js";
 import { LIGGING_NLBE } from "./afgeleid/ligging-nlbe.js";
+import { GRENSGEMEENTEN_NL } from "./afgeleid/grensgemeenten-nl.js";
 import { RELATIES as RELATIESOORTEN } from "./relaties.js";
 import { maakWijsAan, vraagIds } from "./sjablonen/wijs-aan.js";
 import { maakBenoem } from "./sjablonen/benoem.js";
@@ -33,7 +35,7 @@ import { allesMinstensInOntwikkeling, telling } from "./beheersing.js";
 import { deckPick } from "../skills/flow.js";
 
 var KB = {};
-[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL, TAALGEBIEDEN].forEach(function(lijst) {
+[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL, TAALGEBIEDEN, GEMEENTEN_NL].forEach(function(lijst) {
   lijst.forEach(function(it) { if (it && it.id && it.naam) KB[it.id] = it; });
 });
 
@@ -55,7 +57,7 @@ export function ids(soort, prefix) {
 // van de kennisbank ze leest (relatie-index.js, bouwIndex)
 // T5a: ook de afgeleide liggingsrelaties (ligt-in, grenst-aan; afgeleid/ligging-nlbe.js). Een symmetrische relatie (grenst-aan) staat
 // daar een keer; hier ook in de andere richting, zodat elke provincie als bron voorkomt.
-var RELATIES = HOOFDSTEDEN_NLBE.concat(LIGGING_NLBE);
+var RELATIES = HOOFDSTEDEN_NLBE.concat(LIGGING_NLBE, GRENSGEMEENTEN_NL);
 Object.keys(KB).sort().forEach(function(id) { (KB[id].relaties || []).forEach(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = id; RELATIES.push(x); }); });
 RELATIES = RELATIES.filter(function(r) { return r.status === "vastgesteld"; });
 RELATIES = RELATIES.concat(RELATIES.filter(function(r) { return RELATIESOORTEN[r.type] && RELATIESOORTEN[r.type].symmetrisch; }).map(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = r.naar; x.naar = r.van; return x; }));

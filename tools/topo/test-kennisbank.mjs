@@ -374,7 +374,10 @@ var W62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/water-
 var E62 = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/eilanden-nl.js")).href);
 // T5b-1: de vier taalgebieden van Belgie (plan T5b par. 3.8)
 var T5B = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/taalgebieden.js")).href);
-function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE), kopie(W62.WATER_NLBE), kopie(E62.EILANDEN_NL), kopie(T5B.TAALGEBIEDEN)), rel: kopie(H62.HOOFDSTEDEN_NLBE), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
+// T5b-1: de Nederlandse grensgemeenten en hun grenst-aan (plan T5b par. 3.1)
+var GG = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/gemeenten-nl.js")).href);
+var GGR = await import(pathToFileURL(path.join(ROOT, "src/core/topo/afgeleid/grensgemeenten-nl.js")).href);
+function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE), kopie(W62.WATER_NLBE), kopie(E62.EILANDEN_NL), kopie(T5B.TAALGEBIEDEN), kopie(GG.GEMEENTEN_NL)), rel: kopie(H62.HOOFDSTEDEN_NLBE).concat(kopie(GGR.GRENSGEMEENTEN_NL)), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
 function controleer62(c) {
   var fouten = [], n = 0;
   function eis(ok, groep, tekst) { n++; if (!ok) fouten.push({ groep: groep, tekst: tekst }); }
@@ -383,7 +386,7 @@ function controleer62(c) {
   c.oud.concat(c.nieuw).forEach(function(it) { eis(!perId[it.id], "hergebruik", "id een keer in de kennisbank: " + it.id); perId[it.id] = it; });
   ["NLD", "BEL", "DEU"].forEach(function(id) { eis(c.oud.concat(c.nieuw).filter(function(it) { return it.id === id; }).length === 1, "hergebruik", "land bestaat een keer: " + id); });
   c.nieuw.forEach(function(it) {
-    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "taalgebied", "stad", "zee", "rivier", "eiland", "eilandengroep"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2 of T5b: " + it.id);
+    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "taalgebied", "gemeente", "stad", "zee", "rivier", "eiland", "eilandengroep"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2 of T5b: " + it.id);
     eis(gelijk(it.geometrie.kaart, {}), "georef", "nog geen kaartverwijzingen: " + it.id);
     var g = it.geometrie.bron;
     if (it.soort === "stad" && it.geometrie.punt.status !== "vastgesteld") eis(g === null, "georef", "open punt zonder GEOREF: " + it.id);
@@ -411,6 +414,7 @@ function controleer62(c) {
     if (it.soort === "gewest" || it.soort === "taalgebied") return "BEL";
     if (it.soort === "stad") return /^stad-be-/.test(it.id) ? "BEL" : null;
     if (it.soort === "eiland" || it.soort === "eilandengroep") return "NLD";
+    if (it.soort === "gemeente") return /^GM[0-9]{4}$/.test(it.feiten.code && it.feiten.code.waarde) ? "NLD" : null;
     return null;
   }
   // zee en rivier: internationaal water, zonder landrelatie (deel 2); alle andere nieuwe soorten moeten er een hebben
@@ -434,7 +438,10 @@ function controleer62(c) {
   // ---- relaties ----
   var alleItems = c.oud.concat(c.nieuw), idx = IX.bouwIndex(alleItems, c.rel, c.relaties, c.inverseFn), R = c.relaties || RELATIES;
   eis(idx.dubbel.length === 0, "index", "geen dubbele relaties");
-  eis(idx.heen.length === 31, "index", "31 relaties: 24 uit hoofdsteden-nlbe.js, 2 van Brussel en 5 hoort-bij van de Waddeneilanden (" + idx.heen.length + ")");
+  eis(idx.heen.length === 31 + GGR.GRENSGEMEENTEN_NL.length, "index", "31 relaties (24 uit hoofdsteden-nlbe.js, 2 van Brussel, 5 hoort-bij van de Waddeneilanden) plus de grensgemeenten (" + idx.heen.length + ")");
+  // T5b-1: elke grensgemeente grenst aan Belgie of Duitsland, en elke grenst-aan van een gemeente gaat naar BEL of DEU
+  c.nieuw.filter(function(it) { return it.soort === "gemeente"; }).forEach(function(it) { eis(idx.heen.some(function(r) { return r.type === "grenst-aan" && r.van === it.id && (r.naar === "BEL" || r.naar === "DEU"); }), "grens", "grensgemeente grenst aan BEL of DEU: " + it.id); });
+  idx.heen.filter(function(r) { return /^gem-nl-/.test(r.van); }).forEach(function(r) { eis(r.type === "grenst-aan" && (r.naar === "BEL" || r.naar === "DEU") && !!perId[r.van], "grens", "relatie van een gemeente: grenst-aan naar BEL of DEU: " + r.van + " " + r.naar); });
   // nb01 (deel 2): Nederland, Belgie, Duitsland en de Noordzee bestaan elk een keer; geen Waddenzee (K7 B)
   ["NLD", "BEL", "DEU", "zee-noordzee"].forEach(function(id) { eis(alleItems.filter(function(it) { return it.id === id; }).length === 1, "nb01", "nb01-item bestaat een keer: " + id); });
   eis(!alleItems.some(function(it) { return /wadden/i.test(it.naam.waarde) && it.soort !== "eiland" && it.soort !== "eilandengroep"; }) && !idx.heen.some(function(r) { return /waddenzee/.test(r.naar + r.van); }), "nb01", "geen Waddenzee-item en geen relatie naar een Waddenzee");
@@ -460,6 +467,9 @@ uit62.fouten.slice(0, 20).forEach(function(f) { console.log("  - [" + f.groep + 
 function nieuw62(c, id) { return c.nieuw.filter(function(r) { return r.id === id; })[0]; }
 var MUT62 = [
   ["provincie zonder landrelatie", "land", function(c) { delete nieuw62(c, "prov-nl-pv21").feiten.land; }],
+  ["grensgemeente zonder grenst-aan", "grens", function(c) { c.rel = c.rel.filter(function(r) { return r.van !== "gem-nl-gm0744"; }); }],
+  ["grenst-aan van een gemeente naar FRA", "grens", function(c) { c.rel.filter(function(r) { return r.van === "gem-nl-gm0981"; })[0].naar = "FRA"; }],
+  ["grensgemeente met een Belgische code", "land", function(c) { nieuw62(c, "gem-nl-gm0935").feiten.code.waarde = "73040"; }],
   ["taalgebied met land NLD", "land", function(c) { nieuw62(c, "taalgebied-be-de").feiten.land.waarde = "NLD"; }],
   ["taalgebied met een GEOREF buiten het register", "georef", function(c) { nieuw62(c, "taalgebied-be-nl").geometrie.bron.sha256 = "0".repeat(64); }],
   ["taalwet met een andere SHA", "register", function(c) { nieuw62(c, "taalgebied-be-fr").feiten.land.bron.sha256 = "1".repeat(64); }],
@@ -498,14 +508,15 @@ if (uit62.fouten.length || gemist62.length) process.exit(1);
 var KD = { fouten: [], n: 0 };
 function eisKD(ok, tekst) { KD.n++; if (!ok) KD.fouten.push(tekst); }
 var KB63 = {};
-[L.LANDEN, S.STEDEN, P62.PROVINCIES, G62.GEWESTEN, B62.STEDEN_BE, W62.WATER_NLBE, E62.EILANDEN_NL, T5B.TAALGEBIEDEN].forEach(function(lijst) { lijst.forEach(function(it) { KB63[it.id] = it; }); });
-var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
+[L.LANDEN, S.STEDEN, P62.PROVINCIES, G62.GEWESTEN, B62.STEDEN_BE, W62.WATER_NLBE, E62.EILANDEN_NL, T5B.TAALGEBIEDEN, GG.GEMEENTEN_NL].forEach(function(lijst) { lijst.forEach(function(it) { KB63[it.id] = it; }); });
+var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
 var VERWACHT63 = {
   nlbe: {
     "provincies-nl": P62.PROVINCIES.filter(function(p) { return p.feiten.land.waarde === "NLD"; }).map(function(p) { return p.id; }),
     "provincies-be": P62.PROVINCIES.filter(function(p) { return p.feiten.land.waarde === "BEL"; }).map(function(p) { return p.id; }),
     "gewesten": G62.GEWESTEN.map(function(g) { return g.id; }),
     "taalgebieden": T5B.TAALGEBIEDEN.map(function(g) { return g.id; }),
+    "grensgemeenten": GG.GEMEENTEN_NL.map(function(g) { return g.id; }),
     "steden": S.STEDEN.map(function(x) { return x.id; }).concat(B62.STEDEN_BE.filter(function(x) { return x.geometrie.punt && x.geometrie.punt.status === "vastgesteld"; }).map(function(x) { return x.id; })),
     "rivieren": W62.WATER_NLBE.filter(function(w) { return w.soort === "rivier"; }).map(function(w) { return w.id; }),
     "waddeneilanden": E62.EILANDEN_NL.filter(function(e) { return e.soort === "eiland"; }).map(function(e) { return e.id; })

@@ -1,0 +1,12 @@
+{
+  "toelichting": "De Nederlandse grensgemeenten (plan T1 par. 2.1; plan T5b par. 3.1, B1): alle gemeenten van CBS Gebiedsindelingen 2026 (gemeente_niet_gegeneraliseerd) met een stuk van de buitengrens van Nederland aan Belgie of Duitsland. Belgie: de buitenrand van de Statbel-sectoren (exact, binnen de tolerantie). Duitsland: wat van de buitengrens niet aan Belgie ligt en binnen de zoekafstand van Natural Earth (DEU) ligt; Natural Earth wijst alleen het buurland aan, de lengte komt uit de CBS-grens.",
+  "regels": {
+    "verschuivingM": 5,
+    "tolerantieBeM": 50,
+    "zoekafstandDeM": 3000,
+    "minimumM": 10
+  },
+  "uitgezonderd": {
+    "GM1979": { "naam": "Eemsdelta", "besluit": "Claude 25-11-2026: de buitengrens van Eemsdelta bij Duitsland ligt alleen in het water van de Eems; daar hebben Nederland en Duitsland de grens niet vastgelegd (Eems-Dollardverdrag 1960). Geen landgrens, dus geen grensgemeente; een onzeker gegeven komt niet in een vraag (T1 par. 1.3). Open punt" }
+  }
+}
