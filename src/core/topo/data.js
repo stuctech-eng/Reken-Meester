@@ -17,9 +17,16 @@ import { pakUit } from "./kaart/bogen.js";
 import { maakDoelen } from "./kaart/tikregel.js";
 import { ringDelen } from "./kaart/beeld.js";
 import { HOOFDSTEDEN_NLBE } from "./afgeleid/hoofdsteden-nlbe.js";
+import { LIGGING_NLBE } from "./afgeleid/ligging-nlbe.js";
+import { RELATIES as RELATIESOORTEN } from "./relaties.js";
 import { maakWijsAan, vraagIds } from "./sjablonen/wijs-aan.js";
 import { maakBenoem } from "./sjablonen/benoem.js";
 import { maakRelatie, genoemdeIds, juisteIds } from "./sjablonen/relatie.js";
+import { maakWijsRelatie } from "./sjablonen/wijs-relatie.js";
+import { maakNietBij, genoemdNietBij } from "./sjablonen/niet-bij.js";
+import { maakRichting, maakAfstand, windrichting, WINDSTREKEN, MARGE_8 } from "./sjablonen/meten.js";
+import { maakKeten, ketenIds } from "./sjablonen/keten.js";
+import { alleenVan } from "./sjablonen/wijs-aan.js";
 import { maakSessie } from "./sessie.js";
 import { allesMinstensInOntwikkeling, telling } from "./beheersing.js";
 import { deckPick } from "../skills/flow.js";
@@ -45,9 +52,12 @@ export function ids(soort, prefix) {
 // Vastgestelde relaties van een soort: de afgeleide hoofdstadrelaties van Nederland en Belgie (fase 6.2) en de relaties die in de
 // items zelf staan (bijvoorbeeld Brussel: hoofdstad en zetel van de federale regering van Belgie, Grondwet art. 194), zoals de index
 // van de kennisbank ze leest (relatie-index.js, bouwIndex)
-var RELATIES = HOOFDSTEDEN_NLBE.slice();
+// T5a: ook de afgeleide liggingsrelaties (ligt-in, grenst-aan; afgeleid/ligging-nlbe.js). Een symmetrische relatie (grenst-aan) staat
+// daar een keer; hier ook in de andere richting, zodat elke provincie als bron voorkomt.
+var RELATIES = HOOFDSTEDEN_NLBE.concat(LIGGING_NLBE);
 Object.keys(KB).sort().forEach(function(id) { (KB[id].relaties || []).forEach(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = id; RELATIES.push(x); }); });
 RELATIES = RELATIES.filter(function(r) { return r.status === "vastgesteld"; });
+RELATIES = RELATIES.concat(RELATIES.filter(function(r) { return RELATIESOORTEN[r.type] && RELATIESOORTEN[r.type].symmetrisch; }).map(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = r.naar; x.naar = r.van; return x; }));
 export function relaties(type) { return RELATIES.filter(function(r) { return r.type === type; }); }
 
 export function naamVan(id) {
@@ -122,14 +132,31 @@ export function omhulling(kaartId, laagId, ids) {
   return OMHULLING[sleutel];
 }
 
-// De sjablonen (plan T3 par. 3.4)
-var BRON = { laag: laag, naamVan: naamVan, namenVan: namenVan, omhulling: omhulling, relaties: relaties, ids: ids, buren: buren };
-var SJABLONEN = { "wijs-aan": maakWijsAan(BRON), "benoem": maakBenoem(BRON), "relatie": maakRelatie(BRON) };
+// De lengte- en breedtegraad van een item (geometrie.punt in de kennisbank), voor richting en afstand (T5a)
+export function punt(id) {
+  var it = KB[id], p = it && it.geometrie && it.geometrie.punt;
+  if (!p || !Number.isFinite(p.lon) || !Number.isFinite(p.lat)) throw new Error("geen punt in de kennisbank: " + id);
+  return { lon: p.lon, lat: p.lat };
+}
+
+// De sjablonen (plan T3 par. 3.4; T5a: wijs-relatie, niet-bij, richting, afstand, keten)
+var BRON = { laag: laag, kaart: kaart, item: item, punt: punt, meetIds: meetIds, naamVan: naamVan, namenVan: namenVan, omhulling: omhulling, relaties: relaties, ids: ids, buren: buren };
+var SJABLONEN = {
+  "wijs-aan": maakWijsAan(BRON), "benoem": maakBenoem(BRON), "relatie": maakRelatie(BRON),
+  "wijs-relatie": maakWijsRelatie(BRON), "niet-bij": maakNietBij(BRON), "richting": maakRichting(BRON), "afstand": maakAfstand(BRON), "keten": maakKeten(BRON),
+};
+
+// De plaatsen van richting en afstand: de items van een laag met een punt in de kennisbank (o.laag, o.prefix, o.zonder)
+function meetIds(o) { return vraagIds(laag(o.kaart, o.laag), o.prefix, o.zonder).filter(function(id) { var it = KB[id]; return !!(it && it.geometrie && it.geometrie.punt); }); }
 
 // De gevraagde items van een onderdeel
 export function onderdeelIds(o) {
   if (o.sjabloon === "relatie") return genoemdeIds(BRON, o);
-  return vraagIds(laag(o.kaart, o.laag), o.prefix, o.zonder);
+  if (o.sjabloon === "wijs-relatie") return genoemdeIds(BRON, { relatie: o.relatie, gevraagd: "naar", prefix: o.prefix, zonder: o.zonder });
+  if (o.sjabloon === "niet-bij") return genoemdNietBij(BRON, o);
+  if (o.sjabloon === "richting" || o.sjabloon === "afstand") return meetIds(o);
+  if (o.sjabloon === "keten") return ketenIds(BRON, o);
+  return vraagIds(laag(o.kaart, o.laag), o.prefix, o.zonder, alleenVan(BRON, o));
 }
 
 // Alle combinaties (onderdeel, item) van een vaardigheid
@@ -141,10 +168,13 @@ export function combinaties(def) {
 
 // De kennisitems (plan T4 par. 3): de sleutel "<item-id>|<kennissoort>". Per combinatie (onderdeel, item) de sleutels die de vraag
 // kan trainen: aanwijzen a, benoemen b, relatie r:<relatie> op het paar (de bron-id van); bij "van" met meer juiste bronnen elk paar
+// T5a: benoemen met alleen typen (nb24) is s; wijs-relatie en niet-bij zijn r: op het genoemde item (zoals relatie "naar"); richting,
+// afstand en keten hebben geen kennisitem (plan T5 par. 5.1)
 export function sleutelsVan(o, id) {
   if (o.sjabloon === "wijs-aan") return [id + "|a"];
-  if (o.sjabloon === "benoem") return [id + "|b"];
-  if (o.gevraagd === "naar") return [id + "|r:" + o.relatie];
+  if (o.sjabloon === "benoem") return [id + (o.alleenTypen ? "|s" : "|b")];
+  if (o.sjabloon === "richting" || o.sjabloon === "afstand" || o.sjabloon === "keten") return [];
+  if (o.sjabloon === "wijs-relatie" || o.sjabloon === "niet-bij" || o.gevraagd === "naar") return [id + "|r:" + o.relatie];
   return juisteIds(BRON, o, id).map(function(v) { return v + "|r:" + o.relatie; });
 }
 // Alle kennisitems van een vaardigheid (de itemVoorwaarde en de balk); schrijven (s) hoort er niet bij: dat is Meesterschap (T5)
@@ -163,8 +193,9 @@ function kennisVan(def, oi, id, q) {
   var o = def.onderdelen[oi], sleutel;
   if (o.sjabloon === "relatie") sleutel = (o.gevraagd === "van" ? q.relatie.antwoordId : q.relatie.genoemd) + "|r:" + o.relatie;
   else sleutel = sleutelsVan(o, id)[0];
+  if (!sleutel) return null;
   var k = { sleutel: sleutel, defId: def.id, o: oi, id: id };
-  if (o.sjabloon === "benoem" && o.typen) k.typ = id + "|s";
+  if (o.sjabloon === "benoem" && o.typen && !o.alleenTypen) k.typ = id + "|s";
   return k;
 }
 
@@ -175,8 +206,8 @@ export function startSessie(items, datum) { SESSIE.start(items, datum); }
 // Na elk antwoord: het kennisrecord voor de lijst results (invoer: "kaart", "naam" of "choice")
 export function opAntwoord(q, goed, invoer) { return SESSIE.antwoord(q, goed, invoer); }
 // De itemVoorwaarde op de stand van nu (voor de live promotie in het oefenscherm, plan T4 par. 4.5)
-export function itemsOk(def) { return allesMinstensInOntwikkeling(SESSIE.items(), sleutelsVanDef(def), false); }
-export function itemTelling(def, items) { return telling(items || SESSIE.items(), sleutelsVanDef(def), false); }
+export function itemsOk(def) { return allesMinstensInOntwikkeling(SESSIE.items(), sleutelsVanDef(def), def.niveau === "M"); }
+export function itemTelling(def, items) { return telling(items || SESSIE.items(), sleutelsVanDef(def), def.niveau === "M"); }
 export function sessieItems() { return SESSIE.items(); }
 
 // Een vraag van een vaardigheid: eerst de keuze van de sessie (fouten, herhaling, aan de beurt, nieuw), anders een ronde langs
@@ -194,9 +225,55 @@ export function maak(def, defs) {
   }
   var o = k.def.onderdelen[k.o];
   var q = SJABLONEN[o.sjabloon](o, k.id);
-  q.kennis = kennisVan(k.def, k.o, k.id, q);
+  var kn = kennisVan(k.def, k.o, k.id, q);
+  if (kn) q.kennis = kn;
   if (k.def !== def) q.vanSkillId = k.def.id;
   SESSIE.gevraagd(q);
   return q;
 }
 export function maakMet(def, o, id) { return SJABLONEN[o.sjabloon](o, id); }
+
+// De meester zonder AI: uitleg bij een verwisseling (plan T5 par. 4.7). Alleen uit de gegevens; ontbreekt een gegeven, dan valt dat
+// stuk weg; zonder enig stuk null (dan toont het oefenscherm niets extra).
+//   richting   het juiste item ten opzichte van het gekozen item, op de kaart (noord is boven), alleen bij een duidelijke richting
+//              (dezelfde marge als S6 met 8 windrichtingen, MARGE_8); niet bij lijnen
+//   buren      "Ze grenzen aan elkaar." (de buren uit de kaart)
+//   relatie    grenst-aan: of het gekozen item wel of niet aan het genoemde grenst; provinciehoofdstad: de provincie van de gekozen stad
+function middenOpKaart(id) {
+  var gevonden = null;
+  Object.keys(KAARTEN).forEach(function(k) { KAARTEN[k].lagen.forEach(function(l) { if (gevonden) return; (l.doelen || []).forEach(function(d) { if (d.id === id && !gevonden) gevonden = d.soort === "punt" ? { x: d.x, y: d.y } : d.soort === "vlak" ? { x: d.mx, y: d.my } : null; }); }); });
+  return gevonden;
+}
+function idVanNaam(naam, antwoordId) {
+  var voor = antwoordId.split("-").slice(0, 2).join("-") + "-", soort = KB[antwoordId] ? KB[antwoordId].soort : null;
+  var zelfde = Object.keys(KB).filter(function(id) { return id.indexOf(voor) === 0 && KB[id].naam.waarde === naam; });
+  if (zelfde.length === 1) return zelfde[0];
+  var soortGelijk = Object.keys(KB).filter(function(id) { return KB[id].soort === soort && KB[id].naam.waarde === naam; });
+  return soortGelijk.length === 1 ? soortGelijk[0] : null;
+}
+export function uitlegBijFout(q, keuze) {
+  var antwoordId = q.kaart ? q.kaart.antwoordId : q.relatie ? q.relatie.antwoordId : null;
+  if (!antwoordId || typeof keuze !== "string") return null;
+  var gekozen = idVanNaam(keuze, antwoordId);
+  if (!gekozen || gekozen === antwoordId) return null;
+  var delen = [], A = naamVan(antwoordId), B = naamVan(gekozen);
+  var r = q.relatie;
+  if (r && r.relatie === "grenst-aan") {
+    var wel = juisteIds(BRON, { relatie: "grenst-aan", gevraagd: "naar" }, r.genoemd).indexOf(gekozen) >= 0;
+    delen.push(B + (wel ? " grenst wel" : " grenst niet") + " aan " + naamVan(r.genoemd) + ".");
+  } else {
+    var pa = middenOpKaart(antwoordId), pb = middenOpKaart(gekozen);
+    if (pa && pb) {
+      var graden = (Math.atan2(pa.x - pb.x, pb.y - pa.y) * 180 / Math.PI + 360) % 360, w = windrichting(graden, MARGE_8);
+      if (w >= 0) delen.push(A + " ligt ten " + WINDSTREKEN[w] + " van " + B + ".");
+    }
+    if (buren(antwoordId).indexOf(gekozen) >= 0) delen.push("Ze grenzen aan elkaar.");
+  }
+  if (r && r.relatie === "provinciehoofdstad-van") {
+    var vanGekozen = relaties("provinciehoofdstad-van").filter(function(x) { return x.van === gekozen; })[0];
+    var naarGekozen = relaties("provinciehoofdstad-van").filter(function(x) { return x.naar === gekozen; })[0];
+    if (vanGekozen) delen.push(B + " is de hoofdstad van " + naamVan(vanGekozen.naar) + ".");
+    else if (naarGekozen) delen.push("De hoofdstad van " + B + " is " + naamVan(naarGekozen.van) + ".");
+  }
+  return delen.length ? delen.join(" ") : null;
+}

@@ -13,12 +13,12 @@
 //              zijn namen. Zonder Typen (of zonder o.typen) is het kiezen.
 
 import { shuffle } from "../../skills/helpers.js";
-import { vraagIds } from "./wijs-aan.js";
+import { vraagIds, alleenVan, beginbeeld } from "./wijs-aan.js";
 import { kiesFout } from "./foutkeuze.js";
 
 export function maakBenoem(bron) {
   return function(o, id) {
-    var l = bron.laag(o.kaart, o.laag), ids = vraagIds(l, o.prefix, o.zonder);
+    var l = bron.laag(o.kaart, o.laag), ids = vraagIds(l, o.prefix, o.zonder, alleenVan(bron, o));
     if (ids.indexOf(id) < 0) throw new Error("gebied " + id + " hoort niet bij de laag " + o.laag);
     var naam = bron.naamVan(id);
     var anderen = kiesFout(ids.filter(function(x) { return x !== id; }), bron.buren(id), 3).map(function(x) { return bron.naamVan(x); });
@@ -28,9 +28,11 @@ export function maakBenoem(bron) {
       choices: shuffle([naam].concat(anderen)),
       tekstVraag: true,
       smallChoices: true,
-      kaart: { kaart: o.kaart, laag: o.laag, antwoordId: id, focus: bron.omhulling(o.kaart, o.laag, ids), stand: "toon" },
+      kaart: { kaart: o.kaart, laag: o.laag, antwoordId: id, focus: beginbeeld(bron, o, ids), stand: "toon" },
     };
-    if (o.typen) {
+    // o.alleenTypen (T5a, nb24, Meesterschap): altijd typen, ook als de modus op Kiezen staat (het oefenscherm, alleenTypen)
+    if (o.alleenTypen) q.alleenTypen = true;
+    if (o.typen || o.alleenTypen) {
       q.inputType = "naam";
       q.gradingRule = "naam_varianten";
       q.namen = {

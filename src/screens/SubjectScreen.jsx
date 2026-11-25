@@ -41,6 +41,17 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
     return function() { weg = true; };
   }, [subjectId]);
   var topoItems = (save.topo && save.topo.items) || {};
+  var NIVEAU_NAAM = { B: "Basis", G: "Gevorderd", M: "Meesterschap" };
+  var vorigNiveau = null;
+  function niveauBereikt(niveau) {
+    return skillOrder.every(function(id) {
+      var sk = skillList.find(function(x) { return x.id === id; });
+      if (!sk || sk.niveau !== niveau) return true;
+      if (!sk.itemVoorwaarde) return !!(skillStats[id] && skillStats[id].mastered);
+      var t = telling(topoItems, sk.kennisSleutels(), !!sk.meesterschap);
+      return t.totaal > 0 && t.beheerst === t.totaal;
+    });
+  }
 
   var nextSkillInfo = getNextSkill(subjectId, skillStats);
   var activeSkillId = nextSkillInfo.skillId;
@@ -273,7 +284,8 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
                 : (skill.minCorrect > 0 ? Math.min((stats.correct || 0) / skill.minCorrect, 0.99) : 0);
 
               // Topografie: de balk is het aandeel gekende (beheerste) kennisitems; een regel met hoeveel gekend en hoeveel nog nieuw
-              var items = topoKlaar && skill.itemVoorwaarde && skill.kennisSleutels ? telling(topoItems, skill.kennisSleutels(), false) : null;
+              var items = topoKlaar && skill.itemVoorwaarde && skill.kennisSleutels ? telling(topoItems, skill.kennisSleutels(), !!skill.meesterschap) : null;
+              if (items && items.totaal === 0) items = null;
               var itemRegel = null;
               if (items) {
                 started  = started || items.nieuw < items.totaal;
@@ -292,7 +304,19 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
                   ? subject.color + "50"
                   : A.border;
 
-              return (
+              // Topografie (plan T5 par. 4.8): een kopje boven de eerste zichtbare vaardigheid van elk niveau, met een vinkje als het
+              // niveau bereikt is (alle items gekend; een vaardigheid zonder items: beheerst). Zonder niveau (rekenen): geen kopje.
+              var kop = null;
+              if (skill.niveau && skill.niveau !== vorigNiveau) {
+                vorigNiveau = skill.niveau;
+                var bereikt = topoKlaar && niveauBereikt(skill.niveau);
+                kop = (
+                  <div key={"niveau-" + skill.niveau} data-niveau={skill.niveau} style={{ fontSize: 12, fontWeight: 800, color: A.textSoft, textTransform: "uppercase", letterSpacing: 0.6, margin: "6px 2px 0" }}>
+                    {NIVEAU_NAAM[skill.niveau] + (bereikt ? " ✓" : "")}
+                  </div>
+                );
+              }
+              var kaartVak = (
                 <div
                   key={skill.id}
                   role={onPracticeSkill ? "button" : undefined}
@@ -390,6 +414,7 @@ export default function SubjectScreen({ subjectId, save, onBack, onStartLevel, o
                   </div>
                 </div>
               );
+              return kop ? [kop, kaartVak] : kaartVak;
             })}
           </div>
         </div>

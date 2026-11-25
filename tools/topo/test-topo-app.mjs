@@ -14,6 +14,8 @@
 // - T4 (plan T4 par. 5): hooks; kennisitems per vaardigheid; een fout komt na 3 tot 5 vragen terug; nooit twee keer achter elkaar
 //   hetzelfde kennisitem; herhaling op vraag 5, 10 en 15 uit een eerdere vaardigheid; aan de beurt eerst; itemVoorwaarde; het kennisrecord;
 //   buren (par. 8): symmetrisch, bekende gevallen, en minstens een buur bij de foute keuzes als die er is.
+// - T5a (plan T5 par. 4 en 6): nb13, nb14, nb24, nb25, nb26 en nb28, elk 2.000 vragen onafhankelijk nagerekend (eigen formules voor
+//   richting en afstand); kennisitems, minCorrect, niveau; de uitleg bij een fout in bekende gevallen.
 // Mutanten: een andere naam dan de kennisbank, een antwoordId buiten de laag, een dubbele keuze en een naam die twee keer in een
 // laag staat moeten gevangen worden.
 
@@ -136,7 +138,7 @@ function controleerVraagRuw(def, q) {
   }
   return f;
 }
-for (var def of V.TOPO_NLBE_DEFS) {
+for (var def of V.TOPO_NLBE_DEFS.filter(function(d) { return !d.niveau; })) {
   var skill = V.TOPO_NLBE_SKILLS.filter(function(x) { return x.id === def.id; })[0], slecht = [], eersteRonde = {}, soorten = {};
   var combos = D.combinaties(def), verwacht = {}, alleCombos = {}, kennisDef = D.sleutelsVanDef(def);
   combos.forEach(function(c) { var o = def.onderdelen[c.o]; verwacht[o.sjabloon === "relatie" ? "relatie|" + o.relatie + "|" + o.gevraagd + "|" + c.id : o.sjabloon + "|" + o.laag + "|" + c.id] = 1; });
@@ -243,6 +245,7 @@ for (var def4 of V.TOPO_NLBE_DEFS) {
   D.startSessie({}, "2026-12-01");
   for (var z = 0; z < 120; z++) {
     var q4 = await vraag(sk4);
+    if (!q4.kennis) { vorige = null; sk4.opAntwoord(q4, true, "choice"); continue; }
     if (vorige && q4.kennis.sleutel === vorige && D.sleutelsVanDef(def4).length > 1) dubbel++;
     vorige = q4.kennis.sleutel;
     sk4.opAntwoord(q4, Math.random() < 0.6, "kaart");
@@ -325,6 +328,109 @@ for (var bdId of ["nb03", "nb04", "nb10", "nb11"]) {
   }
 }
 eis(metBuur > 500 && zonderBuur === 0, "T4: minstens een buur bij de foute keuzes als die er is (" + metBuur + " vragen met een buur, " + zonderBuur + " zonder)");
+
+
+// ── T5a: de nieuwe vaardigheden nb13, nb14, nb24, nb25, nb26 en nb28 (plan T5 par. 4 en 6) ──
+var NB = await import(bron("src/core/topo/sjablonen/niet-bij.js"));
+var LG = (await import(bron("src/core/topo/afgeleid/ligging-nlbe.js"))).LIGGING_NLBE;
+var HS = (await import(bron("src/core/topo/afgeleid/hoofdsteden-nlbe.js"))).HOOFDSTEDEN_NLBE;
+// onafhankelijke rekenregels (een andere vorm dan meten.js): richting met vectoren, afstand met de cosinusregel
+function rad(x) { return x * Math.PI / 180; }
+function vec(p) { return [Math.cos(rad(p.lat)) * Math.cos(rad(p.lon)), Math.cos(rad(p.lat)) * Math.sin(rad(p.lon)), Math.sin(rad(p.lat))]; }
+function koersVec(a, b) {
+  var A = vec(a), Bv = vec(b), noord = [-Math.sin(rad(a.lat)) * Math.cos(rad(a.lon)), -Math.sin(rad(a.lat)) * Math.sin(rad(a.lon)), Math.cos(rad(a.lat))], oost = [-Math.sin(rad(a.lon)), Math.cos(rad(a.lon)), 0];
+  var d = [Bv[0] - A[0], Bv[1] - A[1], Bv[2] - A[2]], n_ = d[0] * noord[0] + d[1] * noord[1] + d[2] * noord[2], o_ = d[0] * oost[0] + d[1] * oost[1] + d[2] * oost[2];
+  return (Math.atan2(o_, n_) * 180 / Math.PI + 360) % 360;
+}
+function afstandCos(a, b) { var c = Math.sin(rad(a.lat)) * Math.sin(rad(b.lat)) + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.cos(rad(b.lon - a.lon)); return 6371 * Math.acos(Math.min(1, Math.max(-1, c))); }
+var WR = ["noord", "noordoost", "oost", "zuidoost", "zuid", "zuidwest", "west", "noordwest"];
+function provVan(stad) { var r = LG.filter(function(x) { return x.type === "ligt-in" && x.van === stad; }); return r.length === 1 ? r[0].naar : null; }
+function buurIds(p) { return LG.filter(function(x) { return x.type === "grenst-aan" && (x.van === p || x.naar === p); }).map(function(x) { return x.van === p ? x.naar : x.van; }); }
+function controleerT5(def, q) {
+  var f = [], o;
+  if (q.meting) o = def.onderdelen.filter(function(x) { return x.sjabloon === q.meting.soort; })[0];
+  else if (q.keten) o = def.onderdelen.filter(function(x) { return x.sjabloon === "keten" && q.question === x.tekst(D.naamVan(q.keten.begin)); })[0];
+  else o = q.kennis ? def.onderdelen[q.kennis.o] : null;
+  if (!o) return ["geen onderdeel"];
+  if (q.choices.indexOf(q.answer) < 0) f.push("antwoord niet bij de keuzes");
+  if (new Set(q.choices).size !== q.choices.length) f.push("dubbele keuze");
+  if (o.sjabloon === "relatie") {
+    var juist = RS.juisteIds(RBRON, o, q.relatie.genoemd);
+    if (juist.indexOf(q.relatie.antwoordId) < 0 || q.answer !== D.naamVan(q.relatie.antwoordId)) f.push("antwoord niet in de relatie");
+    var pool = RS.poolIds(RBRON, o, q.relatie.genoemd).filter(function(x) { return juist.indexOf(x) < 0 && x !== q.relatie.genoemd; }).map(D.naamVan);
+    if (q.choices.some(function(c) { return c !== q.answer && pool.indexOf(c) < 0; })) f.push("foute keuze buiten de pool (of het genoemde item, of een ander juist antwoord)");
+    if (o.relatie === "ligt-in" && provVan(q.relatie.genoemd) !== q.relatie.antwoordId) f.push("ligt-in klopt niet met ligging-nlbe");
+    if (o.relatie === "grenst-aan" && buurIds(q.relatie.genoemd).indexOf(q.relatie.antwoordId) < 0) f.push("grenst-aan klopt niet");
+  } else if (o.sjabloon === "wijs-relatie") {
+    if (provVan(q.relatie.genoemd) !== q.kaart.antwoordId || q.answer !== D.naamVan(q.kaart.antwoordId)) f.push("aanwijzen: niet de provincie van de stad");
+    if (q.kaart.laag !== o.laag || q.inputType !== "kaart" || q.question !== o.tekst(D.naamVan(q.relatie.genoemd))) f.push("aanwijzen: laag, invoer of vraagtekst");
+  } else if (o.sjabloon === "niet-bij") {
+    var X = q.relatie.genoemd, bu = buurIds(X), ant = q.relatie.antwoordId;
+    if (bu.length < 3 || bu.indexOf(ant) >= 0 || ant === X || ant.slice(0, 7) !== X.slice(0, 7)) f.push("niet-bij: het antwoord is een buur, X zelf of uit een ander land");
+    var andere = q.choices.filter(function(c) { return c !== q.answer; });
+    if (andere.length !== 3 || !andere.every(function(c) { return bu.map(D.naamVan).indexOf(c) >= 0; })) f.push("niet-bij: de 3 andere keuzes zijn niet alle buren");
+  } else if (o.sjabloon === "benoem") {
+    if (!q.alleenTypen || q.inputType !== "naam" || q.gradingRule !== "naam_varianten") f.push("lege kaart: niet alleen typen");
+    var ids = VS.vraagIds(D.laag(o.kaart, o.laag), o.prefix, o.zonder, VS.alleenVan({ relaties: D.relaties }, o));
+    if (ids.indexOf(q.kaart.antwoordId) < 0 || q.answer !== D.naamVan(q.kaart.antwoordId)) f.push("lege kaart: antwoord buiten de vraagset");
+    if (o.metRelatie && !HS.some(function(r) { return r.type === o.metRelatie && r.van === q.kaart.antwoordId; })) f.push("lege kaart: geen provinciehoofdstad");
+    if (JSON.stringify(q.namen.juist) !== JSON.stringify(D.namenVan(q.kaart.antwoordId))) f.push("namen.juist");
+  } else if (o.sjabloon === "wijs-aan") {
+    var k = D.kaart(o.kaart);
+    if (JSON.stringify(q.kaart.focus) !== JSON.stringify([0, 0, k.breedte, k.hoogte])) f.push("zonder hulp: het beginbeeld is niet de hele kaart");
+    if (q.kaart.antwoordId === "stad-nl-ijmond" || q.answer !== D.naamVan(q.kaart.antwoordId)) f.push("zonder hulp: IJmond of verkeerde naam");
+  } else if (o.sjabloon === "richting") {
+    var g = koersVec(D.punt(q.meting.van), D.punt(q.meting.naar)), sec = Math.round(g / 45) % 8, af = Math.abs(((g - sec * 45) + 540) % 360 - 180);
+    if (q.answer !== WR[sec] || 22.5 - af < 10) f.push("richting: " + q.answer + " bij " + g.toFixed(1) + " graden");
+    if (q.choices.length !== 4 || !q.choices.every(function(c) { return WR.indexOf(c) >= 0; })) f.push("richting: keuzes");
+  } else if (o.sjabloon === "afstand") {
+    var d = afstandCos(D.punt(q.meting.van), D.punt(q.meting.naar)), getal = q.choices.map(function(c) { return Number(c.replace(" km", "")); }).sort(function(a, b) { return a - b; });
+    if (q.answer !== Math.round(d / 5) * 5 + " km" || d < 40) f.push("afstand: " + q.answer + " bij " + d.toFixed(1) + " km");
+    if (getal.length !== 4 || !getal.every(function(x, i) { return i === 0 || x / getal[i - 1] >= 1.25; })) f.push("afstand: keuzes niet 25% uit elkaar (" + getal.join(", ") + ")");
+  } else if (o.sjabloon === "keten") {
+    var b = q.keten.begin, p = provVan(b), eind;
+    if (o.stappen[1].relatie === "provinciehoofdstad-van") { var h = HS.filter(function(r) { return r.type === "provinciehoofdstad-van" && r.naar === p; }); eind = h.length === 1 ? h[0].van : null; }
+    else eind = provVan(p);
+    if (!p || eind !== q.keten.eind || q.answer !== D.naamVan(eind) || eind === b) f.push("keten: het eindantwoord klopt niet of staat in de vraag");
+    if (q.choices.indexOf(D.naamVan(b)) >= 0) f.push("keten: het beginitem staat bij de keuzes");
+    if (q.inputType !== "naam") f.push("keten: geen naaminvoer");
+  }
+  return f;
+}
+for (var dT of V.TOPO_NLBE_DEFS.filter(function(d) { return d.niveau; })) {
+  var skT = vaardigheid(dT.id), slechtT = [], eersteT = {}, allesT = {}, kT = D.sleutelsVanDef(dT), nT = 0, combosT = D.combinaties(dT);
+  D.startSessie({}, "2026-12-01");
+  for (var iT = 0; iT < 2000; iT++) {
+    await Promise.resolve();
+    var qT = skT.generate();
+    if (qT.vanSkillId) continue;   // herhaling uit een eerdere vaardigheid: daar gecontroleerd
+    nT++;
+    if (qT.kennis && nT <= kT.length) eersteT[qT.kennis.sleutel] = 1;
+    allesT[qT.kennis ? qT.kennis.o + "|" + qT.kennis.id : JSON.stringify(qT.meting || qT.keten)] = 1;
+    var fT = controleerT5(dT, qT);
+    if (fT.length && slechtT.length < 3) slechtT.push(qT.question + ": " + fT.join("; "));
+  }
+  eis(slechtT.length === 0, dT.id + ": 2000 vragen onafhankelijk nagerekend (" + slechtT.join(" | ") + ")");
+  if (dT.zonderItems) {
+    eis(dT.minCorrect === 12 && kT.length === 0 && !skT.itemVoorwaarde && !skT.kennisSleutels, dT.id + ": zonder kennisitems, geen itemVoorwaarde, minCorrect 12");
+  } else {
+    eis(dT.minCorrect === kT.length && skT.itemVoorwaarde === true, dT.id + ": minCorrect is het aantal kennisitems (" + kT.length + ") en itemVoorwaarde");
+    eis(Object.keys(eersteT).length === kT.length, dT.id + ": elk kennisitem in de eerste ronde (" + Object.keys(eersteT).length + " van " + kT.length + ")");
+    eis(Object.keys(allesT).length === combosT.length, dT.id + ": elke combinatie komt voor (" + Object.keys(allesT).length + " van " + combosT.length + ")");
+  }
+  eis(skT.niveau === dT.niveau && !!skT.meesterschap === (dT.niveau === "M" && !dT.zonderItems), dT.id + ": niveau " + dT.niveau + " en meesterschap");
+}
+eis(D.sleutelsVanDef(defVan("nb13")).length === 38 && D.sleutelsVanDef(defVan("nb14")).length === 22 && D.sleutelsVanDef(defVan("nb24")).length === 42 && D.sleutelsVanDef(defVan("nb25")).length === 42, "T5a: kennisitems nb13 38, nb14 22, nb24 42, nb25 42");
+eis(D.sleutelsVanDef(defVan("nb24")).every(function(s) { return /\|s$/.test(s); }), "T5a: nb24 vraagt schrijven (s)");
+eis(D.combinaties(defVan("nb28")).length === 26, "T5a: nb28 heeft 26 beginsteden met een zinvol eenduidig antwoord (" + D.combinaties(defVan("nb28")).length + ")");
+// de uitleg bij een fout (plan T5 par. 4.7): bekende gevallen
+var u1 = D.maakMet(defVan("nb02"), defVan("nb02").onderdelen[0], "prov-nl-pv26");
+eis(D.uitlegBijFout(u1, "Gelderland") === "Ze grenzen aan elkaar." && D.uitlegBijFout(u1, "Groningen") === "Utrecht ligt ten zuidwesten van Groningen.", "T5a: uitleg Utrecht (Gelderland: buren; Groningen: zuidwesten)");
+var u2 = D.maakMet(defVan("nb04"), defVan("nb04").onderdelen[1], "stad-nl-arnhem");
+eis(D.uitlegBijFout(u2, "Overijssel") === "Gelderland ligt ten zuidwesten van Overijssel. Ze grenzen aan elkaar. De hoofdstad van Overijssel is Zwolle.", "T5a: uitleg Arnhem bij Overijssel (" + D.uitlegBijFout(u2, "Overijssel") + ")");
+var u3 = D.maakMet(defVan("nb14"), defVan("nb14").onderdelen[1], "prov-nl-pv26");
+eis(D.uitlegBijFout(u3, "Gelderland") === "Gelderland grenst wel aan Utrecht.", "T5a: uitleg niet-bij");
+eis(D.uitlegBijFout(u1, "Utrecht") === null && D.uitlegBijFout(u1, "Parijs") === null, "T5a: geen uitleg bij het goede antwoord of een onbekende naam");
 
 console.log("test-topo-app: " + (fouten.length ? "FOUT" : "GOED") + ": " + (n - fouten.length) + " controles geslaagd, " + fouten.length + " mislukt");
 fouten.forEach(function(f) { console.log("  - " + f); });

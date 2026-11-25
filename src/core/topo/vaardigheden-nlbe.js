@@ -20,7 +20,17 @@ export var TOPO_NLBE_KAARTEN = ["nlbe"];
 var K = "nlbe";
 function wijsAan(laag, prefix, soortwoord, zonder) { return { sjabloon: "wijs-aan", kaart: K, laag: laag, prefix: prefix, soortwoord: soortwoord, zonder: zonder || [] }; }
 function benoem(laag, prefix, vraag, typen) { return { sjabloon: "benoem", kaart: K, laag: laag, prefix: prefix, vraag: vraag, typen: !!typen, zonder: [] }; }
-function relatie(rel, gevraagd, prefix, pool, tekst) { return { sjabloon: "relatie", relatie: rel, gevraagd: gevraagd, prefix: prefix, pool: pool, tekst: tekst }; }
+function relatie(rel, gevraagd, prefix, pool, tekst, zonder) { return { sjabloon: "relatie", relatie: rel, gevraagd: gevraagd, prefix: prefix, pool: pool, tekst: tekst, zonder: zonder || [] }; }
+// T5a (plan T5 par. 4)
+function wijsRelatie(rel, prefix, laag, tekst, zonder) { return { sjabloon: "wijs-relatie", relatie: rel, prefix: prefix, kaart: K, laag: laag, tekst: tekst, zonder: zonder || [] }; }
+function nietBij(rel, prefix, pool, tekst) { return { sjabloon: "niet-bij", relatie: rel, prefix: prefix, pool: pool, tekst: tekst }; }
+function typLeeg(laag, prefix, vraag, metRelatie) { return { sjabloon: "benoem", kaart: K, laag: laag, prefix: prefix, vraag: vraag, typen: false, alleenTypen: true, metRelatie: metRelatie || null, zonder: [] }; }
+function wijsVrij(laag, prefix, soortwoord, zonder) { return { sjabloon: "wijs-aan", kaart: K, laag: laag, prefix: prefix, soortwoord: soortwoord, zonder: zonder || [], vrijeStart: true }; }
+function meet(soort) { return { sjabloon: soort, kaart: K, laag: "steden", prefix: "", zonder: [IJMOND], minKm: 40 }; }
+function keten(stappen, prefix, tekst) { return { sjabloon: "keten", stappen: stappen, prefix: prefix, zonder: [IJMOND], tekst: tekst }; }
+var IJMOND = "stad-nl-ijmond";
+function provNL() { return { soort: "provincie", prefix: "prov-nl-" }; }
+function provBE() { return { soort: "provincie", prefix: "prov-be-" }; }
 
 var DEFS = [
   { id: "nb01", label: "Nederland en zijn buren", desc: "Nederland, België en Duitsland benoemen en aanwijzen", minCorrect: 6, onderdelen: [
@@ -53,6 +63,30 @@ var DEFS = [
     relatie("provinciehoofdstad-van", "naar", "stad-be-", { soort: "provincie", prefix: "prov-be-" }, function(n) { return "Van welke Belgische provincie is " + n + " de hoofdstad?"; }) ] },
   { id: "nb12", label: "België: steden aanwijzen", desc: "Acht Belgische steden; Brussel, Leuven en Waver volgen later", minCorrect: 8, onderdelen: [
     wijsAan("steden", "stad-be-", "de stad") ] },
+  // Gevorderd en Meesterschap, de vaardigheden die met de kennisbank van nu kunnen (plan T5a). nb15 tot en met nb23 en nb27 volgen in
+  // T5c op hun plek in de rij. minCorrect = het aantal kennisitems (elk moet minstens een keer goed zijn); zonder kennisitems 12.
+  { id: "nb13", niveau: "G", label: "Steden: in welke provincie?", desc: "Bij elke stad de provincie kiezen of aanwijzen", minCorrect: 38, onderdelen: [
+    relatie("ligt-in", "naar", "stad-nl-", provNL(), function(n) { return "In welke provincie ligt " + n + "?"; }, [IJMOND]),
+    relatie("ligt-in", "naar", "stad-be-", provBE(), function(n) { return "In welke Belgische provincie ligt " + n + "?"; }),
+    wijsRelatie("ligt-in", "stad-nl-", "provincies-nl", function(n) { return "Tik de provincie aan waarin " + n + " ligt."; }, [IJMOND]),
+    wijsRelatie("ligt-in", "stad-be-", "provincies-be", function(n) { return "Tik de Belgische provincie aan waarin " + n + " ligt."; }) ] },
+  { id: "nb14", niveau: "G", label: "Buurprovincies", desc: "Welke provincies grenzen aan elkaar, in Nederland en in België", minCorrect: 22, onderdelen: [
+    relatie("grenst-aan", "naar", "prov-nl-", provNL(), function(n) { return "Welke provincie grenst aan " + n + "?"; }),
+    nietBij("grenst-aan", "prov-nl-", provNL(), function(n) { return "Welke provincie grenst níet aan " + n + "?"; }),
+    relatie("grenst-aan", "naar", "prov-be-", provBE(), function(n) { return "Welke Belgische provincie grenst aan " + n + "?"; }),
+    nietBij("grenst-aan", "prov-be-", provBE(), function(n) { return "Welke Belgische provincie grenst níet aan " + n + "?"; }) ] },
+  { id: "nb24", niveau: "M", label: "Lege kaart: provincies en hoofdsteden", desc: "De naam typen van een provincie of provinciehoofdstad, zonder keuzes", minCorrect: 42, onderdelen: [
+    typLeeg("provincies-nl", "", "Typ de naam van de oranje provincie."),
+    typLeeg("provincies-be", "", "Typ de naam van de oranje Belgische provincie."),
+    typLeeg("steden", "", "Typ de naam van deze provinciehoofdstad.", "provinciehoofdstad-van") ] },
+  { id: "nb25", niveau: "M", label: "Lege kaart: steden en rivieren", desc: "Aanwijzen op de hele kaart, zonder startbeeld; de meren volgen later", minCorrect: 42, onderdelen: [
+    wijsVrij("steden", "", "de stad", [IJMOND]),
+    wijsVrij("rivieren", "", "de rivier") ] },
+  { id: "nb26", niveau: "M", zonderItems: true, label: "Richting en afstand", desc: "In welke richting en hoe ver hemelsbreed, tussen twee steden", minCorrect: 12, onderdelen: [
+    meet("richting"), meet("afstand") ] },
+  { id: "nb28", niveau: "M", zonderItems: true, label: "Combinatievragen", desc: "Twee stappen: de stad, de provincie en dan de hoofdstad of het gewest", minCorrect: 12, onderdelen: [
+    keten([{ relatie: "ligt-in", richting: "heen" }, { relatie: "provinciehoofdstad-van", richting: "terug" }], "stad-", function(n) { return "Wat is de hoofdstad van de provincie waarin " + n + " ligt?"; }),
+    keten([{ relatie: "ligt-in", richting: "heen" }, { relatie: "ligt-in", richting: "heen" }], "stad-be-", function(n) { return "In welk gewest ligt de provincie van " + n + "?"; }) ] },
 ];
 
 // Tip, uitleg en voorbeeld bij een fout (het oefenscherm toont ze na 1, 2 en 3 fouten; elke vaardigheid heeft ze, net als in
@@ -130,6 +164,42 @@ var HULP = {
     uitleg: "Elke stad is een stip op de kaart. Brugge ligt in het westen, dicht bij de kust; Gent iets oostelijker. Bergen en Namen liggen in het zuiden (Wallonië), Hasselt in het oosten en Aarlen helemaal in het zuidoosten.",
     voorbeeld: "Tik de stad Gent aan: begin bij Brugge in het westen en ga naar het oosten. De volgende grote stip is Gent.",
   },
+  nb13: {
+    strategy: "Ligging",
+    tip: "Zoek de stad eerst op de kaart in je hoofd: ligt hij in het noorden, het westen, het oosten of het zuiden? Dan weet je de provincie.",
+    uitleg: "Elke stad ligt in een provincie. Rotterdam, Den Haag, Leiden, Dordrecht en Zoetermeer liggen in Zuid-Holland; Eindhoven, Tilburg en Breda in Noord-Brabant. Bij Aanwijzen tik je het vlak van de provincie aan, niet de stip van de stad.",
+    voorbeeld: "In welke provincie ligt Nijmegen? Nijmegen ligt in het oosten, aan de Waal, vlak bij Duitsland: dat is Gelderland.",
+  },
+  nb14: {
+    strategy: "Buren",
+    tip: "Twee provincies zijn buren als ze een grens delen. Een punt waar ze elkaar alleen raken telt niet. Provincies aan de andere kant van de landsgrens tellen hier niet mee.",
+    uitleg: "Gelderland heeft in Nederland de meeste buren: Flevoland, Limburg, Noord-Brabant, Overijssel, Utrecht en Zuid-Holland. Groningen, Zeeland en Limburg hebben er maar twee.",
+    voorbeeld: "Welke provincie grenst níet aan Utrecht: Gelderland, Noord-Holland, Zuid-Holland of Drenthe? Drenthe ligt in het noordoosten, ver van Utrecht.",
+  },
+  nb24: {
+    strategy: "Uit je hoofd",
+    tip: "Hier zijn geen keuzes: je typt de naam zelf. Hoofdletters, accenten en streepjes tellen niet mee; een kleine tikfout telt wel als fout.",
+    uitleg: "Je ziet een provincie of een provinciehoofdstad in het oranje. Typ de naam zoals op de kaarten in de vorige vaardigheden. Bij een Belgische plaats is de Nederlandse naam goed (Luik, Bergen, Namen, Aarlen).",
+    voorbeeld: "De oranje stip ligt in het zuidoosten, aan de Maas, helemaal onderin Limburg: typ Maastricht.",
+  },
+  nb25: {
+    strategy: "Uit je hoofd",
+    tip: "De kaart begint helemaal uitgezoomd. Zoek eerst de streek, zoom dan zelf in en tik pas aan als je het zeker weet.",
+    uitleg: "Steden en rivieren door elkaar, op de hele kaart van Nederland en België. Een stad is een stip, een rivier een lijn.",
+    voorbeeld: "Tik de rivier de IJssel aan: hij loopt van de Rijn bij Arnhem naar het noorden, naar het IJsselmeer.",
+  },
+  nb26: {
+    strategy: "Rekenen",
+    tip: "Noord is boven op de kaart. Kijk of de tweede stad vooral hoger of lager ligt (noord of zuid), en vooral links of rechts (west of oost).",
+    uitleg: "De richting is de koers van de eerste stad naar de tweede. Hemelsbreed is in een rechte lijn, niet over de weg. Er komt alleen een vraag als de richting duidelijk is.",
+    voorbeeld: "Groningen vanuit Utrecht: Groningen ligt hoger (noord) en rechts (oost) op de kaart, dus noordoost.",
+  },
+  nb28: {
+    strategy: "Twee stappen",
+    tip: "Doe het in twee stappen: eerst de provincie van de stad, dan de hoofdstad of het gewest van die provincie.",
+    uitleg: "Een combinatievraag gebruikt twee feiten na elkaar. Voorbeeld: Eindhoven ligt in Noord-Brabant, en de hoofdstad van Noord-Brabant is 's-Hertogenbosch.",
+    voorbeeld: "Wat is de hoofdstad van de provincie waarin Tilburg ligt? Tilburg ligt in Noord-Brabant; de hoofdstad daarvan is 's-Hertogenbosch.",
+  },
 };
 
 var RUW = DEFS.map(function(v) {
@@ -143,20 +213,27 @@ var RUW = DEFS.map(function(v) {
 });
 
 var GEMAAKT = createSkills("topo_nlbe", RUW);
-// Mag de vaardigheid namen typen (een onderdeel benoem met typen)? Dan toont de modus de schakelaar Kiezen | Typen (inputResolve)
-GEMAAKT.list.forEach(function(sk, i) { if (DEFS[i].onderdelen.some(function(o) { return o.typen; })) sk.typenNaam = true; });
+// Mag de vaardigheid namen typen (een onderdeel benoem met typen, of een keten)? Dan toont de modus de schakelaar Kiezen | Typen
+// (inputResolve)
+GEMAAKT.list.forEach(function(sk, i) { if (DEFS[i].onderdelen.some(function(o) { return o.typen || o.sjabloon === "keten"; })) sk.typenNaam = true; });
 // Beheersing per item (plan T4 par. 4.5 en 5.2): de hooks die het oefenscherm en de voortgang gebruiken. Rekenen en wiskunde hebben ze
 // niet; daar gaat alles zoals voor T4.
 //   itemVoorwaarde  mastered pas als ook elk kennisitem minstens in ontwikkeling is
 //   kennisSleutels  de kennisitems van de vaardigheid (gaan mee in het sessieresultaat, skillItems)
 //   extraVoorwaarde de itemVoorwaarde op de stand van nu, voor de live promotie
 //   opAntwoord      verwerkt een antwoord in de sessie; geeft het kennisrecord voor de lijst results
+// T5a (plan T5 par. 4.8 en 5.1): niveau B, G of M; meesterschap (de itemVoorwaarde telt alleen goed zonder opties); een vaardigheid
+// zonder kennisitems (nb26, nb28) heeft geen itemVoorwaarde en wordt beheerst met de bestaande regel, zoals kl05
 GEMAAKT.list.forEach(function(sk, i) {
   var def = DEFS[i];
+  sk.niveau = def.niveau || "B";
+  sk.opAntwoord = function(q, goed, invoer) { return topo().opAntwoord(q, goed, invoer); };
+  sk.uitlegBijFout = function(q, keuze) { return topo().uitlegBijFout(q, keuze); };
+  if (def.zonderItems) return;
   sk.itemVoorwaarde = true;
+  if (def.niveau === "M") sk.meesterschap = true;
   sk.kennisSleutels = function() { return topo().sleutelsVanDef(def); };
   sk.extraVoorwaarde = function() { return topo().itemsOk(def); };
-  sk.opAntwoord = function(q, goed, invoer) { return topo().opAntwoord(q, goed, invoer); };
 });
 export var TOPO_NLBE_SKILLS = GEMAAKT.list;
 export var TOPO_NLBE_ORDER = DEFS.map(function(v) { return v.id; });

@@ -169,6 +169,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // uitlegVisible: kaart zichtbaar na fout (blijft staan tot "Volgende vraag" getikt)
   // Bijna goed (namen typen, Topografie): de melding "let op de spelling" bij deze vraag (telt als fout)
   var spelState = useState(false), spelMelding = spelState[0], setSpelMelding = spelState[1];
+  // Topografie (plan T5 par. 4.7): de uitleg bij een verwisseling, uit de gegevens (skill.uitlegBijFout); anders null
+  var fuState = useState(null), foutUitleg = fuState[0], setFoutUitleg = fuState[1];
   var uitlegVisState = useState(false);
   var uitlegVisible  = uitlegVisState[0];
   var setUitlegVisible = uitlegVisState[1];
@@ -320,6 +322,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     setFbLevel(0);
     setUitlegVisible(false);
     setSpelMelding(false);
+    setFoutUitleg(null);
     timeRef.current = Date.now();
   }
 
@@ -367,6 +370,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       if (sk && sk.itemVoorwaarde && sk.kennisSleutels && ss[id].total > 0) { skillItems = skillItems || {}; skillItems[id] = sk.kennisSleutels(); }
     });
     if (skillItems) uit.skillItems = skillItems;
+    // Meesterschap (plan T5 par. 4.3): de itemVoorwaarde telt dan alleen goed zonder opties
+    var mstr = null;
+    Object.keys(skillItems || {}).forEach(function(id) { var sk = getSkill(subjectId, id); if (sk && sk.meesterschap) { mstr = mstr || {}; mstr[id] = true; } });
+    if (mstr) uit.skillMeesterschap = mstr;
     return uit;
   }
 
@@ -479,6 +486,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     // Topografie (plan T4 par. 5.2): het kennisitem van het antwoord, met de invoer die de leerling had (kaart, typen of kiezen)
     var kennisRegel = currentQuestion.skill && currentQuestion.skill.opAntwoord ? currentQuestion.skill.opAntwoord(currentQuestion, isCorrect, invoerSoort) : null;
     if (kennisRegel) antwoordRegel.kennis = kennisRegel;
+    if (!isCorrect && currentQuestion.skill && currentQuestion.skill.uitlegBijFout) setFoutUitleg(currentQuestion.skill.uitlegBijFout(currentQuestion, choice));
     var newResults = results.concat([antwoordRegel]);
     setResults(newResults);
 
@@ -611,7 +619,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   // Typen: alleen als gekozen voor deze modus én deze vraag getypt mag worden (anders keuzes).
   // Past het cijferblok niet op het scherm, dan toont deze vraag toch de keuzes (typeFit).
   var inputInfo   = resolveInput(subjectId, currentQuestion.skillId, currentQuestion);
-  var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent" || inputInfo.inputType === "quantity" || inputInfo.inputType === "fraction" || inputInfo.inputType === "pair" || inputInfo.inputType === "naam");
+  // alleenTypen (Topografie, plan T5 par. 4.3: Meesterschap): typen, ook als de modus op Kiezen staat
+  var typeAllowed = (answerMode === "typen" || !!currentQuestion.alleenTypen) && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent" || inputInfo.inputType === "quantity" || inputInfo.inputType === "fraction" || inputInfo.inputType === "pair" || inputInfo.inputType === "naam");
   var typeMode    = typeAllowed && typeFit !== "kiezen";
   // De invoer van deze vraag zoals de leerling hem ziet (ook voor het kennisitem, plan T4 par. 3)
   var invoerSoort = inputInfo.inputType === "kaart" ? "kaart" : typeMode ? inputInfo.inputType : "choice";
@@ -1014,6 +1023,9 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
               }
               {feedback === "wrong" && spelMelding && (
                 <div style={{ fontSize: T.md, fontWeight: 700, marginTop: 4 }}>{"Bijna goed, let op de spelling."}</div>
+              )}
+              {feedback === "wrong" && foutUitleg && (
+                <div data-foutuitleg="1" style={{ fontSize: T.md, fontWeight: 700, marginTop: 4 }}>{foutUitleg}</div>
               )}
             </div>
           )}

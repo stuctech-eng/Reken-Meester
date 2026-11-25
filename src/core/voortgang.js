@@ -29,7 +29,7 @@ export function mergeSessionSkills(subjectId, stats, result, items) {
   for (var skillId in sessionSkills) {
     var ss = sessionSkills[skillId];
     if (skillItems && skillItems[skillId]) {
-      var ok = allesMinstensInOntwikkeling(stand, skillItems[skillId], false);
+      var ok = allesMinstensInOntwikkeling(stand, skillItems[skillId], !!(result.skillMeesterschap && result.skillMeesterschap[skillId]));
       out = updateSkillStats(subjectId, out, skillId, ss.correct, ss.total, (result.promotionSnapshots || {})[skillId], ok);
     } else {
       out = updateSkillStats(subjectId, out, skillId, ss.correct, ss.total, (result.promotionSnapshots || {})[skillId]);
