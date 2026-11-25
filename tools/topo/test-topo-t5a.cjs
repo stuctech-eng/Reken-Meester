@@ -8,6 +8,8 @@
 //   - nb13 los oefenen: een vraag "In welke provincie" of "Tik de provincie aan waarin"; bij aanwijzen het provincievlak;
 //   - nb02 los oefenen: na een fout aangewezen buurprovincie staat de uitleg onder de feedback ("Ze grenzen aan elkaar." of een richting);
 //   - nb24 los oefenen, terwijl de modus op Kiezen staat: een tekstvak en Controleer, geen keuzeknoppen; Controleer in beeld op 375;
+//   - in alle vaardigheden met benoemen (7): het oranje item staat minstens 40 px van de rand van het beeld; staat het beeld tegen de
+//     rand van de kaart zelf (verder schuiven kan niet), dan minstens 15 px;
 //   - geen fout van de pagina.
 
 var playwright = require("playwright");
@@ -89,6 +91,54 @@ function eis(ok, tekst) { n++; if (!ok) fouten.push(tekst); }
     if (MAP && maat[0] === 428) await t.screenshot({ path: MAP + "/t5a-nb24.png" });
     await t.close();
   }
+
+  // 5 bij elke vraag met een oranje gemarkeerd item staat dat item minstens 40 px van de rand van de kaart (Dick, 25-11-2026), in alle
+  //   vaardigheden met benoemen; per vaardigheid 12 vragen, elk goed beantwoord (typen, kiezen of aanwijzen, ook bij een herhaling)
+  var randFout = [], getoetst = 0;
+  async function goed(pg) {
+    // een vraag zonder kaart (een herhaling van een relatievraag): de testhaak kent het antwoord niet; een keuze aantikken en door
+    if (!(await pg.locator("svg[aria-label^='Kaart']").count())) { await pg.locator("button").nth(3).click(); return; }
+    var h = await pg.evaluate(function() { var h = window.__TOPO_APP; if (!h) return null; return { naam: h.doelen.filter(function(x) { return x.id === h.antwoordId; })[0].naam, id: h.antwoordId }; });
+    if (await pg.locator("input[aria-label='Typ de naam']").count()) { await pg.fill("input[aria-label='Typ de naam']", h.naam); await pg.getByRole("button", { name: "Controleer" }).click(); return; }
+    if (await pg.getByText("Dit is mijn antwoord").count()) {
+      // het tikpunt: de stip, het middelpunt van het vlak of het middelste punt van de lijn
+      await pg.evaluate(function(id) { var h = window.__TOPO_APP, d = h.doelen.filter(function(x) { return x.id === id; })[0]; var m = d.soort === "lijn" ? d.ringen[0][Math.floor(d.ringen[0].length / 2)] : null; h.zet(1, d.soort === "punt" ? d.x : m ? m[0] : d.mx, d.soort === "punt" ? d.y : m ? m[1] : d.my); }, h.id);
+      await pg.waitForTimeout(100);
+      var pt = await pg.evaluate(function(id) { var h = window.__TOPO_APP, s = h.schaal(), v = h.venster(), d = h.doelen.filter(function(x) { return x.id === id; })[0]; var r = document.querySelector("svg[aria-label^='Kaart']").getBoundingClientRect(); var m = d.soort === "lijn" ? d.ringen[0][Math.floor(d.ringen[0].length / 2)] : null; var x = d.soort === "punt" ? d.x : m ? m[0] : d.mx, y = d.soort === "punt" ? d.y : m ? m[1] : d.my; return { x: r.left + (x - v.x) * s, y: r.top + (y - v.y) * s }; }, h.id);
+      await pg.touchscreen.tap(pt.x, pt.y); await pg.waitForTimeout(150);
+      await pg.getByText("Dit is mijn antwoord").click(); return;
+    }
+    await pg.getByRole("button", { name: h.naam, exact: true }).first().click();
+  }
+  var BENOEM = ["Nederland en zijn buren", "Provincies benoemen", "Waddeneilanden", "De grote rivieren", "België: gewesten", "België: provincies", "Lege kaart: provincies en hoofdsteden"];
+  for (var vb of BENOEM) {
+    var rv = await nieuw(428, 746);
+    await los(rv, vb);
+    for (var vr = 0; vr < 12; vr++) {
+      var pos = await rv.evaluate(function() {
+        var h = window.__TOPO_APP; if (!h || !document.querySelector("path[fill='#f97316'], circle[fill='#f97316']")) return null;
+        var s = h.schaal(), v = h.venster(), d = h.doelen.filter(function(x) { return x.id === h.antwoordId; })[0];
+        var x = d.soort === "punt" ? d.x : d.soort === "vlak" ? d.mx : d.ringen[0][Math.floor(d.ringen[0].length / 2)][0];
+        var y = d.soort === "punt" ? d.y : d.soort === "vlak" ? d.my : d.ringen[0][Math.floor(d.ringen[0].length / 2)][1];
+        var r = document.querySelector("svg[aria-label^='Kaart']").getBoundingClientRect();
+        var k = h.kaartMaat, e = 0.5;
+        // per kant: de afstand, en of het beeld daar tegen de rand van de kaart zelf staat (verder schuiven kan dan niet)
+        return { naam: d.naam, kanten: [[(x - v.x) * s, v.x <= e], [(y - v.y) * s, v.y <= e], [r.width - (x - v.x) * s, v.x + v.w >= k.b - e], [r.height - (y - v.y) * s, v.y + v.h >= k.h - e]] };
+      });
+      if (pos) {
+        getoetst++;
+        // minstens 40 px van de rand; tegen de rand van de kaart zelf minstens 15 px (de stip helemaal in beeld)
+        var slecht = pos.kanten.filter(function(k) { return k[0] < (k[1] ? 15 : 40); });
+        if (slecht.length) randFout.push(vb + ": " + pos.naam + " " + Math.round(slecht[0][0]) + " px" + (slecht[0][1] ? " (kaartrand)" : ""));
+      }
+      await goed(rv);
+      await rv.waitForTimeout(1900);
+      var volg = rv.getByRole("button", { name: /^Volgende vraag/ });
+      if (await volg.count()) { await volg.first().click(); await rv.waitForTimeout(400); }
+    }
+    await rv.close();
+  }
+  eis(getoetst >= 30 && randFout.length === 0, "het oranje item staat minstens 40 px van de rand, of 15 px tegen de rand van de kaart zelf (" + getoetst + " vragen getoetst; " + randFout.join(", ") + ")");
 
   eis(paginaFouten.length === 0, "geen fouten van de pagina: " + paginaFouten.join(" | "));
   await b.close();

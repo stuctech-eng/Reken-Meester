@@ -52,6 +52,7 @@ export default function KaartAntwoord(props) {
 
   var klaar = !!props.feedback;
   var toon = !!props.toon;
+  var MARGE_TOON = 40;
   var gekozenNaam = props.selected;
 
   function breedte() { return vakRef.current ? vakRef.current.clientWidth : 0; }
@@ -91,8 +92,9 @@ export default function KaartAntwoord(props) {
         var dt = doelen.filter(function(x) { return x.id === spec.antwoordId; })[0];
         var tx = dt.soort === "punt" ? dt.x : dt.mx, ty = dt.soort === "punt" ? dt.y : dt.my;
         if (dt.soort === "lijn") { var rr = dt.ringen[0], mid = rr[Math.floor(rr.length / 2)]; tx = mid[0]; ty = mid[1]; }
-        var nb = begrens(K, v());
-        if (tx < nb.x || tx > nb.x + nb.w || ty < nb.y || ty > nb.y + nb.h) { S.ox = tx - w0.w / 2; S.oy = ty - w0.h / 2; }
+        // met een marge van MARGE_TOON schermpixels tot de rand: een stip op de rand staat anders half buiten beeld (Dick, 25-11-2026)
+        var nb = begrens(K, v()), m = MARGE_TOON * w0.w / breedte();
+        if (tx < nb.x + m || tx > nb.x + nb.w - m || ty < nb.y + m || ty > nb.y + nb.h - m) { S.ox = tx - w0.w / 2; S.oy = ty - w0.h / 2; }
       }
     }
     zetBegrensd();
@@ -237,7 +239,7 @@ export default function KaartAntwoord(props) {
   useEffect(function() {
     if (window.__TOPO_TEST !== true) return;
     window.__TOPO_APP = {
-      schaal: schaal, venster: v, breedte: breedte, doelen: doelen, antwoordId: spec.antwoordId, focus: spec.focus,
+      schaal: schaal, venster: v, breedte: breedte, doelen: doelen, antwoordId: spec.antwoordId, focus: spec.focus, kaartMaat: { b: K.breedte, h: K.hoogte },
       tik: tik, zet: function(z, cx, cy) { zetZoom(z, cx, cy); return v(); },
       uitkomst: function(x, y) { var s = schaal(); return beslis(doelen, s, S.ox * s + x, S.oy * s + y).uitkomst; },
     };
