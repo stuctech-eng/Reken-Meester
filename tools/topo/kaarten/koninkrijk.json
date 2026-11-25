@@ -1,0 +1,82 @@
+{
+  "id": "koninkrijk",
+  "toelichting": "Kaart van het Caribische deel van het Koninkrijk der Nederlanden (plan T5b par. 3.5, B3): Aruba, Curacao en Bonaire (benedenwinds) en Sint Maarten, Saba en Sint Eustatius (bovenwinds), elk met een startbeeld. Geen namen of tekst: de items zijn kennisbank-id's. Het Koninkrijk zelf heeft geen eigen vlak en staat niet op de kaart.",
+  "projectie": {
+    "naam": "transverseMercator",
+    "rotate": [
+      66.5,
+      -15
+    ]
+  },
+  "lon": [
+    -70.4,
+    -62.6
+  ],
+  "lat": [
+    11.7,
+    18.4
+  ],
+  "doek": null,
+  "tolerantiePx": 0.0625,
+  "afronding": 0.01,
+  "achtergrond": [
+    {
+      "bron": "ne-land-overig",
+      "uitgezonderd": [
+        "ABW",
+        "CUW",
+        "SXM",
+        "NLD"
+      ]
+    }
+  ],
+  "lagen": [
+    {
+      "id": "koninkrijk",
+      "soort": "vlak",
+      "bron": "ne-koninkrijk",
+      "items": [
+        "gebied-aruba",
+        "gebied-curacao",
+        "gebied-bonaire",
+        "gebied-sint-maarten",
+        "gebied-saba",
+        "gebied-sint-eustatius"
+      ]
+    }
+  ],
+  "startbeelden": [
+    {
+      "id": "benedenwinden",
+      "lon": [
+        -70.2,
+        -67.9
+      ],
+      "lat": [
+        11.9,
+        12.7
+      ],
+      "doelen": [
+        "gebied-aruba",
+        "gebied-curacao",
+        "gebied-bonaire"
+      ]
+    },
+    {
+      "id": "bovenwinden",
+      "lon": [
+        -63.4,
+        -62.8
+      ],
+      "lat": [
+        17.3,
+        18.2
+      ],
+      "doelen": [
+        "gebied-sint-maarten",
+        "gebied-saba",
+        "gebied-sint-eustatius"
+      ]
+    }
+  ]
+}

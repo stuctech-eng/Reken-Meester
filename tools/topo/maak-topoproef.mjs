@@ -14,11 +14,12 @@ var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
 var KAARTEN = [
   { id: "nlbe", titel: "Nederland en België" },
-  { id: "europa", titel: "Europa" }
+  { id: "europa", titel: "Europa" },
+  { id: "koninkrijk", titel: "Koninkrijk der Nederlanden" }
 ];
-var BEELDTITEL = { west: "West en midden", zuidoost: "Zuidoost", noordoost: "Noordoost", kaukasus: "Kaukasus" };
-var LAAGTITEL = { "provincies-nl": "Provincies (Nederland)", "provincies-be": "Provincies (België)", gewesten: "Gewesten (België)", taalgebieden: "Taalgebieden (België)", grensgemeenten: "Grensgemeenten (Nederland)", streken: "Streken (Nederland)", grenspunten: "Grenspunten", baarle: "Enclavegebied Baarle", steden: "Steden", rivieren: "Rivieren", waddeneilanden: "Waddeneilanden", landen: "Landen" };
-var ITEMS = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js"];
+var BEELDTITEL = { west: "West en midden", zuidoost: "Zuidoost", noordoost: "Noordoost", kaukasus: "Kaukasus", benedenwinden: "Aruba, Curaçao en Bonaire", bovenwinden: "Sint Maarten, Saba en Sint Eustatius" };
+var LAAGTITEL = { "provincies-nl": "Provincies (Nederland)", "provincies-be": "Provincies (België)", gewesten: "Gewesten (België)", taalgebieden: "Taalgebieden (België)", grensgemeenten: "Grensgemeenten (Nederland)", streken: "Streken (Nederland)", grenspunten: "Grenspunten", baarle: "Enclavegebied Baarle", koninkrijk: "Koninkrijk (Caribisch deel)", steden: "Steden", rivieren: "Rivieren", waddeneilanden: "Waddeneilanden", landen: "Landen" };
+var ITEMS = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js"];
 
 function fout(t) { throw new Error(t); }
 var KB = {};

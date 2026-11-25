@@ -1,0 +1,30 @@
+{
+  "toelichting": "Het Koninkrijk der Nederlanden (plan T1 par. 2.1; plan T5b par. 3.5, B3): de vier landen en de drie openbare lichamen (bijzondere gemeenten) in het Caribisch gebied. Status en namen uit het Statuut voor het Koninkrijk, art. 1 (tekst Stb. 2010, 775); de vlakken uit Natural Earth (admin_0_map_units voor Aruba, Curacao en Sint Maarten; admin_1 voor Bonaire, Sint Eustatius en Saba).",
+  "statuut": {
+    "uitgever": "Staatsblad van het Koninkrijk der Nederlanden",
+    "document": "Statuut voor het Koninkrijk der Nederlanden, tekst bekendgemaakt bij besluit van 1 november 2010 (Stb. 2010, 775)",
+    "url": "https://zoek.officielebekendmakingen.nl/stb-2010-775.html",
+    "geraadpleegd": "2026-11-25",
+    "lid1": "Het Koninkrijk omvat de landen Nederland, Aruba, Curaçao en Sint Maarten.",
+    "lid2": "Bonaire, Sint Eustatius en Saba maken elk deel uit van het staatsbestel van Nederland."
+  },
+  "openbaarLichaam": {
+    "uitgever": "Rijksoverheid",
+    "document": "Waaruit bestaat het Koninkrijk der Nederlanden? (vraag en antwoord, Caribische deel van het Koninkrijk)",
+    "url": "https://www.rijksoverheid.nl/onderwerpen/caribische-deel-van-het-koninkrijk/vraag-en-antwoord/waaruit-bestaat-het-koninkrijk-der-nederlanden",
+    "geraadpleegd": "2026-11-25",
+    "passage": "de 3 openbare lichamen Bonaire, Sint Eustatius en Saba"
+  },
+  "koninkrijk": { "id": "gebied-koninkrijk", "naam": "Koninkrijk der Nederlanden" },
+  "landen": {
+    "gebied-aruba": { "naam": "Aruba", "ne": "ABW" },
+    "gebied-curacao": { "naam": "Curaçao", "varianten": ["Curacao"], "ne": "CUW" },
+    "gebied-sint-maarten": { "naam": "Sint Maarten", "ne": "SXM" }
+  },
+  "openbareLichamen": {
+    "gebied-bonaire": { "naam": "Bonaire", "ne1": "NL-BQ1", "neNaam": "Bonaire" },
+    "gebied-sint-eustatius": { "naam": "Sint Eustatius", "varianten": ["Statia"], "ne1": "NL-BQ3", "neNaam": "St. Eustatius" },
+    "gebied-saba": { "naam": "Saba", "ne1": "NL-BQ2", "neNaam": "Saba" }
+  },
+  "besluit": "T1 par. 2.1: Aruba, Curaçao en Sint Maarten als gebied met status land binnen het Koninkrijk (deel-van-koninkrijk); Bonaire, Sint Eustatius en Saba als gebied met status bijzondere gemeente (bijzondere-gemeente-van Nederland); de officiele term is openbaar lichaam"
+}

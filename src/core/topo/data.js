@@ -17,6 +17,7 @@ import { TAALGEBIEDEN } from "./items/taalgebieden.js";
 import { GEMEENTEN_NL } from "./items/gemeenten-nl.js";
 import { STREKEN_NL } from "./items/streken-nl.js";
 import { GRENSGEBIEDEN } from "./items/grensgebieden.js";
+import { KONINKRIJK } from "./items/koninkrijk.js";
 import { pakUit } from "./kaart/bogen.js";
 import { maakDoelen } from "./kaart/tikregel.js";
 import { ringDelen } from "./kaart/beeld.js";
@@ -37,7 +38,7 @@ import { allesMinstensInOntwikkeling, telling } from "./beheersing.js";
 import { deckPick } from "../skills/flow.js";
 
 var KB = {};
-[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL, TAALGEBIEDEN, GEMEENTEN_NL, STREKEN_NL, GRENSGEBIEDEN].forEach(function(lijst) {
+[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL, TAALGEBIEDEN, GEMEENTEN_NL, STREKEN_NL, GRENSGEBIEDEN, KONINKRIJK].forEach(function(lijst) {
   lijst.forEach(function(it) { if (it && it.id && it.naam) KB[it.id] = it; });
 });
 

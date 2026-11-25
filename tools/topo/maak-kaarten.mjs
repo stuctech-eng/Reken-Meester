@@ -39,17 +39,17 @@ var NEB = BRONNEN.naturalEarth.bestanden;
 export var BREEDTE = 1000;
 export var WEERGAVE = 428 - 2 * 16;
 export var EENHEID_PX = WEERGAVE / BREEDTE;
-export var KAARTIDS = ["nlbe", "europa"];
+export var KAARTIDS = ["nlbe", "europa", "koninkrijk"];
 export var GRENS_MIN_STUK_PX2 = 0.01, GRENS_ZONE_PX = 2, GRENS_EIS_PX = 0.5, GRENS_MEETFOUT_PX = 0.05, GRENS_STAP_PX = 0.1, ZOOM_GRENS = 8;
-export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
-export var GZIP_DOEL = { nlbe: 40 * 1024, europa: 120 * 1024 };
+export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
+export var GZIP_DOEL = { nlbe: 40 * 1024, europa: 120 * 1024, koninkrijk: 40 * 1024 };
 
 function fout(t) { throw new Error(t); }
 function sha(b) { return crypto.createHash("sha256").update(b).digest("hex"); }
 
 // ---- de kennisbank (alleen lezen) ----
 async function kennisbank() {
-  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js"];
+  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js"];
   var perId = {};
   for (var i = 0; i < bestanden.length; i++) {
     var m = await import(pathToFileURL(path.join(ROOT, "src/core/topo", bestanden[i])).href);
@@ -333,6 +333,19 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
       var rv7 = gedeeld.rvo(), g7 = it.geometrie.bron;
       if (it.soort !== "streek" || g7.bronId !== "RVO" || g7.sha256 !== rv7.sha || g7.sleutel !== "naam" || !rv7.per[g7.waarde]) fout("GEOREF van " + id + " past niet bij een streek uit RVO");
       gebruik("RVO", rv7.sha); return zetOm(ontNaald(rv7.per[g7.waarde], id, []), rdNaarLl());
+    }
+    if (bron === "ne-koninkrijk") {
+      // T5b (plan par. 3.5): Aruba, Curacao en Sint Maarten uit admin_0_map_units; Bonaire, Sint Eustatius en Saba uit admin_1
+      var g9 = it.geometrie.bron;
+      if (it.soort !== "gebied" || g9.bronId !== "NE") fout("GEOREF van " + id + " past niet bij ne-koninkrijk");
+      if (g9.bestand === "ne_10m_admin_0_map_units.geojson" && g9.sleutel === "ADM0_A3") { if (g9.sha256 !== NEB[g9.bestand]) fout("GEOREF van " + id + ": andere SHA"); return NE[g9.waarde] || fout("NE: geen " + id); }
+      if (g9.bestand === "ne_10m_admin_1_states_provinces.geojson" && g9.sleutel === "iso_3166_2") {
+        var a9 = B.ne(g9.bestand); if (a9.sha !== g9.sha256) fout("GEOREF van " + id + ": andere SHA"); gebruik("NE", a9.sha);
+        var f9 = a9.fs.filter(function(f) { return f.properties.iso_3166_2 === g9.waarde; });
+        if (f9.length !== 1) fout("NE admin_1: niet precies een " + g9.waarde);
+        return f9[0].geometry.type === "Polygon" ? [f9[0].geometry.coordinates] : f9[0].geometry.coordinates;
+      }
+      return fout("GEOREF van " + id + " past niet bij ne-koninkrijk");
     }
     if (bron === "stb-enclaves") {
       // T5b (plan par. 3.6): de Belgische enclaves = de delen van Belgie buiten het hoofdgebied, alleen de buitenrand

@@ -381,7 +381,9 @@ var GGR = await import(pathToFileURL(path.join(ROOT, "src/core/topo/afgeleid/gre
 var STR = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/streken-nl.js")).href);
 // T5b-1: het Drielandenpunt en het enclavegebied Baarle (plan T5b par. 3.6)
 var GB = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/grensgebieden.js")).href);
-function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE), kopie(W62.WATER_NLBE), kopie(E62.EILANDEN_NL), kopie(T5B.TAALGEBIEDEN), kopie(GG.GEMEENTEN_NL), kopie(STR.STREKEN_NL), kopie(GB.GRENSGEBIEDEN)), rel: kopie(H62.HOOFDSTEDEN_NLBE).concat(kopie(GGR.GRENSGEMEENTEN_NL)), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
+// T5b-1: het Koninkrijk der Nederlanden (plan T5b par. 3.5)
+var KN = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/koninkrijk.js")).href);
+function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE), kopie(W62.WATER_NLBE), kopie(E62.EILANDEN_NL), kopie(T5B.TAALGEBIEDEN), kopie(GG.GEMEENTEN_NL), kopie(STR.STREKEN_NL), kopie(GB.GRENSGEBIEDEN), kopie(KN.KONINKRIJK)), rel: kopie(H62.HOOFDSTEDEN_NLBE).concat(kopie(GGR.GRENSGEMEENTEN_NL)), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
 function controleer62(c) {
   var fouten = [], n = 0;
   function eis(ok, groep, tekst) { n++; if (!ok) fouten.push({ groep: groep, tekst: tekst }); }
@@ -390,10 +392,11 @@ function controleer62(c) {
   c.oud.concat(c.nieuw).forEach(function(it) { eis(!perId[it.id], "hergebruik", "id een keer in de kennisbank: " + it.id); perId[it.id] = it; });
   ["NLD", "BEL", "DEU"].forEach(function(id) { eis(c.oud.concat(c.nieuw).filter(function(it) { return it.id === id; }).length === 1, "hergebruik", "land bestaat een keer: " + id); });
   c.nieuw.forEach(function(it) {
-    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "taalgebied", "gemeente", "streek", "grenspunt", "bijzonder-gebied", "stad", "zee", "rivier", "eiland", "eilandengroep"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2 of T5b: " + it.id);
+    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "taalgebied", "gemeente", "streek", "grenspunt", "bijzonder-gebied", "gebied", "stad", "zee", "rivier", "eiland", "eilandengroep"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2 of T5b: " + it.id);
     eis(gelijk(it.geometrie.kaart, {}), "georef", "nog geen kaartverwijzingen: " + it.id);
     var g = it.geometrie.bron;
     if (it.soort === "stad" && it.geometrie.punt.status !== "vastgesteld") eis(g === null, "georef", "open punt zonder GEOREF: " + it.id);
+    else if (it.id === "gebied-koninkrijk") eis(g === null && /geen eigen vlak/.test(it.geometrie.geen || ""), "georef", "het Koninkrijk zonder eigen vlak: " + it.id);
     else if (it.soort === "grenspunt") eis(g === null && it.geometrie.punt.status === "vastgesteld", "georef", "grenspunt met een eigen punt, zonder GEOREF: " + it.id);
     else if (it.soort === "eilandengroep") eis(g === null && /D3 a/.test(it.geometrie.geen || ""), "georef", "eilandengroep zonder eigen vlak (D3 a): " + it.id);
     else eis(!!g && !!reg[g.bronId] && reg[g.bronId].bestanden[g.bestand] === g.sha256 && g.herkomst === undefined && g.status === undefined, "georef", "GEOREF in het register met dezelfde SHA, zonder herkomst en status: " + it.id);
@@ -427,6 +430,8 @@ function controleer62(c) {
   var WATERSOORTEN = ["zee", "rivier"];
   c.nieuw.forEach(function(it) {
     if (WATERSOORTEN.indexOf(it.soort) >= 0) { eis(it.feiten.land === undefined, "land", "water zonder landrelatie: " + it.id); return; }
+    // T5b: het Koninkrijk en zijn landen hebben geen landrelatie; een openbaar lichaam ligt in Nederland (Statuut art. 1, lid 2)
+    if (it.soort === "gebied") { var bg = (it.relaties || []).some(function(x) { return x.type === "bijzondere-gemeente-van"; }); eis(bg ? (!!it.feiten.land && it.feiten.land.waarde === "NLD" && it.feiten.land.herkomst === "bron") : it.feiten.land === undefined, "land", "gebied: Nederland alleen bij een openbaar lichaam: " + it.id); return; }
     // T5b: een grensgebied ligt in meer landen: feiten.landen (een lijst bestaande landen, minstens twee), geen feiten.land
     if (it.soort === "grenspunt" || it.soort === "bijzonder-gebied") { var ls = it.feiten.landen; eis(it.feiten.land === undefined && !!ls && Array.isArray(ls.waarde) && ls.waarde.length >= 2 && ls.waarde.every(function(x) { return !!perId[x] && perId[x].soort === "land"; }), "land", "grensgebied met minstens twee bestaande landen: " + it.id); return; }
     var v = verwachtLand(it), f = it.feiten.land, hk = it.soort === "eilandengroep" ? "besluit" : "bron";
@@ -438,6 +443,7 @@ function controleer62(c) {
     if (WATERSOORTEN.indexOf(it.soort) >= 0) return "internationaal";
     if (it.feiten && it.feiten.land) return it.feiten.land.waarde;
     if (it.feiten && it.feiten.landen) return it.feiten.landen.waarde.join("+");
+    if (it.soort === "gebied") return it.id;
     if (it.soort === "stad" && it.feiten && it.feiten.cbs && it.feiten.cbs.herkomst === "bron") return "NLD";
     return null;
   }
@@ -447,7 +453,7 @@ function controleer62(c) {
   // ---- relaties ----
   var alleItems = c.oud.concat(c.nieuw), idx = IX.bouwIndex(alleItems, c.rel, c.relaties, c.inverseFn), R = c.relaties || RELATIES;
   eis(idx.dubbel.length === 0, "index", "geen dubbele relaties");
-  eis(idx.heen.length === 31 + GGR.GRENSGEMEENTEN_NL.length, "index", "31 relaties (24 uit hoofdsteden-nlbe.js, 2 van Brussel, 5 hoort-bij van de Waddeneilanden) plus de grensgemeenten (" + idx.heen.length + ")");
+  eis(idx.heen.length === 31 + GGR.GRENSGEMEENTEN_NL.length + 7, "index", "31 relaties (24 uit hoofdsteden-nlbe.js, 2 van Brussel, 5 hoort-bij van de Waddeneilanden), plus de grensgemeenten en 7 van het Koninkrijk (" + idx.heen.length + ")");
   // T5b-1: elke grensgemeente grenst aan Belgie of Duitsland, en elke grenst-aan van een gemeente gaat naar BEL of DEU
   c.nieuw.filter(function(it) { return it.soort === "gemeente"; }).forEach(function(it) { eis(idx.heen.some(function(r) { return r.type === "grenst-aan" && r.van === it.id && (r.naar === "BEL" || r.naar === "DEU"); }), "grens", "grensgemeente grenst aan BEL of DEU: " + it.id); });
   idx.heen.filter(function(r) { return /^gem-nl-/.test(r.van); }).forEach(function(r) { eis(r.type === "grenst-aan" && (r.naar === "BEL" || r.naar === "DEU") && !!perId[r.van], "grens", "relatie van een gemeente: grenst-aan naar BEL of DEU: " + r.van + " " + r.naar); });
@@ -477,6 +483,8 @@ function nieuw62(c, id) { return c.nieuw.filter(function(r) { return r.id === id
 var MUT62 = [
   ["provincie zonder landrelatie", "land", function(c) { delete nieuw62(c, "prov-nl-pv21").feiten.land; }],
   ["streek met een GEOREF naar een onbekend bestand", "georef", function(c) { nieuw62(c, "streek-nl-biesbosch").geometrie.bron.bestand = "natpark-oud.gpkg"; }],
+  ["Bonaire zonder Nederland", "land", function(c) { delete nieuw62(c, "gebied-bonaire").feiten.land; }],
+  ["Aruba met een landrelatie", "land", function(c) { nieuw62(c, "gebied-aruba").feiten.land = { waarde: "NLD", herkomst: "bron", status: "vastgesteld", bron: { id: "OV" } }; }],
   ["Drielandenpunt met een onbekend land", "land", function(c) { nieuw62(c, "grenspunt-drielandenpunt").feiten.landen.waarde = ["BEL", "XXX", "NLD"]; }],
   ["Baarle met een land", "land", function(c) { nieuw62(c, "gebied-baarle").feiten.land = { waarde: "BEL", herkomst: "bron", status: "vastgesteld", bron: { id: "STB" } }; }],
   ["streek in Belgie", "land", function(c) { nieuw62(c, "streek-nl-de-kempen").feiten.land.waarde = "BEL"; }],
@@ -521,8 +529,8 @@ if (uit62.fouten.length || gemist62.length) process.exit(1);
 var KD = { fouten: [], n: 0 };
 function eisKD(ok, tekst) { KD.n++; if (!ok) KD.fouten.push(tekst); }
 var KB63 = {};
-[L.LANDEN, S.STEDEN, P62.PROVINCIES, G62.GEWESTEN, B62.STEDEN_BE, W62.WATER_NLBE, E62.EILANDEN_NL, T5B.TAALGEBIEDEN, GG.GEMEENTEN_NL, STR.STREKEN_NL, GB.GRENSGEBIEDEN].forEach(function(lijst) { lijst.forEach(function(it) { KB63[it.id] = it; }); });
-var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
+[L.LANDEN, S.STEDEN, P62.PROVINCIES, G62.GEWESTEN, B62.STEDEN_BE, W62.WATER_NLBE, E62.EILANDEN_NL, T5B.TAALGEBIEDEN, GG.GEMEENTEN_NL, STR.STREKEN_NL, GB.GRENSGEBIEDEN, KN.KONINKRIJK].forEach(function(lijst) { lijst.forEach(function(it) { KB63[it.id] = it; }); });
+var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
 var VERWACHT63 = {
   nlbe: {
     "provincies-nl": P62.PROVINCIES.filter(function(p) { return p.feiten.land.waarde === "NLD"; }).map(function(p) { return p.id; }),
@@ -536,7 +544,8 @@ var VERWACHT63 = {
     "steden": S.STEDEN.map(function(x) { return x.id; }).concat(B62.STEDEN_BE.filter(function(x) { return x.geometrie.punt && x.geometrie.punt.status === "vastgesteld"; }).map(function(x) { return x.id; })),
     "rivieren": W62.WATER_NLBE.filter(function(w) { return w.soort === "rivier"; }).map(function(w) { return w.id; }),
     "waddeneilanden": E62.EILANDEN_NL.filter(function(e) { return e.soort === "eiland"; }).map(function(e) { return e.id; })
-  }
+  },
+  koninkrijk: { "koninkrijk": KN.KONINKRIJK.filter(function(g) { return g.id !== "gebied-koninkrijk"; }).map(function(g) { return g.id; }) }
 };
 var kaartMap = path.join(ROOT, "src/core/topo/kaarten"), kaartBestanden = fs.existsSync(kaartMap) ? fs.readdirSync(kaartMap).filter(function(f) { return /\.js$/.test(f); }).sort() : [];
 for (var kb of kaartBestanden) {
