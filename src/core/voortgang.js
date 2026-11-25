@@ -15,16 +15,38 @@
 
 import { DEFAULT_SAVE, dClone, dMerge } from "./save.js";
 import { checkLevelUnlock, updateSkillStats, getNextSkill, getSkillOrder } from "./subjects.js";
+import { verwerkAntwoorden, allesMinstensInOntwikkeling, dagNr } from "./topo/beheersing.js";
 
-// Sessie-uitkomsten verwerken in skillStats (ook gebruikt voor de voorlopige stand van de Auto-knoptekst)
-export function mergeSessionSkills(subjectId, stats, result) {
+// Sessie-uitkomsten verwerken in skillStats (ook gebruikt voor de voorlopige stand van de Auto-knoptekst).
+// Topografie (plan T4 par. 4.5): result.skillItems geeft per vaardigheid met een itemVoorwaarde haar kennisitems; items is de
+// itemstand na deze sessie (zonder items: alleen de antwoorden van deze sessie, de strengste lezing). Zonder skillItems (rekenen
+// en wiskunde) is de aanroep van updateSkillStats dezelfde als voor T4.
+export function mergeSessionSkills(subjectId, stats, result, items) {
   var out = stats;
   var sessionSkills = result.sessionSkillStats || {};
+  var skillItems = result.skillItems || null;
+  var stand = items || (skillItems ? verwerkAntwoorden({}, result.results, 0) : null);
   for (var skillId in sessionSkills) {
     var ss = sessionSkills[skillId];
-    out = updateSkillStats(subjectId, out, skillId, ss.correct, ss.total, (result.promotionSnapshots || {})[skillId]);
+    if (skillItems && skillItems[skillId]) {
+      var ok = allesMinstensInOntwikkeling(stand, skillItems[skillId], false);
+      out = updateSkillStats(subjectId, out, skillId, ss.correct, ss.total, (result.promotionSnapshots || {})[skillId], ok);
+    } else {
+      out = updateSkillStats(subjectId, out, skillId, ss.correct, ss.total, (result.promotionSnapshots || {})[skillId]);
+    }
   }
   return out;
+}
+
+// De itemstand van Topografie bijwerken met de antwoorden van een sessie (plan T4 par. 6.1 en 6.2). Het deel topo komt pas in de
+// stand bij de eerste sessie met kennisitems; zonder zulke antwoorden blijft de stand zoals hij was.
+function pasItemsToe(next, result, datum) {
+  var heeft = (result.results || []).some(function(r) { return r && r.kennis; });
+  if (!heeft) return null;
+  var oud = (next.topo && next.topo.items) || {};
+  var items = verwerkAntwoorden(oud, result.results, dagNr(datum));
+  next.topo = { v: 1, items: items };
+  return items;
 }
 
 function pasSessieToe(stand, result, datum, gisteren) {
@@ -38,7 +60,9 @@ function pasSessieToe(stand, result, datum, gisteren) {
   // Laatst geoefende modus (voor de bovenste kaart op Home)
   next.lastSubjectId = result.subjectId;
 
-  var currentSkillStats = mergeSessionSkills(result.subjectId, subj.skillStats || {}, result);
+  // Eerst de itemstand (Topografie), dan skillStats met de itemVoorwaarde op die nieuwe stand
+  var itemsNa = pasItemsToe(next, result, datum);
+  var currentSkillStats = mergeSessionSkills(result.subjectId, subj.skillStats || {}, result, itemsNa || undefined);
   subj.skillStats = currentSkillStats;
 
   // Volgende skill (alleen informatie; getNextSkill rekent de actieve skill altijd opnieuw uit)

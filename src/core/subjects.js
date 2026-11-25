@@ -345,7 +345,9 @@ function meetsMastery(skill, storedCorrect, sessionCorrect, sessionTotal) {
 // promotionSnap (optioneel): { correct, total } van deze skill in de sessie op het moment
 // van de live-promotie. De engine toetst die momentopname aan dezelfde masteryregel,
 // zodat latere fouten in dezelfde sessie een geldige promotie niet ongedaan maken.
-export function updateSkillStats(subjectId, skillStats, skillId, sessionCorrect, sessionTotal, promotionSnap) {
+// voorwaardeOk (optioneel, alleen Topografie, plan T4 par. 4.5): false = de itemVoorwaarde is niet vervuld, dan wordt de
+// vaardigheid in deze sessie niet beheerst. Afwezig (rekenen en wiskunde): de regel van voor T4.
+export function updateSkillStats(subjectId, skillStats, skillId, sessionCorrect, sessionTotal, promotionSnap, voorwaardeOk) {
   skillStats = skillStats || {};
   var existing = skillStats[skillId] || { correct: 0, attempts: 0, mastered: false };
   var skill    = getSkill(subjectId, skillId);
@@ -354,8 +356,8 @@ export function updateSkillStats(subjectId, skillStats, skillId, sessionCorrect,
   var newAttempts = existing.attempts + sessionTotal;
 
   var mastered = existing.mastered
-    || meetsMastery(skill, existing.correct, sessionCorrect, sessionTotal)
-    || (promotionSnap ? meetsMastery(skill, existing.correct, promotionSnap.correct, promotionSnap.total) : false);
+    || (voorwaardeOk !== false && (meetsMastery(skill, existing.correct, sessionCorrect, sessionTotal)
+    || (promotionSnap ? meetsMastery(skill, existing.correct, promotionSnap.correct, promotionSnap.total) : false)));
 
   var updated = {};
   for (var k in skillStats) { updated[k] = skillStats[k]; }

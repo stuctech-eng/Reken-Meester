@@ -5,7 +5,7 @@
 // Gebruik (vanuit de hoofdmap van de repo, na npm ci): node tools/topo/test-bundel.mjs
 // Eisen:
 //   - de standaardbundel (de bundel die index.html laadt, met alles wat die statisch importeert) bevat niets uit
-//     src/core/topo/ behalve laden.js, vaardigheden-nlbe.js en zichtbaar.js, en niet KaartAntwoord.jsx of een kaartbestand;
+//     src/core/topo/ behalve beheersing.js (T4), laden.js, vaardigheden-nlbe.js en zichtbaar.js, en niet KaartAntwoord.jsx of een kaartbestand;
 //   - de kennisbank, de sjablonen, de tikregel, de kaarten en KaartAntwoord.jsx zitten in een bundel die pas met import() laadt;
 //   - productie: Topografie staat niet in de app (de modus is weggelaten bij het bouwen);
 //   - preview: de modus topo_nlbe staat er wel in;
@@ -19,7 +19,7 @@ import { fileURLToPath } from "url";
 import { build } from "vite";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url)), ROOT = path.join(HIER, "..", "..");
-var TOEGESTAAN = ["src/core/topo/laden.js", "src/core/topo/vaardigheden-nlbe.js", "src/core/topo/zichtbaar.js"];
+var TOEGESTAAN = ["src/core/topo/beheersing.js", "src/core/topo/laden.js", "src/core/topo/vaardigheden-nlbe.js", "src/core/topo/zichtbaar.js"];
 var n = 0, fouten = [];
 function eis(ok, tekst) { n++; if (!ok) fouten.push(tekst); }
 
