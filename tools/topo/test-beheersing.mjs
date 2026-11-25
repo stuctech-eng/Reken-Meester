@@ -5,7 +5,7 @@
 // - de regels in een tabel: status, een stap per dag, terugval, de tussenpozen, Meesterschap (gz), lezen en schrijven;
 // - verwerkAntwoorden: alleen antwoorden met kennis, ook alleen bij goed, de invoer blijft gelijk;
 // - voortgang: een sessie zonder kennis maakt geen deel topo; een sessie met kennis wel; de itemVoorwaarde houdt mastered tegen
-//   zolang een kennisitem nieuw is; mastered blijft staan; overname neemt de itemstand mee, wissen maakt hem leeg;
+//   zolang een kennisitem nieuw is; mastered blijft staan; overname neemt de itemstand mee, wissen maakt hem leeg; Meesterschap (T5a);
 // - determinisme: 1.000 willekeurige reeksen sessies van twee schrijvers, via herbouw in elke aanvoervolgorde: dezelfde stand;
 // - twee toestellen tegelijk (par. 6.2a): stapTransactie uit src/services/sync.js met een nagebootste Firestore, in beide volgordes
 //   en met een conflict ertussen: dezelfde itemstand, met de antwoorden van allebei, geen enkel antwoord dubbel;
@@ -114,6 +114,15 @@ var ws = VG.pasBewerkingToe(s3, { schrijver: "w1", nr: 4, soort: "wissen" });
 eis(!("topo" in ws), "wissen maakt de itemstand leeg");
 var oudConcept = VG.pasBewerkingToe(s3, sessie("w1", 4, "2026-11-28", "topo_nlbe", "nb02", [{ correct: true }, { correct: true }]));
 eis(JSON.stringify(oudConcept.topo) === JSON.stringify(s3.topo), "een sessie van voor T4 (zonder kennis) verandert de itemstand niet");
+
+// Meesterschap (plan T5 par. 4.3): met skillMeesterschap telt alleen goed zonder opties voor de itemVoorwaarde
+var metOpties = []; for (var mi = 0; mi < 12; mi++) metOpties.push(antw(KEYS[mi % 4], true, true));
+var sm = sessie("w1", 1, "2026-11-25", "topo_nlbe", "nb02", metOpties, KEYS);
+var smZonder = VG.pasBewerkingToe(STAND, sm);
+eis(smZonder.subjects.topo_nlbe.skillStats.nb02.mastered, "zonder skillMeesterschap: goed met opties telt, beheerst");
+sm.result.skillMeesterschap = { nb02: true };
+var smMet = VG.pasBewerkingToe(STAND, sm);
+eis(!smMet.subjects.topo_nlbe.skillStats.nb02.mastered, "met skillMeesterschap: goed met opties telt niet, niet beheerst");
 
 // ── determinisme ──
 var seed = 7;
