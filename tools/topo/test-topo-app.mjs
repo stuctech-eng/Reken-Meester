@@ -12,7 +12,8 @@
 // - namen: geen normalisatiebotsing per laag, ook niet met de varianten;
 // - rand: ringen kleiner dan 1 px2 op het scherm krijgen geen rand (gemeld per laag bij x1); het vlak houdt alle ringen.
 // - T4 (plan T4 par. 5): hooks; kennisitems per vaardigheid; een fout komt na 3 tot 5 vragen terug; nooit twee keer achter elkaar
-//   hetzelfde kennisitem; herhaling op vraag 5, 10 en 15 uit een eerdere vaardigheid; aan de beurt eerst; itemVoorwaarde; het kennisrecord.
+//   hetzelfde kennisitem; herhaling op vraag 5, 10 en 15 uit een eerdere vaardigheid; aan de beurt eerst; itemVoorwaarde; het kennisrecord;
+//   buren (par. 8): symmetrisch, bekende gevallen, en minstens een buur bij de foute keuzes als die er is.
 // Mutanten: een andere naam dan de kennisbank, een antwoordId buiten de laag, een dubbele keuze en een naam die twee keer in een
 // laag staat moeten gevangen worden.
 
@@ -277,6 +278,41 @@ var rt = NB03.opAntwoord(qt, true, "naam"), rc = NB03.opAntwoord(qt, true, "choi
 eis(rt.sleutel === qt.kaart.antwoordId + "|s" && rt.ook[0] === qt.kaart.antwoordId + "|b" && rt.opties === false && rc.sleutel === qt.kaart.antwoordId + "|b" && rc.opties === true, "T4: typen geeft s (en b bij goed), kiezen geeft b met opties");
 var qa = await vraag(NB02);
 eis(NB02.opAntwoord(qa, true, "kaart").opties === false && NB02.opAntwoord(qa, true, "choice").opties === true, "T4: aanwijzen op de kaart is zonder opties; de keuzelijst met");
+
+// ── T4: buren als foute keuzes (plan T4 par. 8) ──
+var RS2 = await import(bron("src/core/topo/sjablonen/relatie.js"));
+function burenNamen(id) { return D.buren(id).map(D.naamVan).sort().join(", "); }
+var symm = true;
+["provincies-nl", "provincies-be", "gewesten"].forEach(function(lid) { D.laag("nlbe", lid).items.forEach(function(it) { D.buren(it.id).forEach(function(b) { if (D.buren(b).indexOf(it.id) < 0) symm = false; }); }); });
+eis(symm, "T4: buren zijn symmetrisch");
+eis(burenNamen("prov-nl-pv20") === "Drenthe, Friesland", "T4: Groningen grenst aan Drenthe en Friesland (" + burenNamen("prov-nl-pv20") + ")");
+var limb = D.laag("nlbe", "provincies-nl").items.filter(function(it) { return it.naam === "Limburg"; })[0].id, zee = D.laag("nlbe", "provincies-nl").items.filter(function(it) { return it.naam === "Zeeland"; })[0].id;
+eis(burenNamen(limb) === "Gelderland, Noord-Brabant" && burenNamen(zee) === "Noord-Brabant, Zuid-Holland", "T4: Limburg en Zeeland, hun buren");
+var bru = D.laag("nlbe", "gewesten").items.filter(function(it) { return it.naam === "Brussels Hoofdstedelijk Gewest"; })[0].id;
+eis(burenNamen(bru) === "Vlaams Gewest", "T4: het Brussels Hoofdstedelijk Gewest grenst alleen aan het Vlaams Gewest");
+eis(D.buren("NLD").length === 0 && D.buren("stad-nl-amsterdam").length === 0, "T4: geen buren uit de kaart voor de landen en de steden");
+var zonderBuur = 0, metBuur = 0;
+for (var bdId of ["nb03", "nb04", "nb10", "nb11"]) {
+  var bd = defVan(bdId), bsk = vaardigheid(bdId);
+  D.startSessie({}, "2026-12-01");
+  for (var bi = 0; bi < 400; bi++) {
+    var bq = await vraag(bsk), o5 = bd.onderdelen[bq.kennis.o], kand, ver, juistNaam = bq.answer;
+    if (o5.sjabloon === "relatie") {
+      var jst = RS2.juisteIds({ relaties: D.relaties }, o5, bq.relatie.genoemd);
+      kand = RS2.poolIds({ ids: D.ids }, o5, bq.relatie.genoemd).filter(function(x) { return jst.indexOf(x) < 0; });
+      ver = RS2.verwarring({ buren: D.buren, relaties: D.relaties }, o5, bq.relatie.genoemd, bq.relatie.antwoordId);
+    } else {
+      kand = D.onderdeelIds(o5).filter(function(x) { return x !== bq.kaart.antwoordId; });
+      ver = D.buren(bq.kaart.antwoordId);
+    }
+    var kandBuur = kand.filter(function(x) { return ver.indexOf(x) >= 0; }).map(D.naamVan);
+    if (!kandBuur.length) continue;
+    metBuur++;
+    if (!bq.choices.some(function(c) { return c !== juistNaam && kandBuur.indexOf(c) >= 0; })) zonderBuur++;
+    bsk.opAntwoord(bq, true, "choice");
+  }
+}
+eis(metBuur > 500 && zonderBuur === 0, "T4: minstens een buur bij de foute keuzes als die er is (" + metBuur + " vragen met een buur, " + zonderBuur + " zonder)");
 
 console.log("test-topo-app: " + (fouten.length ? "FOUT" : "GOED") + ": " + (n - fouten.length) + " controles geslaagd, " + fouten.length + " mislukt");
 fouten.forEach(function(f) { console.log("  - " + f); });

@@ -10,9 +10,11 @@
 //             lijst, of een functie(genoemde id) die een van beide geeft (bijvoorbeeld per land andere steden)
 //   tekst     functie(naam van het genoemde item) -> de vraag
 // Selectieregel: het antwoord is een van de juiste items; de foute keuzes staan aantoonbaar niet in de relatie tot het genoemde item
-// (niet in de kennisbank). Andere juiste items komen nooit als foute keuze.
+// (niet in de kennisbank). Andere juiste items komen nooit als foute keuze. Minstens een foute keuze is een verwarring (buren, plan
+// T4 par. 8), als die er bij de kandidaten is.
 
 import { shuffle } from "../../skills/helpers.js";
+import { kiesFout } from "./foutkeuze.js";
 
 export function genoemdeIds(bron, o) {
   var gezien = {}, uit = [];
@@ -32,12 +34,21 @@ export function poolIds(bron, o, id) {
   return p.ids ? p.ids.slice() : bron.ids(p.soort, p.prefix);
 }
 
+// De verwarring (plan T4 par. 8): bij "naar" (het antwoord is het doel, bijvoorbeeld een provincie) de buren van het antwoord; bij
+// "van" (het antwoord is de bron, bijvoorbeeld een hoofdstad) de bronnen van de buren van het genoemde doel (de hoofdsteden van de
+// buurprovincies)
+export function verwarring(bron, o, id, antwoordId) {
+  if (o.gevraagd === "naar") return bron.buren(antwoordId);
+  var b = bron.buren(id);
+  return bron.relaties(o.relatie).filter(function(r) { return b.indexOf(r.naar) >= 0; }).map(function(r) { return r.van; });
+}
+
 export function maakRelatie(bron) {
   return function(o, id) {
     var juist = juisteIds(bron, o, id);
     if (!juist.length) throw new Error("geen relatie " + o.relatie + " voor " + id);
     var antwoordId = shuffle(juist.slice())[0];
-    var fout = shuffle(poolIds(bron, o, id).filter(function(x) { return juist.indexOf(x) < 0; })).slice(0, 3);
+    var fout = kiesFout(poolIds(bron, o, id).filter(function(x) { return juist.indexOf(x) < 0; }), verwarring(bron, o, id, antwoordId), 3);
     var naam = bron.naamVan(antwoordId);
     return {
       question: o.tekst(bron.naamVan(id)),

@@ -58,9 +58,28 @@ export function naamVan(id) {
 
 var KAARTEN = {};
 
+// Buren (plan T4 par. 8): twee gebieden van dezelfde laag die een boog van de kaart delen, delen een grenslijn (een hoekpunt alleen
+// is geen boog). Alleen voor de lagen waarvan alle gebieden uit een bron komen, zodat de grenzen precies samenvallen: de provincies
+// van Nederland (CBS), van Belgie en de gewesten. De laag landen niet: daar komen de grenzen niet uit een bestand (Nederland en
+// Duitsland delen er geen boog); de grenzen tussen landen staan in afgeleid/randen.js (grenst-aan, voor de modus Europa).
+var BUREN_LAGEN = ["provincies-nl", "provincies-be", "gewesten"];
+var BUREN = {};
+function zetBuren(bestand) {
+  bestand.lagen.forEach(function(l) {
+    if (BUREN_LAGEN.indexOf(l.id) < 0) return;
+    var perBoog = {};
+    l.items.forEach(function(it) { (it.r || []).forEach(function(ring) { ring.forEach(function(a) { var b = a < 0 ? ~a : a; (perBoog[b] = perBoog[b] || {})[it.id] = 1; }); }); });
+    var bu = {};
+    Object.keys(perBoog).forEach(function(b) { var ids = Object.keys(perBoog[b]); ids.forEach(function(x) { ids.forEach(function(y) { if (x !== y) (bu[x] = bu[x] || {})[y] = 1; }); }); });
+    l.items.forEach(function(it) { BUREN[it.id] = Object.keys(bu[it.id] || {}).sort(); });
+  });
+}
+export function buren(id) { return BUREN[id] || []; }
+
 // Een kaart klaarzetten: uitpakken (bogen), per item de ringen met oppervlakte (voor de rand), per laag de doelen met naam
 export function zetKaart(id, bestand) {
   if (KAARTEN[id]) return KAARTEN[id];
+  zetBuren(bestand);
   var k = pakUit(bestand);
   var lagen = k.lagen.map(function(l) {
     var items = l.items.map(function(it) { var n = {}; for (var s in it) n[s] = it[s]; n.naam = naamVan(it.id); if (it.d) n.delen = ringDelen(it.d); return n; });
@@ -104,7 +123,7 @@ export function omhulling(kaartId, laagId, ids) {
 }
 
 // De sjablonen (plan T3 par. 3.4)
-var BRON = { laag: laag, naamVan: naamVan, namenVan: namenVan, omhulling: omhulling, relaties: relaties, ids: ids };
+var BRON = { laag: laag, naamVan: naamVan, namenVan: namenVan, omhulling: omhulling, relaties: relaties, ids: ids, buren: buren };
 var SJABLONEN = { "wijs-aan": maakWijsAan(BRON), "benoem": maakBenoem(BRON), "relatie": maakRelatie(BRON) };
 
 // De gevraagde items van een onderdeel
