@@ -86,6 +86,17 @@
       ]
     },
     {
+      "id": "taalgebieden",
+      "soort": "vlak",
+      "bron": "stb-taalgebied",
+      "items": [
+        "taalgebied-be-bru",
+        "taalgebied-be-de",
+        "taalgebied-be-fr",
+        "taalgebied-be-nl"
+      ]
+    },
+    {
       "id": "steden",
       "soort": "punt",
       "bron": "kb-punt",

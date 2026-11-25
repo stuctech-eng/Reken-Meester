@@ -17,8 +17,8 @@ var KAARTEN = [
   { id: "europa", titel: "Europa" }
 ];
 var BEELDTITEL = { west: "West en midden", zuidoost: "Zuidoost", noordoost: "Noordoost", kaukasus: "Kaukasus" };
-var LAAGTITEL = { "provincies-nl": "Provincies (Nederland)", "provincies-be": "Provincies (België)", gewesten: "Gewesten (België)", steden: "Steden", rivieren: "Rivieren", waddeneilanden: "Waddeneilanden", landen: "Landen" };
-var ITEMS = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js"];
+var LAAGTITEL = { "provincies-nl": "Provincies (Nederland)", "provincies-be": "Provincies (België)", gewesten: "Gewesten (België)", taalgebieden: "Taalgebieden (België)", steden: "Steden", rivieren: "Rivieren", waddeneilanden: "Waddeneilanden", landen: "Landen" };
+var ITEMS = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js"];
 
 function fout(t) { throw new Error(t); }
 var KB = {};

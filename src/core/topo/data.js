@@ -13,6 +13,7 @@ import { GEWESTEN } from "./items/gewesten.js";
 import { STEDEN_BE } from "./items/steden-be.js";
 import { WATER_NLBE } from "./items/water-nlbe.js";
 import { EILANDEN_NL } from "./items/eilanden-nl.js";
+import { TAALGEBIEDEN } from "./items/taalgebieden.js";
 import { pakUit } from "./kaart/bogen.js";
 import { maakDoelen } from "./kaart/tikregel.js";
 import { ringDelen } from "./kaart/beeld.js";
@@ -32,7 +33,7 @@ import { allesMinstensInOntwikkeling, telling } from "./beheersing.js";
 import { deckPick } from "../skills/flow.js";
 
 var KB = {};
-[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL].forEach(function(lijst) {
+[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL, TAALGEBIEDEN].forEach(function(lijst) {
   lijst.forEach(function(it) { if (it && it.id && it.naam) KB[it.id] = it; });
 });
 

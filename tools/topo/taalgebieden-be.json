@@ -1,0 +1,44 @@
+{
+  "toelichting": "De vier taalgebieden van Belgie (plan T1 par. 2.2; plan T5b par. 3.8, B6). De indeling letterlijk uit de wetten op het gebruik van de talen in bestuurszaken, gecoordineerd op 18 juli 1966, art. 2 tot en met 6 (Justel, tekstbijwerking tot 09-05-2016). De namen van de items volgen T1 par. 2.2. Het vlak is de vereniging van de Statbel-sectoren van de gemeenten van het gebied; de gemeenten volgen uit de regel van de wet, toegepast op Statbel REFNIS en de sectoren (maak-taalgebieden-be.mjs).",
+  "bron": {
+    "uitgever": "FOD Justitie, Justel (Belgisch Staatsblad)",
+    "document": "Wetten op het gebruik van de talen in bestuurszaken, gecoordineerd op 18 juli 1966 (numac 1966071850, tekstbijwerking tot 09-05-2016)",
+    "url": "https://www.ejustice.just.fgov.be/cgi_loi/change_lg.pl?language=nl&la=N&table_name=wet&cn=1966071850",
+    "bestand": "Justel_databank.pdf",
+    "sha256": "3351c43b0c434e190b2af9e79dcd4626523ccfa884456b53d3922b220ecfc7c4",
+    "geraadpleegd": "2026-11-25"
+  },
+  "indeling": { "artikel": "art. 2", "passage": "Het land wordt ingedeeld in vier taalgebieden : het Nederlandse, het Franse, het Duitse en Brussel-Hoofdstad." },
+  "gebieden": {
+    "taalgebied-be-nl": {
+      "naam": "Nederlands taalgebied", "varianten": ["Nederlandse taalgebied"], "wet": "het Nederlandse",
+      "artikel": "art. 3, par. 1",
+      "passage": "Het Nederlans taalgebied omvat : 1° de provinciën Antwerpen, Limburg, Oost-Vlaanderen en West-Vlaanderen; 2° het arrondissement Halle-Vilvoorde waarvan sprake in § 2; 3° het arrondissement Leuven.",
+      "provincies": ["Antwerpen", "Limburg", "Oost-Vlaanderen", "West-Vlaanderen"],
+      "arrondissementen": ["Halle-Vilvoorde", "Leuven"]
+    },
+    "taalgebied-be-fr": {
+      "naam": "Frans taalgebied", "varianten": ["Franse taalgebied"], "wet": "het Franse",
+      "artikel": "art. 4",
+      "passage": "Het Franse taalgebied omvat : 1° de provinciën Henegouwen, Luxemburg en Namen; 2° de provincie Luik, behalve de gemeenten vermeld in artikel 5; 3° het arrondissement Nijvel.",
+      "provincies": ["Henegouwen", "Luxemburg", "Namen", "Luik"],
+      "arrondissementen": ["Nijvel"],
+      "behalve": "taalgebied-be-de"
+    },
+    "taalgebied-be-de": {
+      "naam": "Duits taalgebied", "varianten": ["Duitse taalgebied"], "wet": "het Duitse",
+      "artikel": "art. 5",
+      "passage": "Het Duitse taalgebied omvat de gemeenten : Eupen, Eynatten, Hauset, Hergenrath, Kalmis, Kettenis, Lontzen, Neu-Moresnet, Raeren, Walhorn, Amel, Bullingen, Butgenbach, Crombach, Elsenborn, Heppenbach, Lommersweiler, Manderfeld, Meyerode, Recht, Reuland, Rocherath, Sankt-Vith, Schoenberg en Thommen.",
+      "deelgemeenten": ["Eupen", "Eynatten", "Hauset", "Hergenrath", "Kalmis", "Kettenis", "Lontzen", "Neu-Moresnet", "Raeren", "Walhorn", "Amel", "Bullingen", "Butgenbach", "Crombach", "Elsenborn", "Heppenbach", "Lommersweiler", "Manderfeld", "Meyerode", "Recht", "Reuland", "Rocherath", "Sankt-Vith", "Schoenberg", "Thommen"],
+      "binnenProvincie": "Luik",
+      "spelling": { "Kalmis": ["Kelmis"], "Schoenberg": ["Schoenberg", "Schonberg"] },
+      "besluit": "Claude 25-11-2026: de 25 gemeenten van art. 5 zijn de gemeenten van voor de fusie van 1977; ze zijn nu deelgemeenten (Statbel tx_sub_munty_nl). Spelling van de wet tegen Statbel: Kalmis = Kelmis, Schoenberg = Schoenberg of Schonberg (o zonder umlaut); de andere namen zijn gelijk op hoofdletters, koppeltekens en spaties na. Het taalgebied bestaat uit de huidige gemeenten met een deelgemeente uit art. 5, gezocht in de provincie Luik (art. 4, 2°)"
+    },
+    "taalgebied-be-bru": {
+      "naam": "tweetalig gebied Brussel-Hoofdstad", "varianten": ["Brussel-Hoofdstad"], "wet": "Brussel-Hoofdstad",
+      "artikel": "art. 6",
+      "passage": "Er wordt een administratief arrondissement opgericht dat \" Brussel-Hoofdstad \" wordt genoemd en dat volgende gemeenten omvat : Anderlecht, Brussel, Elsene, Etterbeek, Evere, Ganshoren, Jette, Koekelberg, Oudergem, Schaarbeek, Sint-Agatha-Berchem, Sint-Gillis, Sint-Jans-Molenbeek, Sint-Joost-ten-Node, Sint-Lambrechts-Woluwe, Sint-Pieters Woluwe, Ukkel, Vorst en Watermaal-Bosvoorde.",
+      "gemeenten": ["Anderlecht", "Brussel", "Elsene", "Etterbeek", "Evere", "Ganshoren", "Jette", "Koekelberg", "Oudergem", "Schaarbeek", "Sint-Agatha-Berchem", "Sint-Gillis", "Sint-Jans-Molenbeek", "Sint-Joost-ten-Node", "Sint-Lambrechts-Woluwe", "Sint-Pieters Woluwe", "Ukkel", "Vorst", "Watermaal-Bosvoorde"]
+    }
+  }
+}

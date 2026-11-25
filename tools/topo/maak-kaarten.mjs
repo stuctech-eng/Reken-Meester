@@ -41,7 +41,7 @@ export var WEERGAVE = 428 - 2 * 16;
 export var EENHEID_PX = WEERGAVE / BREEDTE;
 export var KAARTIDS = ["nlbe", "europa"];
 export var GRENS_MIN_STUK_PX2 = 0.01, GRENS_ZONE_PX = 2, GRENS_EIS_PX = 0.5, GRENS_MEETFOUT_PX = 0.05, GRENS_STAP_PX = 0.1, ZOOM_GRENS = 8;
-export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
+export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
 export var GZIP_DOEL = { nlbe: 40 * 1024, europa: 120 * 1024 };
 
 function fout(t) { throw new Error(t); }
@@ -49,7 +49,7 @@ function sha(b) { return crypto.createHash("sha256").update(b).digest("hex"); }
 
 // ---- de kennisbank (alleen lezen) ----
 async function kennisbank() {
-  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js"];
+  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js"];
   var perId = {};
   for (var i = 0; i < bestanden.length; i++) {
     var m = await import(pathToFileURL(path.join(ROOT, "src/core/topo", bestanden[i])).href);
@@ -152,7 +152,7 @@ async function leesCbs(paden) {
 function leesStatbel(paden) {
   var s = BRONNEN.statbel.sectoren, b = openBron(paden.sectoren, "STB", s.geojson.bestand);
   if (b.sha256 !== s.geojson.sha256) fout("SHA-256 van de sectoren wijkt af");
-  var g = leesGeojson(b.buf, ["cd_prov_refnis", "cd_rgn_refnis"]);
+  var g = leesGeojson(b.buf, ["cd_prov_refnis", "cd_rgn_refnis", "cd_munty_refnis"]);
   var topo = topology({ s: { type: "GeometryCollection", geometries: g.records.map(function(r) { return { type: "MultiPolygon", coordinates: r.delen }; }) } });
   var geoms = topo.objects.s.geometries;
   var naalden = [];
@@ -305,6 +305,12 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
       if (gs.bronId !== "STB" || gs.sha256 !== st.sha || gs.sleutel !== sl) fout("GEOREF van " + id + " past niet bij " + bron);
       if ((bron === "stb-provincie") !== (it.soort === "provincie")) fout("verkeerde soort voor " + bron + ": " + id);
       gebruik("STB", st.sha); return zetOm(st.samen(function(k) { return k[sl] === code; }, id), lambertNaarLl());
+    }
+    if (bron === "stb-taalgebied") {
+      // T5b (plan par. 3.8): de sectoren van de gemeenten van het taalgebied (maak-taalgebieden-be.mjs)
+      var st4 = gedeeld.stb(), gt = it.geometrie.bron;
+      if (it.soort !== "taalgebied" || gt.bronId !== "STB" || gt.sha256 !== st4.sha || gt.sleutel !== "cd_munty_refnis" || !Array.isArray(gt.waarden) || !gt.waarden.length) fout("GEOREF van " + id + " past niet bij stb-taalgebied");
+      gebruik("STB", st4.sha); return zetOm(st4.samen(function(k) { return gt.waarden.indexOf(k.cd_munty_refnis) >= 0; }, id), lambertNaarLl());
     }
     if (bron === "land-nlbe") {
       // N1 a (GPT 18-11-2026): NLD = de 12 provincievlakken samen, zonder vereniging (een vereniging gaf naalden zonder oppervlakte)
