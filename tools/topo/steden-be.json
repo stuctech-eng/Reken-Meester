@@ -1,16 +1,16 @@
 {
-  "toelichting": "De 11 vaste Belgische steden (plan T1 par. 2.2; bouwplan T2b-2 fase 6.2 v3): de 10 provinciehoofdsteden en Brussel. Geen Charleroi (open punt o, A5). Naam en varianten uit Statbel REFNIS (Nederlands en Frans); het punt uit Natural Earth v5.1.2 (populated_places_simple, de geometrie), alleen als het punt in de eigen gemeente ligt.",
+  "toelichting": "De 11 vaste Belgische steden (plan T1 par. 2.2; bouwplan T2b-2 fase 6.2 v3): de 10 provinciehoofdsteden en Brussel. Geen Charleroi (open punt o, A5). Naam en varianten uit Statbel REFNIS (Nederlands en Frans); het punt uit Natural Earth v5.1.2 (populated_places_simple, de geometrie), alleen als het punt in de eigen gemeente ligt; zonder bruikbaar NE-punt het binnenste punt van de centrumsector van Statbel (centrumSector, T5b).",
   "steden": {
-    "stad-be-brussel": { "refnis": "21004", "neId": null, "puntOpen": "GPT 18-11-2026: geen punt; het Natural Earth-punt (ne_id 1159151465) ligt in Anderlecht (21001), niet in Brussel (21004)" },
+    "stad-be-brussel": { "refnis": "21004", "neId": null, "centrumSector": "21004A001", "centrumNaam": "GROTE MARKT | GRAND-PLACE", "besluit": "Claude 25-11-2026: het punt is het binnenste punt van de Statbel-sector Grote Markt (21004A001), het historische centrum van Brussel; het Natural Earth-punt (ne_id 1159151465) ligt in Anderlecht en blijft ongebruikt (GPT 18-11-2026)" },
     "stad-be-antwerpen": { "refnis": "11002", "neId": 1159147705 },
     "stad-be-gent": { "refnis": "44021", "neId": 1159132155 },
     "stad-be-brugge": { "refnis": "31005", "neId": 1159144553 },
     "stad-be-hasselt": { "refnis": "71022", "neId": 1159120339 },
-    "stad-be-leuven": { "refnis": "24062", "neId": null, "puntOpen": "GPT 18-11-2026 K6 c: geen punt in Natural Earth; open tot het historische centrum voldoende is onderbouwd; geen kunstmatig punt in het gemeentevlak" },
+    "stad-be-leuven": { "refnis": "24062", "neId": null, "centrumSector": "24062A00-", "centrumNaam": "LEUVEN-CENTRUM | LEUVEN-CENTRUM", "besluit": "Claude 25-11-2026: het punt is het binnenste punt van de Statbel-sector Leuven-Centrum (24062A00-), het historische centrum; onderbouwt GPT 18-11-2026 K6 c" },
     "stad-be-bergen": { "refnis": "53053", "neId": 1159120321 },
     "stad-be-luik": { "refnis": "62063", "neId": 1159132333 },
     "stad-be-aarlen": { "refnis": "81001", "neId": 1159121119 },
     "stad-be-namen": { "refnis": "92094", "neId": 1159144557 },
-    "stad-be-waver": { "refnis": "25112", "neId": null, "puntOpen": "GPT 18-11-2026 K6 c: geen punt in Natural Earth; open tot het historische centrum voldoende is onderbouwd; geen kunstmatig punt in het gemeentevlak" }
+    "stad-be-waver": { "refnis": "25112", "neId": null, "centrumSector": "25112A001", "centrumNaam": "WAVRE-CENTRE VILLE | WAVRE-CENTRE VILLE", "besluit": "Claude 25-11-2026: het punt is het binnenste punt van de Statbel-sector Wavre-Centre Ville (25112A001), het historische centrum; onderbouwt GPT 18-11-2026 K6 c" }
   }
 }

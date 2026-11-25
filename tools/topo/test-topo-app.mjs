@@ -403,7 +403,9 @@ for (var dT of V.TOPO_NLBE_DEFS.filter(function(d) { return d.niveau; })) {
   for (var iT = 0; iT < 2000; iT++) {
     await Promise.resolve();
     var qT = skT.generate();
-    if (qT.vanSkillId) continue;   // herhaling uit een eerdere vaardigheid: daar gecontroleerd
+    // herhaling uit een eerdere vaardigheid: daar gecontroleerd; vraagt hij een kennisitem dat ook bij deze vaardigheid hoort (een
+    // gedeelde sleutel, zoals stad|a bij nb06 en nb25), dan telt dat kennisitem wel mee voor de eerste ronde
+    if (qT.vanSkillId) { if (qT.kennis && kT.indexOf(qT.kennis.sleutel) >= 0 && nT < kT.length) eersteT[qT.kennis.sleutel] = 1; continue; }
     nT++;
     if (qT.kennis && nT <= kT.length) eersteT[qT.kennis.sleutel] = 1;
     allesT[qT.kennis ? qT.kennis.o + "|" + qT.kennis.id : JSON.stringify(qT.meting || qT.keten)] = 1;
@@ -420,7 +422,7 @@ for (var dT of V.TOPO_NLBE_DEFS.filter(function(d) { return d.niveau; })) {
   }
   eis(skT.niveau === dT.niveau && !!skT.meesterschap === (dT.niveau === "M" && !dT.zonderItems), dT.id + ": niveau " + dT.niveau + " en meesterschap");
 }
-eis(D.sleutelsVanDef(defVan("nb13")).length === 38 && D.sleutelsVanDef(defVan("nb14")).length === 22 && D.sleutelsVanDef(defVan("nb24")).length === 42 && D.sleutelsVanDef(defVan("nb25")).length === 42, "T5a: kennisitems nb13 38, nb14 22, nb24 42, nb25 42");
+eis(D.sleutelsVanDef(defVan("nb13")).length === 38 && D.sleutelsVanDef(defVan("nb14")).length === 22 && D.sleutelsVanDef(defVan("nb24")).length === 44 && D.sleutelsVanDef(defVan("nb25")).length === 45, "T5a/T5b: kennisitems nb13 38, nb14 22, nb24 44 (met Leuven en Waver), nb25 45 (met Brussel, Leuven en Waver)");
 eis(D.sleutelsVanDef(defVan("nb24")).every(function(s) { return /\|s$/.test(s); }), "T5a: nb24 vraagt schrijven (s)");
 eis(D.combinaties(defVan("nb28")).length === 26, "T5a: nb28 heeft 26 beginsteden met een zinvol eenduidig antwoord (" + D.combinaties(defVan("nb28")).length + ")");
 // de uitleg bij een fout (plan T5 par. 4.7): bekende gevallen

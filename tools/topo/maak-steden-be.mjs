@@ -4,7 +4,9 @@
 // Gebruik: node maak-steden-be.mjs <TU_COM_REFNIS.txt> <sectoren.geojson> <map met de Natural Earth-bestanden> <uitvoermap>
 // - naam (Nederlands) en variant (Frans) uit Statbel REFNIS, geldig op 1-1-2026;
 // - het punt is de geometrie van Natural Earth v5.1.2 (populated_places_simple), alleen als die in de eigen gemeente ligt
-//   (statistische sectoren 2024); anders, of zonder NE-punt, een open punt met de reden uit steden-be.json (K6 c, Brussel);
+//   (statistische sectoren 2024); zonder bruikbaar NE-punt (Brussel, Leuven, Waver) het binnenste punt (pool van ontoegankelijkheid,
+//   1 m, in het grootste deel) van de centrumsector uit steden-be.json: de Statbel-sector van het historische centrum (T5b, besluit
+//   Claude 25-11-2026, onderbouwt K6 c); de sector moet in de eigen gemeente liggen en de naam uit steden-be.json hebben;
 // - Brussel krijgt de relaties hoofdstad-van en regeringszetel-van naar BEL (Grondwet art. 194, ov-rollen-nlbe.json R4, R5);
 // - schrijft items/steden-be.js; twee keer draaien geeft een byte-gelijk bestand.
 
@@ -13,9 +15,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import proj4 from "proj4";
 import { openBron } from "./bronnen/bron.mjs";
-import { CRS_GEOJSON } from "./bronnen/lees-geojson.mjs";
-import { leesRefnis, leesSectoren } from "./maak-bestuur-nlbe.mjs";
-import { binnenVlak } from "./vlakpunt.mjs";
+import { CRS_GEOJSON, leesGeojson } from "./bronnen/lees-geojson.mjs";
+import { leesRefnis } from "./maak-bestuur-nlbe.mjs";
+import { binnenVlak, pool } from "./vlakpunt.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var BRONNEN = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
@@ -24,6 +26,7 @@ var NE_PLAATSEN = "ne_10m_populated_places_simple.geojson";
 var DREMPEL_KM = 1;
 
 function fout(t) { throw new Error(t); }
+function opp(r) { var s = 0; for (var i = 1; i < r.length; i++) s += r[i - 1][0] * r[i][1] - r[i][0] * r[i - 1][1]; return s / 2; }
 function afstandKm(a, b) {
   var R = 6371, r = Math.PI / 180, dl = (b[1] - a[1]) * r, dg = (b[0] - a[0]) * r;
   var h = Math.sin(dl / 2) * Math.sin(dl / 2) + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dg / 2) * Math.sin(dg / 2);
@@ -38,7 +41,9 @@ export function bouw(paden) {
   var sbeBron = openBron(path.join(HIER, "steden-be.json"), "tabellenNlbe", "tools/topo/steden-be.json");
   var ovrBron = openBron(path.join(HIER, "ov-rollen-nlbe.json"), "tabellenNlbe", "tools/topo/ov-rollen-nlbe.json");
   var SBE = JSON.parse(sbeBron.buf.toString("utf8")), OVR = JSON.parse(ovrBron.buf.toString("utf8"));
-  var RF = leesRefnis(refnisBron.buf), sect = leesSectoren(sectBron.buf);
+  // de sectoren met hun naam (voor de centrumsector, T5b); de velden van leesSectoren plus de naam in het Nederlands en het Frans
+  var RF = leesRefnis(refnisBron.buf), sect = leesGeojson(sectBron.buf, ["cd_sector", "cd_munty_refnis", "cd_prov_refnis", "cd_rgn_refnis", "dt_situation", "tx_sector_descr_nl", "tx_sector_descr_fr"]);
+  if (sect.crs !== "EPSG:3812") fout("sectoren: onverwacht CRS " + sect.crs);
   var naar3812 = proj4("EPSG:4326", CRS_GEOJSON["EPSG:3812"]);
   var ne = JSON.parse(neBron.buf.toString("utf8")).features, perNe = {};
   ne.forEach(function(f) { if (perNe[f.properties.ne_id]) fout("NE: dubbel ne_id"); perNe[f.properties.ne_id] = f; });
@@ -62,6 +67,18 @@ export function bouw(paden) {
       georef = { bronId: "NE", bestand: NE_PLAATSEN, sha256: neBron.sha256, sleutel: "ne_id", waarde: t.neId, crs: "EPSG:4326" };
       var kenmerk = [f.properties.longitude, f.properties.latitude], d = afstandKm(ll, kenmerk);
       if (d > DREMPEL_KM) AFW.push({ id: "nlbe-ne-kenmerken-" + id.replace("stad-be-", ""), soort: "bron", tekst: "Natural Earth (ne_id " + t.neId + "): de kenmerken longitude/latitude (" + kenmerk.join(", ") + ") liggen " + d.toFixed(1) + " km van de geometrie (" + ll.join(", ") + "); de geometrie is leidend (GPT 18-11-2026)" });
+    } else if (t.centrumSector) {
+      var sc = sect.records.filter(function(s) { return s.kenmerken.cd_sector === t.centrumSector; });
+      if (sc.length !== 1) fout("centrumsector " + t.centrumSector + " niet precies een keer");
+      var k = sc[0].kenmerken;
+      if (k.cd_munty_refnis !== t.refnis) fout("centrumsector " + t.centrumSector + " ligt niet in " + t.refnis);
+      if (k.tx_sector_descr_nl + " | " + k.tx_sector_descr_fr !== t.centrumNaam) fout("centrumsector " + t.centrumSector + " heeft niet de naam " + t.centrumNaam);
+      var grootste = sc[0].delen.slice().sort(function(a, b) { return Math.abs(opp(b[0])) - Math.abs(opp(a[0])); })[0];
+      var pp = pool(grootste, 1), xy3812 = [Math.round(pp.x), Math.round(pp.y)];
+      var ll2 = naar3812.inverse(xy3812);
+      punt = { lon: Math.round(ll2[0] * 100000) / 100000, lat: Math.round(ll2[1] * 100000) / 100000, lambert2008: xy3812, herkomst: "afgeleid", status: "vastgesteld",
+        afleiding: { script: "tools/topo/maak-steden-be.mjs", invoer: [{ bronId: "STB", sha256: sectBron.sha256 }], regel: "pool van ontoegankelijkheid, 1 m, van de centrumsector " + t.centrumSector + " (" + t.centrumNaam + "), EPSG:3812 naar WGS84; " + t.besluit } };
+      georef = { bronId: "STB", bestand: STB.sectoren.geojson.bestand, sha256: sectBron.sha256, sleutel: "cd_sector", waarde: t.centrumSector, crs: "EPSG:3812" };
     } else {
       if (!t.puntOpen) fout("geen NE-punt en geen reden voor " + id);
       punt = { herkomst: "onderzoek", status: "niet aangetoond", reden: t.puntOpen };

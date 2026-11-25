@@ -469,11 +469,11 @@ var MUT62 = [
   ["10 een tweede Nederland", "hergebruik", function(c) { c.nieuw.push(kopie(c.oud.filter(function(r) { return r.id === "NLD"; })[0])); }],
   ["bron-id niet in het register", "register", function(c) { nieuw62(c, "prov-nl-pv20").naam.bron.id = "CBS2026"; }],
   ["GEOREF met een andere SHA", "georef", function(c) { nieuw62(c, "prov-be-10000").geometrie.bron.sha256 = "3".repeat(64); }],
-  ["open punt met een GEOREF", "georef", function(c) { nieuw62(c, "stad-be-leuven").geometrie.bron = kopie(nieuw62(c, "stad-be-gent").geometrie.bron); }],
+  ["open punt met een GEOREF", "georef", function(c) { var g = nieuw62(c, "stad-be-leuven").geometrie; g.punt = { herkomst: "onderzoek", status: "niet aangetoond", reden: "mutant" }; g.bron = kopie(nieuw62(c, "stad-be-gent").geometrie.bron); }],
   ["twee provincies Antwerpen in Belgie", "namen", function(c) { nieuw62(c, "prov-be-20001").naam.waarde = "Antwerpen"; }],
   ["afgeleide relatie zonder afleiding", "relatiestatus", function(c) { delete c.rel[1].afleiding; }],
   ["provinciehoofdstad-van naar een gewest", "relatiesoort", function(c) { c.rel.filter(function(r) { return r.van === "stad-be-antwerpen"; })[0].naar = "gewest-be-02000"; }],
-  ["open punt als vastgesteld met herkomst onderzoek", "bewijs", function(c) { nieuw62(c, "stad-be-waver").geometrie.punt.status = "vastgesteld"; }],
+  ["open punt als vastgesteld met herkomst onderzoek", "bewijs", function(c) { nieuw62(c, "stad-be-waver").geometrie.punt = { herkomst: "onderzoek", status: "vastgesteld", reden: "mutant", lon: 4.6, lat: 50.7 }; }],
   ["inverse zonder bron", "inverse", function(c) { c.inverseFn = function(r, rel) { var i = kopie(IX.inverseVan(r, rel)); delete i.bron; return i; }; }]
 ];
 var gevangen62 = 0, gemist62 = [];

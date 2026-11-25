@@ -182,9 +182,6 @@ De ids komen uit AFWIJKINGEN_STEDEN in items/steden-nl.js; tools/topo/test-stede
 - nlbe-r7-vlaamse-gemeenschap | onderzocht | R7 Brussel, hoofdstad van de Vlaamse Gemeenschap: bewezen (Vlaamse overheid), GPT 18-11-2026 K1 c: bewezen, maar zonder item en relatie in fase 6.2; volgt in 6.4 met de gemeenschappen. Brussel ligt niet in het Vlaamse Gewest (H2 a)
 - nlbe-naam-limburg | nog onbeslist | Twee provincies met de voorkeursnaam Limburg (prov-be-70000, prov-nl-pv31): de namen zijn uniek per soort en land, niet per soort alleen (plan v2 par. 5.7); te beslissen hoe een vraag ze onderscheidt
 - nlbe-ne-kenmerken-hasselt | bevestigd verschil | Natural Earth (ne_id 1159120339): de kenmerken longitude/latitude (5.483998, 50.964003) liggen 10.9 km van de geometrie (5.338536, 50.928838); de geometrie is leidend (GPT 18-11-2026)
-- nlbe-punt-brussel | onderzocht | Brussel: geen punt. GPT 18-11-2026: geen punt; het Natural Earth-punt (ne_id 1159151465) ligt in Anderlecht (21001), niet in Brussel (21004)
-- nlbe-punt-leuven | onderzocht | Leuven: geen punt. GPT 18-11-2026 K6 c: geen punt in Natural Earth; open tot het historische centrum voldoende is onderbouwd; geen kunstmatig punt in het gemeentevlak
-- nlbe-punt-waver | onderzocht | Waver: geen punt. GPT 18-11-2026 K6 c: geen punt in Natural Earth; open tot het historische centrum voldoende is onderbouwd; geen kunstmatig punt in het gemeentevlak
 
 ## Nederland en België, basisgegevens (T2b-2 fase 6.2, deel 2)
 

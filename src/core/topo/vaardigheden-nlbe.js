@@ -61,7 +61,7 @@ var DEFS = [
   { id: "nb11", label: "België: provinciehoofdsteden", desc: "De hoofdsteden van de 10 Belgische provincies, in beide richtingen", minCorrect: 20, onderdelen: [
     relatie("provinciehoofdstad-van", "van", "prov-be-", { soort: "stad", prefix: "stad-be-" }, function(n) { return "Wat is de hoofdstad van de Belgische provincie " + n + "?"; }),
     relatie("provinciehoofdstad-van", "naar", "stad-be-", { soort: "provincie", prefix: "prov-be-" }, function(n) { return "Van welke Belgische provincie is " + n + " de hoofdstad?"; }) ] },
-  { id: "nb12", label: "België: steden aanwijzen", desc: "Acht Belgische steden; Brussel, Leuven en Waver volgen later", minCorrect: 8, onderdelen: [
+  { id: "nb12", label: "België: steden aanwijzen", desc: "Elf Belgische steden: Brussel en de tien provinciehoofdsteden", minCorrect: 11, onderdelen: [
     wijsAan("steden", "stad-be-", "de stad") ] },
   // Gevorderd en Meesterschap, de vaardigheden die met de kennisbank van nu kunnen (plan T5a). nb15 tot en met nb23 en nb27 volgen in
   // T5c op hun plek in de rij. minCorrect = het aantal kennisitems (elk moet minstens een keer goed zijn); zonder kennisitems 12.
@@ -75,11 +75,11 @@ var DEFS = [
     nietBij("grenst-aan", "prov-nl-", provNL(), function(n) { return "Welke provincie grenst níet aan " + n + "?"; }),
     relatie("grenst-aan", "naar", "prov-be-", provBE(), function(n) { return "Welke Belgische provincie grenst aan " + n + "?"; }),
     nietBij("grenst-aan", "prov-be-", provBE(), function(n) { return "Welke Belgische provincie grenst níet aan " + n + "?"; }) ] },
-  { id: "nb24", niveau: "M", label: "Lege kaart: provincies en hoofdsteden", desc: "De naam typen van een provincie of provinciehoofdstad, zonder keuzes", minCorrect: 42, onderdelen: [
+  { id: "nb24", niveau: "M", label: "Lege kaart: provincies en hoofdsteden", desc: "De naam typen van een provincie of provinciehoofdstad, zonder keuzes", minCorrect: 44, onderdelen: [
     typLeeg("provincies-nl", "", "Typ de naam van de oranje provincie."),
     typLeeg("provincies-be", "", "Typ de naam van de oranje Belgische provincie."),
     typLeeg("steden", "", "Typ de naam van deze provinciehoofdstad.", "provinciehoofdstad-van") ] },
-  { id: "nb25", niveau: "M", label: "Lege kaart: steden en rivieren", desc: "Aanwijzen op de hele kaart, zonder startbeeld; de meren volgen later", minCorrect: 42, onderdelen: [
+  { id: "nb25", niveau: "M", label: "Lege kaart: steden en rivieren", desc: "Aanwijzen op de hele kaart, zonder startbeeld; de meren volgen later", minCorrect: 45, onderdelen: [
     wijsVrij("steden", "", "de stad", [IJMOND]),
     wijsVrij("rivieren", "", "de rivier") ] },
   { id: "nb26", niveau: "M", zonderItems: true, label: "Richting en afstand", desc: "In welke richting en hoe ver hemelsbreed, tussen twee steden", minCorrect: 12, onderdelen: [
@@ -161,7 +161,7 @@ var HULP = {
   nb12: {
     strategy: "Stip zoeken",
     tip: "Antwerpen ligt in het noorden van België, vlak bij de grens met Nederland. Luik ligt in het oosten.",
-    uitleg: "Elke stad is een stip op de kaart. Brugge ligt in het westen, dicht bij de kust; Gent iets oostelijker. Bergen en Namen liggen in het zuiden (Wallonië), Hasselt in het oosten en Aarlen helemaal in het zuidoosten.",
+    uitleg: "Elke stad is een stip op de kaart. Brussel ligt in het midden van België, met Leuven ten oosten en Waver ten zuidoosten ervan. Brugge ligt in het westen, dicht bij de kust; Gent iets oostelijker. Bergen en Namen liggen in het zuiden (Wallonië), Hasselt in het oosten en Aarlen helemaal in het zuidoosten.",
     voorbeeld: "Tik de stad Gent aan: begin bij Brugge in het westen en ga naar het oosten. De volgende grote stip is Gent.",
   },
   nb13: {

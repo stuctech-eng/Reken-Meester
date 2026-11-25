@@ -230,7 +230,7 @@
         ],
         "bestanden": {
           "tools/topo/ov-rollen-nlbe.json": "440805cd7b401fd6f7c01dd97f69c474c9b2c1fcd013e2a326da41e02fabcf45",
-          "tools/topo/steden-be.json": "16c9ced441661752b4ab10a4e9390d3a461a1600b0d56d386fa276f953726770",
+          "tools/topo/steden-be.json": "c22314805ea75a3abd2017de7a00e2c6befe89e8f96ecf6303b57d748ad3324e",
           "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }
       }
