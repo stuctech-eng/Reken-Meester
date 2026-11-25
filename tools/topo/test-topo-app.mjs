@@ -220,7 +220,7 @@ var BH = await import(bron("src/core/topo/beheersing.js"));
 function vaardigheid(id) { return V.TOPO_NLBE_SKILLS.filter(function(x) { return x.id === id; })[0]; }
 function defVan(id) { return V.TOPO_NLBE_DEFS.filter(function(x) { return x.id === id; })[0]; }
 async function vraag(sk) { await Promise.resolve(); return sk.generate(); }
-var NB02 = vaardigheid("nb02"), NB01 = vaardigheid("nb01"), NB03 = vaardigheid("nb03");
+var NB02 = vaardigheid("nb02"), NB01 = vaardigheid("nb01"), NB03 = vaardigheid("nb03"), NB04 = vaardigheid("nb04");
 eis(NB02.itemVoorwaarde === true && typeof NB02.kennisSleutels === "function" && typeof NB02.extraVoorwaarde === "function" && typeof NB02.opAntwoord === "function", "T4: topo-vaardigheden hebben de hooks itemVoorwaarde, kennisSleutels, extraVoorwaarde en opAntwoord");
 eis(NB02.kennisSleutels().length === 12 && D.sleutelsVanDef(defVan("nb04")).length === 12 && D.sleutelsVanDef(defVan("nb05")).length === 3, "T4: kennisitems: nb02 12, nb04 12 (beide richtingen een paar), nb05 3");
 // een fout komt na 3 tot 5 vragen terug
@@ -256,6 +256,18 @@ D.startSessie(st1, "2026-12-01");
 var herhaling = [];
 for (var h = 1; h <= 15; h++) { var qh = await vraag(NB02); if (qh.vanSkillId) herhaling.push(h + ":" + qh.vanSkillId); NB02.opAntwoord(qh, true, "kaart"); }
 eis(herhaling.join(",") === "5:nb01,10:nb01,15:nb01", "T4: herhaling op vraag 5, 10 en 15 uit nb01 (" + herhaling.join(",") + ")");
+// herhaling: ook een teruggevallen item dat aan de beurt is, en anders een nieuw item van een eerdere vaardigheid (beheerst voor T4)
+var st1b = {}, k1 = D.sleutelsVanDef(defVan("nb01"));
+k1.forEach(function(s) { st1b[s] = BH.schrijfItem({ g: 4, f: 0, st: 2, dg: 3, ld: dag, lg: 1, gz: 0, gd: dag }); });
+st1b[k1[2]] = BH.schrijfItem({ g: 4, f: 1, st: 1, dg: 3, ld: dag - 2, lg: 0, gz: 0, gd: dag - 3 });
+D.startSessie(st1b, "2026-12-01");
+var hb = [];
+for (var h3 = 1; h3 <= 5; h3++) { var qb = await vraag(NB02); if (qb.vanSkillId) hb.push(qb.kennis.sleutel); NB02.opAntwoord(qb, true, "kaart"); }
+eis(hb.length === 1 && hb[0] === k1[2], "T4: herhaling neemt een teruggevallen item dat aan de beurt is (" + hb.join(",") + ")");
+D.startSessie({}, "2026-12-01");
+var hn2 = [];
+for (var h4 = 1; h4 <= 30; h4++) { var qc = await vraag(NB04); if (qc.vanSkillId) hn2.push(qc.vanSkillId + ":" + qc.kennis.sleutel); NB04.opAntwoord(qc, true, "choice"); }
+eis(hn2.length === 6 && hn2.every(function(x) { return /^nb0[123]:/.test(x); }) && new Set(hn2).size === 6, "T4: zonder items aan de beurt neemt de herhaling nieuwe items van eerdere vaardigheden (" + hn2.join(", ") + ")");
 D.startSessie(st1, "2026-12-01");
 var geen = 0;
 for (var h2 = 1; h2 <= 10; h2++) { var qn = await vraag(NB01); if (qn.vanSkillId) geen++; NB01.opAntwoord(qn, true, "kaart"); }
@@ -296,7 +308,7 @@ for (var bdId of ["nb03", "nb04", "nb10", "nb11"]) {
   var bd = defVan(bdId), bsk = vaardigheid(bdId);
   D.startSessie({}, "2026-12-01");
   for (var bi = 0; bi < 400; bi++) {
-    var bq = await vraag(bsk), o5 = bd.onderdelen[bq.kennis.o], kand, ver, juistNaam = bq.answer;
+    var bq = await vraag(bsk), o5 = defVan(bq.kennis.defId).onderdelen[bq.kennis.o], kand, ver, juistNaam = bq.answer;
     if (o5.sjabloon === "relatie") {
       var jst = RS2.juisteIds({ relaties: D.relaties }, o5, bq.relatie.genoemd);
       kand = RS2.poolIds({ ids: D.ids }, o5, bq.relatie.genoemd).filter(function(x) { return jst.indexOf(x) < 0; });

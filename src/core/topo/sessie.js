@@ -12,7 +12,8 @@
 //
 // De volgorde per vraag (par. 5.1): 1 een fout uit deze sessie, na 3 tot 5 vragen; 2 op vraag 5, 10, 15 ... een beheerst item dat
 // aan de beurt is uit een eerdere vaardigheid; 3 een item van def dat aan de beurt is (het langst wachtende eerst); 4 een nieuw
-// item van def (willekeurig); 5 anders null. Een item dat aan de beurt of nieuw was, komt hoogstens een keer per sessie via 3 of 4.
+// item van def (willekeurig); 5 anders null. Bij 2: eerst aan de beurt (ook teruggevallen), anders een nieuw item van een eerdere
+// vaardigheid. Een item dat aan de beurt of nieuw was, komt hoogstens een keer per sessie via 3 of 4.
 // Nooit twee keer achter elkaar hetzelfde kennisitem, zolang er een ander is.
 
 import { leesItem, status, aanDeBeurt, wachttijd, verwerkAntwoorden, dagNr } from "./beheersing.js";
@@ -52,17 +53,22 @@ export function maakSessie(api) {
         var f = S.fouten[i];
         if (f.defId === def.id && f.klaar <= S.n && f.sleutel !== S.laatste) { S.fouten.splice(i, 1); return { def: def, o: f.o, id: f.id }; }
       }
-      // 2 herhaling uit een eerdere vaardigheid
+      // 2 herhaling uit een eerdere vaardigheid: een item dat aan de beurt is (gekend, of teruggevallen: T1 par. 1.6 punt 4, het
+      //   langst wachtende eerst); is er geen, dan een item dat nog nieuw is (een vaardigheid die beheerst werd voor T4, of met de
+      //   bestaande regel zonder dat elk item al goed was). Zo blijft geen item van een beheerste vaardigheid ongevraagd.
       var plek = (defs || []).indexOf(def);
       if (S.n % 5 === 0 && plek > 0) {
-        var kand = [], van = {};
+        var kand = [], nieuwKand = [], van = {};
         defs.slice(0, plek).forEach(function(d) {
           api.sleutelsVanDef(d).forEach(function(s) {
-            var it = st(s);
-            if (!van[s] && !S.gezien[s] && s !== S.laatste && status(it) === "beheerst" && aanDeBeurt(it, S.dag)) { van[s] = d; kand.push(s); }
+            if (van[s] || S.gezien[s] || s === S.laatste) return;
+            var it = st(s), stt = status(it);
+            if (stt !== "nieuw" && aanDeBeurt(it, S.dag)) { van[s] = d; kand.push(s); }
+            else if (stt === "nieuw") { van[s] = d; nieuwKand.push(s); }
           });
         });
         if (kand.length) { var h = oudsteEerst(kand)[0]; return combinatie(van[h], h); }
+        if (nieuwKand.length) { var hn = nieuwKand[Math.floor(Math.random() * nieuwKand.length)]; return combinatie(van[hn], hn); }
       }
       var eigen = api.sleutelsVanDef(def).filter(function(s) { return !S.gezien[s] && s !== S.laatste; });
       // 3 aan de beurt
