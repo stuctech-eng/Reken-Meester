@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { DEFAULT_SAVE, dClone, calcXp, getTitel } from "./core/save.js";
 import { getNextSkill, getSkillOrder, getSubject } from "./core/subjects.js";
 import { mergeSessionSkills, pasBewerkingToe, herbouw, normaliseer, zonderSyncVelden } from "./core/voortgang.js";
+import { topo } from "./core/topo/laden.js";
 import { initAuth, volgInlog, huidigeInlog } from "./services/firebase.js";
 import { laadServer, slaOp } from "./services/sync.js";
 import { maakSchrijfplek, probeerLock, pakIn1Locks } from "./services/schrijfplek.js";
@@ -1182,13 +1183,17 @@ export default function App() {
     );
   }
 
+  // Topografie (plan T4 par. 5.2): de sessie begint met de opgeslagen itemstand en de datum van vandaag (dezelfde datum als de
+  // bewerking sessie). ModusLader roept dit alleen aan voor een modus met kaarten, na het laden.
+  function startTopoSessie() { topo().startSessie((save.topo && save.topo.items) || {}, vandaag()); }
+
   // Los oefenen: zelfde oefenscherm, maar zonder opslag, concept of Auto; stoppen = terug
   // naar het modusscherm
   if (screen === "practice" && fixedSkillId) {
     var fixedSubjData = (save.subjects && save.subjects[subjectId]) || {};
     var leaveFixed    = function() { setFixedSkillId(null); setScreen("subject"); };
     return metMelding(
-      <ModusLader kaarten={getSubject(subjectId).kaarten} onBack={leaveFixed}>
+      <ModusLader kaarten={getSubject(subjectId).kaarten} onBack={leaveFixed} opGeladen={startTopoSessie}>
       <PracticeScreen
         key={subjectId + "-los-" + fixedSkillId}
         subjectId={subjectId}
@@ -1219,7 +1224,7 @@ export default function App() {
       };
     }
     return metMelding(
-      <ModusLader kaarten={getSubject(subjectId).kaarten} onBack={function() { handlePracticeBack(null); }}>
+      <ModusLader kaarten={getSubject(subjectId).kaarten} onBack={function() { handlePracticeBack(null); }} opGeladen={startTopoSessie}>
       <PracticeScreen
         key={subjectId + "-" + autoKey}
         subjectId={subjectId}

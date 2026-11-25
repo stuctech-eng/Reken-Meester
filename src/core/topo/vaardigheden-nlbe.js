@@ -138,13 +138,26 @@ var RUW = DEFS.map(function(v) {
     id: v.id, label: v.label, desc: v.desc, minCorrect: v.minCorrect,
     strategy: h.strategy, tip: h.tip, uitleg: h.uitleg, voorbeeld: h.voorbeeld,
     deck: true,
-    make: function() { return topo().maak(v); },
+    make: function() { return topo().maak(v, DEFS); },
   };
 });
 
 var GEMAAKT = createSkills("topo_nlbe", RUW);
 // Mag de vaardigheid namen typen (een onderdeel benoem met typen)? Dan toont de modus de schakelaar Kiezen | Typen (inputResolve)
 GEMAAKT.list.forEach(function(sk, i) { if (DEFS[i].onderdelen.some(function(o) { return o.typen; })) sk.typenNaam = true; });
+// Beheersing per item (plan T4 par. 4.5 en 5.2): de hooks die het oefenscherm en de voortgang gebruiken. Rekenen en wiskunde hebben ze
+// niet; daar gaat alles zoals voor T4.
+//   itemVoorwaarde  mastered pas als ook elk kennisitem minstens in ontwikkeling is
+//   kennisSleutels  de kennisitems van de vaardigheid (gaan mee in het sessieresultaat, skillItems)
+//   extraVoorwaarde de itemVoorwaarde op de stand van nu, voor de live promotie
+//   opAntwoord      verwerkt een antwoord in de sessie; geeft het kennisrecord voor de lijst results
+GEMAAKT.list.forEach(function(sk, i) {
+  var def = DEFS[i];
+  sk.itemVoorwaarde = true;
+  sk.kennisSleutels = function() { return topo().sleutelsVanDef(def); };
+  sk.extraVoorwaarde = function() { return topo().itemsOk(def); };
+  sk.opAntwoord = function(q, goed, invoer) { return topo().opAntwoord(q, goed, invoer); };
+});
 export var TOPO_NLBE_SKILLS = GEMAAKT.list;
 export var TOPO_NLBE_ORDER = DEFS.map(function(v) { return v.id; });
 export var TOPO_NLBE_DEFS = DEFS;

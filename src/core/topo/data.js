@@ -19,7 +19,9 @@ import { ringDelen } from "./kaart/beeld.js";
 import { HOOFDSTEDEN_NLBE } from "./afgeleid/hoofdsteden-nlbe.js";
 import { maakWijsAan, vraagIds } from "./sjablonen/wijs-aan.js";
 import { maakBenoem } from "./sjablonen/benoem.js";
-import { maakRelatie, genoemdeIds } from "./sjablonen/relatie.js";
+import { maakRelatie, genoemdeIds, juisteIds } from "./sjablonen/relatie.js";
+import { maakSessie } from "./sessie.js";
+import { allesMinstensInOntwikkeling, telling } from "./beheersing.js";
 import { deckPick } from "../skills/flow.js";
 
 var KB = {};
@@ -118,9 +120,64 @@ export function combinaties(def) {
   return uit;
 }
 
-// Een vraag van een vaardigheid: een ronde langs alle combinaties (deckPick), daarna het sjabloon van het onderdeel
-export function maak(def) {
-  var c = deckPick(def.id, combinaties(def)), o = def.onderdelen[c.o];
-  return SJABLONEN[o.sjabloon](o, c.id);
+// De kennisitems (plan T4 par. 3): de sleutel "<item-id>|<kennissoort>". Per combinatie (onderdeel, item) de sleutels die de vraag
+// kan trainen: aanwijzen a, benoemen b, relatie r:<relatie> op het paar (de bron-id van); bij "van" met meer juiste bronnen elk paar
+export function sleutelsVan(o, id) {
+  if (o.sjabloon === "wijs-aan") return [id + "|a"];
+  if (o.sjabloon === "benoem") return [id + "|b"];
+  if (o.gevraagd === "naar") return [id + "|r:" + o.relatie];
+  return juisteIds(BRON, o, id).map(function(v) { return v + "|r:" + o.relatie; });
+}
+// Alle kennisitems van een vaardigheid (de itemVoorwaarde en de balk); schrijven (s) hoort er niet bij: dat is Meesterschap (T5)
+var SLEUTELS = {};
+export function sleutelsVanDef(def) {
+  if (SLEUTELS[def.id]) return SLEUTELS[def.id];
+  var gezien = {};
+  combinaties(def).forEach(function(c) { sleutelsVan(def.onderdelen[c.o], c.id).forEach(function(s) { gezien[s] = 1; }); });
+  SLEUTELS[def.id] = Object.keys(gezien).sort();
+  return SLEUTELS[def.id];
+}
+
+// Het kennisitem van een gemaakte vraag: sleutel (en typ: de sleutel bij typen, alleen bij benoemen met typen), met wat de sessie
+// nodig heeft om een fout terug te laten komen (de vaardigheid, het onderdeel en het item)
+function kennisVan(def, oi, id, q) {
+  var o = def.onderdelen[oi], sleutel;
+  if (o.sjabloon === "relatie") sleutel = (o.gevraagd === "van" ? q.relatie.antwoordId : q.relatie.genoemd) + "|r:" + o.relatie;
+  else sleutel = sleutelsVan(o, id)[0];
+  var k = { sleutel: sleutel, defId: def.id, o: oi, id: id };
+  if (o.sjabloon === "benoem" && o.typen) k.typ = id + "|s";
+  return k;
+}
+
+var SESSIE = maakSessie({ combinaties: combinaties, sleutelsVan: sleutelsVan, sleutelsVanDef: sleutelsVanDef });
+
+// De sessie (plan T4 par. 5): bij het openen van de modus de opgeslagen itemstand en de datum
+export function startSessie(items, datum) { SESSIE.start(items, datum); }
+// Na elk antwoord: het kennisrecord voor de lijst results (invoer: "kaart", "naam" of "choice")
+export function opAntwoord(q, goed, invoer) { return SESSIE.antwoord(q, goed, invoer); }
+// De itemVoorwaarde op de stand van nu (voor de live promotie in het oefenscherm, plan T4 par. 4.5)
+export function itemsOk(def) { return allesMinstensInOntwikkeling(SESSIE.items(), sleutelsVanDef(def), false); }
+export function itemTelling(def, items) { return telling(items || SESSIE.items(), sleutelsVanDef(def), false); }
+export function sessieItems() { return SESSIE.items(); }
+
+// Een vraag van een vaardigheid: eerst de keuze van de sessie (fouten, herhaling, aan de beurt, nieuw), anders een ronde langs
+// alle combinaties (deckPick); daarna het sjabloon van het onderdeel. defs: alle vaardigheden van de modus (voor de herhaling).
+// Een herhalingsvraag uit een andere vaardigheid krijgt vanSkillId: het oefenscherm telt hem dan bij die vaardigheid.
+export function maak(def, defs) {
+  var k = SESSIE.kies(def, defs || [def]);
+  if (!k) {
+    // de ronde langs alle combinaties; is het kennisitem hetzelfde als de vorige vraag (een paar in de andere richting), dan een
+    // willekeurige andere combinatie
+    var combos = combinaties(def), c = deckPick(def.id, combos), vorig = SESSIE.laatste();
+    function zelfde(x) { return vorig !== null && sleutelsVan(def.onderdelen[x.o], x.id).indexOf(vorig) >= 0; }
+    if (zelfde(c)) { var anders = combos.filter(function(x) { return !zelfde(x); }); if (anders.length) c = anders[Math.floor(Math.random() * anders.length)]; }
+    k = { def: def, o: c.o, id: c.id };
+  }
+  var o = k.def.onderdelen[k.o];
+  var q = SJABLONEN[o.sjabloon](o, k.id);
+  q.kennis = kennisVan(k.def, k.o, k.id, q);
+  if (k.def !== def) q.vanSkillId = k.def.id;
+  SESSIE.gevraagd(q);
+  return q;
 }
 export function maakMet(def, o, id) { return SJABLONEN[o.sjabloon](o, id); }

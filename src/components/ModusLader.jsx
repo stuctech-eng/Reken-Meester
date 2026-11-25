@@ -8,7 +8,9 @@ import { laadTopo } from "../core/topo/laden.js";
 // Wacht met het oefenscherm tot de kaarten en de kennisbank van een modus van Topografie geladen zijn (plan T3 par. 3.1): het
 // oefenscherm maakt zijn eerste vraag meteen. Een modus zonder kaarten (rekenen, wiskunde) tekent direct zijn kinderen, zonder
 // iets te laden. Bij een fout een zichtbare melding, met "Opnieuw" en "Terug".
-export default function ModusLader({ kaarten, onBack, children }) {
+// opGeladen (optioneel, plan T4 par. 5.2): na het laden en voor het oefenscherm, bijvoorbeeld om de sessie van Topografie te starten
+// met de opgeslagen itemstand. Een fout daarin geeft dezelfde melding.
+export default function ModusLader({ kaarten, onBack, opGeladen, children }) {
   var nodig = !!(kaarten && kaarten.length);
   var st = useState(nodig ? "laden" : "klaar"), stand = st[0], setStand = st[1];
   var ft = useState(null), fout = ft[0], setFout = ft[1];
@@ -19,7 +21,7 @@ export default function ModusLader({ kaarten, onBack, children }) {
     var weg = false;
     setStand("laden"); setFout(null);
     // ook de code van de kaart (KaartAntwoord) meteen: een laadfout komt dan hier, met Opnieuw en Terug, en niet midden in een vraag
-    Promise.all([laadTopo(kaarten), import("./answer/KaartAntwoord.jsx")]).then(function() { if (!weg) setStand("klaar"); }, function(e) { if (!weg) { setFout(e && e.message ? e.message : String(e)); setStand("fout"); } });
+    Promise.all([laadTopo(kaarten), import("./answer/KaartAntwoord.jsx")]).then(function() { if (opGeladen) opGeladen(); if (!weg) setStand("klaar"); }).then(null, function(e) { if (!weg) { setFout(e && e.message ? e.message : String(e)); setStand("fout"); } });
     return function() { weg = true; };
   }, [nodig, poging]);
 

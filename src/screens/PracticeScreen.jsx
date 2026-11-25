@@ -116,7 +116,18 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     var q = skill.generate();
     q.skillId = skillId;
     q.skill   = skill;
+    herhaalVan(q);
     return q;
+  }
+
+  // Topografie (plan T4 par. 5.2): een herhalingsvraag uit een eerdere vaardigheid (vanSkillId) telt bij die vaardigheid.
+  // Zonder vanSkillId (rekenen, wiskunde) verandert er niets.
+  function herhaalVan(q) {
+    if (!q.vanSkillId) return;
+    var van = getSkill(subjectId, q.vanSkillId);
+    if (!van) return;
+    q.skillId = q.vanSkillId;
+    q.skill   = van;
   }
 
   // ── State ──────────────────────────────────────────────────────
@@ -278,6 +289,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     }
     q.skillId = skillId;
     q.skill   = skill;
+    herhaalVan(q);
     lastQuestionRef.current = q.question;
     return q;
   }
@@ -334,7 +346,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     if (rr.length > 0) {
       avgTime = Math.round(rr.reduce(function(s, r) { return s + r.timeMs; }, 0) / rr.length);
     }
-    return {
+    var uit = {
       subjectId:         subjectId,
       level:             level,
       totalCorrect:      cor,
@@ -347,6 +359,15 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       promotionSnapshots: promotionSnapRef.current,
       conceptId:          conceptIdRef.current,
     };
+    // Topografie (plan T4 par. 4.5): per geoefende vaardigheid met een itemVoorwaarde haar kennisitems; zonder zulke vaardigheden
+    // (rekenen, wiskunde) blijft het resultaat zoals het was
+    var skillItems = null;
+    Object.keys(ss).forEach(function(id) {
+      var sk = getSkill(subjectId, id);
+      if (sk && sk.itemVoorwaarde && sk.kennisSleutels && ss[id].total > 0) { skillItems = skillItems || {}; skillItems[id] = sk.kennisSleutels(); }
+    });
+    if (skillItems) uit.skillItems = skillItems;
+    return uit;
   }
 
   // ── Level-up overlay doorgaan ──────────────────────────────────
@@ -445,7 +466,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
     var earnedXp = calcXp(level, isCorrect, timeMs);
     totalXpRef.current += earnedXp;
 
-    var newResults = results.concat([{
+    var antwoordRegel = {
       correct:  isCorrect,
       timeMs:   timeMs,
       answer:   currentQuestion.answer,
@@ -454,7 +475,11 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
       skillId:  answerSkillId,
       terms:    currentQuestion.terms || null,
       xp:       earnedXp,
-    }]);
+    };
+    // Topografie (plan T4 par. 5.2): het kennisitem van het antwoord, met de invoer die de leerling had (kaart, typen of kiezen)
+    var kennisRegel = currentQuestion.skill && currentQuestion.skill.opAntwoord ? currentQuestion.skill.opAntwoord(currentQuestion, isCorrect, invoerSoort) : null;
+    if (kennisRegel) antwoordRegel.kennis = kennisRegel;
+    var newResults = results.concat([antwoordRegel]);
     setResults(newResults);
 
     if (!isCorrect) {
@@ -514,7 +539,10 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         var checkSkill      = getSkill(subjectId, answerSkillId);
         var minC            = checkSkill ? (checkSkill.minCorrect || 8) : 8;
 
-        if (cumulativeC >= minC && sessionTotal >= SESSION_MIN && sessionAcc >= SESSION_ACC) {
+        // Topografie (plan T4 par. 4.5): ook de itemVoorwaarde op de stand van nu; zonder extraVoorwaarde geldt de bestaande regel
+        var extraOk         = !(checkSkill && checkSkill.extraVoorwaarde) || checkSkill.extraVoorwaarde();
+
+        if (cumulativeC >= minC && sessionTotal >= SESSION_MIN && sessionAcc >= SESSION_ACC && extraOk) {
           promotedThisSession.current.add(answerSkillId);
           promotionSnapRef.current[answerSkillId] = { correct: sessionCorrect, total: sessionTotal };
 
@@ -585,6 +613,8 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
   var inputInfo   = resolveInput(subjectId, currentQuestion.skillId, currentQuestion);
   var typeAllowed = answerMode === "typen" && (inputInfo.inputType === "number" || inputInfo.inputType === "decimal" || inputInfo.inputType === "money" || inputInfo.inputType === "percent" || inputInfo.inputType === "quantity" || inputInfo.inputType === "fraction" || inputInfo.inputType === "pair" || inputInfo.inputType === "naam");
   var typeMode    = typeAllowed && typeFit !== "kiezen";
+  // De invoer van deze vraag zoals de leerling hem ziet (ook voor het kennisitem, plan T4 par. 3)
+  var invoerSoort = inputInfo.inputType === "kaart" ? "kaart" : typeMode ? inputInfo.inputType : "choice";
   var kpBase      = KEYPAD_SIZES[tiny ? "tiny" : compact ? "compact" : "normal"];
   var kpSize      = (typeFit && typeFit !== "kiezen") ? typeFit : kpBase;
 
@@ -997,7 +1027,7 @@ export default function PracticeScreen({ subjectId, level, skillStats, onBack, o
         {/* Antwoordgebied: cijferblok als deze vraag getypt wordt, de kaart bij aanwijzen (Topografie), anders de vier keuzes */}
         <AnswerArea
           ref={kpWrapRef}
-          inputType={inputInfo.inputType === "kaart" ? "kaart" : typeMode ? inputInfo.inputType : "choice"}
+          inputType={invoerSoort}
           vraag={currentQuestion}
           size={tiny ? "tiny" : compact ? "compact" : "normal"}
           fit={kpSize}

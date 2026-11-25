@@ -8,9 +8,11 @@
 //   de volgorde van de items doet er niet toe (raster van tikken met de omgekeerde volgorde: dezelfde uitkomst);
 // - vaardigheden (S1 benoem, S2 wijs-aan, S3 relatie): per vaardigheid 2.000 vragen, elk opnieuw nagerekend op de kennisbank: het
 //   antwoord, de vraagset, de vraagtekst, de keuzes (verschillend, met het antwoord, uit de toegestane namen; bij S3 nooit een ander
-//   juist antwoord), de invoer (resolveInput); elke combinatie van onderdeel en item komt in de eerste ronde langs; minCorrect;
+//   juist antwoord), de invoer (resolveInput); elk kennisitem komt in de eerste ronde langs (T4) en elke combinatie komt voor; minCorrect;
 // - namen: geen normalisatiebotsing per laag, ook niet met de varianten;
 // - rand: ringen kleiner dan 1 px2 op het scherm krijgen geen rand (gemeld per laag bij x1); het vlak houdt alle ringen.
+// - T4 (plan T4 par. 5): hooks; kennisitems per vaardigheid; een fout komt na 3 tot 5 vragen terug; nooit twee keer achter elkaar
+//   hetzelfde kennisitem; herhaling op vraag 5, 10 en 15 uit een eerdere vaardigheid; aan de beurt eerst; itemVoorwaarde; het kennisrecord.
 // Mutanten: een andere naam dan de kennisbank, een antwoordId buiten de laag, een dubbele keuze en een naam die twee keer in een
 // laag staat moeten gevangen worden.
 
@@ -135,13 +137,14 @@ function controleerVraagRuw(def, q) {
 }
 for (var def of V.TOPO_NLBE_DEFS) {
   var skill = V.TOPO_NLBE_SKILLS.filter(function(x) { return x.id === def.id; })[0], slecht = [], eersteRonde = {}, soorten = {};
-  var combos = D.combinaties(def), verwacht = {};
+  var combos = D.combinaties(def), verwacht = {}, alleCombos = {}, kennisDef = D.sleutelsVanDef(def);
   combos.forEach(function(c) { var o = def.onderdelen[c.o]; verwacht[o.sjabloon === "relatie" ? "relatie|" + o.relatie + "|" + o.gevraagd + "|" + c.id : o.sjabloon + "|" + o.laag + "|" + c.id] = 1; });
   eis(def.minCorrect === combos.length, def.id + ": minCorrect " + def.minCorrect + " is het aantal combinaties " + combos.length);
   for (var i = 0; i < 2000; i++) {
     await Promise.resolve();   // een nieuw rekenmoment: elke aanroep is een getoonde vraag (flow.js, currentTick)
     var q = skill.generate(), k = sleutel(q);
-    if (i < combos.length) eersteRonde[k] = 1;
+    alleCombos[k] = 1;
+    if (i < kennisDef.length && q.kennis) eersteRonde[q.kennis.sleutel] = 1;
     soorten[k.split("|")[0]] = 1;
     var f = controleerVraag(def, q);
     if (f.length && slecht.length < 3) slecht.push(i + " (" + k + "): " + f.join("; "));
@@ -150,7 +153,10 @@ for (var def of V.TOPO_NLBE_DEFS) {
     if (r.inputType !== verwachtInvoer && slecht.length < 3) slecht.push(i + " (" + k + "): resolveInput " + r.inputType + " in plaats van " + verwachtInvoer);
   }
   eis(slecht.length === 0, def.id + ": 2000 vragen kloppen (" + slecht.join(" | ") + ")");
-  eis(Object.keys(eersteRonde).length === combos.length && Object.keys(eersteRonde).every(function(k) { return verwacht[k]; }), def.id + ": elke combinatie komt in de eerste ronde langs (" + Object.keys(eersteRonde).length + " van " + combos.length + ")");
+  // T4 (plan T4 par. 5.1): de eerste ronde gaat langs elk kennisitem (bij een relatie traint een kennisitem beide richtingen);
+  // daarna de ronde langs alle combinaties, dus elke combinatie komt voor
+  eis(Object.keys(eersteRonde).length === kennisDef.length && kennisDef.every(function(k) { return eersteRonde[k]; }), def.id + ": elk kennisitem komt in de eerste ronde langs (" + Object.keys(eersteRonde).length + " van " + kennisDef.length + ")");
+  eis(Object.keys(alleCombos).length === combos.length && Object.keys(alleCombos).every(function(k) { return verwacht[k]; }), def.id + ": elke combinatie komt voor (" + Object.keys(alleCombos).length + " van " + combos.length + ")");
   eis(def.onderdelen.every(function(o) { return soorten[o.sjabloon]; }), def.id + ": elk sjabloon komt voor");
   eis(["strategy", "tip", "uitleg", "voorbeeld", "label", "desc"].every(function(k) { return typeof skill[k] === "string" && skill[k].length > 3; }), def.id + ": label, desc, strategy, tip, uitleg en voorbeeld (het oefenscherm toont ze)");
   eis(!!skill.typenNaam === def.onderdelen.some(function(o) { return o.typen; }), def.id + ": typenNaam (de schakelaar Kiezen | Typen) volgt de onderdelen");
@@ -207,6 +213,70 @@ console.log("rand bij x1 (396 px): " + regels.join("; "));
 var proefRing = [{ d: "M0,0l10,0 0,10 -10,0Z", opp: 100 }, { d: "M5,5l0.001,0 0,0.001Z", opp: 0.0000005 }];
 eis(BE.randPad(proefRing, 1) === "M0,0l10,0 0,10 -10,0Z", "randPad laat een ring zonder oppervlakte weg");
 eis(BE.randPad(proefRing, 2000) === proefRing[0].d + proefRing[1].d, "randPad toont de ring als hij ingezoomd groot genoeg is");
+
+// ── T4: de samenstelling van een sessie (plan T4 par. 5) ──
+var BH = await import(bron("src/core/topo/beheersing.js"));
+function vaardigheid(id) { return V.TOPO_NLBE_SKILLS.filter(function(x) { return x.id === id; })[0]; }
+function defVan(id) { return V.TOPO_NLBE_DEFS.filter(function(x) { return x.id === id; })[0]; }
+async function vraag(sk) { await Promise.resolve(); return sk.generate(); }
+var NB02 = vaardigheid("nb02"), NB01 = vaardigheid("nb01"), NB03 = vaardigheid("nb03");
+eis(NB02.itemVoorwaarde === true && typeof NB02.kennisSleutels === "function" && typeof NB02.extraVoorwaarde === "function" && typeof NB02.opAntwoord === "function", "T4: topo-vaardigheden hebben de hooks itemVoorwaarde, kennisSleutels, extraVoorwaarde en opAntwoord");
+eis(NB02.kennisSleutels().length === 12 && D.sleutelsVanDef(defVan("nb04")).length === 12 && D.sleutelsVanDef(defVan("nb05")).length === 3, "T4: kennisitems: nb02 12, nb04 12 (beide richtingen een paar), nb05 3");
+// een fout komt na 3 tot 5 vragen terug
+var terug = {}, telFout = 0;
+for (var p = 0; p < 60; p++) {
+  D.startSessie({}, "2026-12-01");
+  var eerste = await vraag(NB02); NB02.opAntwoord(eerste, false, "kaart");
+  for (var j = 1; j <= 8; j++) {
+    var qq = await vraag(NB02);
+    if (qq.kennis.sleutel === eerste.kennis.sleutel) { terug[j] = (terug[j] || 0) + 1; break; }
+    NB02.opAntwoord(qq, true, "kaart");
+  }
+  if (j > 8) telFout++;
+}
+eis(telFout === 0 && Object.keys(terug).every(function(x) { return x >= 3 && x <= 5; }), "T4: een fout gebied komt na 3 tot 5 vragen terug (" + JSON.stringify(terug) + ", " + telFout + " niet terug)");
+// nooit twee keer achter elkaar hetzelfde kennisitem
+var dubbel = 0;
+for (var def4 of V.TOPO_NLBE_DEFS) {
+  var sk4 = vaardigheid(def4.id), vorige = null;
+  D.startSessie({}, "2026-12-01");
+  for (var z = 0; z < 120; z++) {
+    var q4 = await vraag(sk4);
+    if (vorige && q4.kennis.sleutel === vorige && D.sleutelsVanDef(def4).length > 1) dubbel++;
+    vorige = q4.kennis.sleutel;
+    sk4.opAntwoord(q4, Math.random() < 0.6, "kaart");
+  }
+}
+eis(dubbel === 0, "T4: nooit twee keer achter elkaar hetzelfde kennisitem (" + dubbel + " keer)");
+// herhaling op vraag 5, 10 en 15, uit een eerdere vaardigheid
+var dag = BH.dagNr("2026-12-01"), beheerstOud = BH.schrijfItem({ g: 4, f: 0, st: 2, dg: 3, ld: dag - 10, lg: 1, gz: 0, gd: dag - 10 });
+var st1 = {}; D.sleutelsVanDef(defVan("nb01")).forEach(function(s) { st1[s] = beheerstOud; });
+D.startSessie(st1, "2026-12-01");
+var herhaling = [];
+for (var h = 1; h <= 15; h++) { var qh = await vraag(NB02); if (qh.vanSkillId) herhaling.push(h + ":" + qh.vanSkillId); NB02.opAntwoord(qh, true, "kaart"); }
+eis(herhaling.join(",") === "5:nb01,10:nb01,15:nb01", "T4: herhaling op vraag 5, 10 en 15 uit nb01 (" + herhaling.join(",") + ")");
+D.startSessie(st1, "2026-12-01");
+var geen = 0;
+for (var h2 = 1; h2 <= 10; h2++) { var qn = await vraag(NB01); if (qn.vanSkillId) geen++; NB01.opAntwoord(qn, true, "kaart"); }
+eis(geen === 0, "T4: de eerste vaardigheid krijgt geen herhaling uit een eerdere");
+// aan de beurt gaat voor, het langst wachtende eerst
+var st2 = {}, ks = NB02.kennisSleutels();
+ks.forEach(function(s, i) { st2[s] = BH.schrijfItem({ g: 1, f: 0, st: 1, dg: 1, ld: dag, lg: 1, gz: 0, gd: dag }); });
+st2[ks[4]] = BH.schrijfItem({ g: 1, f: 0, st: 1, dg: 1, ld: dag - 3, lg: 1, gz: 0, gd: dag - 3 });
+st2[ks[7]] = BH.schrijfItem({ g: 1, f: 0, st: 1, dg: 1, ld: dag - 9, lg: 1, gz: 0, gd: dag - 9 });
+D.startSessie(st2, "2026-12-01");
+var b1 = await vraag(NB02), b2 = await vraag(NB02);
+eis(b1.kennis.sleutel === ks[7] && b2.kennis.sleutel === ks[4], "T4: aan de beurt eerst, het langst wachtende eerst (" + b1.kennis.sleutel + ", " + b2.kennis.sleutel + ")");
+// itemsOk (de live promotie) en het kennisrecord
+D.startSessie({}, "2026-12-01");
+eis(!NB01.extraVoorwaarde(), "T4: itemVoorwaarde niet vervuld aan het begin");
+for (var w = 0; w < 6; w++) { var qw = await vraag(NB01); NB01.opAntwoord(qw, true, qw.kaart && qw.kaart.stand === "toon" ? "choice" : "kaart"); }
+eis(NB01.extraVoorwaarde() && D.itemTelling(defVan("nb01")).ontwikkeling === 6, "T4: na 6 goede antwoorden op de 6 kennisitems is de itemVoorwaarde vervuld");
+var qt = await vraag(NB03);
+var rt = NB03.opAntwoord(qt, true, "naam"), rc = NB03.opAntwoord(qt, true, "choice");
+eis(rt.sleutel === qt.kaart.antwoordId + "|s" && rt.ook[0] === qt.kaart.antwoordId + "|b" && rt.opties === false && rc.sleutel === qt.kaart.antwoordId + "|b" && rc.opties === true, "T4: typen geeft s (en b bij goed), kiezen geeft b met opties");
+var qa = await vraag(NB02);
+eis(NB02.opAntwoord(qa, true, "kaart").opties === false && NB02.opAntwoord(qa, true, "choice").opties === true, "T4: aanwijzen op de kaart is zonder opties; de keuzelijst met");
 
 console.log("test-topo-app: " + (fouten.length ? "FOUT" : "GOED") + ": " + (n - fouten.length) + " controles geslaagd, " + fouten.length + " mislukt");
 fouten.forEach(function(f) { console.log("  - " + f); });
