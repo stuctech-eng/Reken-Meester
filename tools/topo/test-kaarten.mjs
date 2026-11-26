@@ -39,7 +39,7 @@ if (!PADEN.ne || !PADEN.gpkg || !PADEN.sectoren || !WERK) stop("gebruik: node te
 fs.mkdirSync(WERK, { recursive: true });
 
 // eigen tabellen (los van maak-kaarten.mjs)
-var SOORT = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "rvo-park": "natuurgebied" };
+var SOORT = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "water-rivier-vlak": "rivier", "rvo-park": "natuurgebied" };
 var TOL_PX = { nlbe: 0.0625, europa: 0.125, koninkrijk: 0.0625 };
 var AFRONDING = { nlbe: 0.01, europa: 0.1, koninkrijk: 0.01 };
 var GZIP = { nlbe: 40 * 1024, europa: 120 * 1024, koninkrijk: 40 * 1024 };

@@ -44,7 +44,7 @@ export var WEERGAVE = 428 - 2 * 16;
 export var EENHEID_PX = WEERGAVE / BREEDTE;
 export var KAARTIDS = ["nlbe", "europa", "koninkrijk"];
 export var GRENS_MIN_STUK_PX2 = 0.01, GRENS_ZONE_PX = 2, GRENS_EIS_PX = 0.5, GRENS_MEETFOUT_PX = 0.05, GRENS_STAP_PX = 0.1, ZOOM_GRENS = 8;
-export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "rvo-park": "natuurgebied" };
+export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "water-rivier-vlak": "rivier", "rvo-park": "natuurgebied" };
 // T5b-2 (plan par. 3.3): een park dat al een streek is, staat als die streek in de laag van de parken (een item, twee rollen)
 export function soortPastInLaag(bron, it) { return it.soort === SOORT_PER_BRON[bron] || (bron === "rvo-park" && it.soort === "streek" && !!it.feiten.nationaalPark); }
 export var GZIP_DOEL = { nlbe: 40 * 1024, europa: 120 * 1024, koninkrijk: 40 * 1024 };
@@ -392,14 +392,14 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
         var dk = [];
         gk.waarden.forEach(function(k) {
           var g = (kw.per[k] || fout("KRW: geen lichaam " + k)).geometrie();
-          if (g.soort !== GEOM_PER_SOORT[it.soort]) fout("KRW: " + k + " is een " + g.soort + " voor " + id);
+          if (g.soort !== (gk.vorm || GEOM_PER_SOORT[it.soort])) fout("KRW: " + k + " is een " + g.soort + " voor " + id);
           dk = dk.concat(g.soort === "lijn" ? g.lijnen : g.delen);
         });
-        return GEOM_PER_SOORT[it.soort] === "lijn" ? dk : d3Wind(dk);
+        return (gk.vorm || GEOM_PER_SOORT[it.soort]) === "lijn" ? dk : d3Wind(dk);
       }
       if (gk.bronId === "TOP10") {
         var tw = gedeeld.top10();
-        if (gk.sha256 !== tw.sha || gk.sleutel !== "lokaal_id" || GEOM_PER_SOORT[it.soort] !== "vlak") fout("GEOREF van " + id + " past niet bij " + bron);
+        if (gk.sha256 !== tw.sha || gk.sleutel !== "lokaal_id" || (gk.vorm || GEOM_PER_SOORT[it.soort]) !== "vlak") fout("GEOREF van " + id + " past niet bij " + bron);
         gebruik("TOP10", tw.sha);
         var tt = topology({ w: { type: "GeometryCollection", geometries: gk.waarden.map(function(k) { return { type: "MultiPolygon", coordinates: (tw.per[k] || fout("TOP10: geen waterdeel " + k)).delen }; }) } });
         return d3Wind(ontNaald(merge(tt, tt.objects.w.geometries).coordinates, id, []));

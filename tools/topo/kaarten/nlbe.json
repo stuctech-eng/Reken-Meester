@@ -312,6 +312,19 @@
       ]
     },
     {
+      "id": "rivieren-vlak",
+      "soort": "vlak",
+      "bron": "water-rivier-vlak",
+      "items": [
+        "rivier-merwede",
+        "rivier-nieuwe-maas",
+        "rivier-nieuwe-waterweg",
+        "rivier-noord",
+        "rivier-utrechtse-vecht",
+        "rivier-zwarte-water"
+      ]
+    },
+    {
       "id": "parken",
       "soort": "vlak",
       "bron": "rvo-park",

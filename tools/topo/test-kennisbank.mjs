@@ -545,7 +545,7 @@ var KD = { fouten: [], n: 0 };
 function eisKD(ok, tekst) { KD.n++; if (!ok) KD.fouten.push(tekst); }
 var KB63 = {};
 [L.LANDEN, S.STEDEN, P62.PROVINCIES, G62.GEWESTEN, B62.STEDEN_BE, W62.WATER_NLBE, E62.EILANDEN_NL, T5B.TAALGEBIEDEN, GG.GEMEENTEN_NL, STR.STREKEN_NL, GB.GRENSGEBIEDEN, KN.KONINKRIJK, WNL.WATER_NL, PNL.PARKEN_NL].forEach(function(lijst) { lijst.forEach(function(it) { KB63[it.id] = it; }); });
-var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "rvo-park": "natuurgebied" };
+var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "water-rivier-vlak": "rivier", "rvo-park": "natuurgebied" };
 var VERWACHT63 = {
   nlbe: {
     "provincies-nl": P62.PROVINCIES.filter(function(p) { return p.feiten.land.waarde === "NLD"; }).map(function(p) { return p.id; }),
@@ -561,7 +561,8 @@ var VERWACHT63 = {
     "waddenzee": ["zee-waddenzee"],
     "meren": WNL.WATER_NL.filter(function(w) { return w.soort === "meer"; }).map(function(w) { return w.id; }),
     "zeearmen": WNL.WATER_NL.filter(function(w) { return w.soort === "zeearm"; }).map(function(w) { return w.id; }),
-    "rivieren-nl": WNL.WATER_NL.filter(function(w) { return w.soort === "rivier"; }).map(function(w) { return w.id; }),
+    "rivieren-nl": WNL.WATER_NL.filter(function(w) { return w.soort === "rivier" && !w.geometrie.bron.vorm; }).map(function(w) { return w.id; }),
+    "rivieren-vlak": WNL.WATER_NL.filter(function(w) { return w.soort === "rivier" && w.geometrie.bron.vorm === "vlak"; }).map(function(w) { return w.id; }),
     "parken": PNL.PARKEN_NL.map(function(p) { return p.id; }).concat(PNL.PARKEN_ALS_STREEK.map(function(p) { return p.item; })),
     "waddeneilanden": E62.EILANDEN_NL.filter(function(e) { return e.soort === "eiland"; }).map(function(e) { return e.id; })
   },

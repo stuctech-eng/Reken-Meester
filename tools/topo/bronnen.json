@@ -141,9 +141,9 @@
     "bron": "TOP10",
     "titel": "Kadaster, BRT TOP10NL, waterdeel_vlak, via de PDOK OGC API Features (https://api.pdok.nl/kadaster/brt-top10nl/ogc/v1), opgehaald per zoekkader (bbox) en pagina",
     "bestand": "top10nl-waterdeel-t5b2.json",
-    "grootte": 44129675,
-    "sha256": "157aa71e19138bc4ce58163e936fb1516c4d0e264a3cc133551b2d58a7eecab4",
-    "paginas": 24,
+    "grootte": 87779851,
+    "sha256": "66316ff2ff9de7daf14be1430100144fd8214dfb26bde00876a38f2d37727aae",
+    "paginas": 49,
     "opgehaald": "2026-11-26",
     "opmerking": "door Dick op zijn iPhone opgehaald (Safari, Webarchief); de GeoJSON-tekst per pagina is uit het webarchief gehaald en met de URL gebundeld in een bestand (alleen bouwomgeving). Zoeken op naam kan niet (queryables: alleen geometry en lokaal_id); per pagina hoogstens 1000 waterdelen"
   },
@@ -284,7 +284,7 @@
           "bestand"
         ],
         "bestanden": {
-          "top10nl-waterdeel-t5b2.json": "157aa71e19138bc4ce58163e936fb1516c4d0e264a3cc133551b2d58a7eecab4"
+          "top10nl-waterdeel-t5b2.json": "66316ff2ff9de7daf14be1430100144fd8214dfb26bde00876a38f2d37727aae"
         }
       },
       "tabellenNlbe": {
@@ -299,7 +299,7 @@
           "tools/topo/koninkrijk.json": "7a0bb05d9bb70ce8d15408b108623a5199375de2c44a9aeeaa9221ad124c5191",
           "tools/topo/streken-nl.json": "20cf6148db2a7cd1ec7a2ddd1581d7f696f8386663633238fc31c3505793d7e7",
           "tools/topo/taalgebieden-be.json": "487d86af0a35f1508a207e4eb7d007093267f65202b94e5ee618394e46515c35",
-          "tools/topo/water-nl.json": "f06bec694706ab1b3c824ecd2a24cbe87eaae9fae88fa9ecc050acb14e88103d",
+          "tools/topo/water-nl.json": "3e42c6ace42698146c5277e7e73d6fc68d26395067b4980085ba2ba2fec9ed77",
           "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }
       }

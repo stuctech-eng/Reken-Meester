@@ -41,9 +41,10 @@ eis(fs.readFileSync(path.join(tmp, "items", "water-nl.js")).equals(fs.readFileSy
 
 // ---- inhoud ----
 var tel = {}; W.forEach(function(w) { tel[w.soort] = (tel[w.soort] || 0) + 1; });
-eis(W.length === 24 && tel.zee === 1 && tel.meer === 13 && tel.zeearm === 5 && tel.rivier === 5, "24 items: 1 zee, 13 meren, 5 zeearmen, 5 rivieren (" + JSON.stringify(tel) + ")");
-var T1 = ["Waddenzee", "IJsselmeer", "Markermeer", "Grevelingenmeer", "Veerse Meer", "Lauwersmeer", "Zuidlaardermeer", "Westerschelde", "Oosterschelde", "Bergse Maas", "Oude Maas", "Overijsselse Vecht", "Roer", "Dommel", "Gooimeer", "Veluwemeer", "Ketelmeer", "Sneekermeer", "Tjeukemeer", "Volkerak-Zoommeer", "Loosdrechtse Plassen", "Hollandsch Diep", "Haringvliet", "Dollard"];
-eis(W.map(function(w) { return w.naam.waarde; }).sort().join() === T1.slice().sort().join(), "de namen zijn precies de 24 namen uit T1 par. 2.1 (en nb01)");
+eis(W.length === 30 && tel.zee === 1 && tel.meer === 13 && tel.zeearm === 5 && tel.rivier === 11, "30 items: 1 zee, 13 meren, 5 zeearmen, 11 rivieren (" + JSON.stringify(tel) + ")");
+eis(W.filter(function(w) { return w.geometrie.bron.vorm === "vlak"; }).map(function(w) { return w.id; }).sort().join() === "rivier-merwede,rivier-nieuwe-maas,rivier-nieuwe-waterweg,rivier-noord,rivier-utrechtse-vecht,rivier-zwarte-water", "de 6 brede rivieren als vlak (besluitRivierVlak)");
+var T1 = ["Waddenzee", "IJsselmeer", "Markermeer", "Grevelingenmeer", "Veerse Meer", "Lauwersmeer", "Zuidlaardermeer", "Westerschelde", "Oosterschelde", "Bergse Maas", "Oude Maas", "Overijsselse Vecht", "Roer", "Dommel", "Gooimeer", "Veluwemeer", "Ketelmeer", "Sneekermeer", "Tjeukemeer", "Volkerak-Zoommeer", "Loosdrechtse Plassen", "Hollandsch Diep", "Haringvliet", "Dollard", "Merwede", "Noord", "Nieuwe Maas", "Nieuwe Waterweg", "Zwarte Water", "Utrechtse Vecht"];
+eis(W.map(function(w) { return w.naam.waarde; }).sort().join() === T1.slice().sort().join(), "de namen zijn precies de 30 namen uit T1 par. 2.1 (en nb01)");
 
 // ---- nagerekend met de lezer ----
 var K = leesKrwGml(fs.readFileSync(PADEN.gml)), per = {};
@@ -54,7 +55,9 @@ var geo = {};
 var B10 = JSON.parse(fs.readFileSync(PADEN.top10, "utf8")), deel = {}, urls = {};
 B10.paginas.forEach(function(p) { eis(!urls[p.url], "pagina een keer in de bundel: " + p.url); urls[p.url] = 1; JSON.parse(p.tekst).features.forEach(function(f) { deel[f.properties.lokaal_id] = f; }); });
 W.filter(function(w) { return w.geometrie.bron.bronId === "TOP10"; }).forEach(function(w) {
-  var namen = w.naam.controle.waarde.split("; "), verwacht = Object.keys(deel).filter(function(k) { return namen.indexOf(deel[k].properties.naamnl) >= 0; }).sort();
+  var tab = JSON.parse(fs.readFileSync(path.join(HIER, "water-nl.json"), "utf8")).water[w.id], gb = tab.gebied;
+  function inGb(f) { var g = f.geometry, c = (g.type === "Polygon" ? g.coordinates : g.coordinates[0])[0][0]; return c[0] >= gb[0] && c[0] <= gb[2] && c[1] >= gb[1] && c[1] <= gb[3]; }
+  var namen = w.naam.controle.waarde.split("; "), verwacht = Object.keys(deel).filter(function(k) { return namen.indexOf(deel[k].properties.naamnl) >= 0 && inGb(deel[k]); }).sort();
   eis(verwacht.length > 0 && verwacht.join() === w.geometrie.bron.waarden.join(), "TOP10NL " + w.id + ": precies alle " + verwacht.length + " waterdelen met naamnl " + namen.join(" of "));
   geo[w.id] = []; verwacht.forEach(function(k) { var g = deel[k].geometry; geo[w.id] = geo[w.id].concat(g.type === "Polygon" ? [g.coordinates] : g.coordinates); });
 });
@@ -64,7 +67,8 @@ W.filter(function(w) { return w.geometrie.bron.bronId === "KRW"; }).forEach(func
   var delen = [];
   ids.forEach(function(k, i) {
     var r = per[k];
-    eis(!!r && r.kenmerken.naam === namen[i] && r.soort === GEOM[w.soort], "KRW " + k + ": naam " + namen[i] + " en " + GEOM[w.soort] + " (" + w.id + ")");
+    var vm = w.geometrie.bron.vorm || GEOM[w.soort];
+    eis(!!r && r.kenmerken.naam === namen[i] && r.soort === vm, "KRW " + k + ": naam " + namen[i] + " en " + vm + " (" + w.id + ")");
     if (r) { var g = r.geometrie(); delen = delen.concat(g.lijnen || g.delen); }
   });
   geo[w.id] = delen;
@@ -90,12 +94,12 @@ var buren = JSON.parse(fs.readFileSync(path.join(NE, "ne_10m_admin_0_map_units.g
 });
 function rd(delen) { return delen.map(function(p) { return p.map(function(r) { return r.map(function(c) { return naarRd.forward(c); }); }); }); }
 W.forEach(function(w) {
-  if ((w.soort === "meer" || w.soort === "zeearm") && !w.feiten.grensgebied) {
+  if ((w.soort === "meer" || w.soort === "zeearm" || w.geometrie.bron.vorm === "vlak") && !w.feiten.grensgebied) {
     var v = rd(geo[w.id]), groot = v.slice().sort(function(a, b) { return Math.abs(oppRing(b[0])) - Math.abs(oppRing(a[0])); })[0];
     var pl = pool([groot[0]].concat(groot.slice(1)), 1), q = [pl.x, pl.y], dNl = randAfstand(q, gem, 20000), dBuur = randAfstand(q, buren, Infinity);
     eis(dNl <= 20000 && dNl < dBuur, "het binnenste punt van " + w.id + " ligt bij Nederland: " + Math.round(dNl) + " m van een Nederlandse gemeente, " + Math.round(dBuur) + " m van Belgie of Duitsland");
   }
-  if (w.soort === "rivier") {
+  if (w.soort === "rivier" && !w.geometrie.bron.vorm) {
     var pts = []; geo[w.id].forEach(function(l) { l.forEach(function(c, i) { if (i % 5 === 0) pts.push(naarRd.forward(c)); }); });
     var binnen = pts.filter(function(q) { return inNl(q, 100); }).length;
     eis(binnen >= 0.9 * pts.length, "rivier " + w.id + ": " + binnen + " van " + pts.length + " punten in Nederland (of binnen 100 m)");
@@ -116,7 +120,7 @@ function opp(m) { var s = 0; m.forEach(function(p) { p.forEach(function(r, i) { 
 
 // ---- geen overlap tussen watervlakken ----
 // binnen een bron hoogstens 1 ha; tussen KRW en TOP10NL (twee karteringen van dezelfde oever) hoogstens 5 ha, en gemeld
-var V = W.filter(function(w) { return w.soort !== "rivier"; }).map(function(w) { return { id: w.id, bron: w.geometrie.bron.bronId, g: rd(geo[w.id]) }; }), gemeld = [];
+var V = W.filter(function(w) { return w.soort !== "rivier" || w.geometrie.bron.vorm === "vlak"; }).map(function(w) { return { id: w.id, bron: w.geometrie.bron.bronId, g: rd(geo[w.id]) }; }), gemeld = [];
 for (var i = 0; i < V.length; i++) for (var j = i + 1; j < V.length; j++) {
   var x = opp(pc.intersection(V[i].g, V[j].g)) / 1e4, max = V[i].bron === V[j].bron ? 1 : 5;
   if (x >= 0.01) gemeld.push(V[i].id + " / " + V[j].id + ": " + x.toFixed(2) + " ha");

@@ -60,6 +60,9 @@ export function bouw(paden) {
   var ITEMS = Object.keys(T.water).sort().map(function(id) {
     var t = T.water[id];
     if (!GEOM_PER_SOORT[t.soort]) fout("onbekende soort: " + t.soort);
+    // T5b-2: een brede benedenrivier als vlak (besluitRivierVlak); anders de vorm van de soort
+    var vorm = t.vorm || GEOM_PER_SOORT[t.soort];
+    if (t.vorm && (t.soort !== "rivier" || t.vorm !== "vlak")) fout("alleen een rivier kan als vlak: " + id);
     if (!!t.krw === !!t.top10) fout("item met precies een bron (krw of top10): " + id);
     if (namen[t.soort + "|" + t.naam]) fout("naam twee keer: " + t.naam); namen[t.soort + "|" + t.naam] = 1;
     var it = { id: id, soort: t.soort, naam: null, feiten: {}, geometrie: null, relaties: [] };
@@ -71,8 +74,8 @@ export function bouw(paden) {
         var r = K.per[k] || fout("KRW: geen lichaam " + k);
         if (r.kenmerken.naam !== t.krw[k]) fout("KRW: " + k + " heet " + r.kenmerken.naam + ", niet " + t.krw[k]);
         if (gebruikt[k]) fout("KRW: " + k + " twee keer gebruikt (" + gebruikt[k] + ", " + id + ")"); gebruikt[k] = id;
-        if (r.soort !== GEOM_PER_SOORT[t.soort]) fout("KRW: " + k + " is een " + r.soort + ", een " + t.soort + " vraagt een " + GEOM_PER_SOORT[t.soort]);
-        if (KRW_TYPE_PER_SOORT[t.soort].indexOf(r.kenmerken.type) < 0) fout("KRW: " + k + " heeft type " + r.kenmerken.type + ", past niet bij " + t.soort);
+        if (r.soort !== vorm) fout("KRW: " + k + " is een " + r.soort + ", " + id + " vraagt een " + vorm);
+        if (KRW_TYPE_PER_SOORT[t.soort].concat(t.vorm ? ["transitionalWaterBody"] : []).indexOf(r.kenmerken.type) < 0) fout("KRW: " + k + " heeft type " + r.kenmerken.type + ", past niet bij " + t.soort);
         beheerders[r.kenmerken.beheerder || fout("KRW: " + k + " zonder beheerder")] = 1;
       });
       var krwNamen = ids.map(function(k) { return t.krw[k]; });
@@ -86,7 +89,10 @@ export function bouw(paden) {
       bron = bronKrw;
     } else {
       // TOP10NL: alle waterdelen met precies deze naam (naamnl); elk punt ervan ligt in het doorzochte gebied (dus geen deel gemist)
-      var delen = D.records.filter(function(r) { return t.top10.indexOf(r.kenmerken.naamnl) >= 0; });
+      var gb = t.gebied || fout("TOP10-item zonder gebied: " + id);
+      function inGebied(r) { var c = r.delen[0][0][0]; return c[0] >= gb[0] && c[0] <= gb[2] && c[1] >= gb[1] && c[1] <= gb[3]; }
+      var delen = D.records.filter(function(r) { return t.top10.indexOf(r.kenmerken.naamnl) >= 0 && inGebied(r); });
+      var elders = D.records.filter(function(r) { return t.top10.indexOf(r.kenmerken.naamnl) >= 0 && !inGebied(r); }).length;
       t.top10.forEach(function(n) { if (!delen.some(function(r) { return r.kenmerken.naamnl === n; })) fout("TOP10: geen waterdeel met de naam " + n); });
       delen.forEach(function(r) {
         var k = r.kenmerken.lokaal_id;
@@ -97,11 +103,12 @@ export function bouw(paden) {
       var types = {}; delen.forEach(function(r) { types[r.kenmerken.typewater || fout("TOP10: waterdeel zonder typewater")] = 1; });
       it.naam = { waarde: t.naam, varianten: [], herkomst: "besluit", status: "vastgesteld", besluit: T.naamBesluit, controle: { id: "TOP10", waarde: t.top10.join("; ") } };
       it.geometrie = { bron: { bronId: "TOP10", bestand: T10.bestand, sha256: T10.sha256, sleutel: "lokaal_id", waarden: lid, crs: "CRS84",
-        aggregatie: "alle " + lid.length + " waterdelen met naamnl " + t.top10.join(" of ") + " in de doorzochte kaders; besluit in tools/topo/water-nl.json (besluitTop10)" }, kaart: {} };
+        aggregatie: "alle " + lid.length + " waterdelen met naamnl " + t.top10.join(" of ") + " in het gebied " + gb.join(",") + "; besluit in tools/topo/water-nl.json (besluitTop10)" }, kaart: {} };
       it.feiten.typewater = { waarde: Object.keys(types).sort(), herkomst: "bron", status: "vastgesteld", bron: bronTop10 };
-      it.feiten.afbakening = { waarde: "TOP10NL naamnl: " + t.top10.join(", "), herkomst: "besluit", status: "vastgesteld", besluit: T.besluitTop10 };
+      it.feiten.afbakening = { waarde: "TOP10NL naamnl: " + t.top10.join(", ") + "; gebied " + gb.join(",") + (elders ? "; " + elders + " waterdelen met dezelfde naam elders" : ""), herkomst: "besluit", status: "vastgesteld", besluit: T.besluitTop10 };
       bron = bronTop10;
     }
+    if (t.vorm) { it.geometrie.bron.vorm = t.vorm; it.feiten.vorm = { waarde: t.vorm, herkomst: "besluit", status: "vastgesteld", besluit: T.besluitRivierVlak }; }
     if (t.grensgebied) it.feiten.grensgebied = { waarde: t.grensgebied.landen, herkomst: "besluit", status: "vastgesteld", besluit: T[t.grensgebied.besluit] || fout("onbekend besluit: " + t.grensgebied.besluit) };
     else if (t.soort === "meer" || t.soort === "zeearm") it.feiten.land = { waarde: "NLD", herkomst: "bron", status: "vastgesteld", bron: bron };
     return it;
