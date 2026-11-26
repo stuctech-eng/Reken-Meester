@@ -76,13 +76,31 @@ var DEFS = [
     nietBij("grenst-aan", "prov-nl-", provNL(), function(n) { return "Welke provincie grenst níet aan " + n + "?"; }),
     relatie("grenst-aan", "naar", "prov-be-", provBE(), function(n) { return "Welke Belgische provincie grenst aan " + n + "?"; }),
     nietBij("grenst-aan", "prov-be-", provBE(), function(n) { return "Welke Belgische provincie grenst níet aan " + n + "?"; }) ] },
+  // T5c-2 (plan T5c): de vaardigheden met de gegevens van T5b. Alleen items met een vlak of lijn op de kaart; de Belgische rivieren
+  // en kanalen volgen als hun lijnen er zijn. Kanalen mogen in aanwijzen: de lijnproef op de iPhone slaagde (26-11-2026).
+  { id: "nb15", niveau: "G", label: "Rivieren en zeearmen", desc: "Alle rivieren en zeearmen van Nederland benoemen en aanwijzen", minCorrect: 44, onderdelen: [
+    benoem("rivieren", "", "Welke rivier is oranje?", true), benoem("rivieren-nl", "", "Welke rivier is oranje?", true),
+    benoem("rivieren-vlak", "", "Welke rivier is oranje?", true), benoem("zeearmen", "", "Welke zeearm is oranje?", true),
+    wijsAan("rivieren", "", "de rivier"), wijsAan("rivieren-nl", "", "de rivier"), wijsAan("rivieren-vlak", "", "de rivier"), wijsAan("zeearmen", "", "de zeearm") ] },
+  { id: "nb18", niveau: "G", label: "Meren en kanalen", desc: "De meren en kanalen van Nederland benoemen en aanwijzen", minCorrect: 50, onderdelen: [
+    benoem("meren", "", "Welk meer is oranje?", true), wijsAan("meren", "", "het meer"),
+    benoem("kanalen", "", "Welk kanaal is oranje?", true), wijsAan("kanalen", "", "het kanaal") ] },
+  { id: "nb19", niveau: "G", label: "Streken en landschappen", desc: "Streken in Nederland en België benoemen en aanwijzen", minCorrect: 32, onderdelen: [
+    benoem("streken", "", "Welke streek is oranje?", true), wijsAan("streken", "", "de streek"),
+    benoem("streken-be", "", "Welke Belgische streek is oranje?", true), wijsAan("streken-be", "", "de Belgische streek") ] },
+  { id: "nb20", niveau: "G", label: "Nationale parken", desc: "De nationale parken aanwijzen, en in welke provincie ze liggen", minCorrect: 48, onderdelen: [
+    wijsAan("parken", "", "het nationaal park"), wijsAan("parken-be", "", "het park"),
+    relatie("ligt-in", "naar", "park-nl-", provNL(), function(n) { return "In welke provincie ligt het nationaal park " + n + "?"; }),
+    relatie("ligt-in", "naar", "streek-nl-", provNL(), function(n) { return "In welke provincie ligt het nationaal park " + n + "?"; }),
+    relatie("ligt-in", "naar", "park-be-", provBE(), function(n) { return "In welke Belgische provincie ligt het " + n + "?"; }) ] },
   { id: "nb24", niveau: "M", label: "Lege kaart: provincies en hoofdsteden", desc: "De naam typen van een provincie of provinciehoofdstad, zonder keuzes", minCorrect: 44, onderdelen: [
     typLeeg("provincies-nl", "", "Typ de naam van de oranje provincie."),
     typLeeg("provincies-be", "", "Typ de naam van de oranje Belgische provincie."),
     typLeeg("steden", "", "Typ de naam van deze provinciehoofdstad.", "provinciehoofdstad-van") ] },
-  { id: "nb25", niveau: "M", label: "Lege kaart: steden en rivieren", desc: "Aanwijzen op de hele kaart, zonder startbeeld; de meren volgen later", minCorrect: 45, onderdelen: [
+  { id: "nb25", niveau: "M", label: "Lege kaart: steden, rivieren en meren", desc: "Aanwijzen op de hele kaart, zonder startbeeld", minCorrect: 58, onderdelen: [
     wijsVrij("steden", "", "de stad", [IJMOND]),
-    wijsVrij("rivieren", "", "de rivier") ] },
+    wijsVrij("rivieren", "", "de rivier"),
+    wijsVrij("meren", "", "het meer") ] },
   { id: "nb26", niveau: "M", zonderItems: true, label: "Richting en afstand", desc: "In welke richting en hoe ver hemelsbreed, tussen twee steden", minCorrect: 12, onderdelen: [
     meet("richting"), meet("afstand") ] },
   { id: "nb28", niveau: "M", zonderItems: true, label: "Combinatievragen", desc: "Twee stappen: de stad, de provincie en dan de hoofdstad of het gewest", minCorrect: 12, onderdelen: [
@@ -177,6 +195,30 @@ var HULP = {
     uitleg: "Gelderland heeft in Nederland de meeste buren: Flevoland, Limburg, Noord-Brabant, Overijssel, Utrecht en Zuid-Holland. Groningen, Zeeland en Limburg hebben er maar twee.",
     voorbeeld: "Welke provincie grenst níet aan Utrecht: Gelderland, Noord-Holland, Zuid-Holland of Drenthe? Drenthe ligt in het noordoosten, ver van Utrecht.",
   },
+  nb15: {
+    strategy: "Water op de kaart",
+    tip: "Een rivier is een lijn of een smal vlak. Een zeearm is een brede arm van de zee: in Zeeland en Zuid-Holland, en de Dollard in het noordoosten.",
+    uitleg: "De Rijn en de Maas komen Nederland binnen in het oosten en het zuiden en stromen naar het westen, naar de zee. In het westen splitsen ze in smallere rivieren. De zeearmen liggen tussen de eilanden in de zuidwesthoek.",
+    voorbeeld: "Tik de Westerschelde aan: dat is de zeearm het verst naar het zuiden, tussen Zeeuws-Vlaanderen en de rest van Zeeland.",
+  },
+  nb18: {
+    strategy: "Meren en kanalen",
+    tip: "Een meer is een vlak met water. Een kanaal is gegraven: je herkent het aan de lange rechte stukken.",
+    uitleg: "Het IJsselmeer is het grote water midden in het land; het Markermeer ligt eronder. Andere meren liggen in Friesland, Groningen en Zeeland. Een kanaal is een lijn die vaak twee wateren of steden verbindt.",
+    voorbeeld: "Tik het Noordzeekanaal aan: het loopt van Amsterdam recht naar het westen, naar de zee.",
+  },
+  nb19: {
+    strategy: "Streken",
+    tip: "Een streek is een gebied met een eigen naam. Het ligt meestal binnen een of twee provincies.",
+    uitleg: "De Veluwe en de Achterhoek liggen in Gelderland, Twente en Salland in Overijssel. In België liggen de Kempen in het noorden, de Ardennen in het zuidoosten.",
+    voorbeeld: "Tik Twente aan: dat is het oostelijke deel van Overijssel, tegen Duitsland.",
+  },
+  nb20: {
+    strategy: "Nationale parken",
+    tip: "Een nationaal park is een beschermd natuurgebied. Zoek eerst de provincie waarin het ligt.",
+    uitleg: "Sommige parken liggen in twee provincies, zoals de Biesbosch (Noord-Brabant en Zuid-Holland). Dan is elk van die provincies goed.",
+    voorbeeld: "In welke provincie ligt De Hoge Veluwe? Op de Veluwe, dus in Gelderland.",
+  },
   nb24: {
     strategy: "Uit je hoofd",
     tip: "Hier zijn geen keuzes: je typt de naam zelf. Hoofdletters, accenten en streepjes tellen niet mee; een kleine tikfout telt wel als fout.",
@@ -186,7 +228,7 @@ var HULP = {
   nb25: {
     strategy: "Uit je hoofd",
     tip: "De kaart begint helemaal uitgezoomd. Zoek eerst de streek, zoom dan zelf in en tik pas aan als je het zeker weet.",
-    uitleg: "Steden en rivieren door elkaar, op de hele kaart van Nederland en België. Een stad is een stip, een rivier een lijn.",
+    uitleg: "Steden, rivieren en meren door elkaar, op de hele kaart van Nederland en België. Een stad is een stip, een rivier een lijn, een meer een vlak.",
     voorbeeld: "Tik de rivier de IJssel aan: hij loopt van de Rijn bij Arnhem naar het noorden, naar het IJsselmeer.",
   },
   nb26: {

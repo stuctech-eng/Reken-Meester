@@ -16,7 +16,7 @@ var HEEN = [
   { id: "provinciehoofdstad-van", inverse: "heeft-provinciehoofdstad", bronSoorten: ["stad"], doelSoorten: ["provincie"], kwalificaties: {} },
   { id: "gewesthoofdstad-van", inverse: "heeft-gewesthoofdstad", bronSoorten: ["stad"], doelSoorten: ["gewest"], kwalificaties: {} },
   { id: "bevoegd-in", inverse: "valt-onder-gemeenschap", bronSoorten: ["gemeenschap"], doelSoorten: ["taalgebied"], kwalificaties: { reikwijdte: { waarden: ["taalgebied", "instellingen"] } } },
-  { id: "ligt-in", inverse: "bevat", bronSoorten: ["stad", "agglomeratie", "gemeente", "provincie", "taalgebied", "natuurgebied", "bergtop", "vulkaan", "meer", "eiland"], doelSoorten: BESTUURLIJK.concat(["werelddeel", "regio"]), kwalificaties: {} },
+  { id: "ligt-in", inverse: "bevat", bronSoorten: ["stad", "agglomeratie", "gemeente", "provincie", "taalgebied", "natuurgebied", "streek", "bergtop", "vulkaan", "meer", "eiland"], doelSoorten: BESTUURLIJK.concat(["werelddeel", "regio"]), kwalificaties: {} },
   { id: "gemeente-van", inverse: "omvat-woonplaats", bronSoorten: ["stad"], doelSoorten: ["gemeente"], kwalificaties: {} },
   { id: "grenst-aan", inverse: "grenst-aan", symmetrisch: true, bronSoorten: BESTUURLIJK, doelSoorten: BESTUURLIJK, kwalificaties: { km: { type: "getal" }, via: { waarden: ["land", "beide", "binnenwater"] } } },
   { id: "stroomt-door", inverse: "wordt-doorstroomd-door", bronSoorten: ["rivier", "riviertak"], doelSoorten: BESTUURLIJK, kwalificaties: {} },

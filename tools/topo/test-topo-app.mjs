@@ -106,8 +106,8 @@ function controleerKeuzes(q, toegestaan, f) {
   if (q.choices.some(function(c) { return toegestaan.indexOf(c) < 0; })) f.push("keuze buiten de toegestane namen");
 }
 function controleerVraag(def, q) { try { return controleerVraagRuw(def, q); } catch (e) { return ["fout: " + e.message]; } }
-function controleerVraagRuw(def, q) {
-  var f = [], o = onderdeelVan(def, q);
+function controleerVraagRuw(def, q, oGegeven) {
+  var f = [], o = oGegeven || onderdeelVan(def, q);
   if (!o) return ["geen onderdeel van " + def.id];
   if (!q.tekstVraag) f.push("geen tekstVraag");
   if (o.sjabloon === "relatie") {
@@ -359,6 +359,8 @@ function controleerT5(def, q) {
   else if (q.keten) o = def.onderdelen.filter(function(x) { return x.sjabloon === "keten" && q.question === x.tekst(D.naamVan(q.keten.begin)); })[0];
   else o = q.kennis ? def.onderdelen[q.kennis.o] : null;
   if (!o) return ["geen onderdeel"];
+  // T5c-2: benoemen en aanwijzen met hulp (nb15, nb18, nb19, nb20) zoals de Basis-vaardigheden, met het onderdeel van de vraag
+  if ((o.sjabloon === "benoem" && !o.alleenTypen) || (o.sjabloon === "wijs-aan" && !o.vrijeStart)) { try { return controleerVraagRuw(def, q, o); } catch (e) { return ["fout: " + e.message]; } }
   if (q.choices.indexOf(q.answer) < 0) f.push("antwoord niet bij de keuzes");
   if (new Set(q.choices).size !== q.choices.length) f.push("dubbele keuze");
   if (o.sjabloon === "relatie") {
@@ -366,7 +368,13 @@ function controleerT5(def, q) {
     if (juist.indexOf(q.relatie.antwoordId) < 0 || q.answer !== D.naamVan(q.relatie.antwoordId)) f.push("antwoord niet in de relatie");
     var pool = RS.poolIds(RBRON, o, q.relatie.genoemd).filter(function(x) { return juist.indexOf(x) < 0 && x !== q.relatie.genoemd; }).map(D.naamVan);
     if (q.choices.some(function(c) { return c !== q.answer && pool.indexOf(c) < 0; })) f.push("foute keuze buiten de pool (of het genoemde item, of een ander juist antwoord)");
-    if (o.relatie === "ligt-in" && provVan(q.relatie.genoemd) !== q.relatie.antwoordId) f.push("ligt-in klopt niet met ligging-nlbe");
+    if (o.relatie === "ligt-in" && /^stad-/.test(q.relatie.genoemd) && provVan(q.relatie.genoemd) !== q.relatie.antwoordId) f.push("ligt-in klopt niet met ligging-nlbe");
+    // T5c-2: een park kan in meer provincies liggen; het antwoord is een ervan, de foute keuzes geen enkele (ligging-nlbe)
+    if (o.relatie === "ligt-in" && !/^stad-/.test(q.relatie.genoemd)) {
+      var inProv = LG.filter(function(x) { return x.type === "ligt-in" && x.van === q.relatie.genoemd; }).map(function(x) { return x.naar; });
+      if (inProv.indexOf(q.relatie.antwoordId) < 0) f.push("park: het antwoord is geen provincie van het park");
+      if (q.choices.some(function(c) { return c !== q.answer && inProv.map(D.naamVan).indexOf(c) >= 0; })) f.push("park: een andere provincie van het park staat bij de foute keuzes");
+    }
     if (o.relatie === "grenst-aan" && buurIds(q.relatie.genoemd).indexOf(q.relatie.antwoordId) < 0) f.push("grenst-aan klopt niet");
   } else if (o.sjabloon === "wijs-relatie") {
     if (provVan(q.relatie.genoemd) !== q.kaart.antwoordId || q.answer !== D.naamVan(q.kaart.antwoordId)) f.push("aanwijzen: niet de provincie van de stad");
@@ -429,7 +437,12 @@ for (var dT of V.TOPO_NLBE_DEFS.filter(function(d) { return d.niveau; })) {
   }
   eis(skT.niveau === dT.niveau && !!skT.meesterschap === (dT.niveau === "M" && !dT.zonderItems), dT.id + ": niveau " + dT.niveau + " en meesterschap");
 }
-eis(D.sleutelsVanDef(defVan("nb13")).length === 38 && D.sleutelsVanDef(defVan("nb14")).length === 22 && D.sleutelsVanDef(defVan("nb24")).length === 44 && D.sleutelsVanDef(defVan("nb25")).length === 45, "T5a/T5b: kennisitems nb13 38, nb14 22, nb24 44 (met Leuven en Waver), nb25 45 (met Brussel, Leuven en Waver)");
+eis(D.sleutelsVanDef(defVan("nb13")).length === 38 && D.sleutelsVanDef(defVan("nb14")).length === 22 && D.sleutelsVanDef(defVan("nb24")).length === 44 && D.sleutelsVanDef(defVan("nb25")).length === 58, "T5a/T5b: kennisitems nb13 38, nb14 22, nb24 44 (met Leuven en Waver), nb25 45 (met Brussel, Leuven en Waver)");
+// T5c-2 (plan T5c): de nieuwe vaardigheden; de volgorde in de rij
+eis(D.sleutelsVanDef(defVan("nb15")).length === 44 && D.sleutelsVanDef(defVan("nb18")).length === 50 && D.sleutelsVanDef(defVan("nb19")).length === 32 && D.sleutelsVanDef(defVan("nb20")).length === 48, "T5c-2: kennisitems nb15 44, nb18 50, nb19 32, nb20 48");
+eis(V.TOPO_NLBE_ORDER.join() === "nb01,nb02,nb03,nb04,nb05,nb06,nb07,nb08,nb09,nb10,nb11,nb12,nb13,nb14,nb15,nb18,nb19,nb20,nb24,nb25,nb26,nb28", "T5c-2: de volgorde van de vaardigheden");
+eis(D.sleutelsVanDef(defVan("nb18")).indexOf("kanaal-noordzeekanaal|a") >= 0 && D.sleutelsVanDef(defVan("nb25")).indexOf("meer-ijsselmeer|a") >= 0, "T5c-2: kanalen aanwijzen in nb18 (de lijnproef slaagde), meren in nb25");
+eis(JSON.stringify(V.delenVanVaardigheid("nb15")) === "[\"nlbe/water\"]" && JSON.stringify(V.delenVanVaardigheid("nb20")) === "[\"nlbe/gebieden\"]" && JSON.stringify(V.delenVanVaardigheid("nb01")) === "[]", "T5c-2: de delen van de kaart per vaardigheid");
 eis(D.sleutelsVanDef(defVan("nb24")).every(function(s) { return /\|s$/.test(s); }), "T5a: nb24 vraagt schrijven (s)");
 eis(D.combinaties(defVan("nb28")).length === 26, "T5a: nb28 heeft 26 beginsteden met een zinvol eenduidig antwoord (" + D.combinaties(defVan("nb28")).length + ")");
 // de uitleg bij een fout (plan T5 par. 4.7): bekende gevallen
