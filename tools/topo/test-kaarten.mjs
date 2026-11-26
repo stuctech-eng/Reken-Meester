@@ -50,7 +50,7 @@ var SLEUTELS_KAART = { id: 1, kaartVersie: 1, invoer: 1, breedte: 1, hoogte: 1, 
 var SLEUTELS_LAAG = { id: 1, soort: 1, bron: 1, items: 1, achtergrond: 1 };
 
 async function kennisbank() {
-  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js", "items/water-nl.js", "items/parken-nl.js", "items/kanalen-nl.js", "items/parken-be.js"], perId = {};
+  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js", "items/water-nl.js", "items/parken-nl.js", "items/kanalen-nl.js", "items/parken-be.js", "items/water-be.js"], perId = {};
   for (var i = 0; i < bestanden.length; i++) {
     var m = await import(pathToFileURL(path.join(ROOT, "src/core/topo", bestanden[i])).href);
     Object.keys(m).forEach(function(k) { if (Array.isArray(m[k])) m[k].forEach(function(it) { if (it && it.geometrie) perId[it.id] = it; }); });

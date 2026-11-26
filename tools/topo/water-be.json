@@ -1,0 +1,8 @@
+{
+  "toelichting": "De rivieren en kanalen van Belgie (plan T1 par. 2.2; plan T5b-3 par. 3.1 en 3.2), voorlopig als label-item zonder lijn (A2): alleen benoemen. Besluit Dick 26-11-2026 (optie B): de bronnen (VHA van de VMM, RHW van SPW) konden niet vanaf de iPhone worden opgehaald; de lijnen volgen later (open punt be-water-lijnen). De Maas en het Kanaal Gent-Terneuzen bestaan al (rivier-maas, kanaal-gent-terneuzen) en komen hier niet nog een keer.",
+  "naamBesluit": "T1 par. 2.2: de naam volgens de lijsten rivieren en kanalen van Belgie in T1; de Woordenlijst was vanuit de bouwomgeving niet toegankelijk (zoals GPT 18-11-2026 D1 b)",
+  "landBesluit": "Claude 26-11-2026: een kanaal uit de lijst kanalen van Belgie in T1 par. 2.2 ligt in Belgie (geen bron met geometrie; besluit Dick 26-11-2026, optie B)",
+  "bestaand": { "Maas": "rivier-maas", "Kanaal Gent-Terneuzen": "kanaal-gent-terneuzen" },
+  "rivieren": ["Schelde", "Maas", "Leie", "Dender", "Durme", "Rupel", "Dijle", "Demer", "Nete", "Zenne", "IJzer", "Samber", "Ourthe", "Vesder", "Lesse", "Semois"],
+  "kanalen": ["Albertkanaal", "Kanaal Gent-Terneuzen", "Zeekanaal Brussel-Schelde", "Kanaal Brussel-Charleroi", "Kempisch Kanaal", "Kanaal Bossuit-Kortrijk", "Kanaal Gent-Brugge"]
+}

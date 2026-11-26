@@ -340,6 +340,7 @@
           "tools/topo/taalgebieden-be.json": "487d86af0a35f1508a207e4eb7d007093267f65202b94e5ee618394e46515c35",
           "tools/topo/kanalen-nl.json": "eb6376a8a585b3d745d27a205b6633ca39c9999827e0d769e29e772f28ae8c55",
           "tools/topo/parken-be.json": "e128af8a82f8af251120f2166afde9e3b5b3edb80614535d41e120cb1d0e37c8",
+          "tools/topo/water-be.json": "d4477a44ae51c7a3061d9edb9e1f2516c1cdc0658b0c62479302eb3fa1402c8d",
           "tools/topo/water-nl.json": "3e42c6ace42698146c5277e7e73d6fc68d26395067b4980085ba2ba2fec9ed77",
           "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }
