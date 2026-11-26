@@ -66,7 +66,17 @@ export async function bouw(paden) {
       it.feiten.land = { waarde: "NLD", herkomst: "bron", status: "vastgesteld", bron: rvoBron };
       it.feiten.indeling = { waarde: "Nationaal Park " + k.naam + " (nr " + k.nr + ", " + k.datum + ")", herkomst: "besluit", status: "vastgesteld", besluit: T.besluit };
       it.geometrie = { bron: { bronId: "RVO", bestand: RVO.gpkg.bestand, sha256: RVO.gpkg.sha256, laag: RVO.gpkg.laag, sleutel: "naam", waarde: k.naam, crs: RVO.gpkg.crs }, kaart: {} };
-    } else fout("streek zonder indeling of park: " + id);
+    } else if (s.globaal) {
+      // globaal (plan T5b par. 3.4, besluit T5b-1): geen officiele grens, dus geen vlak (soorten.js, A2); de gemeenten als besluit,
+      // elke code met precies die naam in het CBS-register
+      var gl = Object.keys(s.globaal).sort();
+      if (!gl.length) fout("globale streek zonder gemeenten: " + id);
+      gl.forEach(function(c) { var x = reg.records.filter(function(r) { return r.kenmerken.gm_code === c; }); if (x.length !== 1 || x[0].kenmerken.gm_naam !== s.globaal[c]) fout("CBS: " + c + " is niet " + s.globaal[c]); });
+      it.feiten.land = { waarde: "NLD", herkomst: "bron", status: "vastgesteld", bron: regBron };
+      it.feiten.grens = { waarde: "globaal", herkomst: "besluit", status: "vastgesteld", besluit: T.besluitGlobaal };
+      it.feiten.gemeenten = { waarde: gl, herkomst: "besluit", status: "vastgesteld", besluit: T.besluitGlobaal };
+      it.geometrie = { bron: null, geen: "globaal, zonder officiele grens: alleen benoemen, als label-item zonder vlak (A2)", kaart: {} };
+    } else fout("streek zonder indeling, park of globaal: " + id);
     if (gebruikt[s.naam]) fout("naam twee keer: " + s.naam); gebruikt[s.naam] = 1;
     return it;
   });
@@ -82,5 +92,5 @@ export function schrijf(uit, r) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   var r = await bouw({ gpkg: process.argv[2], natpark: process.argv[3] });
   schrijf(process.argv[4], r);
-  console.log(JSON.stringify(r.ITEMS.map(function(i) { return [i.id, i.feiten.aantalGemeenten ? i.feiten.aantalGemeenten.waarde : i.feiten.indeling.waarde]; })));
+  console.log(JSON.stringify(r.ITEMS.map(function(i) { return [i.id, i.feiten.aantalGemeenten ? i.feiten.aantalGemeenten.waarde : i.feiten.indeling ? i.feiten.indeling.waarde : i.feiten.gemeenten.waarde.length]; })));
 }

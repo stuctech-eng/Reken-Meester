@@ -398,6 +398,7 @@ function controleer62(c) {
     if (it.soort === "stad" && it.geometrie.punt.status !== "vastgesteld") eis(g === null, "georef", "open punt zonder GEOREF: " + it.id);
     else if (it.id === "gebied-koninkrijk") eis(g === null && /geen eigen vlak/.test(it.geometrie.geen || ""), "georef", "het Koninkrijk zonder eigen vlak: " + it.id);
     else if (it.soort === "grenspunt") eis(g === null && it.geometrie.punt.status === "vastgesteld", "georef", "grenspunt met een eigen punt, zonder GEOREF: " + it.id);
+    else if (it.soort === "streek" && it.feiten.grens) eis(g === null && it.feiten.grens.waarde === "globaal" && /A2/.test(it.geometrie.geen || ""), "georef", "globale streek zonder vlak (A2): " + it.id);
     else if (it.soort === "eilandengroep") eis(g === null && /D3 a/.test(it.geometrie.geen || ""), "georef", "eilandengroep zonder eigen vlak (D3 a): " + it.id);
     else eis(!!g && !!reg[g.bronId] && reg[g.bronId].bestanden[g.bestand] === g.sha256 && g.herkomst === undefined && g.status === undefined, "georef", "GEOREF in het register met dezelfde SHA, zonder herkomst en status: " + it.id);
     var feiten = [["naam", it.naam]];
@@ -538,7 +539,7 @@ var VERWACHT63 = {
     "gewesten": G62.GEWESTEN.map(function(g) { return g.id; }),
     "taalgebieden": T5B.TAALGEBIEDEN.map(function(g) { return g.id; }),
     "grensgemeenten": GG.GEMEENTEN_NL.map(function(g) { return g.id; }),
-    "streken": STR.STREKEN_NL.map(function(g) { return g.id; }),
+    "streken": STR.STREKEN_NL.filter(function(g) { return !!g.geometrie.bron; }).map(function(g) { return g.id; }),
     "baarle": ["gebied-baarle"],
     "grenspunten": ["grenspunt-drielandenpunt"],
     "steden": S.STEDEN.map(function(x) { return x.id; }).concat(B62.STEDEN_BE.filter(function(x) { return x.geometrie.punt && x.geometrie.punt.status === "vastgesteld"; }).map(function(x) { return x.id; })),
