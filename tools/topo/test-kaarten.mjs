@@ -2,7 +2,7 @@
 // Een meting in Node vervangt de iPhone-controle niet (plan v2 par. 5.6).
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
-// Gebruik: node --max-old-space-size=8000 test-kaarten.mjs <map NE> <cbsgebiedsindelingen2026.gpkg> <sectoren.geojson> <werkmap> <natpark.gpkg> <INSPIRESurfaceWaterBody.gml>
+// Gebruik: node --max-old-space-size=8000 test-kaarten.mjs <map NE> <cbsgebiedsindelingen2026.gpkg> <sectoren.geojson> <werkmap> <natpark.gpkg> <INSPIRESurfaceWaterBody.gml> <top10nl-waterdeel-t5b2.json>
 // Met KAARTEN kies je de kaarten (standaard alle drie, bijvoorbeeld KAARTEN=nlbe); met DELEN de delen (standaard "inhoud"):
 //   inhoud  - opnieuw bouwen (byte-gelijk met de bestanden), structuur, KAARTREF, eigen meting van de vereenvoudiging,
 //             eigen grensmeting NL-BE (met de toetszone), omvang (gemeld tegen het doel, geen fout: B11 a),
@@ -27,7 +27,7 @@ import * as MK from "./maak-kaarten.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
-var PADEN = { ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[6], krw: process.argv[7] }, WERK = process.argv[5];
+var PADEN = { ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[6], krw: process.argv[7], top10: process.argv[8] }, WERK = process.argv[5];
 var DELEN = (process.env.DELEN || "inhoud").split(",");
 var IDS = (process.env.KAARTEN || "nlbe,europa,koninkrijk").split(",");
 var BRONNEN = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
@@ -39,7 +39,7 @@ if (!PADEN.ne || !PADEN.gpkg || !PADEN.sectoren || !WERK) stop("gebruik: node te
 fs.mkdirSync(WERK, { recursive: true });
 
 // eigen tabellen (los van maak-kaarten.mjs)
-var SOORT = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "krw-zee": "zee", "krw-meer": "meer", "krw-zeearm": "zeearm", "krw-rivier": "rivier", "rvo-park": "natuurgebied" };
+var SOORT = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "rvo-park": "natuurgebied" };
 var TOL_PX = { nlbe: 0.0625, europa: 0.125, koninkrijk: 0.0625 };
 var AFRONDING = { nlbe: 0.01, europa: 0.1, koninkrijk: 0.01 };
 var GZIP = { nlbe: 40 * 1024, europa: 120 * 1024, koninkrijk: 40 * 1024 };

@@ -137,6 +137,16 @@
     "gedownload": "2026-11-25",
     "opmerking": "door Dick toegevoegd vanaf zijn iPhone; het downloadadres staat nog niet in het register (open punt nlbe-water-krw-bron). EPSG:4258 (ETRS89) wordt gelezen als lon/lat, zoals EPSG:4326: het verschil is kleiner dan een meter. De wettelijke grondslag in elk lichaam: Richtlijn 2000/60/EG (Kaderrichtlijn Water)"
   },
+  "top10nlWaterdeel": {
+    "bron": "TOP10",
+    "titel": "Kadaster, BRT TOP10NL, waterdeel_vlak, via de PDOK OGC API Features (https://api.pdok.nl/kadaster/brt-top10nl/ogc/v1), opgehaald per zoekkader (bbox) en pagina",
+    "bestand": "top10nl-waterdeel-t5b2.json",
+    "grootte": 44129675,
+    "sha256": "157aa71e19138bc4ce58163e936fb1516c4d0e264a3cc133551b2d58a7eecab4",
+    "paginas": 24,
+    "opgehaald": "2026-11-26",
+    "opmerking": "door Dick op zijn iPhone opgehaald (Safari, Webarchief); de GeoJSON-tekst per pagina is uit het webarchief gehaald en met de URL gebundeld in een bestand (alleen bouwomgeving). Zoeken op naam kan niet (queryables: alleen geometry en lokaal_id); per pagina hoogstens 1000 waterdelen"
+  },
   "register": {
     "toelichting": "Register van de bron-ids (bouwplan T2b-2 fase 6.1 v1.9). Elk bron-id dat in een FEIT of afleiding voorkomt, staat hier expliciet; er wordt niets aangevuld. Bestanden met hun SHA-256; een webpagina heeft geen bestand en dus geen SHA.",
     "ids": {
@@ -268,6 +278,15 @@
           "INSPIRESurfaceWaterBody.gml": "1bc4aec02640f0571fa5c9d9bc01c81554007fb63f9e54b52e8d20ca96f0ec18"
         }
       },
+      "TOP10": {
+        "titel": "Kadaster, BRT TOP10NL, waterdeel_vlak (PDOK OGC API, bundel van de opgehaalde pagina's)",
+        "soort": [
+          "bestand"
+        ],
+        "bestanden": {
+          "top10nl-waterdeel-t5b2.json": "157aa71e19138bc4ce58163e936fb1516c4d0e264a3cc133551b2d58a7eecab4"
+        }
+      },
       "tabellenNlbe": {
         "titel": "Tabellen voor Nederland en Belgie in de repository (rollen met hun officiele passages; vaste ids van de Belgische steden)",
         "soort": [
@@ -280,7 +299,7 @@
           "tools/topo/koninkrijk.json": "7a0bb05d9bb70ce8d15408b108623a5199375de2c44a9aeeaa9221ad124c5191",
           "tools/topo/streken-nl.json": "20cf6148db2a7cd1ec7a2ddd1581d7f696f8386663633238fc31c3505793d7e7",
           "tools/topo/taalgebieden-be.json": "487d86af0a35f1508a207e4eb7d007093267f65202b94e5ee618394e46515c35",
-          "tools/topo/water-nl.json": "abbec2d6896cce6ca1da809948e2d538579d0359312cce81cb9ea6a6db691624",
+          "tools/topo/water-nl.json": "f06bec694706ab1b3c824ecd2a24cbe87eaae9fae88fa9ecc050acb14e88103d",
           "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }
       }

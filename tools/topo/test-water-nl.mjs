@@ -1,14 +1,16 @@
 // Tests voor het water van Nederland uit de landelijke KRW-waterlichamen (plan T5b par. 3.2, B7 en B8). Alleen bouwomgeving.
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
-// Gebruik: node --max-old-space-size=6000 test-water-nl.mjs <INSPIRESurfaceWaterBody.gml> <cbsgebiedsindelingen2026.gpkg> <map NE>
+// Gebruik: node --max-old-space-size=7000 test-water-nl.mjs <INSPIRESurfaceWaterBody.gml> <cbsgebiedsindelingen2026.gpkg> <map NE>
+//          <top10nl-waterdeel-t5b2.json>
 // - byte-gelijk: het script maakt opnieuw precies items/water-nl.js;
-// - de inhoud: 14 items (1 zee, 6 meren, 2 zeearmen, 5 rivieren), de namen uit T1 par. 2.1, elke KRW-naam als controle;
+// - de inhoud: 24 items (1 zee, 13 meren, 5 zeearmen, 5 rivieren), de namen uit T1 par. 2.1, elke KRW- of TOP10NL-naam als controle;
+// - TOP10NL, nagerekend zonder het script: per item precies alle waterdelen van de bundel met die naam; geen pagina dubbel;
 // - nagerekend zonder het script, met de lezer van de GML: elk lichaam heeft de naam uit de tabel en het juiste soort geometrie;
 // - de ligging, onafhankelijk met CBS en NE: het binnenste punt van elk meer en elke zeearm ligt binnen 20 km van een Nederlandse
 //   gemeente (CBS; de gemeentevlakken zijn zonder het grote water) en dichter bij Nederland dan bij Belgie of Duitsland (NE); van elke
 //   rivier ligt minstens 90 % van de punten in een Nederlandse gemeente (of binnen 100 m ervan);
-// - geen overlap tussen twee watervlakken (polygon-clipping, kleiner dan 1 ha);
+// - overlap tussen twee watervlakken (polygon-clipping): binnen een bron kleiner dan 1 ha, tussen KRW en TOP10NL kleiner dan 5 ha (gemeld);
 // - de Dommel: de twee lichamen sluiten op elkaar aan (een eindpunt binnen 100 m van de andere lijn);
 // - mutanten op de tabel: een andere naam, een lichaam dat niet bestaat, een lijn als meer, een lichaam twee keer, een meer als zeearm.
 
@@ -27,7 +29,7 @@ import { bouw, schrijf } from "./maak-water-nl.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
-var PADEN = { gml: process.argv[2] }, GPKG = process.argv[3], NE = process.argv[4];
+var PADEN = { gml: process.argv[2], top10: process.argv[5] }, GPKG = process.argv[3], NE = process.argv[4];
 var W = (await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/water-nl.js")).href)).WATER_NL;
 var n = 0, fouten = [];
 function eis(ok, t) { n++; if (!ok) fouten.push(t); }
@@ -39,16 +41,24 @@ eis(fs.readFileSync(path.join(tmp, "items", "water-nl.js")).equals(fs.readFileSy
 
 // ---- inhoud ----
 var tel = {}; W.forEach(function(w) { tel[w.soort] = (tel[w.soort] || 0) + 1; });
-eis(W.length === 14 && tel.zee === 1 && tel.meer === 6 && tel.zeearm === 2 && tel.rivier === 5, "14 items: 1 zee, 6 meren, 2 zeearmen, 5 rivieren (" + JSON.stringify(tel) + ")");
-var T1 = ["Waddenzee", "IJsselmeer", "Markermeer", "Grevelingenmeer", "Veerse Meer", "Lauwersmeer", "Zuidlaardermeer", "Westerschelde", "Oosterschelde", "Bergse Maas", "Oude Maas", "Overijsselse Vecht", "Roer", "Dommel"];
-eis(W.map(function(w) { return w.naam.waarde; }).sort().join() === T1.slice().sort().join(), "de namen zijn precies de 14 namen uit T1 par. 2.1 (en nb01)");
+eis(W.length === 24 && tel.zee === 1 && tel.meer === 13 && tel.zeearm === 5 && tel.rivier === 5, "24 items: 1 zee, 13 meren, 5 zeearmen, 5 rivieren (" + JSON.stringify(tel) + ")");
+var T1 = ["Waddenzee", "IJsselmeer", "Markermeer", "Grevelingenmeer", "Veerse Meer", "Lauwersmeer", "Zuidlaardermeer", "Westerschelde", "Oosterschelde", "Bergse Maas", "Oude Maas", "Overijsselse Vecht", "Roer", "Dommel", "Gooimeer", "Veluwemeer", "Ketelmeer", "Sneekermeer", "Tjeukemeer", "Volkerak-Zoommeer", "Loosdrechtse Plassen", "Hollandsch Diep", "Haringvliet", "Dollard"];
+eis(W.map(function(w) { return w.naam.waarde; }).sort().join() === T1.slice().sort().join(), "de namen zijn precies de 24 namen uit T1 par. 2.1 (en nb01)");
 
 // ---- nagerekend met de lezer ----
 var K = leesKrwGml(fs.readFileSync(PADEN.gml)), per = {};
 K.records.forEach(function(r) { per[r.kenmerken.localId] = r; });
 var GEOM = { rivier: "lijn", zee: "vlak", meer: "vlak", zeearm: "vlak" };
 var geo = {};
-W.forEach(function(w) {
+// TOP10NL, zonder de lezer van het script: de pagina's uit de bundel, elk waterdeel per lokaal_id
+var B10 = JSON.parse(fs.readFileSync(PADEN.top10, "utf8")), deel = {}, urls = {};
+B10.paginas.forEach(function(p) { eis(!urls[p.url], "pagina een keer in de bundel: " + p.url); urls[p.url] = 1; JSON.parse(p.tekst).features.forEach(function(f) { deel[f.properties.lokaal_id] = f; }); });
+W.filter(function(w) { return w.geometrie.bron.bronId === "TOP10"; }).forEach(function(w) {
+  var namen = w.naam.controle.waarde.split("; "), verwacht = Object.keys(deel).filter(function(k) { return namen.indexOf(deel[k].properties.naamnl) >= 0; }).sort();
+  eis(verwacht.length > 0 && verwacht.join() === w.geometrie.bron.waarden.join(), "TOP10NL " + w.id + ": precies alle " + verwacht.length + " waterdelen met naamnl " + namen.join(" of "));
+  geo[w.id] = []; verwacht.forEach(function(k) { var g = deel[k].geometry; geo[w.id] = geo[w.id].concat(g.type === "Polygon" ? [g.coordinates] : g.coordinates); });
+});
+W.filter(function(w) { return w.geometrie.bron.bronId === "KRW"; }).forEach(function(w) {
   var ids = w.geometrie.bron.waarden, namen = w.naam.controle.waarde.split("; ");
   eis(ids.length === namen.length, "evenveel lichamen als KRW-namen: " + w.id);
   var delen = [];
@@ -59,7 +69,7 @@ W.forEach(function(w) {
   });
   geo[w.id] = delen;
 });
-eis(W.filter(function(w) { return w.geometrie.bron.waarden.length > 1; }).map(function(w) { return w.id; }).sort().join() === "rivier-dommel,zee-waddenzee", "alleen de Waddenzee en de Dommel bestaan uit twee lichamen");
+eis(W.filter(function(w) { return w.geometrie.bron.bronId === "KRW" && w.geometrie.bron.waarden.length > 1; }).map(function(w) { return w.id; }).sort().join() === "rivier-dommel,zee-waddenzee", "alleen de Waddenzee en de Dommel bestaan uit twee lichamen");
 
 // ---- ligging met CBS (RD) ----
 var naarRd = proj4("EPSG:4326", CRS["EPSG:28992"]);
@@ -80,7 +90,7 @@ var buren = JSON.parse(fs.readFileSync(path.join(NE, "ne_10m_admin_0_map_units.g
 });
 function rd(delen) { return delen.map(function(p) { return p.map(function(r) { return r.map(function(c) { return naarRd.forward(c); }); }); }); }
 W.forEach(function(w) {
-  if (w.soort === "meer" || w.soort === "zeearm") {
+  if ((w.soort === "meer" || w.soort === "zeearm") && !w.feiten.grensgebied) {
     var v = rd(geo[w.id]), groot = v.slice().sort(function(a, b) { return Math.abs(oppRing(b[0])) - Math.abs(oppRing(a[0])); })[0];
     var pl = pool([groot[0]].concat(groot.slice(1)), 1), q = [pl.x, pl.y], dNl = randAfstand(q, gem, 20000), dBuur = randAfstand(q, buren, Infinity);
     eis(dNl <= 20000 && dNl < dBuur, "het binnenste punt van " + w.id + " ligt bij Nederland: " + Math.round(dNl) + " m van een Nederlandse gemeente, " + Math.round(dBuur) + " m van Belgie of Duitsland");
@@ -105,8 +115,14 @@ function oppRing(r) { var s = 0; for (var i = 0; i + 1 < r.length; i++) s += r[i
 function opp(m) { var s = 0; m.forEach(function(p) { p.forEach(function(r, i) { s += (i ? -1 : 1) * Math.abs(oppRing(r)); }); }); return s; }
 
 // ---- geen overlap tussen watervlakken ----
-var V = W.filter(function(w) { return w.soort !== "rivier"; }).map(function(w) { return { id: w.id, g: rd(geo[w.id]) }; });
-for (var i = 0; i < V.length; i++) for (var j = i + 1; j < V.length; j++) { var x = opp(pc.intersection(V[i].g, V[j].g)) / 1e4; eis(x < 1, "geen overlap " + V[i].id + " en " + V[j].id + " (" + x.toFixed(2) + " ha)"); }
+// binnen een bron hoogstens 1 ha; tussen KRW en TOP10NL (twee karteringen van dezelfde oever) hoogstens 5 ha, en gemeld
+var V = W.filter(function(w) { return w.soort !== "rivier"; }).map(function(w) { return { id: w.id, bron: w.geometrie.bron.bronId, g: rd(geo[w.id]) }; }), gemeld = [];
+for (var i = 0; i < V.length; i++) for (var j = i + 1; j < V.length; j++) {
+  var x = opp(pc.intersection(V[i].g, V[j].g)) / 1e4, max = V[i].bron === V[j].bron ? 1 : 5;
+  if (x >= 0.01) gemeld.push(V[i].id + " / " + V[j].id + ": " + x.toFixed(2) + " ha");
+  eis(x < max, "overlap " + V[i].id + " en " + V[j].id + " kleiner dan " + max + " ha (" + x.toFixed(2) + " ha)");
+}
+console.log("overlap tussen watervlakken (vanaf 0,01 ha): " + (gemeld.join("; ") || "geen"));
 
 // ---- de Dommel sluit aan ----
 var d1 = per.NL27_BO_1_2.geometrie().lijnen.map(function(l) { return l.map(function(c) { return naarRd.forward(c); }); }), d2 = per.NL99_6_BO_BE_2.geometrie().lijnen.map(function(l) { return l.map(function(c) { return naarRd.forward(c); }); });
@@ -124,7 +140,10 @@ var MUT = [
   ["een rivierlijn als meer", function(t) { t.water["meer-zuidlaardermeer"].krw = { NL60_ROER: "Roer" }; }],
   ["een lichaam twee keer", function(t) { t.water["zeearm-oosterschelde"].krw = { NL89_WESTSDE_OWL: "Westerschelde" }; }],
   ["een meer als zeearm", function(t) { t.water["meer-veerse-meer"].soort = "zeearm"; }],
-  ["twee items met dezelfde naam", function(t) { t.water["meer-veerse-meer"].naam = "IJsselmeer"; }]
+  ["twee items met dezelfde naam", function(t) { t.water["meer-veerse-meer"].naam = "IJsselmeer"; }],
+  ["een TOP10NL-naam die niet bestaat", function(t) { t.water["meer-gooimeer"].top10 = ["Goimeer"]; }],
+  ["een item met twee bronnen", function(t) { t.water["meer-ketelmeer"].krw = { NL92_KETELMEER_VOSSEMEER: "Ketelmeer, Vossemeer" }; }],
+  ["een TOP10NL-water dat buiten het doorzochte gebied doorloopt", function(t) { t.water["meer-gooimeer"].top10 = ["IJmeer"]; }]
 ];
 var gevangen = 0, gemist = [];
 try {

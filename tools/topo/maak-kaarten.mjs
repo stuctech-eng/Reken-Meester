@@ -4,6 +4,7 @@
 // Gebruik: node --max-old-space-size=8000 maak-kaarten.mjs <map met de Natural Earth-bestanden> <cbsgebiedsindelingen2026.gpkg>
 //          <sectoren.geojson> <uitvoermap> [kaartId,kaartId] [natpark.gpkg van RVO, voor de streken uit een Nationaal Park]
 //          [INSPIRESurfaceWaterBody.gml, de landelijke KRW-waterlichamen, voor het water van Nederland (T5b-2)]
+//          [top10nl-waterdeel-t5b2.json, de bundel met de TOP10NL-waterdelen (T5b-2)]
 // - leest de configuratie tools/topo/kaarten/<kaartId>.json en de kennisbank (alleen lezen);
 // - de bronnen via openBron, met de SHA-256 uit het register;
 // - projecteert, knipt, maakt een topologie, vereenvoudigt en rondt af met dezelfde regels als maak-proefkaarten.mjs (T2a).
@@ -32,7 +33,7 @@ import { leesGpkg, leesGeometrie } from "./bronnen/lees-gpkg.mjs";
 import { leesGeojson, CRS_GEOJSON } from "./bronnen/lees-geojson.mjs";
 import { noordzeeVlak } from "./maak-water-nlbe.mjs";
 import { shaComponent } from "./maak-eilanden-nl.mjs";
-import { openKrw, GEOM_PER_SOORT } from "./maak-water-nl.mjs";
+import { openKrw, openTop10, GEOM_PER_SOORT } from "./maak-water-nl.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
@@ -43,7 +44,7 @@ export var WEERGAVE = 428 - 2 * 16;
 export var EENHEID_PX = WEERGAVE / BREEDTE;
 export var KAARTIDS = ["nlbe", "europa", "koninkrijk"];
 export var GRENS_MIN_STUK_PX2 = 0.01, GRENS_ZONE_PX = 2, GRENS_EIS_PX = 0.5, GRENS_MEETFOUT_PX = 0.05, GRENS_STAP_PX = 0.1, ZOOM_GRENS = 8;
-export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "krw-zee": "zee", "krw-meer": "meer", "krw-zeearm": "zeearm", "krw-rivier": "rivier", "rvo-park": "natuurgebied" };
+export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "rvo-park": "natuurgebied" };
 // T5b-2 (plan par. 3.3): een park dat al een streek is, staat als die streek in de laag van de parken (een item, twee rollen)
 export function soortPastInLaag(bron, it) { return it.soort === SOORT_PER_BRON[bron] || (bron === "rvo-park" && it.soort === "streek" && !!it.feiten.nationaalPark); }
 export var GZIP_DOEL = { nlbe: 40 * 1024, europa: 120 * 1024, koninkrijk: 40 * 1024 };
@@ -379,18 +380,31 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
       if (fs2.length !== it.geometrie.bron.features) fout("NE: aantal features van " + id);
       var l = []; fs2.forEach(function(f) { var g2 = f.geometry; l = l.concat(g2.type === "LineString" ? [g2.coordinates] : g2.coordinates); }); return l;
     }
-    // T5b-2 (plan par. 3.2): water uit de landelijke KRW-waterlichamen; een item uit meer lichamen: hun delen samen, zonder vereniging
-    if (/^krw-/.test(bron)) {
-      var kw = gedeeld.krw(), gk = it.geometrie.bron;
-      if (gk.bronId !== "KRW" || gk.sha256 !== kw.sha || gk.sleutel !== "localId" || !Array.isArray(gk.waarden) || !gk.waarden.length) fout("GEOREF van " + id + " past niet bij " + bron);
-      gebruik("KRW", kw.sha);
-      var dk = [];
-      gk.waarden.forEach(function(k) {
-        var g = (kw.per[k] || fout("KRW: geen lichaam " + k)).geometrie();
-        if (g.soort !== GEOM_PER_SOORT[it.soort]) fout("KRW: " + k + " is een " + g.soort + " voor " + id);
-        dk = dk.concat(g.soort === "lijn" ? g.lijnen : g.delen);
-      });
-      return GEOM_PER_SOORT[it.soort] === "lijn" ? dk : d3Wind(dk);
+    // T5b-2 (plan par. 3.2): water uit de landelijke KRW-waterlichamen, of uit BRT TOP10NL (de waterdelen met de naam); een item uit
+    // meer delen: bij KRW hun delen samen (zonder vereniging), bij TOP10NL samengevoegd langs gedeelde randen (topojson merge)
+    if (/^water-/.test(bron)) {
+      var gk = it.geometrie.bron;
+      if (!Array.isArray(gk.waarden) || !gk.waarden.length) fout("GEOREF van " + id + " past niet bij " + bron);
+      if (gk.bronId === "KRW") {
+        var kw = gedeeld.krw();
+        if (gk.sha256 !== kw.sha || gk.sleutel !== "localId") fout("GEOREF van " + id + " past niet bij " + bron);
+        gebruik("KRW", kw.sha);
+        var dk = [];
+        gk.waarden.forEach(function(k) {
+          var g = (kw.per[k] || fout("KRW: geen lichaam " + k)).geometrie();
+          if (g.soort !== GEOM_PER_SOORT[it.soort]) fout("KRW: " + k + " is een " + g.soort + " voor " + id);
+          dk = dk.concat(g.soort === "lijn" ? g.lijnen : g.delen);
+        });
+        return GEOM_PER_SOORT[it.soort] === "lijn" ? dk : d3Wind(dk);
+      }
+      if (gk.bronId === "TOP10") {
+        var tw = gedeeld.top10();
+        if (gk.sha256 !== tw.sha || gk.sleutel !== "lokaal_id" || GEOM_PER_SOORT[it.soort] !== "vlak") fout("GEOREF van " + id + " past niet bij " + bron);
+        gebruik("TOP10", tw.sha);
+        var tt = topology({ w: { type: "GeometryCollection", geometries: gk.waarden.map(function(k) { return { type: "MultiPolygon", coordinates: (tw.per[k] || fout("TOP10: geen waterdeel " + k)).delen }; }) } });
+        return d3Wind(ontNaald(merge(tt, tt.objects.w.geometries).coordinates, id, []));
+      }
+      return fout("GEOREF van " + id + " past niet bij " + bron);
     }
     // T5b-2 (plan par. 3.3): een Nationaal Park (RVO), ook een streek die een park is
     if (bron === "rvo-park") {
@@ -674,8 +688,8 @@ export function tekst(res, afronding) {
 var GEDEELD = null;
 export async function maakGedeeld(paden) {
   if (GEDEELD && GEDEELD.sleutel === JSON.stringify(paden)) return GEDEELD;
-  var KB = await kennisbank(), B = bronnen(paden), c = await leesCbs(paden), s = null, rv = paden.rvo ? await leesRvo(paden) : null, kw = null;
-  var gedeeld = { cbs: function() { return c; }, stb: function() { if (!s) s = leesStatbel(paden); return s; }, rvo: function() { return rv || fout("geen natpark.gpkg opgegeven (zevende argument)"); }, krw: function() { if (!kw) kw = openKrw(paden.krw || fout("geen KRW-GML opgegeven (achtste argument)")); return kw; } };
+  var KB = await kennisbank(), B = bronnen(paden), c = await leesCbs(paden), s = null, rv = paden.rvo ? await leesRvo(paden) : null, kw = null, tw = null;
+  var gedeeld = { cbs: function() { return c; }, stb: function() { if (!s) s = leesStatbel(paden); return s; }, rvo: function() { return rv || fout("geen natpark.gpkg opgegeven (zevende argument)"); }, krw: function() { if (!kw) kw = openKrw(paden.krw || fout("geen KRW-GML opgegeven (achtste argument)")); return kw; }, top10: function() { if (!tw) tw = openTop10(paden.top10 || fout("geen TOP10NL-bundel opgegeven (negende argument)")); return tw; } };
   GEDEELD = { sleutel: JSON.stringify(paden), KB: KB, B: B, gedeeld: gedeeld };
   return GEDEELD;
 }
@@ -696,7 +710,7 @@ export async function bouwAlles(paden, ids) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   var ids = process.argv[6] ? process.argv[6].split(",") : KAARTIDS;
-  var uit = await bouwAlles({ ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[7], krw: process.argv[8] }, ids);
+  var uit = await bouwAlles({ ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[7], krw: process.argv[8], top10: process.argv[9] }, ids);
   var stop = [];
   uit.forEach(function(u) {
     console.log(u.cfg.id + ": afwijking " + u.res.meting.maxAfwijkingPx + " px (tolerantie " + u.cfg.tolerantiePx + "), " + u.res.omvang.bytes + " bytes, gzip " + u.res.omvang.gzip + " (doel " + u.res.omvang.doel + (u.res.omvang.gzip > u.res.omvang.doel ? ", boven het doel: melden met een voorstel, B11 a" : "") + "), lagen " + u.res.kaart.lagen.map(function(l) { return l.id + " " + l.items.length; }).join(", ") + ", achtergrond " + u.res.kaart.achtergrond.length);

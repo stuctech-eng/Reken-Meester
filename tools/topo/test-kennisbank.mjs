@@ -436,6 +436,8 @@ function controleer62(c) {
     if (WATERSOORTEN.indexOf(it.soort) >= 0) { eis(it.feiten.land === undefined, "land", "water zonder landrelatie: " + it.id); return; }
     // T5b: het Koninkrijk en zijn landen hebben geen landrelatie; een openbaar lichaam ligt in Nederland (Statuut art. 1, lid 2)
     if (it.soort === "gebied") { var bg = (it.relaties || []).some(function(x) { return x.type === "bijzondere-gemeente-van"; }); eis(bg ? (!!it.feiten.land && it.feiten.land.waarde === "NLD" && it.feiten.land.herkomst === "bron") : it.feiten.land === undefined, "land", "gebied: Nederland alleen bij een openbaar lichaam: " + it.id); return; }
+    // T5b-2: een zeearm op de grens (de Dollard): geen land, wel grensgebied met twee bestaande landen (besluit)
+    if (it.soort === "zeearm" && it.feiten.grensgebied) { var gg = it.feiten.grensgebied; eis(it.feiten.land === undefined && gg.herkomst === "besluit" && Array.isArray(gg.waarde) && gg.waarde.length >= 2 && gg.waarde.every(function(x) { return !!perId[x] && perId[x].soort === "land"; }), "land", "zeearm op de grens zonder land, met grensgebied: " + it.id); return; }
     // T5b: een grensgebied ligt in meer landen: feiten.landen (een lijst bestaande landen, minstens twee), geen feiten.land
     if (it.soort === "grenspunt" || it.soort === "bijzonder-gebied") { var ls = it.feiten.landen; eis(it.feiten.land === undefined && !!ls && Array.isArray(ls.waarde) && ls.waarde.length >= 2 && ls.waarde.every(function(x) { return !!perId[x] && perId[x].soort === "land"; }), "land", "grensgebied met minstens twee bestaande landen: " + it.id); return; }
     var v = verwachtLand(it), f = it.feiten.land, hk = it.soort === "eilandengroep" ? "besluit" : "bron";
@@ -447,6 +449,7 @@ function controleer62(c) {
     if (WATERSOORTEN.indexOf(it.soort) >= 0) return "internationaal";
     if (it.feiten && it.feiten.land) return it.feiten.land.waarde;
     if (it.feiten && it.feiten.landen) return it.feiten.landen.waarde.join("+");
+    if (it.feiten && it.feiten.grensgebied) return it.feiten.grensgebied.waarde.join("+");
     if (it.soort === "gebied") return it.id;
     if (it.soort === "stad" && it.feiten && it.feiten.cbs && it.feiten.cbs.herkomst === "bron") return "NLD";
     return null;
@@ -542,7 +545,7 @@ var KD = { fouten: [], n: 0 };
 function eisKD(ok, tekst) { KD.n++; if (!ok) KD.fouten.push(tekst); }
 var KB63 = {};
 [L.LANDEN, S.STEDEN, P62.PROVINCIES, G62.GEWESTEN, B62.STEDEN_BE, W62.WATER_NLBE, E62.EILANDEN_NL, T5B.TAALGEBIEDEN, GG.GEMEENTEN_NL, STR.STREKEN_NL, GB.GRENSGEBIEDEN, KN.KONINKRIJK, WNL.WATER_NL, PNL.PARKEN_NL].forEach(function(lijst) { lijst.forEach(function(it) { KB63[it.id] = it; }); });
-var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "krw-zee": "zee", "krw-meer": "meer", "krw-zeearm": "zeearm", "krw-rivier": "rivier", "rvo-park": "natuurgebied" };
+var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "rvo-park": "natuurgebied" };
 var VERWACHT63 = {
   nlbe: {
     "provincies-nl": P62.PROVINCIES.filter(function(p) { return p.feiten.land.waarde === "NLD"; }).map(function(p) { return p.id; }),

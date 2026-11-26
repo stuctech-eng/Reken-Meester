@@ -262,7 +262,7 @@
     {
       "id": "waddenzee",
       "soort": "vlak",
-      "bron": "krw-zee",
+      "bron": "water-zee",
       "items": [
         "zee-waddenzee"
       ]
@@ -270,21 +270,31 @@
     {
       "id": "meren",
       "soort": "vlak",
-      "bron": "krw-meer",
+      "bron": "water-meer",
       "items": [
+        "meer-gooimeer",
         "meer-grevelingenmeer",
         "meer-ijsselmeer",
+        "meer-ketelmeer",
         "meer-lauwersmeer",
+        "meer-loosdrechtse-plassen",
         "meer-markermeer",
+        "meer-sneekermeer",
+        "meer-tjeukemeer",
         "meer-veerse-meer",
+        "meer-veluwemeer",
+        "meer-volkerak-zoommeer",
         "meer-zuidlaardermeer"
       ]
     },
     {
       "id": "zeearmen",
       "soort": "vlak",
-      "bron": "krw-zeearm",
+      "bron": "water-zeearm",
       "items": [
+        "zeearm-dollard",
+        "zeearm-haringvliet",
+        "zeearm-hollandsch-diep",
         "zeearm-oosterschelde",
         "zeearm-westerschelde"
       ]
@@ -292,7 +302,7 @@
     {
       "id": "rivieren-nl",
       "soort": "lijn",
-      "bron": "krw-rivier",
+      "bron": "water-rivier",
       "items": [
         "rivier-bergse-maas",
         "rivier-dommel",
