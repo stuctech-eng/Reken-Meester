@@ -18,8 +18,8 @@ var KAARTEN = [
   { id: "koninkrijk", titel: "Koninkrijk der Nederlanden" }
 ];
 var BEELDTITEL = { west: "West en midden", zuidoost: "Zuidoost", noordoost: "Noordoost", kaukasus: "Kaukasus", benedenwinden: "Aruba, Curaçao en Bonaire", bovenwinden: "Sint Maarten, Saba en Sint Eustatius" };
-var LAAGTITEL = { "provincies-nl": "Provincies (Nederland)", "provincies-be": "Provincies (België)", gewesten: "Gewesten (België)", taalgebieden: "Taalgebieden (België)", grensgemeenten: "Grensgemeenten (Nederland)", streken: "Streken (Nederland)", grenspunten: "Grenspunten", baarle: "Enclavegebied Baarle", koninkrijk: "Koninkrijk (Caribisch deel)", steden: "Steden", rivieren: "Rivieren", waddeneilanden: "Waddeneilanden", landen: "Landen" };
-var ITEMS = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js"];
+var LAAGTITEL = { "provincies-nl": "Provincies (Nederland)", "provincies-be": "Provincies (België)", gewesten: "Gewesten (België)", taalgebieden: "Taalgebieden (België)", grensgemeenten: "Grensgemeenten (Nederland)", streken: "Streken (Nederland)", grenspunten: "Grenspunten", baarle: "Enclavegebied Baarle", koninkrijk: "Koninkrijk (Caribisch deel)", steden: "Steden", rivieren: "Rivieren", waddenzee: "Waddenzee", meren: "Meren (Nederland)", zeearmen: "Zeearmen (Nederland)", "rivieren-nl": "Rivieren (Nederland, KRW)", parken: "Nationale Parken (Nederland)", waddeneilanden: "Waddeneilanden", landen: "Landen" };
+var ITEMS = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js", "items/water-nl.js", "items/parken-nl.js"];
 
 function fout(t) { throw new Error(t); }
 var KB = {};

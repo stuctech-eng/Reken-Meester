@@ -260,6 +260,77 @@
       ]
     },
     {
+      "id": "waddenzee",
+      "soort": "vlak",
+      "bron": "krw-zee",
+      "items": [
+        "zee-waddenzee"
+      ]
+    },
+    {
+      "id": "meren",
+      "soort": "vlak",
+      "bron": "krw-meer",
+      "items": [
+        "meer-grevelingenmeer",
+        "meer-ijsselmeer",
+        "meer-lauwersmeer",
+        "meer-markermeer",
+        "meer-veerse-meer",
+        "meer-zuidlaardermeer"
+      ]
+    },
+    {
+      "id": "zeearmen",
+      "soort": "vlak",
+      "bron": "krw-zeearm",
+      "items": [
+        "zeearm-oosterschelde",
+        "zeearm-westerschelde"
+      ]
+    },
+    {
+      "id": "rivieren-nl",
+      "soort": "lijn",
+      "bron": "krw-rivier",
+      "items": [
+        "rivier-bergse-maas",
+        "rivier-dommel",
+        "rivier-oude-maas",
+        "rivier-overijsselse-vecht",
+        "rivier-roer"
+      ]
+    },
+    {
+      "id": "parken",
+      "soort": "vlak",
+      "bron": "rvo-park",
+      "items": [
+        "park-nl-de-alde-feanen",
+        "park-nl-de-groote-peel",
+        "park-nl-de-hoge-veluwe",
+        "park-nl-de-maasduinen",
+        "park-nl-de-meinweg",
+        "park-nl-drents-friese-wold",
+        "park-nl-drentsche-aa",
+        "park-nl-duinen-van-texel",
+        "park-nl-dwingelderveld",
+        "park-nl-grenspark-de-zoom-kalmthoutse-heide",
+        "park-nl-hollandse-duinen",
+        "park-nl-lauwersmeer",
+        "park-nl-nieuw-land",
+        "park-nl-oosterschelde",
+        "park-nl-sallandse-heuvelrug",
+        "park-nl-schiermonnikoog",
+        "park-nl-van-gogh",
+        "park-nl-veluwezoom",
+        "park-nl-weerribben-wieden",
+        "park-nl-zuid-kennemerland",
+        "streek-nl-biesbosch",
+        "streek-nl-utrechtse-heuvelrug"
+      ]
+    },
+    {
       "id": "waddeneilanden",
       "soort": "vlak",
       "bron": "cbs-eiland",

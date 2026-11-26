@@ -3,6 +3,7 @@
 //
 // Gebruik: node --max-old-space-size=8000 maak-kaarten.mjs <map met de Natural Earth-bestanden> <cbsgebiedsindelingen2026.gpkg>
 //          <sectoren.geojson> <uitvoermap> [kaartId,kaartId] [natpark.gpkg van RVO, voor de streken uit een Nationaal Park]
+//          [INSPIRESurfaceWaterBody.gml, de landelijke KRW-waterlichamen, voor het water van Nederland (T5b-2)]
 // - leest de configuratie tools/topo/kaarten/<kaartId>.json en de kennisbank (alleen lezen);
 // - de bronnen via openBron, met de SHA-256 uit het register;
 // - projecteert, knipt, maakt een topologie, vereenvoudigt en rondt af met dezelfde regels als maak-proefkaarten.mjs (T2a).
@@ -31,6 +32,7 @@ import { leesGpkg, leesGeometrie } from "./bronnen/lees-gpkg.mjs";
 import { leesGeojson, CRS_GEOJSON } from "./bronnen/lees-geojson.mjs";
 import { noordzeeVlak } from "./maak-water-nlbe.mjs";
 import { shaComponent } from "./maak-eilanden-nl.mjs";
+import { openKrw, GEOM_PER_SOORT } from "./maak-water-nl.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
@@ -41,7 +43,9 @@ export var WEERGAVE = 428 - 2 * 16;
 export var EENHEID_PX = WEERGAVE / BREEDTE;
 export var KAARTIDS = ["nlbe", "europa", "koninkrijk"];
 export var GRENS_MIN_STUK_PX2 = 0.01, GRENS_ZONE_PX = 2, GRENS_EIS_PX = 0.5, GRENS_MEETFOUT_PX = 0.05, GRENS_STAP_PX = 0.1, ZOOM_GRENS = 8;
-export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land" };
+export var SOORT_PER_BRON = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "krw-zee": "zee", "krw-meer": "meer", "krw-zeearm": "zeearm", "krw-rivier": "rivier", "rvo-park": "natuurgebied" };
+// T5b-2 (plan par. 3.3): een park dat al een streek is, staat als die streek in de laag van de parken (een item, twee rollen)
+export function soortPastInLaag(bron, it) { return it.soort === SOORT_PER_BRON[bron] || (bron === "rvo-park" && it.soort === "streek" && !!it.feiten.nationaalPark); }
 export var GZIP_DOEL = { nlbe: 40 * 1024, europa: 120 * 1024, koninkrijk: 40 * 1024 };
 
 function fout(t) { throw new Error(t); }
@@ -49,7 +53,7 @@ function sha(b) { return crypto.createHash("sha256").update(b).digest("hex"); }
 
 // ---- de kennisbank (alleen lezen) ----
 async function kennisbank() {
-  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js"];
+  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js", "items/water-nl.js", "items/parken-nl.js"];
   var perId = {};
   for (var i = 0; i < bestanden.length; i++) {
     var m = await import(pathToFileURL(path.join(ROOT, "src/core/topo", bestanden[i])).href);
@@ -375,6 +379,25 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
       if (fs2.length !== it.geometrie.bron.features) fout("NE: aantal features van " + id);
       var l = []; fs2.forEach(function(f) { var g2 = f.geometry; l = l.concat(g2.type === "LineString" ? [g2.coordinates] : g2.coordinates); }); return l;
     }
+    // T5b-2 (plan par. 3.2): water uit de landelijke KRW-waterlichamen; een item uit meer lichamen: hun delen samen, zonder vereniging
+    if (/^krw-/.test(bron)) {
+      var kw = gedeeld.krw(), gk = it.geometrie.bron;
+      if (gk.bronId !== "KRW" || gk.sha256 !== kw.sha || gk.sleutel !== "localId" || !Array.isArray(gk.waarden) || !gk.waarden.length) fout("GEOREF van " + id + " past niet bij " + bron);
+      gebruik("KRW", kw.sha);
+      var dk = [];
+      gk.waarden.forEach(function(k) {
+        var g = (kw.per[k] || fout("KRW: geen lichaam " + k)).geometrie();
+        if (g.soort !== GEOM_PER_SOORT[it.soort]) fout("KRW: " + k + " is een " + g.soort + " voor " + id);
+        dk = dk.concat(g.soort === "lijn" ? g.lijnen : g.delen);
+      });
+      return GEOM_PER_SOORT[it.soort] === "lijn" ? dk : d3Wind(dk);
+    }
+    // T5b-2 (plan par. 3.3): een Nationaal Park (RVO), ook een streek die een park is
+    if (bron === "rvo-park") {
+      var rv8 = gedeeld.rvo(), gp8 = it.geometrie.bron;
+      if (!soortPastInLaag(bron, it) || gp8.bronId !== "RVO" || gp8.sha256 !== rv8.sha || gp8.sleutel !== "naam" || !rv8.per[gp8.waarde]) fout("GEOREF van " + id + " past niet bij rvo-park");
+      gebruik("RVO", rv8.sha); return zetOm(ontNaald(rv8.per[gp8.waarde], id, []), rdNaarLl());
+    }
     if (bron === "noordzee") { var mar = B.ne("ne_10m_geography_marine_polys.geojson"); gebruik("NE", mar.sha); return d3Wind(noordzeeVlak(mar.buf, B.ne("ne_10m_admin_0_map_units.geojson").buf, KB["zee-noordzee"].geometrie.bron.waarde).vlak); }
     return fout("onbekende bron: " + bron);
   }
@@ -383,7 +406,7 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
     if (!SOORT_PER_BRON[l.bron]) fout("onbekende bron in laag " + l.id + ": " + l.bron);
     return { id: l.id, soort: l.soort, bron: l.bron, items: l.items.map(function(id) {
       var it = item(id);
-      if (it.soort !== SOORT_PER_BRON[l.bron]) fout("item " + id + " heeft soort " + it.soort + ", laag " + l.id + " vraagt " + SOORT_PER_BRON[l.bron]);
+      if (!soortPastInLaag(l.bron, it)) fout("item " + id + " heeft soort " + it.soort + ", laag " + l.id + " vraagt " + SOORT_PER_BRON[l.bron]);
       if (l.soort === "punt") { if (it.geometrie.punt.status !== "vastgesteld") fout("geen vastgesteld punt: " + id); return { id: id, punt: [it.geometrie.punt.lon, it.geometrie.punt.lat] }; }
       return { id: id, delen: geom(l.bron, id) };
     }), achter: (l.laagAchtergrond || []).map(function(a) { return { id: a.id, delen: geom(a.bron, a.id) }; }) };
@@ -651,8 +674,8 @@ export function tekst(res, afronding) {
 var GEDEELD = null;
 export async function maakGedeeld(paden) {
   if (GEDEELD && GEDEELD.sleutel === JSON.stringify(paden)) return GEDEELD;
-  var KB = await kennisbank(), B = bronnen(paden), c = await leesCbs(paden), s = null, rv = paden.rvo ? await leesRvo(paden) : null;
-  var gedeeld = { cbs: function() { return c; }, stb: function() { if (!s) s = leesStatbel(paden); return s; }, rvo: function() { return rv || fout("geen natpark.gpkg opgegeven (zevende argument)"); } };
+  var KB = await kennisbank(), B = bronnen(paden), c = await leesCbs(paden), s = null, rv = paden.rvo ? await leesRvo(paden) : null, kw = null;
+  var gedeeld = { cbs: function() { return c; }, stb: function() { if (!s) s = leesStatbel(paden); return s; }, rvo: function() { return rv || fout("geen natpark.gpkg opgegeven (zevende argument)"); }, krw: function() { if (!kw) kw = openKrw(paden.krw || fout("geen KRW-GML opgegeven (achtste argument)")); return kw; } };
   GEDEELD = { sleutel: JSON.stringify(paden), KB: KB, B: B, gedeeld: gedeeld };
   return GEDEELD;
 }
@@ -673,7 +696,7 @@ export async function bouwAlles(paden, ids) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   var ids = process.argv[6] ? process.argv[6].split(",") : KAARTIDS;
-  var uit = await bouwAlles({ ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[7] }, ids);
+  var uit = await bouwAlles({ ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[7], krw: process.argv[8] }, ids);
   var stop = [];
   uit.forEach(function(u) {
     console.log(u.cfg.id + ": afwijking " + u.res.meting.maxAfwijkingPx + " px (tolerantie " + u.cfg.tolerantiePx + "), " + u.res.omvang.bytes + " bytes, gzip " + u.res.omvang.gzip + " (doel " + u.res.omvang.doel + (u.res.omvang.gzip > u.res.omvang.doel ? ", boven het doel: melden met een voorstel, B11 a" : "") + "), lagen " + u.res.kaart.lagen.map(function(l) { return l.id + " " + l.items.length; }).join(", ") + ", achtergrond " + u.res.kaart.achtergrond.length);

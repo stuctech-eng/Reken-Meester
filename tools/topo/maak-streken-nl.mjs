@@ -65,6 +65,8 @@ export async function bouw(paden) {
       it.naam.controle = { id: "RVO", waarde: k.naam };
       it.feiten.land = { waarde: "NLD", herkomst: "bron", status: "vastgesteld", bron: rvoBron };
       it.feiten.indeling = { waarde: "Nationaal Park " + k.naam + " (nr " + k.nr + ", " + k.datum + ")", herkomst: "besluit", status: "vastgesteld", besluit: T.besluit };
+      // T5b-2 (plan par. 3.3): de tweede rol van dit item, Nationaal Park (T1 par. 2.1: een item, twee rollen)
+      it.feiten.nationaalPark = { waarde: k.naam, herkomst: "bron", status: "vastgesteld", bron: rvoBron };
       it.geometrie = { bron: { bronId: "RVO", bestand: RVO.gpkg.bestand, sha256: RVO.gpkg.sha256, laag: RVO.gpkg.laag, sleutel: "naam", waarde: k.naam, crs: RVO.gpkg.crs }, kaart: {} };
     } else if (s.globaal) {
       // globaal (plan T5b par. 3.4, besluit T5b-1): geen officiele grens, dus geen vlak (soorten.js, A2); de gemeenten als besluit,

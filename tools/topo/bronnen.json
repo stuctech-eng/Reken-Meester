@@ -130,6 +130,13 @@
     "gedownload": "2026-11-25",
     "opmerking": "door Dick toegevoegd vanaf zijn iPhone (PDOK-download); twee parken met nr 22 (Van Gogh, zonder datum, en Hollandse Duinen, 2026-04-19)"
   },
+  "krwOppervlaktewaterlichamen": {
+    "bron": "KRW",
+    "titel": "KRW-oppervlaktewaterlichamen, landelijke set (INSPIRE Area Management, nlam-owl, rapportage 2024): alle 745 waterlichamen van Rijkswaterstaat en de waterschappen, met naam, beheerder en begrenzing",
+    "gml": { "bestand": "INSPIRESurfaceWaterBody.gml", "grootte": 214318370, "sha256": "1bc4aec02640f0571fa5c9d9bc01c81554007fb63f9e54b52e8d20ca96f0ec18", "crs": "EPSG:4258", "features": 745, "vlakken": 511, "lijnen": 234, "versie": "2024" },
+    "gedownload": "2026-11-25",
+    "opmerking": "door Dick toegevoegd vanaf zijn iPhone; het downloadadres staat nog niet in het register (open punt nlbe-water-krw-bron). EPSG:4258 (ETRS89) wordt gelezen als lon/lat, zoals EPSG:4326: het verschil is kleiner dan een meter. De wettelijke grondslag in elk lichaam: Richtlijn 2000/60/EG (Kaderrichtlijn Water)"
+  },
   "register": {
     "toelichting": "Register van de bron-ids (bouwplan T2b-2 fase 6.1 v1.9). Elk bron-id dat in een FEIT of afleiding voorkomt, staat hier expliciet; er wordt niets aangevuld. Bestanden met hun SHA-256; een webpagina heeft geen bestand en dus geen SHA.",
     "ids": {
@@ -252,6 +259,15 @@
           "natpark.gpkg": "9a406c04ad98aa9033e3cd50009e8aec2d42c5617abcfe64d2a91372c81e10a6"
         }
       },
+      "KRW": {
+        "titel": "KRW-oppervlaktewaterlichamen, landelijke set (INSPIRE, rapportage 2024)",
+        "soort": [
+          "bestand"
+        ],
+        "bestanden": {
+          "INSPIRESurfaceWaterBody.gml": "1bc4aec02640f0571fa5c9d9bc01c81554007fb63f9e54b52e8d20ca96f0ec18"
+        }
+      },
       "tabellenNlbe": {
         "titel": "Tabellen voor Nederland en Belgie in de repository (rollen met hun officiele passages; vaste ids van de Belgische steden)",
         "soort": [
@@ -264,6 +280,7 @@
           "tools/topo/koninkrijk.json": "7a0bb05d9bb70ce8d15408b108623a5199375de2c44a9aeeaa9221ad124c5191",
           "tools/topo/streken-nl.json": "20cf6148db2a7cd1ec7a2ddd1581d7f696f8386663633238fc31c3505793d7e7",
           "tools/topo/taalgebieden-be.json": "487d86af0a35f1508a207e4eb7d007093267f65202b94e5ee618394e46515c35",
+          "tools/topo/water-nl.json": "abbec2d6896cce6ca1da809948e2d538579d0359312cce81cb9ea6a6db691624",
           "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }
       }

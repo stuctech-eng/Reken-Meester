@@ -1,0 +1,21 @@
+{
+  "toelichting": "Het water van Nederland uit de landelijke KRW-oppervlaktewaterlichamen (plan T5b par. 3.2, B7 en B8). Alleen de wateren uit T1 par. 2.1 die in de bron een eigen waterlichaam hebben met dezelfde naam (of die samen uit lichamen met die naam bestaan). Samengevoegde of ontbrekende wateren staan op de open lijst (nlbe-water-krw) en hier niet. De naam volgt T1 par. 2.1; de KRW-naam staat als controle. NE is nooit een naambron (T1 par. 1.3).",
+  "naamBesluit": "T1 par. 2.1: de naam volgens de lijsten van T1 (rivieren, zeearmen, meren; Waddenzee in nb01); de Woordenlijst was vanuit de bouwomgeving niet toegankelijk (zoals GPT 18-11-2026 D1 b)",
+  "besluitSamen": "Claude 26-11-2026: een water uit twee KRW-lichamen is de vereniging van die lichamen als samen precies dat water zijn volgens hun namen in de bron: de Waddenzee = Waddenzee en Waddenzee vastelandskust (beide beheerd door Rijkswaterstaat, kustwater); de Dommel = Boven Dommel en Midden- en Beneden Dommel (beide Waterschap De Dommel)",
+  "water": {
+    "zee-waddenzee": { "soort": "zee", "naam": "Waddenzee", "krw": { "NL81_1": "Waddenzee", "NL81_10": "Waddenzee vastelandskust" } },
+    "meer-ijsselmeer": { "soort": "meer", "naam": "IJsselmeer", "krw": { "NL92_IJSSELMEER": "IJsselmeer" } },
+    "meer-markermeer": { "soort": "meer", "naam": "Markermeer", "krw": { "NL92_MARKERMEER": "Markermeer" } },
+    "meer-grevelingenmeer": { "soort": "meer", "naam": "Grevelingenmeer", "krw": { "NL89_GREVLEMR": "Grevelingenmeer" } },
+    "meer-veerse-meer": { "soort": "meer", "naam": "Veerse Meer", "krw": { "NL89_VEERSMR": "Veerse Meer" } },
+    "meer-lauwersmeer": { "soort": "meer", "naam": "Lauwersmeer", "krw": { "NL34M108": "Lauwersmeer" } },
+    "meer-zuidlaardermeer": { "soort": "meer", "naam": "Zuidlaardermeer", "krw": { "NL33ZM": "Zuidlaardermeer" } },
+    "zeearm-westerschelde": { "soort": "zeearm", "naam": "Westerschelde", "krw": { "NL89_WESTSDE_OWL": "Westerschelde" } },
+    "zeearm-oosterschelde": { "soort": "zeearm", "naam": "Oosterschelde", "krw": { "NL89_OOSTSDE_OWL": "Oosterschelde" } },
+    "rivier-bergse-maas": { "soort": "rivier", "naam": "Bergse Maas", "krw": { "NL94_6": "Bergsche Maas" } },
+    "rivier-oude-maas": { "soort": "rivier", "naam": "Oude Maas", "krw": { "NL94_4": "Oude Maas" } },
+    "rivier-overijsselse-vecht": { "soort": "rivier", "naam": "Overijsselse Vecht", "krw": { "NL44_OVERIJSSELVECHT14": "Overijsselse Vecht" } },
+    "rivier-roer": { "soort": "rivier", "naam": "Roer", "krw": { "NL60_ROER": "Roer" } },
+    "rivier-dommel": { "soort": "rivier", "naam": "Dommel", "krw": { "NL27_BO_1_2": "Boven Dommel", "NL99_6_BO_BE_2": "Midden- en Beneden Dommel" } }
+  }
+}
