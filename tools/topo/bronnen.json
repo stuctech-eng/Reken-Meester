@@ -147,6 +147,27 @@
     "opgehaald": "2026-11-26",
     "opmerking": "door Dick op zijn iPhone opgehaald (Safari, Webarchief); de GeoJSON-tekst per pagina is uit het webarchief gehaald en met de URL gebundeld in een bestand (alleen bouwomgeving). Zoeken op naam kan niet (queryables: alleen geometry en lokaal_id); per pagina hoogstens 1000 waterdelen"
   },
+  "nwbVaarwegen": {
+    "bron": "NWB",
+    "titel": "Rijkswaterstaat, NWB Vaarwegen, vaarwegvakken, via de PDOK OGC API Features (https://api.pdok.nl/rws/nationaal-wegenbestand-vaarwegen/ogc/v1), alle bladzijden van de hele set",
+    "bestand": "nwb-vaarwegen-t5b3.json",
+    "grootte": 5032503,
+    "sha256": "3f20f4a8229943cd9f640a07958d20141b0e8b431403af6950d54666d8d1574f",
+    "paginas": 5,
+    "vakken": 4825,
+    "opgehaald": "2026-11-26",
+    "opmerking": "door Dick op zijn iPhone opgehaald (Safari, Webarchief); de GeoJSON-tekst per pagina is uit het webarchief gehaald en met de URL gebundeld (alleen bouwomgeving)"
+  },
+  "spwParcsNationaux": {
+    "bron": "SPW",
+    "titel": "Service public de Wallonie, Parcs nationaux, couche Perimetres (https://geoservices.wallonie.be/arcgis/rest/services/FAUNE_FLORE/PARCS_NATIONAUX/MapServer/3)",
+    "bestand": "spw-parcs-nationaux-t5b3.json",
+    "grootte": 1964196,
+    "sha256": "8e463e8a228a19afd199dd40e96f6ba9b5b7691549b3f38d21e9de1ef7a57e1f",
+    "paginas": 1,
+    "opgehaald": "2026-11-26",
+    "opmerking": "door Dick op zijn iPhone opgehaald (Safari, Webarchief), uitvoer GeoJSON in EPSG:4326 (outSR=4326); 2 perimeters met STATUT Valide"
+  },
   "register": {
     "toelichting": "Register van de bron-ids (bouwplan T2b-2 fase 6.1 v1.9). Elk bron-id dat in een FEIT of afleiding voorkomt, staat hier expliciet; er wordt niets aangevuld. Bestanden met hun SHA-256; een webpagina heeft geen bestand en dus geen SHA.",
     "ids": {
@@ -287,6 +308,24 @@
           "top10nl-waterdeel-t5b2.json": "66316ff2ff9de7daf14be1430100144fd8214dfb26bde00876a38f2d37727aae"
         }
       },
+      "NWB": {
+        "titel": "Rijkswaterstaat, NWB Vaarwegen, vaarwegvakken (PDOK OGC API, bundel van alle bladzijden)",
+        "soort": [
+          "bestand"
+        ],
+        "bestanden": {
+          "nwb-vaarwegen-t5b3.json": "3f20f4a8229943cd9f640a07958d20141b0e8b431403af6950d54666d8d1574f"
+        }
+      },
+      "SPW": {
+        "titel": "Service public de Wallonie, Parcs nationaux (ArcGIS REST, laag Perimetres)",
+        "soort": [
+          "bestand"
+        ],
+        "bestanden": {
+          "spw-parcs-nationaux-t5b3.json": "8e463e8a228a19afd199dd40e96f6ba9b5b7691549b3f38d21e9de1ef7a57e1f"
+        }
+      },
       "tabellenNlbe": {
         "titel": "Tabellen voor Nederland en Belgie in de repository (rollen met hun officiele passages; vaste ids van de Belgische steden)",
         "soort": [
@@ -299,6 +338,8 @@
           "tools/topo/koninkrijk.json": "7a0bb05d9bb70ce8d15408b108623a5199375de2c44a9aeeaa9221ad124c5191",
           "tools/topo/streken-nl.json": "20cf6148db2a7cd1ec7a2ddd1581d7f696f8386663633238fc31c3505793d7e7",
           "tools/topo/taalgebieden-be.json": "487d86af0a35f1508a207e4eb7d007093267f65202b94e5ee618394e46515c35",
+          "tools/topo/kanalen-nl.json": "eb6376a8a585b3d745d27a205b6633ca39c9999827e0d769e29e772f28ae8c55",
+          "tools/topo/parken-be.json": "e128af8a82f8af251120f2166afde9e3b5b3edb80614535d41e120cb1d0e37c8",
           "tools/topo/water-nl.json": "3e42c6ace42698146c5277e7e73d6fc68d26395067b4980085ba2ba2fec9ed77",
           "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }

@@ -385,7 +385,9 @@ var GB = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/grensge
 var KN = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/koninkrijk.js")).href);
 var WNL = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/water-nl.js")).href);
 var PNL = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/parken-nl.js")).href);
-function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE), kopie(W62.WATER_NLBE), kopie(E62.EILANDEN_NL), kopie(T5B.TAALGEBIEDEN), kopie(GG.GEMEENTEN_NL), kopie(STR.STREKEN_NL), kopie(GB.GRENSGEBIEDEN), kopie(KN.KONINKRIJK), kopie(WNL.WATER_NL), kopie(PNL.PARKEN_NL)), rel: kopie(H62.HOOFDSTEDEN_NLBE).concat(kopie(GGR.GRENSGEMEENTEN_NL)), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
+var KNL = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/kanalen-nl.js")).href);
+var PBE = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/parken-be.js")).href);
+function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE), kopie(W62.WATER_NLBE), kopie(E62.EILANDEN_NL), kopie(T5B.TAALGEBIEDEN), kopie(GG.GEMEENTEN_NL), kopie(STR.STREKEN_NL), kopie(GB.GRENSGEBIEDEN), kopie(KN.KONINKRIJK), kopie(WNL.WATER_NL), kopie(PNL.PARKEN_NL), kopie(KNL.KANALEN_NL), kopie(PBE.PARKEN_BE)), rel: kopie(H62.HOOFDSTEDEN_NLBE).concat(kopie(GGR.GRENSGEMEENTEN_NL)), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
 function controleer62(c) {
   var fouten = [], n = 0;
   function eis(ok, groep, tekst) { n++; if (!ok) fouten.push({ groep: groep, tekst: tekst }); }
@@ -394,12 +396,13 @@ function controleer62(c) {
   c.oud.concat(c.nieuw).forEach(function(it) { eis(!perId[it.id], "hergebruik", "id een keer in de kennisbank: " + it.id); perId[it.id] = it; });
   ["NLD", "BEL", "DEU"].forEach(function(id) { eis(c.oud.concat(c.nieuw).filter(function(it) { return it.id === id; }).length === 1, "hergebruik", "land bestaat een keer: " + id); });
   c.nieuw.forEach(function(it) {
-    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "taalgebied", "gemeente", "streek", "grenspunt", "bijzonder-gebied", "gebied", "stad", "zee", "rivier", "eiland", "eilandengroep", "meer", "zeearm", "natuurgebied"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2 of T5b: " + it.id);
+    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "taalgebied", "gemeente", "streek", "grenspunt", "bijzonder-gebied", "gebied", "stad", "zee", "rivier", "eiland", "eilandengroep", "meer", "zeearm", "natuurgebied", "kanaal"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2 of T5b: " + it.id);
     eis(gelijk(it.geometrie.kaart, {}), "georef", "nog geen kaartverwijzingen: " + it.id);
     var g = it.geometrie.bron;
     if (it.soort === "stad" && it.geometrie.punt.status !== "vastgesteld") eis(g === null, "georef", "open punt zonder GEOREF: " + it.id);
     else if (it.id === "gebied-koninkrijk") eis(g === null && /geen eigen vlak/.test(it.geometrie.geen || ""), "georef", "het Koninkrijk zonder eigen vlak: " + it.id);
     else if (it.soort === "grenspunt") eis(g === null && it.geometrie.punt.status === "vastgesteld", "georef", "grenspunt met een eigen punt, zonder GEOREF: " + it.id);
+    else if (it.soort === "natuurgebied" && g === null) eis(/^park-be-/.test(it.id) && /A2/.test(it.geometrie.geen || ""), "georef", "Vlaams park zonder vlak (A2): " + it.id);
     else if (it.soort === "streek" && it.feiten.grens) eis(g === null && it.feiten.grens.waarde === "globaal" && /A2/.test(it.geometrie.geen || ""), "georef", "globale streek zonder vlak (A2): " + it.id);
     else if (it.soort === "eilandengroep") eis(g === null && /D3 a/.test(it.geometrie.geen || ""), "georef", "eilandengroep zonder eigen vlak (D3 a): " + it.id);
     else eis(!!g && !!reg[g.bronId] && reg[g.bronId].bestanden[g.bestand] === g.sha256 && g.herkomst === undefined && g.status === undefined, "georef", "GEOREF in het register met dezelfde SHA, zonder herkomst en status: " + it.id);
@@ -426,7 +429,8 @@ function controleer62(c) {
     if (it.soort === "stad") return /^stad-be-/.test(it.id) ? "BEL" : null;
     if (it.soort === "eiland" || it.soort === "eilandengroep") return "NLD";
     if (it.soort === "streek") return "NLD";
-    if (it.soort === "meer" || it.soort === "zeearm" || it.soort === "natuurgebied") return "NLD";
+    if (it.soort === "natuurgebied") return /^park-be-/.test(it.id) ? "BEL" : "NLD";
+    if (it.soort === "meer" || it.soort === "zeearm" || it.soort === "kanaal") return "NLD";
     if (it.soort === "gemeente") return /^GM[0-9]{4}$/.test(it.feiten.code && it.feiten.code.waarde) ? "NLD" : null;
     return null;
   }
@@ -437,7 +441,7 @@ function controleer62(c) {
     // T5b: het Koninkrijk en zijn landen hebben geen landrelatie; een openbaar lichaam ligt in Nederland (Statuut art. 1, lid 2)
     if (it.soort === "gebied") { var bg = (it.relaties || []).some(function(x) { return x.type === "bijzondere-gemeente-van"; }); eis(bg ? (!!it.feiten.land && it.feiten.land.waarde === "NLD" && it.feiten.land.herkomst === "bron") : it.feiten.land === undefined, "land", "gebied: Nederland alleen bij een openbaar lichaam: " + it.id); return; }
     // T5b-2: een zeearm op de grens (de Dollard): geen land, wel grensgebied met twee bestaande landen (besluit)
-    if (it.soort === "zeearm" && it.feiten.grensgebied) { var gg = it.feiten.grensgebied; eis(it.feiten.land === undefined && gg.herkomst === "besluit" && Array.isArray(gg.waarde) && gg.waarde.length >= 2 && gg.waarde.every(function(x) { return !!perId[x] && perId[x].soort === "land"; }), "land", "zeearm op de grens zonder land, met grensgebied: " + it.id); return; }
+    if ((it.soort === "zeearm" || it.soort === "kanaal") && it.feiten.grensgebied) { var gg = it.feiten.grensgebied; eis(it.feiten.land === undefined && gg.herkomst === "besluit" && Array.isArray(gg.waarde) && gg.waarde.length >= 2 && gg.waarde.every(function(x) { return !!perId[x] && perId[x].soort === "land"; }), "land", "zeearm op de grens zonder land, met grensgebied: " + it.id); return; }
     // T5b: een grensgebied ligt in meer landen: feiten.landen (een lijst bestaande landen, minstens twee), geen feiten.land
     if (it.soort === "grenspunt" || it.soort === "bijzonder-gebied") { var ls = it.feiten.landen; eis(it.feiten.land === undefined && !!ls && Array.isArray(ls.waarde) && ls.waarde.length >= 2 && ls.waarde.every(function(x) { return !!perId[x] && perId[x].soort === "land"; }), "land", "grensgebied met minstens twee bestaande landen: " + it.id); return; }
     var v = verwachtLand(it), f = it.feiten.land, hk = it.soort === "eilandengroep" ? "besluit" : "bron";
@@ -497,6 +501,9 @@ var MUT62 = [
   ["Drielandenpunt met een onbekend land", "land", function(c) { nieuw62(c, "grenspunt-drielandenpunt").feiten.landen.waarde = ["BEL", "XXX", "NLD"]; }],
   ["Baarle met een land", "land", function(c) { nieuw62(c, "gebied-baarle").feiten.land = { waarde: "BEL", herkomst: "bron", status: "vastgesteld", bron: { id: "STB" } }; }],
   ["streek in Belgie", "land", function(c) { nieuw62(c, "streek-nl-de-kempen").feiten.land.waarde = "BEL"; }],
+  ["kanaal in Belgie", "land", function(c) { nieuw62(c, "kanaal-noordzeekanaal").feiten.land.waarde = "BEL"; }],
+  ["Waals park in Nederland", "land", function(c) { nieuw62(c, "park-be-vallee-de-la-semois").feiten.land.waarde = "NLD"; }],
+  ["Vlaams park met een onbekende GEOREF", "georef", function(c) { nieuw62(c, "park-be-bosland").geometrie.bron = { bronId: "XXX", bestand: "x", sha256: "0".repeat(64) }; }],
   ["meer in Belgie", "land", function(c) { nieuw62(c, "meer-ijsselmeer").feiten.land.waarde = "BEL"; }],
   ["rivier met een landrelatie", "land", function(c) { nieuw62(c, "rivier-roer").feiten.land = { waarde: "NLD", herkomst: "bron", status: "vastgesteld", bron: { id: "KRW" } }; }],
   ["park zonder landrelatie", "land", function(c) { delete nieuw62(c, "park-nl-veluwezoom").feiten.land; }],
@@ -544,8 +551,8 @@ if (uit62.fouten.length || gemist62.length) process.exit(1);
 var KD = { fouten: [], n: 0 };
 function eisKD(ok, tekst) { KD.n++; if (!ok) KD.fouten.push(tekst); }
 var KB63 = {};
-[L.LANDEN, S.STEDEN, P62.PROVINCIES, G62.GEWESTEN, B62.STEDEN_BE, W62.WATER_NLBE, E62.EILANDEN_NL, T5B.TAALGEBIEDEN, GG.GEMEENTEN_NL, STR.STREKEN_NL, GB.GRENSGEBIEDEN, KN.KONINKRIJK, WNL.WATER_NL, PNL.PARKEN_NL].forEach(function(lijst) { lijst.forEach(function(it) { KB63[it.id] = it; }); });
-var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "water-rivier-vlak": "rivier", "rvo-park": "natuurgebied" };
+[L.LANDEN, S.STEDEN, P62.PROVINCIES, G62.GEWESTEN, B62.STEDEN_BE, W62.WATER_NLBE, E62.EILANDEN_NL, T5B.TAALGEBIEDEN, GG.GEMEENTEN_NL, STR.STREKEN_NL, GB.GRENSGEBIEDEN, KN.KONINKRIJK, WNL.WATER_NL, PNL.PARKEN_NL, KNL.KANALEN_NL, PBE.PARKEN_BE].forEach(function(lijst) { lijst.forEach(function(it) { KB63[it.id] = it; }); });
+var SOORT63 = { "cbs-provincie": "provincie", "stb-provincie": "provincie", "stb-gewest": "gewest", "stb-taalgebied": "taalgebied", "cbs-gemeente": "gemeente", "streek": "streek", "kb-grenspunt": "grenspunt", "stb-enclaves": "bijzonder-gebied", "ne-koninkrijk": "gebied", "kb-punt": "stad", "ne-rivier": "rivier", "cbs-eiland": "eiland", "ne-land": "land", "land-nlbe": "land", "water-zee": "zee", "water-meer": "meer", "water-zeearm": "zeearm", "water-rivier": "rivier", "water-rivier-vlak": "rivier", "rvo-park": "natuurgebied", "nwb-kanaal": "kanaal", "spw-park": "natuurgebied" };
 var VERWACHT63 = {
   nlbe: {
     "provincies-nl": P62.PROVINCIES.filter(function(p) { return p.feiten.land.waarde === "NLD"; }).map(function(p) { return p.id; }),
@@ -563,6 +570,8 @@ var VERWACHT63 = {
     "zeearmen": WNL.WATER_NL.filter(function(w) { return w.soort === "zeearm"; }).map(function(w) { return w.id; }),
     "rivieren-nl": WNL.WATER_NL.filter(function(w) { return w.soort === "rivier" && !w.geometrie.bron.vorm; }).map(function(w) { return w.id; }),
     "rivieren-vlak": WNL.WATER_NL.filter(function(w) { return w.soort === "rivier" && w.geometrie.bron.vorm === "vlak"; }).map(function(w) { return w.id; }),
+    "kanalen": KNL.KANALEN_NL.map(function(x) { return x.id; }),
+    "parken-be": PBE.PARKEN_BE.filter(function(x) { return !!x.geometrie.bron; }).map(function(x) { return x.id; }),
     "parken": PNL.PARKEN_NL.map(function(p) { return p.id; }).concat(PNL.PARKEN_ALS_STREEK.map(function(p) { return p.item; })),
     "waddeneilanden": E62.EILANDEN_NL.filter(function(e) { return e.soort === "eiland"; }).map(function(e) { return e.id; })
   },

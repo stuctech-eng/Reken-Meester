@@ -1,0 +1,21 @@
+{
+  "toelichting": "De kanalen van Nederland (plan T1 par. 2.1; plan T5b-3 par. 3.2) uit het NWB Vaarwegen van Rijkswaterstaat: per kanaal alle vaarwegvakken met precies deze vaarwegnaam (vwg_naam). Een kanaal is een lijn; een aanwijsvraag pas na de lijnproef (T1 par. 5.3). De naam volgt T1 par. 2.1; de NWB-naam staat als controle.",
+  "naamBesluit": "T1 par. 2.1: de naam volgens de lijst kanalen van T1; de Woordenlijst was vanuit de bouwomgeving niet toegankelijk (zoals GPT 18-11-2026 D1 b)",
+  "besluitTwente": "Claude 26-11-2026: het Twentekanaal = de vaarwegen Kanaal Zutphen-Enschede en Zijkanaal naar Almelo, samen de Twenthekanalen (zo heten ze in NWB, routes van de Twenthekanalen, en in de KRW-set, lichaam Twenthekanalen)",
+  "besluitGentTerneuzen": "Claude 26-11-2026: het Kanaal Gent-Terneuzen ligt in Nederland en Belgie; een item (T1 par. 2.1 en 2.2). NWB heeft het hele kanaal, van Gent (km 0) tot Terneuzen; daarom geen feit land maar grensgebied",
+  "besluitZuidWillemsvaart": "Claude 26-11-2026: de Zuid-Willemsvaart loopt van Maastricht door Belgie (bij Bocholt) naar 's-Hertogenbosch; NWB heeft het hele kanaal. Een item, met de omleiding bij Helmond (sinds 2014 de vaarweg, vwg_naam Omleiding te Helmond, Zuid-Willemsvaart); geen feit land maar grensgebied",
+  "kanalen": {
+    "kanaal-noordzeekanaal": { "naam": "Noordzeekanaal", "nwb": ["Noordzeekanaal"] },
+    "kanaal-amsterdam-rijnkanaal": { "naam": "Amsterdam-Rijnkanaal", "nwb": ["Amsterdam-Rijnkanaal"] },
+    "kanaal-noordhollandsch-kanaal": { "naam": "Noordhollandsch Kanaal", "nwb": ["Noordhollandsch Kanaal"] },
+    "kanaal-twentekanaal": { "naam": "Twentekanaal", "nwb": ["Kanaal Zutphen-Enschede", "Zijkanaal naar Almelo"], "besluit": "besluitTwente" },
+    "kanaal-julianakanaal": { "naam": "Julianakanaal", "nwb": ["Julianakanaal"] },
+    "kanaal-maas-waalkanaal": { "naam": "Maas-Waalkanaal", "nwb": ["Maas-Waalkanaal"] },
+    "kanaal-zuid-willemsvaart": { "naam": "Zuid-Willemsvaart", "nwb": ["Zuid-Willemsvaart", "Omleiding te Helmond, Zuid-Willemsvaart"], "besluit": "besluitZuidWillemsvaart", "grensgebied": { "landen": ["BEL", "NLD"], "besluit": "besluitZuidWillemsvaart" } },
+    "kanaal-wilhelminakanaal": { "naam": "Wilhelminakanaal", "nwb": ["Wilhelminakanaal"] },
+    "kanaal-van-starkenborghkanaal": { "naam": "Van Starkenborghkanaal", "nwb": ["Van Starkenborghkanaal"] },
+    "kanaal-prinses-margrietkanaal": { "naam": "Prinses Margrietkanaal", "nwb": ["Prinses Margrietkanaal"] },
+    "kanaal-door-zuid-beveland": { "naam": "Kanaal door Zuid-Beveland", "nwb": ["Kanaal door Zuid-Beveland"] },
+    "kanaal-gent-terneuzen": { "naam": "Kanaal Gent-Terneuzen", "nwb": ["Kanaal Gent-Terneuzen"], "grensgebied": { "landen": ["BEL", "NLD"], "besluit": "besluitGentTerneuzen" } }
+  }
+}

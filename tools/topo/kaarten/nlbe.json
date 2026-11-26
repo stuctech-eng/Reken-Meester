@@ -325,6 +325,25 @@
       ]
     },
     {
+      "id": "kanalen",
+      "soort": "lijn",
+      "bron": "nwb-kanaal",
+      "items": [
+        "kanaal-amsterdam-rijnkanaal",
+        "kanaal-door-zuid-beveland",
+        "kanaal-gent-terneuzen",
+        "kanaal-julianakanaal",
+        "kanaal-maas-waalkanaal",
+        "kanaal-noordhollandsch-kanaal",
+        "kanaal-noordzeekanaal",
+        "kanaal-prinses-margrietkanaal",
+        "kanaal-twentekanaal",
+        "kanaal-van-starkenborghkanaal",
+        "kanaal-wilhelminakanaal",
+        "kanaal-zuid-willemsvaart"
+      ]
+    },
+    {
       "id": "parken",
       "soort": "vlak",
       "bron": "rvo-park",
@@ -351,6 +370,15 @@
         "park-nl-zuid-kennemerland",
         "streek-nl-biesbosch",
         "streek-nl-utrechtse-heuvelrug"
+      ]
+    },
+    {
+      "id": "parken-be",
+      "soort": "vlak",
+      "bron": "spw-park",
+      "items": [
+        "park-be-entre-sambre-et-meuse",
+        "park-be-vallee-de-la-semois"
       ]
     },
     {

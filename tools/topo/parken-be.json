@@ -1,0 +1,21 @@
+{
+  "toelichting": "De Nationale Parken van Belgie (plan T1 par. 2.2: de erkende parken op de peildatum; plan T5b-3 par. 3.4). Wallonie: de twee parken van de laag Perimetres van SPW, met vlak. Vlaanderen: de vier erkende parken (Agentschap Natuur en Bos); er is geen openbare begrenzing gevonden, dus een label-item zonder vlak (A2) tot die er is (open punt be-parken-vlaanderen-vlak).",
+  "naamBesluitSpw": "T1 par. 1.3, naamregel 3: geen Nederlandse naam bij de Taalunie of in de Woordenlijst gevonden (niet toegankelijk vanuit de bouwomgeving); de naam in de landstaal volgens SPW, met de vlag naam zonder Nederlandse bron (alleen kiezen)",
+  "anb": {
+    "uitgever": "Agentschap Natuur en Bos",
+    "document": "Nationale Parken Vlaanderen",
+    "url": "https://natuurenbos.be/dossiers/nationale-parken-vlaanderen",
+    "passage": "die op 13 oktober 2023 vier Nationale Parken erkende, namelijk Bosland, Brabantse Wouden, Hoge Kempen en Scheldevallei.",
+    "geraadpleegd": "2026-11-26"
+  },
+  "wallonie": {
+    "park-be-entre-sambre-et-meuse": { "spw": "Parc national de l’Entre-Sambre-et-Meuse" },
+    "park-be-vallee-de-la-semois": { "spw": "Parc national de la Vallée de la Semois" }
+  },
+  "vlaanderen": {
+    "park-be-bosland": { "naam": "Bosland", "variant": "Nationaal Park Bosland" },
+    "park-be-brabantse-wouden": { "naam": "Brabantse Wouden", "variant": "Nationaal Park Brabantse Wouden" },
+    "park-be-hoge-kempen": { "naam": "Hoge Kempen", "variant": "Nationaal Park Hoge Kempen" },
+    "park-be-scheldevallei": { "naam": "Scheldevallei", "variant": "Nationaal Park Scheldevallei" }
+  }
+}
