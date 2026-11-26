@@ -5,7 +5,7 @@
 //          <sectoren.geojson> <uitvoermap> [kaartId,kaartId] [natpark.gpkg van RVO, voor de streken uit een Nationaal Park]
 //          [INSPIRESurfaceWaterBody.gml, de landelijke KRW-waterlichamen, voor het water van Nederland (T5b-2)]
 //          [top10nl-waterdeel-t5b2.json, de bundel met de TOP10NL-waterdelen (T5b-2)]
-//          [nwb-vaarwegen-t5b3.json en spw-parcs-nationaux-t5b3.json, de kanalen en de Waalse parken (T5b-3a)]
+//          [nwb-vaarwegen-t5b3.json en spw-parcs-nationaux-t5b3.json, de kanalen en de Waalse parken (T5b-3a)] [Lbstrbel.gpkg (T5b-3c)]
 // - leest de configuratie tools/topo/kaarten/<kaartId>.json en de kennisbank (alleen lezen);
 // - de bronnen via openBron, met de SHA-256 uit het register;
 // - projecteert, knipt, maakt een topologie, vereenvoudigt en rondt af met dezelfde regels als maak-proefkaarten.mjs (T2a).
@@ -37,6 +37,7 @@ import { shaComponent } from "./maak-eilanden-nl.mjs";
 import { openKrw, openTop10, GEOM_PER_SOORT } from "./maak-water-nl.mjs";
 import { openNwb } from "./maak-kanalen-nl.mjs";
 import { openSpw } from "./maak-parken-be.mjs";
+import { openLbs } from "./maak-streken-be.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
@@ -57,7 +58,7 @@ function sha(b) { return crypto.createHash("sha256").update(b).digest("hex"); }
 
 // ---- de kennisbank (alleen lezen) ----
 async function kennisbank() {
-  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js", "items/water-nl.js", "items/parken-nl.js", "items/kanalen-nl.js", "items/parken-be.js", "items/water-be.js"];
+  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js", "items/water-nl.js", "items/parken-nl.js", "items/kanalen-nl.js", "items/parken-be.js", "items/water-be.js", "items/streken-be.js"];
   var perId = {};
   for (var i = 0; i < bestanden.length; i++) {
     var m = await import(pathToFileURL(path.join(ROOT, "src/core/topo", bestanden[i])).href);
@@ -336,6 +337,12 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
       var cb6 = gedeeld.cbs(), g6 = it.geometrie.bron;
       if (it.soort !== "streek" || g6.bronId !== "CBSGEB" || g6.sha256 !== cb6.sha || g6.laag !== "gemeente_niet_gegeneraliseerd" || g6.sleutel !== "statcode" || !Array.isArray(g6.waarden) || !g6.waarden.length) fout("GEOREF van " + id + " past niet bij een streek uit CBS");
       gebruik("CBSGEB", cb6.sha); return zetOm(cb6.gemeenten(g6.waarden, id), rdNaarLl());
+    }
+    // T5b-3c (plan par. 3.3): een Belgische streek uit de landbouwstreken (KB 1951); bij meer landbouwstreken hun delen samen
+    if (bron === "streek" && it.geometrie.bron && it.geometrie.bron.bronId === "LBS") {
+      var lb = gedeeld.lbs(), gl = it.geometrie.bron;
+      if (it.soort !== "streek" || gl.sha256 !== lb.sha || gl.sleutel !== "NAAM" || !Array.isArray(gl.waarden) || !gl.waarden.length) fout("GEOREF van " + id + " past niet bij een streek uit LBS");
+      gebruik("LBS", lb.sha); var dl = []; gl.waarden.forEach(function(n) { dl = dl.concat(lb.per[n] || fout("LBS: geen " + n)); }); return d3Wind(dl);
     }
     if (bron === "streek") {
       var rv7 = gedeeld.rvo(), g7 = it.geometrie.bron;
@@ -705,8 +712,8 @@ export function tekst(res, afronding) {
 var GEDEELD = null;
 export async function maakGedeeld(paden) {
   if (GEDEELD && GEDEELD.sleutel === JSON.stringify(paden)) return GEDEELD;
-  var KB = await kennisbank(), B = bronnen(paden), c = await leesCbs(paden), s = null, rv = paden.rvo ? await leesRvo(paden) : null, kw = null, tw = null, nb = null, sw = null;
-  var gedeeld = { cbs: function() { return c; }, stb: function() { if (!s) s = leesStatbel(paden); return s; }, rvo: function() { return rv || fout("geen natpark.gpkg opgegeven (zevende argument)"); }, krw: function() { if (!kw) kw = openKrw(paden.krw || fout("geen KRW-GML opgegeven (achtste argument)")); return kw; }, top10: function() { if (!tw) tw = openTop10(paden.top10 || fout("geen TOP10NL-bundel opgegeven (negende argument)")); return tw; }, nwb: function() { if (!nb) nb = openNwb(paden.nwb || fout("geen NWB-bundel opgegeven (tiende argument)")); return nb; }, spw: function() { if (!sw) sw = openSpw(paden.spw || fout("geen SPW-bundel opgegeven (elfde argument)")); return sw; } };
+  var KB = await kennisbank(), B = bronnen(paden), c = await leesCbs(paden), s = null, rv = paden.rvo ? await leesRvo(paden) : null, kw = null, tw = null, nb = null, sw = null, lb = paden.lbs ? await openLbs(paden.lbs) : null;
+  var gedeeld = { cbs: function() { return c; }, stb: function() { if (!s) s = leesStatbel(paden); return s; }, rvo: function() { return rv || fout("geen natpark.gpkg opgegeven (zevende argument)"); }, krw: function() { if (!kw) kw = openKrw(paden.krw || fout("geen KRW-GML opgegeven (achtste argument)")); return kw; }, top10: function() { if (!tw) tw = openTop10(paden.top10 || fout("geen TOP10NL-bundel opgegeven (negende argument)")); return tw; }, nwb: function() { if (!nb) nb = openNwb(paden.nwb || fout("geen NWB-bundel opgegeven (tiende argument)")); return nb; }, spw: function() { if (!sw) sw = openSpw(paden.spw || fout("geen SPW-bundel opgegeven (elfde argument)")); return sw; }, lbs: function() { return lb || fout("geen Lbstrbel.gpkg opgegeven (twaalfde argument)"); } };
   GEDEELD = { sleutel: JSON.stringify(paden), KB: KB, B: B, gedeeld: gedeeld };
   return GEDEELD;
 }
@@ -727,7 +734,7 @@ export async function bouwAlles(paden, ids) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   var ids = process.argv[6] ? process.argv[6].split(",") : KAARTIDS;
-  var uit = await bouwAlles({ ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[7], krw: process.argv[8], top10: process.argv[9], nwb: process.argv[10], spw: process.argv[11] }, ids);
+  var uit = await bouwAlles({ ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[7], krw: process.argv[8], top10: process.argv[9], nwb: process.argv[10], spw: process.argv[11], lbs: process.argv[12] }, ids);
   var stop = [];
   uit.forEach(function(u) {
     console.log(u.cfg.id + ": afwijking " + u.res.meting.maxAfwijkingPx + " px (tolerantie " + u.cfg.tolerantiePx + "), " + u.res.omvang.bytes + " bytes, gzip " + u.res.omvang.gzip + " (doel " + u.res.omvang.doel + (u.res.omvang.gzip > u.res.omvang.doel ? ", boven het doel: melden met een voorstel, B11 a" : "") + "), lagen " + u.res.kaart.lagen.map(function(l) { return l.id + " " + l.items.length; }).join(", ") + ", achtergrond " + u.res.kaart.achtergrond.length);

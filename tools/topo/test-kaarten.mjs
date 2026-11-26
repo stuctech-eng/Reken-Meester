@@ -3,7 +3,7 @@
 // NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.
 //
 // Gebruik: node --max-old-space-size=8000 test-kaarten.mjs <map NE> <cbsgebiedsindelingen2026.gpkg> <sectoren.geojson> <werkmap> <natpark.gpkg> <INSPIRESurfaceWaterBody.gml> <top10nl-waterdeel-t5b2.json>
-//          <nwb-vaarwegen-t5b3.json> <spw-parcs-nationaux-t5b3.json>
+//          <nwb-vaarwegen-t5b3.json> <spw-parcs-nationaux-t5b3.json> <Lbstrbel.gpkg>
 // Met KAARTEN kies je de kaarten (standaard alle drie, bijvoorbeeld KAARTEN=nlbe); met DELEN de delen (standaard "inhoud"):
 //   inhoud  - opnieuw bouwen (byte-gelijk met de bestanden), structuur, KAARTREF, eigen meting van de vereenvoudiging,
 //             eigen grensmeting NL-BE (met de toetszone), omvang (gemeld tegen het doel, geen fout: B11 a),
@@ -28,7 +28,7 @@ import * as MK from "./maak-kaarten.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
-var PADEN = { ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[6], krw: process.argv[7], top10: process.argv[8], nwb: process.argv[9], spw: process.argv[10] }, WERK = process.argv[5];
+var PADEN = { ne: process.argv[2], gpkg: process.argv[3], sectoren: process.argv[4], rvo: process.argv[6], krw: process.argv[7], top10: process.argv[8], nwb: process.argv[9], spw: process.argv[10], lbs: process.argv[11] }, WERK = process.argv[5];
 var DELEN = (process.env.DELEN || "inhoud").split(",");
 var IDS = (process.env.KAARTEN || "nlbe,europa,koninkrijk").split(",");
 var BRONNEN = JSON.parse(fs.readFileSync(path.join(HIER, "bronnen.json"), "utf8"));
@@ -50,7 +50,7 @@ var SLEUTELS_KAART = { id: 1, kaartVersie: 1, invoer: 1, breedte: 1, hoogte: 1, 
 var SLEUTELS_LAAG = { id: 1, soort: 1, bron: 1, items: 1, achtergrond: 1 };
 
 async function kennisbank() {
-  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js", "items/water-nl.js", "items/parken-nl.js", "items/kanalen-nl.js", "items/parken-be.js", "items/water-be.js"], perId = {};
+  var bestanden = ["items/landen.js", "items/steden-nl.js", "items/provincies.js", "items/gewesten.js", "items/steden-be.js", "items/water-nlbe.js", "items/eilanden-nl.js", "items/taalgebieden.js", "items/gemeenten-nl.js", "items/streken-nl.js", "items/grensgebieden.js", "items/koninkrijk.js", "items/water-nl.js", "items/parken-nl.js", "items/kanalen-nl.js", "items/parken-be.js", "items/water-be.js", "items/streken-be.js"], perId = {};
   for (var i = 0; i < bestanden.length; i++) {
     var m = await import(pathToFileURL(path.join(ROOT, "src/core/topo", bestanden[i])).href);
     Object.keys(m).forEach(function(k) { if (Array.isArray(m[k])) m[k].forEach(function(it) { if (it && it.geometrie) perId[it.id] = it; }); });

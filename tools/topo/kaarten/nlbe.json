@@ -184,6 +184,17 @@
       ]
     },
     {
+      "id": "streken-be",
+      "soort": "vlak",
+      "bron": "streek",
+      "items": [
+        "streek-be-ardennen",
+        "streek-be-condroz",
+        "streek-be-famenne",
+        "streek-be-kempen"
+      ]
+    },
+    {
       "id": "baarle",
       "soort": "vlak",
       "bron": "stb-enclaves",

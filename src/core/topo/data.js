@@ -23,6 +23,7 @@ import { PARKEN_NL } from "./items/parken-nl.js";
 import { KANALEN_NL } from "./items/kanalen-nl.js";
 import { PARKEN_BE } from "./items/parken-be.js";
 import { WATER_BE } from "./items/water-be.js";
+import { STREKEN_BE } from "./items/streken-be.js";
 import { pakUit } from "./kaart/bogen.js";
 import { maakDoelen } from "./kaart/tikregel.js";
 import { ringDelen } from "./kaart/beeld.js";
@@ -43,7 +44,7 @@ import { allesMinstensInOntwikkeling, telling } from "./beheersing.js";
 import { deckPick } from "../skills/flow.js";
 
 var KB = {};
-[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL, TAALGEBIEDEN, GEMEENTEN_NL, STREKEN_NL, GRENSGEBIEDEN, KONINKRIJK, WATER_NL, PARKEN_NL, KANALEN_NL, PARKEN_BE, WATER_BE].forEach(function(lijst) {
+[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL, TAALGEBIEDEN, GEMEENTEN_NL, STREKEN_NL, GRENSGEBIEDEN, KONINKRIJK, WATER_NL, PARKEN_NL, KANALEN_NL, PARKEN_BE, WATER_BE, STREKEN_BE].forEach(function(lijst) {
   lijst.forEach(function(it) { if (it && it.id && it.naam) KB[it.id] = it; });
 });
 

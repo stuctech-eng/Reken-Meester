@@ -1,0 +1,11 @@
+{
+  "toelichting": "De Belgische streken met een officiele grens (plan T1 par. 2.2; plan T5b-3 par. 3.3): de landbouwstreken van het koninklijk besluit van 24 februari 1951 (gewijzigd 1953, 1968 en 1974), uit de dataset Landbouwstreken Belgie van de Vlaamse overheid. Alleen een streek uit T1 met een landbouwstreek van dezelfde naam is een vlak. Gaume, Hoge Venen, Haspengouw, Hageland, Waasland, Pajottenland en Westhoek: geen officiele indeling met die naam, dus alleen uitleg (besluit Dick 26-11-2026); ze staan hier niet in.",
+  "naamBesluit": "T1 par. 2.2: de namen van de Belgische streken volgens T1; de naam van de landbouwstreek staat als controle",
+  "besluit": "Claude 26-11-2026: de indeling per streek volgens het voorstel na T5b-3c, met akkoord van Dick op 26-11-2026: Kempen, Condroz en Famenne = de landbouwstreek met die naam (de Henegouwse Kempen hoort niet bij de Kempen); Ardennen = de landbouwstreken Ardennen en Hoge Ardennen samen (de Hoge Ardennen zijn het hoogste deel van de Ardennen)",
+  "streken": {
+    "streek-be-kempen": { "naam": "Kempen", "lbs": ["Kempen"] },
+    "streek-be-condroz": { "naam": "Condroz", "lbs": ["Condroz"] },
+    "streek-be-famenne": { "naam": "Famenne", "lbs": ["Famenne"] },
+    "streek-be-ardennen": { "naam": "Ardennen", "lbs": ["Ardennen", "Hoge Ardennen"] }
+  }
+}

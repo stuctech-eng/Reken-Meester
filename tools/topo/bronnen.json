@@ -168,6 +168,14 @@
     "opgehaald": "2026-11-26",
     "opmerking": "door Dick op zijn iPhone opgehaald (Safari, Webarchief), uitvoer GeoJSON in EPSG:4326 (outSR=4326); 2 perimeters met STATUT Valide"
   },
+  "landbouwstrekenBelgie": {
+    "bron": "LBS",
+    "titel": "Landbouwstreken Belgie (Departement Landbouw en Visserij, Vlaamse overheid): de landbouwstreken zoals vastgelegd bij koninklijk besluit van 24 februari 1951, gewijzigd bij KB 15 juli 1953, 8 maart 1968 en 15 februari 1974; OGC API Features https://geo.api.vlaanderen.be/Landbouwstreken/ogc/features/collections/Lbstrbel",
+    "gpkg": { "bestand": "Lbstrbel.gpkg", "grootte": 2465792, "sha256": "ed5dc4658d84a952fd682a85552420eb47b50c2efab3457cb32a93a12c7bbaf0", "laag": "Lbstrbel", "crs": "EPSG:4326", "features": 14 },
+    "pagina": "https://lv.vlaanderen.be/voorlichting-info/feiten-cijfers/landbouwstreken-belgie",
+    "gedownload": "2026-11-26",
+    "opmerking": "door Dick op zijn iPhone gedownload (GeoPackage); 14 landbouwstreken met NAAM"
+  },
   "register": {
     "toelichting": "Register van de bron-ids (bouwplan T2b-2 fase 6.1 v1.9). Elk bron-id dat in een FEIT of afleiding voorkomt, staat hier expliciet; er wordt niets aangevuld. Bestanden met hun SHA-256; een webpagina heeft geen bestand en dus geen SHA.",
     "ids": {
@@ -326,6 +334,15 @@
           "spw-parcs-nationaux-t5b3.json": "8e463e8a228a19afd199dd40e96f6ba9b5b7691549b3f38d21e9de1ef7a57e1f"
         }
       },
+      "LBS": {
+        "titel": "Landbouwstreken Belgie (KB 24-02-1951; Vlaamse overheid, GeoPackage)",
+        "soort": [
+          "bestand"
+        ],
+        "bestanden": {
+          "Lbstrbel.gpkg": "ed5dc4658d84a952fd682a85552420eb47b50c2efab3457cb32a93a12c7bbaf0"
+        }
+      },
       "tabellenNlbe": {
         "titel": "Tabellen voor Nederland en Belgie in de repository (rollen met hun officiele passages; vaste ids van de Belgische steden)",
         "soort": [
@@ -341,6 +358,7 @@
           "tools/topo/kanalen-nl.json": "eb6376a8a585b3d745d27a205b6633ca39c9999827e0d769e29e772f28ae8c55",
           "tools/topo/parken-be.json": "e128af8a82f8af251120f2166afde9e3b5b3edb80614535d41e120cb1d0e37c8",
           "tools/topo/water-be.json": "d4477a44ae51c7a3061d9edb9e1f2516c1cdc0658b0c62479302eb3fa1402c8d",
+          "tools/topo/streken-be.json": "9b63afe259e798e54906dd91178577f03bce1f8f7f562e50589f2493dfe1556c",
           "tools/topo/water-nl.json": "3e42c6ace42698146c5277e7e73d6fc68d26395067b4980085ba2ba2fec9ed77",
           "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }
