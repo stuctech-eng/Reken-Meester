@@ -14,6 +14,7 @@
 
 import { createSkills } from "../skills/flow.js";
 import { topo } from "./laden.js";
+import { delenVoorLagen } from "./kaartdelen.js";
 
 export var TOPO_NLBE_KAARTEN = ["nlbe"];
 
@@ -238,3 +239,20 @@ GEMAAKT.list.forEach(function(sk, i) {
 export var TOPO_NLBE_SKILLS = GEMAAKT.list;
 export var TOPO_NLBE_ORDER = DEFS.map(function(v) { return v.id; });
 export var TOPO_NLBE_DEFS = DEFS;
+
+// T5c (plan T5c par. 3.3): de delen van de kaart die een vaardigheid nodig heeft (de lagen van haar onderdelen; zonder de basis)
+var DELEN = {};
+DEFS.forEach(function(v) { DELEN[v.id] = delenVoorLagen(v.onderdelen.filter(function(o) { return o.kaart && o.laag; }).map(function(o) { return { kaart: o.kaart, laag: o.laag }; })); });
+export function delenVanVaardigheid(id) { return (DELEN[id] || []).slice(); }
+
+// Wat het oefenscherm moet laden: de doelvaardigheid is de vaste (los oefenen) of de eerste die nog niet beheerst is. Nodig zijn de
+// delen van alle vaardigheden tot en met de doelvaardigheid (ook voor de herhaling en de terugval, die alleen eerdere vaardigheden
+// vragen) en van de volgende (na een promotie in dezelfde sessie); vooruit, op de achtergrond, die van de vaardigheid daarna.
+export function topoNlbeDelen(skillStats, fixedSkillId) {
+  var stats = skillStats || {}, doel = fixedSkillId ? TOPO_NLBE_ORDER.indexOf(fixedSkillId) : -1;
+  if (doel < 0) { doel = 0; while (doel < TOPO_NLBE_ORDER.length - 1 && stats[TOPO_NLBE_ORDER[doel]] && stats[TOPO_NLBE_ORDER[doel]].mastered) doel++; }
+  var nodig = {}, vooruit = {};
+  TOPO_NLBE_ORDER.forEach(function(id, i) { if (i <= doel + 1) DELEN[id].forEach(function(d) { nodig[d] = 1; }); });
+  if (doel + 2 < TOPO_NLBE_ORDER.length) DELEN[TOPO_NLBE_ORDER[doel + 2]].forEach(function(d) { if (!nodig[d]) vooruit[d] = 1; });
+  return { nodig: Object.keys(nodig).sort(), vooruit: Object.keys(vooruit).sort() };
+}

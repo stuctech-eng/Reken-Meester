@@ -112,8 +112,10 @@ export default function KaartAntwoord(props) {
       if (r) groep.appendChild(el("path", { d: r, fill: "none", stroke: rand, "stroke-width": dikte * px }));
     }
     K.achtergrond.forEach(function(a) { vlakPad(a, KLEUR.land, KLEUR.landRand, 0.8); });
+    // de andere vlakken als land eronder: alleen die van de basis (T5c: een deel van de kaart, zoals water of parken, hoort niet
+    // onder een vraag van een andere laag; zo hangt het beeld niet af van welke delen al geladen zijn)
     K.lagen.forEach(function(l) {
-      if (l.id === L.id || l.soort !== "vlak") return;
+      if (l.id === L.id || l.soort !== "vlak" || l.deel) return;
       l.items.forEach(function(it) { vlakPad(it, KLEUR.land, KLEUR.landRand, 0.8); });
     });
     var goedId = klaar ? spec.antwoordId : null;

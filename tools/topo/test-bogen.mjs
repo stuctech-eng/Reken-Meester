@@ -17,6 +17,7 @@ import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { pakIn } from "./bogen.mjs";
 import { pakUit, FORMAAT } from "../../src/core/topo/kaart/bogen.js";
+import { KAARTDELEN } from "../../src/core/topo/kaartdelen.js";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url)), ROOT = path.join(HIER, "..", "..");
 var MAP = path.join(ROOT, "src/core/topo/kaarten");
@@ -29,7 +30,10 @@ function eersteRing(K) {
   return null;
 }
 
-var bestanden = fs.readdirSync(MAP).filter(function(f) { return /\.js$/.test(f); }).sort();
+// T5c: de delen van een kaart (kaarten/<id>-basis.js en -<deel>.js) zijn geen losse kaarten; die test test-kaartdelen.mjs
+var DEELBESTANDEN = {};
+Object.keys(KAARTDELEN).forEach(function(k) { DEELBESTANDEN[k + "-basis.js"] = 1; Object.keys(KAARTDELEN[k]).forEach(function(d) { DEELBESTANDEN[k + "-" + d + ".js"] = 1; }); });
+var bestanden = fs.readdirSync(MAP).filter(function(f) { return /\.js$/.test(f) && !DEELBESTANDEN[f]; }).sort();
 for (var b of bestanden) {
   var K = (await import(pathToFileURL(path.join(MAP, b)).href)).default, id = b.replace(/\.js$/, "");
   eis(K.formaat === FORMAAT, id + ": formaat " + FORMAAT);

@@ -1186,6 +1186,8 @@ export default function App() {
   // Topografie (plan T4 par. 5.2): de sessie begint met de opgeslagen itemstand en de datum van vandaag (dezelfde datum als de
   // bewerking sessie). ModusLader roept dit alleen aan voor een modus met kaarten, na het laden.
   function startTopoSessie() { topo().startSessie((save.topo && save.topo.items) || {}, vandaag()); }
+  // T5c (plan T5c par. 3.3): de delen van de kaart voor dit oefenscherm (nodig en vooruit); een modus zonder delen: null
+  function topoDelen(skillStats, vastId) { var sub = getSubject(subjectId); return sub && sub.delenVoor ? sub.delenVoor(skillStats || {}, vastId) : null; }
 
   // Los oefenen: zelfde oefenscherm, maar zonder opslag, concept of Auto; stoppen = terug
   // naar het modusscherm
@@ -1193,7 +1195,7 @@ export default function App() {
     var fixedSubjData = (save.subjects && save.subjects[subjectId]) || {};
     var leaveFixed    = function() { setFixedSkillId(null); setScreen("subject"); };
     return metMelding(
-      <ModusLader kaarten={getSubject(subjectId).kaarten} onBack={leaveFixed} opGeladen={startTopoSessie}>
+      <ModusLader kaarten={getSubject(subjectId).kaarten} delen={topoDelen(fixedSubjData.skillStats, fixedSkillId)} onBack={leaveFixed} opGeladen={startTopoSessie}>
       <PracticeScreen
         key={subjectId + "-los-" + fixedSkillId}
         subjectId={subjectId}
@@ -1224,7 +1226,7 @@ export default function App() {
       };
     }
     return metMelding(
-      <ModusLader kaarten={getSubject(subjectId).kaarten} onBack={function() { handlePracticeBack(null); }} opGeladen={startTopoSessie}>
+      <ModusLader kaarten={getSubject(subjectId).kaarten} delen={topoDelen(practiceSkillStats, null)} onBack={function() { handlePracticeBack(null); }} opGeladen={startTopoSessie}>
       <PracticeScreen
         key={subjectId + "-" + autoKey}
         subjectId={subjectId}

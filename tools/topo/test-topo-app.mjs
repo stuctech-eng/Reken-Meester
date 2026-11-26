@@ -38,6 +38,13 @@ var gooit = false; try { LADEN.topo(); } catch (e) { gooit = true; }
 eis(gooit, "topo() gooit een fout voordat Topografie geladen is");
 var D = await LADEN.laadTopo(["nlbe"]);
 eis(LADEN.topo() === D, "na laadTopo geeft topo() de geladen gegevens");
+// T5c (plan T5c par. 3.3): met alleen de basis kent een laag van een deel zijn items, maar laag() geeft een fout; daarna alle delen
+var KD = await import(bron("src/core/topo/kaartdelen.js"));
+var alleDelen = Object.keys(KD.KAARTDELEN.nlbe).map(function(d) { return "nlbe/" + d; });
+var gooitDeel = false; try { D.laag("nlbe", "meren"); } catch (e) { gooitDeel = /nog niet geladen/.test(e.message); }
+eis(gooitDeel && D.laagInhoud("nlbe", "meren").items.length === 13, "alleen de basis: de laag meren kent 13 items, laag() geeft een fout");
+await LADEN.laadTopo(["nlbe"], alleDelen);
+eis(D.laag("nlbe", "meren").doelen.length === 13, "na alle delen: de laag meren heeft 13 doelen");
 var TR = await import(bron("src/core/topo/kaart/tikregel.js"));
 var BE = await import(bron("src/core/topo/kaart/beeld.js"));
 var V = await import(bron("src/core/topo/vaardigheden-nlbe.js"));

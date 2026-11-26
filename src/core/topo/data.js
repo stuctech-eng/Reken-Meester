@@ -24,7 +24,7 @@ import { KANALEN_NL } from "./items/kanalen-nl.js";
 import { PARKEN_BE } from "./items/parken-be.js";
 import { WATER_BE } from "./items/water-be.js";
 import { STREKEN_BE } from "./items/streken-be.js";
-import { pakUit } from "./kaart/bogen.js";
+import { pakUit, pakDeelUit } from "./kaart/bogen.js";
 import { maakDoelen } from "./kaart/tikregel.js";
 import { ringDelen } from "./kaart/beeld.js";
 import { HOOFDSTEDEN_NLBE } from "./afgeleid/hoofdsteden-nlbe.js";
@@ -98,17 +98,25 @@ function zetBuren(bestand) {
 }
 export function buren(id) { return BUREN[id] || []; }
 
-// Een kaart klaarzetten: uitpakken (bogen), per item de ringen met oppervlakte (voor de rand), per laag de doelen met naam
+// Een kaart klaarzetten: uitpakken (bogen), per item de ringen met oppervlakte (voor de rand), per laag de doelen met naam.
+// T5c (plan T5c par. 3.3): een kaart in delen (kaartdelen.js) komt eerst als basis. Van de lagen van een deel kent de basis alleen de
+// items (de id's); zetDeel geeft ze daarna hun vormen en doelen. Tot dan geeft laag() voor zo'n laag een fout, en laagInhoud() de items.
+var BASIS = {};
+function klaarLaag(l) {
+  var items = l.items.map(function(it) { var n = {}; for (var s in it) n[s] = it[s]; n.naam = naamVan(it.id); if (it.d) n.delen = ringDelen(it.d); return n; });
+  var laag = { id: l.id, soort: l.soort, bron: l.bron, items: items };
+  laag.doelen = maakDoelen(laag);
+  return laag;
+}
 export function zetKaart(id, bestand) {
   if (KAARTEN[id]) return KAARTEN[id];
   zetBuren(bestand);
   var k = pakUit(bestand);
   var lagen = k.lagen.map(function(l) {
-    var items = l.items.map(function(it) { var n = {}; for (var s in it) n[s] = it[s]; n.naam = naamVan(it.id); if (it.d) n.delen = ringDelen(it.d); return n; });
-    var laag = { id: l.id, soort: l.soort, bron: l.bron, items: items };
-    laag.doelen = maakDoelen(laag);
-    return laag;
+    if (!l.deel) return klaarLaag(l);
+    return { id: l.id, soort: l.soort, bron: l.bron, deel: l.deel, items: l.items.map(function(it) { return { id: it.id, naam: naamVan(it.id) }; }), doelen: null };
   });
+  BASIS[id] = bestand;
   KAARTEN[id] = {
     id: k.id, breedte: k.breedte, hoogte: k.hoogte,
     achtergrond: k.achtergrond.map(function(a) { return { id: a.id, d: a.d, delen: ringDelen(a.d) }; }),
@@ -116,15 +124,33 @@ export function zetKaart(id, bestand) {
   };
   return KAARTEN[id];
 }
+export function zetDeel(id, deelBestand) {
+  var K = KAARTEN[id];
+  if (!K || !BASIS[id]) throw new Error("eerst de basis van de kaart " + id + ", dan het deel " + deelBestand.deel);
+  pakDeelUit(BASIS[id], deelBestand).forEach(function(l) {
+    var i = K.lagen.map(function(x) { return x.id; }).indexOf(l.id);
+    if (i < 0 || K.lagen[i].deel !== deelBestand.deel) throw new Error("de laag " + l.id + " hoort niet bij het deel " + deelBestand.deel);
+    if (K.lagen[i].doelen) return;
+    var nieuw = klaarLaag(l);
+    nieuw.deel = deelBestand.deel;
+    if (nieuw.items.map(function(it) { return it.id; }).join() !== K.lagen[i].items.map(function(it) { return it.id; }).join()) throw new Error("de laag " + l.id + " van het deel " + deelBestand.deel + " heeft andere items dan de basis");
+    K.lagen[i] = nieuw;
+  });
+}
 
 export function kaart(id) {
   if (!KAARTEN[id]) throw new Error("kaart niet geladen: " + id);
   return KAARTEN[id];
 }
 
-export function laag(kaartId, laagId) {
+export function laagInhoud(kaartId, laagId) {
   var l = kaart(kaartId).lagen.filter(function(x) { return x.id === laagId; })[0];
   if (!l) throw new Error("onbekende laag " + laagId + " op de kaart " + kaartId);
+  return l;
+}
+export function laag(kaartId, laagId) {
+  var l = laagInhoud(kaartId, laagId);
+  if (!l.doelen) throw new Error("de laag " + laagId + " (deel " + l.deel + " van de kaart " + kaartId + ") is nog niet geladen");
   return l;
 }
 
@@ -159,7 +185,7 @@ var SJABLONEN = {
 };
 
 // De plaatsen van richting en afstand: de items van een laag met een punt in de kennisbank (o.laag, o.prefix, o.zonder)
-function meetIds(o) { return vraagIds(laag(o.kaart, o.laag), o.prefix, o.zonder).filter(function(id) { var it = KB[id]; return !!(it && it.geometrie && it.geometrie.punt); }); }
+function meetIds(o) { return vraagIds(laagInhoud(o.kaart, o.laag), o.prefix, o.zonder).filter(function(id) { var it = KB[id]; return !!(it && it.geometrie && it.geometrie.punt); }); }
 
 // De gevraagde items van een onderdeel
 export function onderdeelIds(o) {
@@ -168,7 +194,7 @@ export function onderdeelIds(o) {
   if (o.sjabloon === "niet-bij") return genoemdNietBij(BRON, o);
   if (o.sjabloon === "richting" || o.sjabloon === "afstand") return meetIds(o);
   if (o.sjabloon === "keten") return ketenIds(BRON, o);
-  return vraagIds(laag(o.kaart, o.laag), o.prefix, o.zonder, alleenVan(BRON, o));
+  return vraagIds(laagInhoud(o.kaart, o.laag), o.prefix, o.zonder, alleenVan(BRON, o));
 }
 
 // Alle combinaties (onderdeel, item) van een vaardigheid

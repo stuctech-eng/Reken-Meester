@@ -23,7 +23,7 @@ function leesBoog(tekst, f) {
 function ringPunten(refs, bogen) {
   var pts = [];
   for (var i = 0; i < refs.length; i++) {
-    var r = refs[i], boog = bogen[r < 0 ? ~r : r], n = boog.length;
+    var r = refs[i], boog = bogen(r < 0 ? ~r : r), n = boog.length;
     for (var j = pts.length ? 1 : 0; j < n; j++) pts.push(r < 0 ? boog[n - 1 - j] : boog[j]);
   }
   return pts;
@@ -56,11 +56,19 @@ function itemUit(it, bogen, gesloten, f) {
   return nieuw;
 }
 
+// T5c: een boog wordt pas gelezen als een item hem gebruikt (een deel gebruikt maar een stuk van de bogen van de basis)
+function lezer(tekst, f) {
+  var gelezen = [];
+  return function(i) {
+    if (gelezen[i] === undefined) { if (tekst[i] === undefined) throw new Error("onbekende boog: " + i); gelezen[i] = leesBoog(tekst[i], f); }
+    return gelezen[i];
+  };
+}
+
 // kaart met bogen -> kaart in de T2a-vorm (een nieuw object; de invoer blijft ongewijzigd)
 export function pakUit(kaart) {
   if (kaart.formaat !== FORMAAT) throw new Error("onbekend kaartformaat: " + kaart.formaat);
-  var f = Math.round(1 / kaart.afronding), bogen = [];
-  for (var i = 0; i < kaart.bogen.length; i++) bogen.push(leesBoog(kaart.bogen[i], f));
+  var f = Math.round(1 / kaart.afronding), bogen = lezer(kaart.bogen, f);
   var uit = {};
   for (var k in kaart) {
     if (k === "formaat" || k === "afronding" || k === "bogen") continue;
@@ -74,4 +82,12 @@ export function pakUit(kaart) {
     } else uit[k] = kaart[k];
   }
   return uit;
+}
+
+// T5c (plan T5c par. 3.3): de lagen van een deel van een kaart (tools/topo/maak-kaartdelen.mjs) in de T2a-vorm. De boognummers van
+// het deel wijzen naar de bogen van de basis en daarna naar de eigen bogen van het deel.
+export function pakDeelUit(basis, deel) {
+  if (deel.formaat !== FORMAAT || basis.formaat !== FORMAAT) throw new Error("onbekend kaartformaat");
+  if (deel.id !== basis.id || deel.kaartVersie !== basis.kaartVersie || deel.basisBogen !== basis.bogen.length) throw new Error("het deel " + deel.deel + " past niet bij de basis van de kaart " + basis.id);
+  return pakUit({ formaat: deel.formaat, afronding: deel.afronding, bogen: basis.bogen.concat(deel.bogen), achtergrond: [], lagen: deel.lagen }).lagen;
 }

@@ -582,7 +582,10 @@ var VERWACHT63 = {
   },
   koninkrijk: { "koninkrijk": KN.KONINKRIJK.filter(function(g) { return g.id !== "gebied-koninkrijk"; }).map(function(g) { return g.id; }) }
 };
-var kaartMap = path.join(ROOT, "src/core/topo/kaarten"), kaartBestanden = fs.existsSync(kaartMap) ? fs.readdirSync(kaartMap).filter(function(f) { return /\.js$/.test(f); }).sort() : [];
+// T5c: de delen van een kaart (kaarten/<id>-basis.js en -<deel>.js) komen byte-gelijk uit de volledige kaart (test-kaartdelen.mjs)
+var DEELBESTAND63 = {}, KDL = (await import(pathToFileURL(path.join(ROOT, "src/core/topo/kaartdelen.js")).href)).KAARTDELEN;
+Object.keys(KDL).forEach(function(k) { DEELBESTAND63[k + "-basis.js"] = 1; Object.keys(KDL[k]).forEach(function(d) { DEELBESTAND63[k + "-" + d + ".js"] = 1; }); });
+var kaartMap = path.join(ROOT, "src/core/topo/kaarten"), kaartBestanden = fs.existsSync(kaartMap) ? fs.readdirSync(kaartMap).filter(function(f) { return /\.js$/.test(f) && !DEELBESTAND63[f]; }).sort() : [];
 for (var kb of kaartBestanden) {
   var KM = (await import(pathToFileURL(path.join(kaartMap, kb)).href)).default, kid = kb.replace(/\.js$/, "");
   eisKD(KM.id === kid, kb + ": id van de kaart");

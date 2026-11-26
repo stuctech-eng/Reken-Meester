@@ -14,6 +14,8 @@
 // - schrijft src/core/topo/kaarten/<kaartId>.js met gedeelde bogen (plan T3 par. 3.5, bogen.mjs); uitgepakt met pakUit
 //   (src/core/topo/kaart/bogen.js) is dat byte-gelijk de vorm van de T2a-kaarten, zodat tik-meet.mjs ze ongewijzigd meet;
 //   per item alleen de kennisbank-id (KAARTREF), geen naam (B1 a, B2 a);
+// - T5c: een kaart met een indeling in src/core/topo/kaartdelen.js krijgt ook zijn delen (<kaartId>-basis.js en -<deel>.js), via
+//   maak-kaartdelen.mjs; de app laadt alleen de delen;
 // - de grensmeting NL-BE op de uiteindelijke kaartgeometrie (bouwplan par. 1, optie a); stopt bij elke overschrijding.
 
 import fs from "fs";
@@ -38,6 +40,8 @@ import { openKrw, openTop10, GEOM_PER_SOORT } from "./maak-water-nl.mjs";
 import { openNwb } from "./maak-kanalen-nl.mjs";
 import { openSpw } from "./maak-parken-be.mjs";
 import { openLbs } from "./maak-streken-be.mjs";
+import { KAARTDELEN } from "../../src/core/topo/kaartdelen.js";
+import { splits as splitsDelen, schrijf as schrijfDelen } from "./maak-kaartdelen.mjs";
 
 var HIER = path.dirname(fileURLToPath(import.meta.url));
 var ROOT = path.resolve(HIER, "..", "..");
@@ -744,4 +748,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (stop.length) { console.log("STOP: " + stop.join(" | ")); process.exit(2); }
   fs.mkdirSync(path.join(process.argv[5], "kaarten"), { recursive: true });
   uit.forEach(function(u) { fs.writeFileSync(path.join(process.argv[5], "kaarten", u.cfg.id + ".js"), u.tekst); });
+  // T5c (plan T5c par. 3.3): een kaart met een indeling in delen krijgt ook zijn delen, uit het zojuist geschreven bestand
+  for (var ki = 0; ki < uit.length; ki++) {
+    if (!KAARTDELEN[uit[ki].cfg.id]) continue;
+    var vol = (await import(pathToFileURL(path.join(process.argv[5], "kaarten", uit[ki].cfg.id + ".js")).href)).default;
+    console.log("delen: " + schrijfDelen(path.join(process.argv[5], "kaarten"), vol, splitsDelen(vol)).join(", "));
+  }
 }

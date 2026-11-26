@@ -10,7 +10,7 @@ import { laadTopo } from "../core/topo/laden.js";
 // iets te laden. Bij een fout een zichtbare melding, met "Opnieuw" en "Terug".
 // opGeladen (optioneel, plan T4 par. 5.2): na het laden en voor het oefenscherm, bijvoorbeeld om de sessie van Topografie te starten
 // met de opgeslagen itemstand. Een fout daarin geeft dezelfde melding.
-export default function ModusLader({ kaarten, onBack, opGeladen, children }) {
+export default function ModusLader({ kaarten, delen, onBack, opGeladen, children }) {
   var nodig = !!(kaarten && kaarten.length);
   var st = useState(nodig ? "laden" : "klaar"), stand = st[0], setStand = st[1];
   var ft = useState(null), fout = ft[0], setFout = ft[1];
@@ -21,7 +21,14 @@ export default function ModusLader({ kaarten, onBack, opGeladen, children }) {
     var weg = false;
     setStand("laden"); setFout(null);
     // ook de code van de kaart (KaartAntwoord) meteen: een laadfout komt dan hier, met Opnieuw en Terug, en niet midden in een vraag
-    Promise.all([laadTopo(kaarten), import("./answer/KaartAntwoord.jsx")]).then(function() { if (opGeladen) opGeladen(); if (!weg) setStand("klaar"); }).then(null, function(e) { if (!weg) { setFout(e && e.message ? e.message : String(e)); setStand("fout"); } });
+    // T5c: delen = { nodig, vooruit } (kaartdelen.js): eerst de nodige delen; daarna, zonder te wachten, de delen voor de vaardigheid
+    // daarna (een fout daarbij is geen fout van het scherm: die delen komen anders bij de volgende keer)
+    var nodigeDelen = (delen && delen.nodig) || [], vooruit = (delen && delen.vooruit) || [];
+    Promise.all([laadTopo(kaarten, nodigeDelen), import("./answer/KaartAntwoord.jsx")]).then(function() {
+      if (opGeladen) opGeladen();
+      if (!weg) setStand("klaar");
+      if (vooruit.length) laadTopo(kaarten, vooruit).then(null, function() {});
+    }).then(null, function(e) { if (!weg) { setFout(e && e.message ? e.message : String(e)); setStand("fout"); } });
     return function() { weg = true; };
   }, [nodig, poging]);
 
