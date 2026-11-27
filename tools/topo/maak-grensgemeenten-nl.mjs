@@ -10,6 +10,7 @@
 // - Belgie: het midden ligt binnen tolerantieBeM van de buitenrand van de Statbel-sectoren (omgezet naar RD);
 // - Duitsland: anders, als het midden binnen zoekafstandDeM van Natural Earth DEU ligt (NE wijst alleen het buurland aan);
 // - een gemeente is grensgemeente van een land bij minstens minimumM grens; uitgezonderd: de gemeenten in de tabel (besluit);
+// - T5c-3: varianten van de naam (voor typen in nb27) uit de tabel, met het besluit;
 // - schrijft items/gemeenten-nl.js (de grensgemeenten) en afgeleid/grensgemeenten-nl.js (grenst-aan, zonder km: de lengte
 //   is een meting voor het rapport; bij Oldambt telt het water van de Dollard mee);
 // - twee keer draaien geeft byte-gelijke bestanden.
@@ -118,6 +119,7 @@ export function kies(M, T) {
     });
   });
   Object.keys(T.uitgezonderd).forEach(function(c) { if (M.naam[c] !== T.uitgezonderd[c].naam) fout("uitgezonderd: " + c + " is niet " + T.uitgezonderd[c].naam); });
+  Object.keys(T.varianten || {}).forEach(function(c) { if (c !== "besluit" && !M.naam[c]) fout("varianten: geen gemeente " + c); });
   return uit.filter(function(x) { return !T.uitgezonderd[x.code]; });
 }
 
@@ -129,7 +131,8 @@ export async function bouw(paden) {
   var ITEMS = codes.map(function(c) {
     return {
       id: "gem-nl-" + c.toLowerCase(), soort: "gemeente",
-      naam: { waarde: M.naam[c], varianten: [], herkomst: "bron", status: "vastgesteld", bron: cbsBron },
+      naam: T.varianten && T.varianten[c] ? { waarde: M.naam[c], varianten: T.varianten[c].slice(), herkomst: "bron", status: "vastgesteld", bron: cbsBron, besluitVarianten: T.varianten.besluit }
+        : { waarde: M.naam[c], varianten: [], herkomst: "bron", status: "vastgesteld", bron: cbsBron },
       feiten: { land: { waarde: "NLD", herkomst: "bron", status: "vastgesteld", bron: cbsBron }, code: { waarde: c, herkomst: "bron", status: "vastgesteld", bron: cbsBron } },
       geometrie: { bron: { bronId: "CBSGEB", bestand: GEB.gpkg.bestand, sha256: GEB.gpkg.sha256, laag: LAAG, sleutel: "statcode", waarde: c, crs: "EPSG:28992" }, kaart: {} },
       relaties: []

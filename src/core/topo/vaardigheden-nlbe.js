@@ -103,6 +103,9 @@ var DEFS = [
     wijsVrij("meren", "", "het meer") ] },
   { id: "nb26", niveau: "M", zonderItems: true, label: "Richting en afstand", desc: "In welke richting en hoe ver hemelsbreed, tussen twee steden", minCorrect: 12, onderdelen: [
     meet("richting"), meet("afstand") ] },
+  { id: "nb27", niveau: "M", label: "Grensgemeenten", desc: "De Nederlandse gemeenten aan de grens met België en Duitsland: aanwijzen en de naam typen", minCorrect: 122, onderdelen: [
+    wijsVrij("grensgemeenten", "", "de grensgemeente"),
+    typLeeg("grensgemeenten", "", "Typ de naam van de oranje grensgemeente.") ] },
   { id: "nb28", niveau: "M", zonderItems: true, label: "Combinatievragen", desc: "Twee stappen: de stad, de provincie en dan de hoofdstad of het gewest", minCorrect: 12, onderdelen: [
     keten([{ relatie: "ligt-in", richting: "heen" }, { relatie: "provinciehoofdstad-van", richting: "terug" }], "stad-", function(n) { return "Wat is de hoofdstad van de provincie waarin " + n + " ligt?"; }),
     keten([{ relatie: "ligt-in", richting: "heen" }, { relatie: "ligt-in", richting: "heen" }], "stad-be-", function(n) { return "In welk gewest ligt de provincie van " + n + "?"; }) ] },
@@ -236,6 +239,12 @@ var HULP = {
     tip: "Noord is boven op de kaart. Kijk of de tweede stad vooral hoger of lager ligt (noord of zuid), en vooral links of rechts (west of oost).",
     uitleg: "De richting is de koers van de eerste stad naar de tweede. Hemelsbreed is in een rechte lijn, niet over de weg. Er komt alleen een vraag als de richting duidelijk is.",
     voorbeeld: "Groningen vanuit Utrecht: Groningen ligt hoger (noord) en rechts (oost) op de kaart, dus noordoost.",
+  },
+  nb27: {
+    strategy: "Langs de grens",
+    tip: "Volg de grens van noord naar zuid: eerst langs Duitsland (Groningen, Drenthe, Overijssel, Gelderland, Limburg), dan langs België (Limburg, Noord-Brabant, Zeeland).",
+    uitleg: "Een grensgemeente is een Nederlandse gemeente die aan België of Duitsland grenst. Je tikt het vlak van de gemeente aan, niet een stad. Sommige gemeenten heten net als een stad erin, zoals Enschede of Maastricht.",
+    voorbeeld: "Tik Vaals aan: de gemeente in de uiterste zuidoosthoek van Limburg, waar Nederland, België en Duitsland samenkomen.",
   },
   nb28: {
     strategy: "Twee stappen",

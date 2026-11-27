@@ -7,7 +7,7 @@
 //     kaart (alleen de basis);
 //   - per nieuwe vaardigheid (los oefenen): de delen van de kaart volgens topoNlbeDelen (vaardigheden-nlbe.js): die van de
 //     vaardigheden tot en met de volgende (ook eerdere, voor de herhaling) en vooruit die van de vaardigheid daarna; bij deze vier
-//     zijn dat water en gebieden;
+//     zijn dat water en gebieden; bij nb27 (T5c-3) ook grens;
 //     16 vragen, elk goed beantwoord (typen, kiezen of aanwijzen); elke vraag met een kaart geeft "Goed zo";
 //   - nb18: minstens een kanaal aangewezen (een lijn, na de lijnproef van 26-11-2026); nb20: minstens een vraag naar de provincie
 //     van een park;
@@ -48,7 +48,7 @@ function eis(ok, tekst) { n++; if (!ok) fouten.push(tekst); }
       var pt = await pg.evaluate(function(id) { var h = window.__TOPO_APP, s = h.schaal(), v = h.venster(), d = h.doelen.filter(function(x) { return x.id === id; })[0]; var r = document.querySelector("svg[aria-label^='Kaart']").getBoundingClientRect(); var m = d.soort === "lijn" ? d.ringen[0][Math.floor(d.ringen[0].length / 2)] : null; var x = d.soort === "punt" ? d.x : m ? m[0] : d.mx, y = d.soort === "punt" ? d.y : m ? m[1] : d.my; return { x: r.left + (x - v.x) * s, y: r.top + (y - v.y) * s }; }, h.id);
       await pg.touchscreen.tap(pt.x, pt.y); await pg.waitForTimeout(250);
       // een tik bij twee doelen (twijfel): de keuzelijst of ingezoomd; dan het juiste kiezen uit de lijst, of nog een keer tikken
-      if (await pg.getByText("Dit is mijn antwoord").isDisabled()) {
+      for (var poging = 0; poging < 3 && await pg.getByText("Dit is mijn antwoord").isDisabled(); poging++) {
         var info = await pg.evaluate(function() { return document.body.innerText.slice(0, 300); });
         twijfels.push(h.naam + ": " + info.replace(/\s+/g, " ").slice(0, 160));
         var inLijst = pg.getByRole("button", { name: h.naam, exact: true });
@@ -72,11 +72,12 @@ function eis(ok, tekst) { n++; if (!ok) fouten.push(tekst); }
   await p.close();
 
   // 2 de nieuwe vaardigheden
-  var GEVAL = [["Rivieren en zeearmen", "water"], ["Meren en kanalen", "water"], ["Streken en landschappen", "gebieden"], ["Nationale parken", "gebieden"]], DELEN = "gebieden,water";
+  var GEVAL = [["Rivieren en zeearmen", "water"], ["Meren en kanalen", "water"], ["Streken en landschappen", "gebieden"], ["Nationale parken", "gebieden"], ["Grensgemeenten", "grens"]];
   for (var g of GEVAL) {
     var v = await nieuw(428, 746), kaartVragen = 0, goedZo = 0, kanaal = 0, park = 0;
     await los(v, g[0]);
     await v.waitForTimeout(1500);
+    var DELEN = g[1] === "grens" ? "gebieden,grens,water" : "gebieden,water";
     eis(v.delen.slice().sort().join() === DELEN, g[0] + ": laadt de delen " + DELEN + " (" + v.delen.join(", ") + ")");
     for (var i = 0; i < 16; i++) {
       var vraag = await v.evaluate(function() { var e = document.querySelector("h1, h2, [data-vraag]"); return document.body.innerText; });

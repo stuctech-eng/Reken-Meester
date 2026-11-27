@@ -438,9 +438,11 @@ for (var dT of V.TOPO_NLBE_DEFS.filter(function(d) { return d.niveau; })) {
   eis(skT.niveau === dT.niveau && !!skT.meesterschap === (dT.niveau === "M" && !dT.zonderItems), dT.id + ": niveau " + dT.niveau + " en meesterschap");
 }
 eis(D.sleutelsVanDef(defVan("nb13")).length === 38 && D.sleutelsVanDef(defVan("nb14")).length === 22 && D.sleutelsVanDef(defVan("nb24")).length === 44 && D.sleutelsVanDef(defVan("nb25")).length === 58, "T5a/T5b: kennisitems nb13 38, nb14 22, nb24 44 (met Leuven en Waver), nb25 45 (met Brussel, Leuven en Waver)");
+// T5c-3: nb27 grensgemeenten (aanwijzen zonder hulp en typen); Bergen (L.) en Stein (L.) ook zonder (L.)
+eis(D.sleutelsVanDef(defVan("nb27")).length === 122 && D.namenVan("gem-nl-gm0893").indexOf("Bergen") >= 0 && D.namenVan("gem-nl-gm0971").indexOf("Stein") >= 0 && JSON.stringify(V.delenVanVaardigheid("nb27")) === "[\"nlbe/grens\"]", "T5c-3: nb27 122 kennisitems, de varianten Bergen en Stein, het deel grens");
 // T5c-2 (plan T5c): de nieuwe vaardigheden; de volgorde in de rij
 eis(D.sleutelsVanDef(defVan("nb15")).length === 44 && D.sleutelsVanDef(defVan("nb18")).length === 50 && D.sleutelsVanDef(defVan("nb19")).length === 32 && D.sleutelsVanDef(defVan("nb20")).length === 48, "T5c-2: kennisitems nb15 44, nb18 50, nb19 32, nb20 48");
-eis(V.TOPO_NLBE_ORDER.join() === "nb01,nb02,nb03,nb04,nb05,nb06,nb07,nb08,nb09,nb10,nb11,nb12,nb13,nb14,nb15,nb18,nb19,nb20,nb24,nb25,nb26,nb28", "T5c-2: de volgorde van de vaardigheden");
+eis(V.TOPO_NLBE_ORDER.join() === "nb01,nb02,nb03,nb04,nb05,nb06,nb07,nb08,nb09,nb10,nb11,nb12,nb13,nb14,nb15,nb18,nb19,nb20,nb24,nb25,nb26,nb27,nb28", "T5c-2: de volgorde van de vaardigheden");
 eis(D.sleutelsVanDef(defVan("nb18")).indexOf("kanaal-noordzeekanaal|a") >= 0 && D.sleutelsVanDef(defVan("nb25")).indexOf("meer-ijsselmeer|a") >= 0, "T5c-2: kanalen aanwijzen in nb18 (de lijnproef slaagde), meren in nb25");
 eis(JSON.stringify(V.delenVanVaardigheid("nb15")) === "[\"nlbe/water\"]" && JSON.stringify(V.delenVanVaardigheid("nb20")) === "[\"nlbe/gebieden\"]" && JSON.stringify(V.delenVanVaardigheid("nb01")) === "[]", "T5c-2: de delen van de kaart per vaardigheid");
 eis(D.sleutelsVanDef(defVan("nb24")).every(function(s) { return /\|s$/.test(s); }), "T5a: nb24 vraagt schrijven (s)");
