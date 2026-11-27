@@ -354,6 +354,7 @@
           "tools/topo/steden-be.json": "c22314805ea75a3abd2017de7a00e2c6befe89e8f96ecf6303b57d748ad3324e",
           "tools/topo/grensgemeenten-nl.json": "0530661f6982ba153ba3f103e6f23f5126b5bee4bb9a08942e15ded68b00eab8",
           "tools/topo/gemeenschappen-be.json": "4feb4ad94169b082926be5287893a6bc570ddba87213b6cf9118839579dd255f",
+          "tools/topo/water-steden-nl.json": "8d12d285fdd0b9c1b369669c9c12a8f93cdb2160c681198c049b4d40c4944d91",
           "tools/topo/koninkrijk.json": "7a0bb05d9bb70ce8d15408b108623a5199375de2c44a9aeeaa9221ad124c5191",
           "tools/topo/streken-nl.json": "20cf6148db2a7cd1ec7a2ddd1581d7f696f8386663633238fc31c3505793d7e7",
           "tools/topo/taalgebieden-be.json": "487d86af0a35f1508a207e4eb7d007093267f65202b94e5ee618394e46515c35",
@@ -361,7 +362,7 @@
           "tools/topo/parken-be.json": "e128af8a82f8af251120f2166afde9e3b5b3edb80614535d41e120cb1d0e37c8",
           "tools/topo/water-be.json": "d4477a44ae51c7a3061d9edb9e1f2516c1cdc0658b0c62479302eb3fa1402c8d",
           "tools/topo/streken-be.json": "9b63afe259e798e54906dd91178577f03bce1f8f7f562e50589f2493dfe1556c",
-          "tools/topo/water-nl.json": "3e42c6ace42698146c5277e7e73d6fc68d26395067b4980085ba2ba2fec9ed77",
+          "tools/topo/water-nl.json": "af97766547802593bb1fa837243f2d8ac2258129b2a7c23ce5ccb01020f9a624",
           "tools/topo/water-nlbe.json": "bf95ba7455ca0c1caa1944c7d854a1d8291daffd99eff6cfd84a008dccfb7723"
         }
       }

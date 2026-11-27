@@ -1,0 +1,13 @@
+{
+  "toelichting": "Steden aan het water (plan T5c, B3 met de rand van de bebouwing, akkoord Dick 27-11-2026; nb17): een Nederlandse stad ligt aan een rivier als de rivier binnen ligtAanM van haar bebouwing ligt (het vlak van de CBS-bevolkingskern van de stad, de GEOREF van het item; 0 als de rivier erdoor loopt); tussen ligtAanM en twijfelM is het twijfel: geen relatie, en die rivier en stad komen bij elkaar niet als fout antwoord of foute keuze. De rivier: de vaarwegvakken van NWB Vaarwegen met de namen hieronder (de 6 grote rivieren; hun lijn op de kaart komt uit Natural Earth en is te grof), anders de GEOREF van het item (KRW of TOP10NL).",
+  "regels": { "ligtAanM": 500, "twijfelM": 3000 },
+  "nwb": {
+    "besluit": "Claude 27-11-2026 (B3): de NWB-namen van de 6 grote rivieren. De Rijn is de Boven-Rijn met het Bijlandsch Kanaal; niet de vaarweg Rijn bij Katwijk (de Oude Rijn). De Nederrijn zonder het Pannerdensch Kanaal (een eigen naam). De IJssel is de Geldersche IJssel.",
+    "rivier-rijn": ["Boven-Rijn", "Bijlandsch Kanaal, Boven-Rijn"],
+    "rivier-waal": ["Waal"],
+    "rivier-nederrijn": ["Neder-Rijn"],
+    "rivier-lek": ["Lek"],
+    "rivier-ijssel": ["Geldersche IJssel"],
+    "rivier-maas": ["Maas"]
+  }
+}

@@ -49,6 +49,16 @@ eis(W.map(function(w) { return w.naam.waarde; }).sort().join() === T1.slice().so
 // ---- nagerekend met de lezer ----
 var K = leesKrwGml(fs.readFileSync(PADEN.gml)), per = {};
 K.records.forEach(function(r) { per[r.kenmerken.localId] = r; });
+// T5c-3 (besluitOudeMaas): eigen uitwerking van deelGebied: alleen de lijnen waarvan elk punt in het gebied ligt
+function krwVormT(gk) {
+  var uit = [];
+  gk.waarden.forEach(function(k) {
+    var g = per[k].geometrie(), d = g.lijnen || g.delen, b = gk.deelGebied;
+    if (b) d = d.filter(function(l) { for (var i = 0; i < l.length; i++) if (l[i][0] < b[0] || l[i][0] > b[2] || l[i][1] < b[1] || l[i][1] > b[3]) return false; return true; });
+    uit = uit.concat(d);
+  });
+  return uit;
+}
 var GEOM = { rivier: "lijn", zee: "vlak", meer: "vlak", zeearm: "vlak" };
 var geo = {};
 // TOP10NL, zonder de lezer van het script: de pagina's uit de bundel, elk waterdeel per lokaal_id
@@ -69,10 +79,14 @@ W.filter(function(w) { return w.geometrie.bron.bronId === "KRW"; }).forEach(func
     var r = per[k];
     var vm = w.geometrie.bron.vorm || GEOM[w.soort];
     eis(!!r && r.kenmerken.naam === namen[i] && r.soort === vm, "KRW " + k + ": naam " + namen[i] + " en " + vm + " (" + w.id + ")");
-    if (r) { var g = r.geometrie(); delen = delen.concat(g.lijnen || g.delen); }
   });
-  geo[w.id] = delen;
+  // T5c-3: de vorm via krwVorm (met deelGebied); onafhankelijk nagerekend hieronder voor de Oude Maas
+  geo[w.id] = ids.every(function(k) { return !!per[k]; }) ? krwVormT(w.geometrie.bron) : delen;
 });
+// T5c-3: de Oude Maas zonder de Lek, de Noord, het Spui en de Dordtsche Kil: 2 stukken, van Dordrecht (4,62 oost) tot de Nieuwe
+// Maas (4,34 oost), niets ten oosten van 4,63 of ten noorden van 51,87
+var om = geo["rivier-oude-maas"] || [], omPunten = [].concat.apply([], om);
+eis(om.length === 2 && omPunten.every(function(c) { return c[0] <= 4.63 && c[1] <= 51.87 && c[1] >= 51.79; }) && Math.min.apply(null, omPunten.map(function(c) { return c[0]; })) < 4.34 && Math.max.apply(null, omPunten.map(function(c) { return c[0]; })) > 4.62, "de Oude Maas: 2 stukken van Dordrecht tot de Nieuwe Maas, zonder de Lek (" + om.length + " stukken)");
 eis(W.filter(function(w) { return w.geometrie.bron.bronId === "KRW" && w.geometrie.bron.waarden.length > 1; }).map(function(w) { return w.id; }).sort().join() === "rivier-dommel,zee-waddenzee", "alleen de Waddenzee en de Dommel bestaan uit twee lichamen");
 
 // ---- ligging met CBS (RD) ----

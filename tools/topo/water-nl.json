@@ -6,6 +6,7 @@
   "besluitLoosdrecht": "Claude 26-11-2026: de Loosdrechtse Plassen = het KRW-lichaam Loosdrechtse Plas 1 t/m 5 (NL11_5_5); TOP10NL heeft geen naam voor de plassen samen, alleen Eerste tot en met Vijfde Plas",
   "besluitDollard": "Claude 26-11-2026: de Dollard ligt tussen Nederland en Duitsland en de grens is daar niet vastgelegd (Eems-Dollardverdrag 1960); daarom geen feit land maar grensgebied (T1 par. 2.1: de Dollard heeft ook de rol grensgebied, nb23). Het vlak is wat TOP10NL (Nederland) als Dollard tekent",
   "besluitRivierVlak": "Claude 26-11-2026, met akkoord van Dick en advies van GPT: de brede benedenrivieren Merwede, Noord, Nieuwe Maas, Nieuwe Waterweg, Zwarte Water en Utrechtse Vecht als vlak (vorm vlak), niet als lijn: beter aan te tikken en zonder de lijnproef. De Merwede = Boven Merwede en Beneden-Merwede (zonder de Nieuwe Merwede, akkoord Dick); de Utrechtse Vecht heet in TOP10NL Vecht",
+  "besluitOudeMaas": "Claude 27-11-2026, met akkoord van Dick (T5c-3): het KRW-lichaam Oude Maas (NL94_4) bevat ook de Lek van Kinderdijk tot Vianen, de Noord, het Spui en de Dordtsche Kil. De Oude Maas is alleen de stukken van de lijn die helemaal in het gebied 4,30-4,63 oost en 51,79-51,87 noord liggen: van Dordrecht tot de Nieuwe Maas.",
   "water": {
     "zee-waddenzee": { "soort": "zee", "naam": "Waddenzee", "krw": { "NL81_1": "Waddenzee", "NL81_10": "Waddenzee vastelandskust" } },
     "meer-ijsselmeer": { "soort": "meer", "naam": "IJsselmeer", "krw": { "NL92_IJSSELMEER": "IJsselmeer" } },
@@ -17,7 +18,7 @@
     "zeearm-westerschelde": { "soort": "zeearm", "naam": "Westerschelde", "krw": { "NL89_WESTSDE_OWL": "Westerschelde" } },
     "zeearm-oosterschelde": { "soort": "zeearm", "naam": "Oosterschelde", "krw": { "NL89_OOSTSDE_OWL": "Oosterschelde" } },
     "rivier-bergse-maas": { "soort": "rivier", "naam": "Bergse Maas", "krw": { "NL94_6": "Bergsche Maas" } },
-    "rivier-oude-maas": { "soort": "rivier", "naam": "Oude Maas", "krw": { "NL94_4": "Oude Maas" } },
+    "rivier-oude-maas": { "soort": "rivier", "naam": "Oude Maas", "krw": { "NL94_4": "Oude Maas" }, "deelGebied": [4.30, 51.79, 4.63, 51.87], "besluitDeel": "besluitOudeMaas" },
     "rivier-overijsselse-vecht": { "soort": "rivier", "naam": "Overijsselse Vecht", "krw": { "NL44_OVERIJSSELVECHT14": "Overijsselse Vecht" } },
     "rivier-roer": { "soort": "rivier", "naam": "Roer", "krw": { "NL60_ROER": "Roer" } },
     "meer-gooimeer": { "soort": "meer", "naam": "Gooimeer", "top10": ["Gooimeer"], "gebied": [5.10, 52.25, 5.45, 52.40] },

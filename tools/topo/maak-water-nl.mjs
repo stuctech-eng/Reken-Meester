@@ -31,6 +31,23 @@ export var KRW_TYPE_PER_SOORT = { rivier: ["riverWaterBody"], zee: ["coastalWate
 
 function fout(t) { throw new Error(t); }
 
+// T5c-3 (besluitOudeMaas): de vorm van een KRW-item volgens zijn GEOREF; met deelGebied alleen de stukken (lijnen) waarvan elk
+// punt in het gebied ligt. Gebruikt door maak-kaarten.mjs, de tests en de afleidingen, zodat ze allemaal dezelfde vorm hebben.
+export function krwVorm(K, gk) {
+  var uit = [];
+  gk.waarden.forEach(function(k) {
+    var g = (K.per[k] || fout("KRW: geen lichaam " + k)).geometrie(), d = g.lijnen || g.delen;
+    if (gk.deelGebied) {
+      var b = gk.deelGebied;
+      if (!g.lijnen) fout("deelGebied alleen bij een lijn: " + k);
+      d = d.filter(function(l) { return l.every(function(c) { return c[0] >= b[0] && c[0] <= b[2] && c[1] >= b[1] && c[1] <= b[3]; }); });
+      if (!d.length) fout("deelGebied: geen stuk van " + k + " in het gebied");
+    }
+    uit = uit.concat(d);
+  });
+  return { soort: (K.per[gk.waarden[0]].geometrie()).soort, delen: uit };
+}
+
 export function openKrw(pad) {
   var b = openBron(pad, "KRW", KRWB.gml.bestand);
   if (b.sha256 !== KRWB.gml.sha256) fout("SHA-256 van de KRW-GML wijkt af van krwOppervlaktewaterlichamen");
@@ -86,6 +103,12 @@ export function bouw(paden) {
       it.feiten.beheerder = { waarde: bh.length === 1 ? bh[0] : bh, herkomst: "bron", status: "vastgesteld", bron: bronKrw };
       if (ids.length > 1) it.feiten.samengesteld = { waarde: ids.length, herkomst: "besluit", status: "vastgesteld", besluit: T.besluitSamen };
       if (t.besluit) it.feiten.afbakening = { waarde: krwNamen.join("; "), herkomst: "besluit", status: "vastgesteld", besluit: T[t.besluit] || fout("onbekend besluit: " + t.besluit) };
+      if (t.deelGebied) {
+        if (vorm !== "lijn" || ids.length !== 1) fout("deelGebied alleen bij een lijn uit een KRW-lichaam: " + id);
+        it.geometrie.bron.deelGebied = t.deelGebied.slice();
+        var alle = K.per[ids[0]].geometrie().lijnen.length, deel = krwVorm(K, it.geometrie.bron).delen.length;
+        it.feiten.afbakening = { waarde: krwNamen.join("; ") + ": " + deel + " van de " + alle + " stukken, in het gebied " + t.deelGebied.join(","), herkomst: "besluit", status: "vastgesteld", besluit: T[t.besluitDeel] || fout("onbekend besluit: " + t.besluitDeel) };
+      }
       bron = bronKrw;
     } else {
       // TOP10NL: alle waterdelen met precies deze naam (naamnl); elk punt ervan ligt in het doorzochte gebied (dus geen deel gemist)

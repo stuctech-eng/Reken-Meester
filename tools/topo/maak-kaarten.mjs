@@ -36,7 +36,7 @@ import { leesGpkg, leesGeometrie } from "./bronnen/lees-gpkg.mjs";
 import { leesGeojson, CRS_GEOJSON } from "./bronnen/lees-geojson.mjs";
 import { noordzeeVlak } from "./maak-water-nlbe.mjs";
 import { shaComponent } from "./maak-eilanden-nl.mjs";
-import { openKrw, openTop10, GEOM_PER_SOORT } from "./maak-water-nl.mjs";
+import { openKrw, openTop10, GEOM_PER_SOORT, krwVorm } from "./maak-water-nl.mjs";
 import { openNwb } from "./maak-kanalen-nl.mjs";
 import { openSpw } from "./maak-parken-be.mjs";
 import { openLbs } from "./maak-streken-be.mjs";
@@ -403,12 +403,10 @@ export async function maakKaart(cfg, KB, B, gedeeld) {
         var kw = gedeeld.krw();
         if (gk.sha256 !== kw.sha || gk.sleutel !== "localId") fout("GEOREF van " + id + " past niet bij " + bron);
         gebruik("KRW", kw.sha);
-        var dk = [];
-        gk.waarden.forEach(function(k) {
-          var g = (kw.per[k] || fout("KRW: geen lichaam " + k)).geometrie();
-          if (g.soort !== (gk.vorm || GEOM_PER_SOORT[it.soort])) fout("KRW: " + k + " is een " + g.soort + " voor " + id);
-          dk = dk.concat(g.soort === "lijn" ? g.lijnen : g.delen);
-        });
+        // T5c-3: via krwVorm (met deelGebied: alleen de stukken in het gebied, besluitOudeMaas)
+        var kv = krwVorm(kw, gk);
+        if (kv.soort !== (gk.vorm || GEOM_PER_SOORT[it.soort])) fout("KRW: " + gk.waarden.join(",") + " is een " + kv.soort + " voor " + id);
+        var dk = kv.delen;
         return (gk.vorm || GEOM_PER_SOORT[it.soort]) === "lijn" ? dk : d3Wind(dk);
       }
       if (gk.bronId === "TOP10") {

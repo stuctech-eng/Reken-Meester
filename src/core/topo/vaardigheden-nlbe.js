@@ -35,6 +35,9 @@ var IJMOND = "stad-nl-ijmond";
 var GRENSGEBIEDEN = ["grenspunt-drielandenpunt", "gebied-baarle", "streek-nl-zeeuws-vlaanderen", "zeearm-dollard"];
 function benoemGrens(laag, prefix) { return { sjabloon: "benoem", kaart: K, laag: laag, prefix: prefix, vraag: "Welk grensgebied is oranje?", typen: false, zonder: [], keuzeIds: GRENSGEBIEDEN }; }
 var BUURLANDEN = { ids: ["BEL", "DEU", "FRA", "LUX", "GBR"] };
+// T5c-3 (nb17, B3): de 17 Nederlandse rivieren met een vorm (gemeten in water-steden-nl); niet de Belgische (nog geen lijn)
+var RIVIEREN_NL = ["rivier-rijn", "rivier-waal", "rivier-nederrijn", "rivier-lek", "rivier-ijssel", "rivier-maas", "rivier-bergse-maas", "rivier-dommel", "rivier-oude-maas",
+  "rivier-overijsselse-vecht", "rivier-roer", "rivier-merwede", "rivier-nieuwe-maas", "rivier-nieuwe-waterweg", "rivier-noord", "rivier-utrechtse-vecht", "rivier-zwarte-water"];
 // T5c-3 (nb21): de status van de zes Caribische eilanden (feit status: Statuut art. 1 en Rijksoverheid); "een provincie van Nederland"
 // alleen als foute keuze (geen van de zes is een van de 12 provincies)
 var STATUS_KONINKRIJK = { sjabloon: "status", kaart: "koninkrijk", laag: "koninkrijk", prefix: "", zonder: [],
@@ -93,6 +96,10 @@ var DEFS = [
     benoem("rivieren", "", "Welke rivier is oranje?", true), benoem("rivieren-nl", "", "Welke rivier is oranje?", true),
     benoem("rivieren-vlak", "", "Welke rivier is oranje?", true), benoem("zeearmen", "", "Welke zeearm is oranje?", true),
     wijsAan("rivieren", "", "de rivier"), wijsAan("rivieren-nl", "", "de rivier"), wijsAan("rivieren-vlak", "", "de rivier"), wijsAan("zeearmen", "", "de zeearm") ] },
+  // nb17 (B3): een stad ligt aan een rivier binnen 500 m van haar bebouwing; tussen 500 m en 3 km twijfel (nooit als foute keuze)
+  { id: "nb17", niveau: "G", label: "Steden aan het water", desc: "Aan welke rivier ligt een stad", minCorrect: 11, onderdelen: [
+    relatie("ligt-aan", "naar", "stad-nl-", { ids: RIVIEREN_NL }, function(n) { return "Aan welke rivier ligt " + n + "?"; }, [IJMOND]),
+    nietBij("heeft-aan-oever", "rivier-", { soort: "stad", prefix: "stad-nl-", zonder: [IJMOND] }, function(n) { return "Welke stad ligt níet aan de " + n + "?"; }) ] },
   { id: "nb18", niveau: "G", label: "Meren en kanalen", desc: "De meren en kanalen van Nederland benoemen en aanwijzen", minCorrect: 50, onderdelen: [
     benoem("meren", "", "Welk meer is oranje?", true), wijsAan("meren", "", "het meer"),
     benoem("kanalen", "", "Welk kanaal is oranje?", true), wijsAan("kanalen", "", "het kanaal") ] },
@@ -229,6 +236,12 @@ var HULP = {
     tip: "Een rivier is een lijn of een smal vlak. Een zeearm is een brede arm van de zee: in Zeeland en Zuid-Holland, en de Dollard in het noordoosten.",
     uitleg: "De Rijn en de Maas komen Nederland binnen in het oosten en het zuiden en stromen naar het westen, naar de zee. In het westen splitsen ze in smallere rivieren. De zeearmen liggen tussen de eilanden in de zuidwesthoek.",
     voorbeeld: "Tik de Westerschelde aan: dat is de zeearm het verst naar het zuiden, tussen Zeeuws-Vlaanderen en de rest van Zeeland.",
+  },
+  nb17: {
+    strategy: "Steden aan het water",
+    tip: "Veel grote steden liggen aan een rivier: Nijmegen aan de Waal, Arnhem aan de Nederrijn, Maastricht aan de Maas.",
+    uitleg: "Een stad ligt aan een rivier als de rivier langs of door de bebouwing van de stad stroomt. Sommige steden liggen aan twee rivieren, zoals Zwolle (IJssel en Zwarte Water) en Dordrecht.",
+    voorbeeld: "Aan welke rivier ligt Nijmegen? Nijmegen ligt in het oosten van Gelderland, aan de Waal.",
   },
   nb18: {
     strategy: "Meren en kanalen",

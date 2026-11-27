@@ -29,9 +29,14 @@ export function juisteIds(bron, o, id) {
   return bron.relaties(o.relatie).filter(function(r) { return (o.gevraagd === "van" ? r.naar : r.van) === id; }).map(function(r) { return o.gevraagd === "van" ? r.van : r.naar; });
 }
 
+// T5c-3 (nb17): p.zonder haalt items uit de pool (bijvoorbeeld IJmond, die niet gemeten is); een twijfelpaar met het genoemde item
+// (bron.twijfel) komt nooit als foute keuze
 export function poolIds(bron, o, id) {
   var p = typeof o.pool === "function" ? o.pool(id) : o.pool;
-  return p.ids ? p.ids.slice() : bron.ids(p.soort, p.prefix);
+  var uit = p.ids ? p.ids.slice() : bron.ids(p.soort, p.prefix);
+  if (p.zonder) uit = uit.filter(function(x) { return p.zonder.indexOf(x) < 0; });
+  if (bron.twijfel) uit = uit.filter(function(x) { return o.gevraagd === "van" ? !bron.twijfel(o.relatie, x, id) : !bron.twijfel(o.relatie, id, x); });
+  return uit;
 }
 
 // De verwarring (plan T4 par. 8): bij "naar" (het antwoord is het doel, bijvoorbeeld een provincie) de buren van het antwoord; bij
