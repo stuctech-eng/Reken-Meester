@@ -7,7 +7,7 @@
 //     kaart (alleen de basis);
 //   - per nieuwe vaardigheid (los oefenen): de delen van de kaart volgens topoNlbeDelen (vaardigheden-nlbe.js): die van de
 //     vaardigheden tot en met de volgende (ook eerdere, voor de herhaling) en vooruit die van de vaardigheid daarna; bij deze vier
-//     zijn dat water en gebieden; bij nb27 (T5c-3) ook grens;
+//     zijn dat water en gebieden; bij nb23 en nb27 (T5c-3) ook grens; nb21 benoemt op de kaart van het Koninkrijk;
 //     16 vragen, elk goed beantwoord (typen, kiezen of aanwijzen); elke vraag met een kaart geeft "Goed zo";
 //   - nb18: minstens een kanaal aangewezen (een lijn, na de lijnproef van 26-11-2026); nb20: minstens een vraag naar de provincie
 //     van een park;
@@ -72,12 +72,13 @@ function eis(ok, tekst) { n++; if (!ok) fouten.push(tekst); }
   await p.close();
 
   // 2 de nieuwe vaardigheden
-  var GEVAL = [["Rivieren en zeearmen", "water"], ["Meren en kanalen", "water"], ["Streken en landschappen", "gebieden"], ["Nationale parken", "gebieden"], ["Grensgemeenten", "grens"]];
+  var GEVAL = [["Rivieren en zeearmen", "water"], ["Meren en kanalen", "water"], ["Streken en landschappen", "gebieden"], ["Nationale parken", "gebieden"], ["Grensgemeenten", "grens"], ["Het Koninkrijk der Nederlanden", "koninkrijk"], ["Grensgebieden", "grens"]];
   for (var g of GEVAL) {
     var v = await nieuw(428, 746), kaartVragen = 0, goedZo = 0, kanaal = 0, park = 0;
     await los(v, g[0]);
     await v.waitForTimeout(1500);
-    var DELEN = g[1] === "grens" ? "gebieden,grens,water" : "gebieden,water";
+    // nb21 (koninkrijk): de delen tot en met nb22, en vooruit grens (voor nb23)
+    var DELEN = g[1] === "grens" || g[1] === "koninkrijk" ? "gebieden,grens,water" : "gebieden,water";
     eis(v.delen.slice().sort().join() === DELEN, g[0] + ": laadt de delen " + DELEN + " (" + v.delen.join(", ") + ")");
     for (var i = 0; i < 16; i++) {
       var vraag = await v.evaluate(function() { var e = document.querySelector("h1, h2, [data-vraag]"); return document.body.innerText; });
