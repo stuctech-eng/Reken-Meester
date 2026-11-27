@@ -26,7 +26,7 @@ function bron(p) { return pathToFileURL(path.join(ROOT, p)).href; }
 if (process.argv[2] === "--vaardigheid") {
   var id = process.argv[3];
   var LADEN = await import(bron("src/core/topo/laden.js")), V = await import(bron("src/core/topo/vaardigheden-nlbe.js"));
-  var D = await LADEN.laadTopo(["nlbe"], V.delenVanVaardigheid(id));
+  var D = await LADEN.laadTopo(V.TOPO_NLBE_KAARTEN, V.delenVanVaardigheid(id));
   var def = V.TOPO_NLBE_DEFS.filter(function(d) { return d.id === id; })[0], tel = 0;
   D.combinaties(def).forEach(function(c) { var q = D.maakMet(def, def.onderdelen[c.o], c.id); if (q) tel++; });
   console.log("vragen " + tel);
@@ -34,7 +34,7 @@ if (process.argv[2] === "--vaardigheid") {
 }
 if (process.argv[2] === "--alleen-basis") {
   var LADEN2 = await import(bron("src/core/topo/laden.js")), V2 = await import(bron("src/core/topo/vaardigheden-nlbe.js"));
-  var D2 = await LADEN2.laadTopo(["nlbe"]);
+  var D2 = await LADEN2.laadTopo(V2.TOPO_NLBE_KAARTEN);
   var uit = {}; V2.TOPO_NLBE_DEFS.forEach(function(d) { uit[d.id] = d.zonderItems ? [] : D2.sleutelsVanDef(d); });
   console.log(JSON.stringify(uit));
   process.exit(0);
@@ -89,7 +89,7 @@ eis(gevangen === 2, "mutanten kaartdelen: " + gevangen + " van 2 gevangen");
 // per vaardigheid in een eigen proces
 var V = await import(bron("src/core/topo/vaardigheden-nlbe.js"));
 var LADEN = await import(bron("src/core/topo/laden.js"));
-var D = await LADEN.laadTopo(["nlbe"], Object.keys(IND).map(function(k) { return "nlbe/" + k; }));
+var D = await LADEN.laadTopo(V.TOPO_NLBE_KAARTEN, Object.keys(IND).map(function(k) { return "nlbe/" + k; }));
 V.TOPO_NLBE_DEFS.forEach(function(def) {
   var uit = "";
   try { uit = execFileSync(process.execPath, [fileURLToPath(import.meta.url), "--vaardigheid", def.id], { encoding: "utf8", maxBuffer: 1 << 24 }); } catch (e) { uit = String(e.stdout || "") + String(e.stderr || ""); }

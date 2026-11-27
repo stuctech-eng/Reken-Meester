@@ -11,6 +11,8 @@
 //   typen      alleen met o.typen: inputType "naam" en nakijkregel "naam_varianten" (plan T3 par. 3.3), met de namen die de regel
 //              nodig heeft: namen.juist = de voorkeursnaam en de goedgekeurde varianten; namen.anderen = per ander gebied van de laag
 //              zijn namen. Zonder Typen (of zonder o.typen) is het kiezen.
+//   keuzeIds   T5c-3 (nb23, optioneel): de foute keuzes komen uit deze items in plaats van uit de laag (de vier grensgebieden
+//              staan elk in een andere laag); alleen kiezen
 
 import { shuffle } from "../../skills/helpers.js";
 import { vraagIds, alleenVan, beginbeeld } from "./wijs-aan.js";
@@ -21,7 +23,8 @@ export function maakBenoem(bron) {
     var l = bron.laag(o.kaart, o.laag), ids = vraagIds(l, o.prefix, o.zonder, alleenVan(bron, o));
     if (ids.indexOf(id) < 0) throw new Error("gebied " + id + " hoort niet bij de laag " + o.laag);
     var naam = bron.naamVan(id);
-    var anderen = kiesFout(ids.filter(function(x) { return x !== id; }), bron.buren(id), 3).map(function(x) { return bron.naamVan(x); });
+    var pool = o.keuzeIds ? o.keuzeIds : ids;
+    var anderen = kiesFout(pool.filter(function(x) { return x !== id; }), o.keuzeIds ? [] : bron.buren(id), 3).map(function(x) { return bron.naamVan(x); });
     var q = {
       question: o.vraag,
       answer: naam,

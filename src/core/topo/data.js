@@ -30,6 +30,7 @@ import { ringDelen } from "./kaart/beeld.js";
 import { HOOFDSTEDEN_NLBE } from "./afgeleid/hoofdsteden-nlbe.js";
 import { LIGGING_NLBE } from "./afgeleid/ligging-nlbe.js";
 import { GRENSGEMEENTEN_NL } from "./afgeleid/grensgemeenten-nl.js";
+import { GRENSGEBIEDEN_NLBE } from "./afgeleid/grensgebieden-nlbe.js";
 import { RELATIES as RELATIESOORTEN } from "./relaties.js";
 import { maakWijsAan, vraagIds } from "./sjablonen/wijs-aan.js";
 import { maakBenoem } from "./sjablonen/benoem.js";
@@ -38,6 +39,7 @@ import { maakWijsRelatie } from "./sjablonen/wijs-relatie.js";
 import { maakNietBij, genoemdNietBij } from "./sjablonen/niet-bij.js";
 import { maakRichting, maakAfstand, windrichting, WINDSTREKEN, MARGE_8 } from "./sjablonen/meten.js";
 import { maakKeten, ketenIds } from "./sjablonen/keten.js";
+import { maakStatus, statusVan } from "./sjablonen/status.js";
 import { alleenVan } from "./sjablonen/wijs-aan.js";
 import { maakSessie } from "./sessie.js";
 import { allesMinstensInOntwikkeling, telling } from "./beheersing.js";
@@ -66,7 +68,7 @@ export function ids(soort, prefix) {
 // van de kennisbank ze leest (relatie-index.js, bouwIndex)
 // T5a: ook de afgeleide liggingsrelaties (ligt-in, grenst-aan; afgeleid/ligging-nlbe.js). Een symmetrische relatie (grenst-aan) staat
 // daar een keer; hier ook in de andere richting, zodat elke provincie als bron voorkomt.
-var RELATIES = HOOFDSTEDEN_NLBE.concat(LIGGING_NLBE, GRENSGEMEENTEN_NL);
+var RELATIES = HOOFDSTEDEN_NLBE.concat(LIGGING_NLBE, GRENSGEMEENTEN_NL, GRENSGEBIEDEN_NLBE);
 Object.keys(KB).sort().forEach(function(id) { (KB[id].relaties || []).forEach(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = id; RELATIES.push(x); }); });
 RELATIES = RELATIES.filter(function(r) { return r.status === "vastgesteld"; });
 RELATIES = RELATIES.concat(RELATIES.filter(function(r) { return RELATIESOORTEN[r.type] && RELATIESOORTEN[r.type].symmetrisch; }).map(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = r.naar; x.naar = r.van; return x; }));
@@ -182,6 +184,7 @@ var BRON = { laag: laag, kaart: kaart, item: item, punt: punt, meetIds: meetIds,
 var SJABLONEN = {
   "wijs-aan": maakWijsAan(BRON), "benoem": maakBenoem(BRON), "relatie": maakRelatie(BRON),
   "wijs-relatie": maakWijsRelatie(BRON), "niet-bij": maakNietBij(BRON), "richting": maakRichting(BRON), "afstand": maakAfstand(BRON), "keten": maakKeten(BRON),
+  "status": maakStatus(BRON),
 };
 
 // De plaatsen van richting en afstand: de items van een laag met een punt in de kennisbank (o.laag, o.prefix, o.zonder)
@@ -194,6 +197,7 @@ export function onderdeelIds(o) {
   if (o.sjabloon === "niet-bij") return genoemdNietBij(BRON, o);
   if (o.sjabloon === "richting" || o.sjabloon === "afstand") return meetIds(o);
   if (o.sjabloon === "keten") return ketenIds(BRON, o);
+  if (o.sjabloon === "status") return vraagIds(laagInhoud(o.kaart, o.laag), o.prefix, o.zonder).filter(function(id) { return !!statusVan(BRON, o, id); });
   return vraagIds(laagInhoud(o.kaart, o.laag), o.prefix, o.zonder, alleenVan(BRON, o));
 }
 
@@ -206,11 +210,13 @@ export function combinaties(def) {
 
 // De kennisitems (plan T4 par. 3): de sleutel "<item-id>|<kennissoort>". Per combinatie (onderdeel, item) de sleutels die de vraag
 // kan trainen: aanwijzen a, benoemen b, relatie r:<relatie> op het paar (de bron-id van); bij "van" met meer juiste bronnen elk paar
+// T5c-3: status (S13, nb21) is st, op het genoemde item.
 // T5a: benoemen met alleen typen (nb24) is s; wijs-relatie en niet-bij zijn r: op het genoemde item (zoals relatie "naar"); richting,
 // afstand en keten hebben geen kennisitem (plan T5 par. 5.1)
 export function sleutelsVan(o, id) {
   if (o.sjabloon === "wijs-aan") return [id + "|a"];
   if (o.sjabloon === "benoem") return [id + (o.alleenTypen ? "|s" : "|b")];
+  if (o.sjabloon === "status") return [id + "|st"];
   if (o.sjabloon === "richting" || o.sjabloon === "afstand" || o.sjabloon === "keten") return [];
   if (o.sjabloon === "wijs-relatie" || o.sjabloon === "niet-bij" || o.gevraagd === "naar") return [id + "|r:" + o.relatie];
   return juisteIds(BRON, o, id).map(function(v) { return v + "|r:" + o.relatie; });

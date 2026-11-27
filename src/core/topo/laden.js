@@ -9,6 +9,7 @@
 
 var KAARTBESTAND = {
   nlbe: function() { return import("./kaarten/nlbe-basis.js"); },
+  koninkrijk: function() { return import("./kaarten/koninkrijk.js"); },
 };
 var DEELBESTAND = {
   "nlbe/water": function() { return import("./kaarten/nlbe-water.js"); },

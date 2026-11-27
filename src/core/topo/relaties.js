@@ -6,6 +6,8 @@
 
 var BESTUURLIJK = ["land", "gebied", "bijzonder-gebied", "gewest", "provincie", "district", "gemeente", "taalgebied"];
 var WATER = ["oceaan", "zee", "baai", "zeestraat", "meer", "zeearm", "rivier", "riviertak", "kanaal"];
+// T5c-3 (nb23): grenst-aan ook voor de grensgebieden die geen bestuurlijk gebied zijn (het Drielandenpunt, Zeeuws-Vlaanderen, de Dollard)
+var GRENZEND = BESTUURLIJK.concat(["bijzonder-gebied", "grenspunt", "streek", "zeearm"]).filter(function(s, i, a) { return a.indexOf(s) === i; });
 
 var HEEN = [
   { id: "hoofdstad-van", inverse: "heeft-hoofdstad", bronSoorten: ["stad"], doelSoorten: ["land"], kwalificaties: {} },
@@ -18,7 +20,7 @@ var HEEN = [
   { id: "bevoegd-in", inverse: "valt-onder-gemeenschap", bronSoorten: ["gemeenschap"], doelSoorten: ["taalgebied"], kwalificaties: { reikwijdte: { waarden: ["taalgebied", "instellingen"] } } },
   { id: "ligt-in", inverse: "bevat", bronSoorten: ["stad", "agglomeratie", "gemeente", "provincie", "taalgebied", "natuurgebied", "streek", "bergtop", "vulkaan", "meer", "eiland"], doelSoorten: BESTUURLIJK.concat(["werelddeel", "regio"]), kwalificaties: {} },
   { id: "gemeente-van", inverse: "omvat-woonplaats", bronSoorten: ["stad"], doelSoorten: ["gemeente"], kwalificaties: {} },
-  { id: "grenst-aan", inverse: "grenst-aan", symmetrisch: true, bronSoorten: BESTUURLIJK, doelSoorten: BESTUURLIJK, kwalificaties: { km: { type: "getal" }, via: { waarden: ["land", "beide", "binnenwater"] } } },
+  { id: "grenst-aan", inverse: "grenst-aan", symmetrisch: true, bronSoorten: GRENZEND, doelSoorten: GRENZEND, kwalificaties: { km: { type: "getal" }, via: { waarden: ["land", "beide", "binnenwater"] } } },
   { id: "stroomt-door", inverse: "wordt-doorstroomd-door", bronSoorten: ["rivier", "riviertak"], doelSoorten: BESTUURLIJK, kwalificaties: {} },
   { id: "ontspringt-in", inverse: "bron-van", bronSoorten: ["rivier", "riviertak"], doelSoorten: BESTUURLIJK.concat(["gebergte"]), kwalificaties: {} },
   { id: "mondt-uit-in", inverse: "ontvangt", bronSoorten: ["rivier", "riviertak", "kanaal"], doelSoorten: WATER, kwalificaties: {} },

@@ -3,7 +3,7 @@
 //
 // Gebruik (vanuit de hoofdmap van de repo): node tools/topo/test-topo-app.mjs
 // - tikregel: src/core/topo/kaart/tikregel.js is onder de kop letterlijk gelijk aan public/kaartproef/tikregel.js;
-// - laden: laadTopo(["nlbe"]) zet de kaart klaar; topo() werkt pas daarna;
+// - laden: laadTopo(["nlbe", "koninkrijk"]) zet de kaarten klaar; topo() werkt pas daarna;
 // - identiteit: binnen elke laag geen twee gebieden met dezelfde naam, ook niet na normalisatie; elke naam komt uit de kennisbank;
 //   de volgorde van de items doet er niet toe (raster van tikken met de omgekeerde volgorde: dezelfde uitkomst);
 // - vaardigheden (S1 benoem, S2 wijs-aan, S3 relatie): per vaardigheid 2.000 vragen, elk opnieuw nagerekend op de kennisbank: het
@@ -36,14 +36,14 @@ eis(app === proef, "tikregel in de app gelijk aan de tikregel van de proef");
 var LADEN = await import(bron("src/core/topo/laden.js"));
 var gooit = false; try { LADEN.topo(); } catch (e) { gooit = true; }
 eis(gooit, "topo() gooit een fout voordat Topografie geladen is");
-var D = await LADEN.laadTopo(["nlbe"]);
+var D = await LADEN.laadTopo(["nlbe", "koninkrijk"]);
 eis(LADEN.topo() === D, "na laadTopo geeft topo() de geladen gegevens");
 // T5c (plan T5c par. 3.3): met alleen de basis kent een laag van een deel zijn items, maar laag() geeft een fout; daarna alle delen
 var KD = await import(bron("src/core/topo/kaartdelen.js"));
 var alleDelen = Object.keys(KD.KAARTDELEN.nlbe).map(function(d) { return "nlbe/" + d; });
 var gooitDeel = false; try { D.laag("nlbe", "meren"); } catch (e) { gooitDeel = /nog niet geladen/.test(e.message); }
 eis(gooitDeel && D.laagInhoud("nlbe", "meren").items.length === 13, "alleen de basis: de laag meren kent 13 items, laag() geeft een fout");
-await LADEN.laadTopo(["nlbe"], alleDelen);
+await LADEN.laadTopo(["nlbe", "koninkrijk"], alleDelen);
 eis(D.laag("nlbe", "meren").doelen.length === 13, "na alle delen: de laag meren heeft 13 doelen");
 var TR = await import(bron("src/core/topo/kaart/tikregel.js"));
 var BE = await import(bron("src/core/topo/kaart/beeld.js"));
@@ -128,8 +128,10 @@ function controleerVraagRuw(def, q, oGegeven) {
   if (ids.indexOf(q.kaart.antwoordId) < 0) f.push("antwoordId buiten de vraagset");
   if (q.kaart.kaart !== o.kaart || q.kaart.laag !== o.laag) f.push("kaart of laag past niet");
   if (JSON.stringify(q.kaart.focus) !== JSON.stringify(D.omhulling(o.kaart, o.laag, ids))) f.push("focus is niet de omhullende van de vraagset");
-  controleerKeuzes(q, namen, f);
-  if (q.choices.length !== Math.min(4, ids.length)) f.push("aantal keuzes");
+  // T5c-3 (nb23): met keuzeIds komen de keuzes uit die items (de vier grensgebieden), niet uit de laag
+  var keuzeNamen = o.keuzeIds ? o.keuzeIds.map(function(x) { return D.naamVan(x); }) : namen;
+  controleerKeuzes(q, keuzeNamen, f);
+  if (q.choices.length !== Math.min(4, o.keuzeIds ? o.keuzeIds.length : ids.length)) f.push("aantal keuzes");
   if (o.sjabloon === "wijs-aan") {
     if (q.question !== "Tik " + o.soortwoord + " " + q.answer + " aan.") f.push("vraagtekst");
     if (q.inputType !== "kaart" || q.gradingRule !== "kaart_item") f.push("invoer is niet aanwijzen");
@@ -341,6 +343,7 @@ eis(metBuur > 500 && zonderBuur === 0, "T4: minstens een buur bij de foute keuze
 var NB = await import(bron("src/core/topo/sjablonen/niet-bij.js"));
 var LG = (await import(bron("src/core/topo/afgeleid/ligging-nlbe.js"))).LIGGING_NLBE;
 var HS = (await import(bron("src/core/topo/afgeleid/hoofdsteden-nlbe.js"))).HOOFDSTEDEN_NLBE;
+var GB = (await import(bron("src/core/topo/afgeleid/grensgebieden-nlbe.js"))).GRENSGEBIEDEN_NLBE;
 // onafhankelijke rekenregels (een andere vorm dan meten.js): richting met vectoren, afstand met de cosinusregel
 function rad(x) { return x * Math.PI / 180; }
 function vec(p) { return [Math.cos(rad(p.lat)) * Math.cos(rad(p.lon)), Math.cos(rad(p.lat)) * Math.sin(rad(p.lon)), Math.sin(rad(p.lat))]; }
@@ -352,7 +355,7 @@ function koersVec(a, b) {
 function afstandCos(a, b) { var c = Math.sin(rad(a.lat)) * Math.sin(rad(b.lat)) + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.cos(rad(b.lon - a.lon)); return 6371 * Math.acos(Math.min(1, Math.max(-1, c))); }
 var WR = ["noord", "noordoost", "oost", "zuidoost", "zuid", "zuidwest", "west", "noordwest"];
 function provVan(stad) { var r = LG.filter(function(x) { return x.type === "ligt-in" && x.van === stad; }); return r.length === 1 ? r[0].naar : null; }
-function buurIds(p) { return LG.filter(function(x) { return x.type === "grenst-aan" && (x.van === p || x.naar === p); }).map(function(x) { return x.van === p ? x.naar : x.van; }); }
+function buurIds(p) { return LG.concat(GB).filter(function(x) { return x.type === "grenst-aan" && (x.van === p || x.naar === p); }).map(function(x) { return x.van === p ? x.naar : x.van; }); }
 function controleerT5(def, q) {
   var f = [], o;
   if (q.meting) o = def.onderdelen.filter(function(x) { return x.sjabloon === q.meting.soort; })[0];
@@ -402,6 +405,14 @@ function controleerT5(def, q) {
     var d = afstandCos(D.punt(q.meting.van), D.punt(q.meting.naar)), getal = q.choices.map(function(c) { return Number(c.replace(" km", "")); }).sort(function(a, b) { return a - b; });
     if (q.answer !== Math.round(d / 5) * 5 + " km" || d < 40) f.push("afstand: " + q.answer + " bij " + d.toFixed(1) + " km");
     if (getal.length !== 4 || !getal.every(function(x, i) { return i === 0 || x / getal[i - 1] >= 1.25; })) f.push("afstand: keuzes niet 25% uit elkaar (" + getal.join(", ") + ")");
+  } else if (o.sjabloon === "status") {
+    // T5c-3 (nb21): het antwoord is de omschrijving van het vastgestelde feit status uit de kennisbank (eigen tabel, niet uit het
+    // onderdeel); de foute keuzes zijn de andere omschrijvingen of een provincie
+    var EIGEN = { "land binnen het Koninkrijk": "een land binnen het Koninkrijk", "openbaar lichaam": "een bijzondere gemeente van Nederland (openbaar lichaam)" };
+    var st = D.item(q.status.genoemd).feiten.status;
+    if (st.status !== "vastgesteld" || q.answer !== EIGEN[st.waarde] || q.question !== "Wat is " + D.naamVan(q.status.genoemd) + " binnen het Koninkrijk der Nederlanden?") f.push("status: antwoord of vraag klopt niet");
+    if (q.choices.length !== 3 || q.choices.filter(function(c) { return c !== q.answer; }).some(function(c) { return c !== "een provincie van Nederland" && [EIGEN["land binnen het Koninkrijk"], EIGEN["openbaar lichaam"]].indexOf(c) < 0; })) f.push("status: keuzes");
+    if (D.ids("provincie").indexOf(q.status.genoemd) >= 0) f.push("status: het eiland is een provincie");
   } else if (o.sjabloon === "keten") {
     var b = q.keten.begin, p = provVan(b), eind;
     if (o.stappen[1].relatie === "provinciehoofdstad-van") { var h = HS.filter(function(r) { return r.type === "provinciehoofdstad-van" && r.naar === p; }); eind = h.length === 1 ? h[0].van : null; }
@@ -440,9 +451,14 @@ for (var dT of V.TOPO_NLBE_DEFS.filter(function(d) { return d.niveau; })) {
 eis(D.sleutelsVanDef(defVan("nb13")).length === 38 && D.sleutelsVanDef(defVan("nb14")).length === 22 && D.sleutelsVanDef(defVan("nb24")).length === 44 && D.sleutelsVanDef(defVan("nb25")).length === 58, "T5a/T5b: kennisitems nb13 38, nb14 22, nb24 44 (met Leuven en Waver), nb25 45 (met Brussel, Leuven en Waver)");
 // T5c-3: nb27 grensgemeenten (aanwijzen zonder hulp en typen); Bergen (L.) en Stein (L.) ook zonder (L.)
 eis(D.sleutelsVanDef(defVan("nb27")).length === 122 && D.namenVan("gem-nl-gm0893").indexOf("Bergen") >= 0 && D.namenVan("gem-nl-gm0971").indexOf("Stein") >= 0 && JSON.stringify(V.delenVanVaardigheid("nb27")) === "[\"nlbe/grens\"]", "T5c-3: nb27 122 kennisitems, de varianten Bergen en Stein, het deel grens");
+// T5c-3: nb21 Koninkrijk: 6 eilanden benoemen (b) en hun status (st); de kaart koninkrijk
+eis(D.sleutelsVanDef(defVan("nb21")).length === 12 && D.sleutelsVanDef(defVan("nb21")).filter(function(k) { return /\|st$/.test(k); }).length === 6, "T5c-3: nb21 12 kennisitems, waarvan 6 status");
+// T5c-3 (B4): nb23, benoemen met de vier grensgebieden als keuzes en het buurland
+eis(D.sleutelsVanDef(defVan("nb23")).length === 8 && JSON.stringify(V.delenVanVaardigheid("nb23")) === "[\"nlbe/gebieden\",\"nlbe/grens\",\"nlbe/water\"]", "T5c-3: nb23 8 kennisitems; de delen gebieden, grens en water");
+eis(GB.map(function(r) { return r.van + ">" + r.naar; }).sort().join() === "gebied-baarle>BEL,grenspunt-drielandenpunt>BEL,grenspunt-drielandenpunt>DEU,streek-nl-zeeuws-vlaanderen>BEL,zeearm-dollard>DEU", "T5c-3: de buurlanden van de grensgebieden");
 // T5c-2 (plan T5c): de nieuwe vaardigheden; de volgorde in de rij
 eis(D.sleutelsVanDef(defVan("nb15")).length === 44 && D.sleutelsVanDef(defVan("nb18")).length === 50 && D.sleutelsVanDef(defVan("nb19")).length === 32 && D.sleutelsVanDef(defVan("nb20")).length === 48, "T5c-2: kennisitems nb15 44, nb18 50, nb19 32, nb20 48");
-eis(V.TOPO_NLBE_ORDER.join() === "nb01,nb02,nb03,nb04,nb05,nb06,nb07,nb08,nb09,nb10,nb11,nb12,nb13,nb14,nb15,nb18,nb19,nb20,nb24,nb25,nb26,nb27,nb28", "T5c-2: de volgorde van de vaardigheden");
+eis(V.TOPO_NLBE_ORDER.join() === "nb01,nb02,nb03,nb04,nb05,nb06,nb07,nb08,nb09,nb10,nb11,nb12,nb13,nb14,nb15,nb18,nb19,nb20,nb21,nb23,nb24,nb25,nb26,nb27,nb28", "T5c-2: de volgorde van de vaardigheden");
 eis(D.sleutelsVanDef(defVan("nb18")).indexOf("kanaal-noordzeekanaal|a") >= 0 && D.sleutelsVanDef(defVan("nb25")).indexOf("meer-ijsselmeer|a") >= 0, "T5c-2: kanalen aanwijzen in nb18 (de lijnproef slaagde), meren in nb25");
 eis(JSON.stringify(V.delenVanVaardigheid("nb15")) === "[\"nlbe/water\"]" && JSON.stringify(V.delenVanVaardigheid("nb20")) === "[\"nlbe/gebieden\"]" && JSON.stringify(V.delenVanVaardigheid("nb01")) === "[]", "T5c-2: de delen van de kaart per vaardigheid");
 eis(D.sleutelsVanDef(defVan("nb24")).every(function(s) { return /\|s$/.test(s); }), "T5a: nb24 vraagt schrijven (s)");

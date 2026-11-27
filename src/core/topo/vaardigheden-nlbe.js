@@ -16,7 +16,8 @@ import { createSkills } from "../skills/flow.js";
 import { topo } from "./laden.js";
 import { delenVoorLagen } from "./kaartdelen.js";
 
-export var TOPO_NLBE_KAARTEN = ["nlbe"];
+// T5c-3: ook de kaart van het Koninkrijk (nb21; klein, gzip ongeveer 5 kB)
+export var TOPO_NLBE_KAARTEN = ["nlbe", "koninkrijk"];
 
 var K = "nlbe";
 function wijsAan(laag, prefix, soortwoord, zonder) { return { sjabloon: "wijs-aan", kaart: K, laag: laag, prefix: prefix, soortwoord: soortwoord, zonder: zonder || [] }; }
@@ -30,6 +31,16 @@ function wijsVrij(laag, prefix, soortwoord, zonder) { return { sjabloon: "wijs-a
 function meet(soort) { return { sjabloon: soort, kaart: K, laag: "steden", prefix: "", zonder: [IJMOND], minKm: 40 }; }
 function keten(stappen, prefix, tekst) { return { sjabloon: "keten", stappen: stappen, prefix: prefix, zonder: [IJMOND], tekst: tekst }; }
 var IJMOND = "stad-nl-ijmond";
+// T5c-3 (nb23): de vier grensgebieden, elk in een andere laag van de kaart; benoemen met deze vier als keuzes
+var GRENSGEBIEDEN = ["grenspunt-drielandenpunt", "gebied-baarle", "streek-nl-zeeuws-vlaanderen", "zeearm-dollard"];
+function benoemGrens(laag, prefix) { return { sjabloon: "benoem", kaart: K, laag: laag, prefix: prefix, vraag: "Welk grensgebied is oranje?", typen: false, zonder: [], keuzeIds: GRENSGEBIEDEN }; }
+var BUURLANDEN = { ids: ["BEL", "DEU", "FRA", "LUX", "GBR"] };
+// T5c-3 (nb21): de status van de zes Caribische eilanden (feit status: Statuut art. 1 en Rijksoverheid); "een provincie van Nederland"
+// alleen als foute keuze (geen van de zes is een van de 12 provincies)
+var STATUS_KONINKRIJK = { sjabloon: "status", kaart: "koninkrijk", laag: "koninkrijk", prefix: "", zonder: [],
+  omschrijving: { "land binnen het Koninkrijk": "een land binnen het Koninkrijk", "openbaar lichaam": "een bijzondere gemeente van Nederland (openbaar lichaam)" },
+  extra: ["een provincie van Nederland"],
+  tekst: function(n) { return "Wat is " + n + " binnen het Koninkrijk der Nederlanden?"; } };
 function provNL() { return { soort: "provincie", prefix: "prov-nl-" }; }
 function provBE() { return { soort: "provincie", prefix: "prov-be-" }; }
 
@@ -93,6 +104,16 @@ var DEFS = [
     relatie("ligt-in", "naar", "park-nl-", provNL(), function(n) { return "In welke provincie ligt het nationaal park " + n + "?"; }),
     relatie("ligt-in", "naar", "streek-nl-", provNL(), function(n) { return "In welke provincie ligt het nationaal park " + n + "?"; }),
     relatie("ligt-in", "naar", "park-be-", provBE(), function(n) { return "In welke Belgische provincie ligt het " + n + "?"; }) ] },
+  { id: "nb21", niveau: "G", label: "Het Koninkrijk der Nederlanden", desc: "Aruba, Curaçao, Sint Maarten, Bonaire, Sint Eustatius en Saba: herkennen en hun plaats in het Koninkrijk", minCorrect: 12, onderdelen: [
+    { sjabloon: "benoem", kaart: "koninkrijk", laag: "koninkrijk", prefix: "", vraag: "Welk eiland is oranje?", typen: true, zonder: [] },
+    STATUS_KONINKRIJK ] },
+  { id: "nb23", niveau: "G", label: "Grensgebieden", desc: "Het Drielandenpunt, Baarle, Zeeuws-Vlaanderen en de Dollard: herkennen en het buurland", minCorrect: 8, onderdelen: [
+    benoemGrens("grenspunten", "grenspunt-drielandenpunt"), benoemGrens("baarle", "gebied-baarle"),
+    benoemGrens("streken", "streek-nl-zeeuws-vlaanderen"), benoemGrens("zeearmen", "zeearm-dollard"),
+    relatie("grenst-aan", "naar", "grenspunt-drielandenpunt", BUURLANDEN, function() { return "Welk land grenst bij het Drielandenpunt aan Nederland?"; }),
+    relatie("grenst-aan", "naar", "gebied-baarle", BUURLANDEN, function() { return "Met welk land deelt Nederland het enclavegebied Baarle?"; }),
+    relatie("grenst-aan", "naar", "streek-nl-zeeuws-vlaanderen", BUURLANDEN, function() { return "Aan welk land grenst Zeeuws-Vlaanderen?"; }),
+    relatie("grenst-aan", "naar", "zeearm-dollard", BUURLANDEN, function() { return "Aan welk land grenst de Dollard?"; }) ] },
   { id: "nb24", niveau: "M", label: "Lege kaart: provincies en hoofdsteden", desc: "De naam typen van een provincie of provinciehoofdstad, zonder keuzes", minCorrect: 44, onderdelen: [
     typLeeg("provincies-nl", "", "Typ de naam van de oranje provincie."),
     typLeeg("provincies-be", "", "Typ de naam van de oranje Belgische provincie."),
@@ -221,6 +242,18 @@ var HULP = {
     tip: "Een nationaal park is een beschermd natuurgebied. Zoek eerst de provincie waarin het ligt.",
     uitleg: "Sommige parken liggen in twee provincies, zoals de Biesbosch (Noord-Brabant en Zuid-Holland). Dan is elk van die provincies goed.",
     voorbeeld: "In welke provincie ligt De Hoge Veluwe? Op de Veluwe, dus in Gelderland.",
+  },
+  nb21: {
+    strategy: "Het Koninkrijk",
+    tip: "Aruba, Curaçao en Sint Maarten zijn landen binnen het Koninkrijk, net als Nederland. Bonaire, Sint Eustatius en Saba horen bij Nederland zelf.",
+    uitleg: "Het Koninkrijk der Nederlanden bestaat uit vier landen: Nederland, Aruba, Curaçao en Sint Maarten. Bonaire, Sint Eustatius en Saba zijn openbare lichamen van Nederland: bijzondere gemeenten. Aruba, Curaçao en Bonaire liggen bij elkaar, voor de kust van Venezuela; Sint Maarten, Saba en Sint Eustatius liggen verder naar het noordoosten.",
+    voorbeeld: "Wat is Saba binnen het Koninkrijk? Saba hoort bij Nederland zelf: een bijzondere gemeente van Nederland (openbaar lichaam).",
+  },
+  nb23: {
+    strategy: "Grensgebieden",
+    tip: "Het Drielandenpunt ligt in de zuidoosthoek van Limburg, Baarle in Noord-Brabant, Zeeuws-Vlaanderen in het zuidwesten en de Dollard in het noordoosten.",
+    uitleg: "Bij het Drielandenpunt komen Nederland, België en Duitsland samen. In Baarle liggen Belgische stukjes midden in Nederland. Zeeuws-Vlaanderen grenst aan België, de Dollard aan Duitsland.",
+    voorbeeld: "Aan welk land grenst de Dollard? De Dollard ligt in het noordoosten van Groningen, tegen Duitsland: Duitsland.",
   },
   nb24: {
     strategy: "Uit je hoofd",
