@@ -77,8 +77,9 @@ function eis(ok, tekst) { n++; if (!ok) fouten.push(tekst); }
     var v = await nieuw(428, 746), kaartVragen = 0, goedZo = 0, kanaal = 0, park = 0;
     await los(v, g[0]);
     await v.waitForTimeout(1500);
-    // nb21 (koninkrijk): de delen tot en met nb22, en vooruit grens (voor nb23)
-    var DELEN = g[1] === "grens" || g[1] === "koninkrijk" ? "gebieden,grens,water" : "gebieden,water";
+    // de delen volgens topoNlbeDelen: tot en met de volgende vaardigheid, en vooruit die daarna (T5c-3: nb15 -> nb17 zonder kaart en
+    // vooruit nb18: alleen water; nb21 -> nb22 zonder kaart en vooruit nb23: ook grens)
+    var DELEN = { "Rivieren en zeearmen": "water", "Meren en kanalen": "gebieden,water", "Streken en landschappen": "gebieden,water", "Nationale parken": "gebieden,water", "Grensgemeenten": "gebieden,grens,water", "Het Koninkrijk der Nederlanden": "gebieden,grens,water", "Grensgebieden": "gebieden,grens,water" }[g[0]];
     eis(v.delen.slice().sort().join() === DELEN, g[0] + ": laadt de delen " + DELEN + " (" + v.delen.join(", ") + ")");
     for (var i = 0; i < 16; i++) {
       var vraag = await v.evaluate(function() { var e = document.querySelector("h1, h2, [data-vraag]"); return document.body.innerText; });
