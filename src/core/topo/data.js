@@ -24,6 +24,7 @@ import { KANALEN_NL } from "./items/kanalen-nl.js";
 import { PARKEN_BE } from "./items/parken-be.js";
 import { WATER_BE } from "./items/water-be.js";
 import { STREKEN_BE } from "./items/streken-be.js";
+import { GEMEENSCHAPPEN_BE } from "./items/gemeenschappen-be.js";
 import { pakUit, pakDeelUit } from "./kaart/bogen.js";
 import { maakDoelen } from "./kaart/tikregel.js";
 import { ringDelen } from "./kaart/beeld.js";
@@ -46,7 +47,7 @@ import { allesMinstensInOntwikkeling, telling } from "./beheersing.js";
 import { deckPick } from "../skills/flow.js";
 
 var KB = {};
-[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL, TAALGEBIEDEN, GEMEENTEN_NL, STREKEN_NL, GRENSGEBIEDEN, KONINKRIJK, WATER_NL, PARKEN_NL, KANALEN_NL, PARKEN_BE, WATER_BE, STREKEN_BE].forEach(function(lijst) {
+[LANDEN, STEDEN, PROVINCIES, GEWESTEN, STEDEN_BE, WATER_NLBE, EILANDEN_NL, TAALGEBIEDEN, GEMEENTEN_NL, STREKEN_NL, GRENSGEBIEDEN, KONINKRIJK, WATER_NL, PARKEN_NL, KANALEN_NL, PARKEN_BE, WATER_BE, STREKEN_BE, GEMEENSCHAPPEN_BE].forEach(function(lijst) {
   lijst.forEach(function(it) { if (it && it.id && it.naam) KB[it.id] = it; });
 });
 
@@ -72,7 +73,12 @@ var RELATIES = HOOFDSTEDEN_NLBE.concat(LIGGING_NLBE, GRENSGEMEENTEN_NL, GRENSGEB
 Object.keys(KB).sort().forEach(function(id) { (KB[id].relaties || []).forEach(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = id; RELATIES.push(x); }); });
 RELATIES = RELATIES.filter(function(r) { return r.status === "vastgesteld"; });
 RELATIES = RELATIES.concat(RELATIES.filter(function(r) { return RELATIESOORTEN[r.type] && RELATIESOORTEN[r.type].symmetrisch; }).map(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = r.naar; x.naar = r.van; return x; }));
-export function relaties(type) { return RELATIES.filter(function(r) { return r.type === type; }); }
+// T5c-3 (nb22): een inverse soort (bijvoorbeeld valt-onder-gemeenschap) uit de heenrichting, met dezelfde kwalificaties
+export function relaties(type) {
+  var t = RELATIESOORTEN[type];
+  if (t && t.richting === "terug") return RELATIES.filter(function(r) { return r.type === t.inverse; }).map(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.type = type; x.van = r.naar; x.naar = r.van; return x; });
+  return RELATIES.filter(function(r) { return r.type === type; });
+}
 
 export function naamVan(id) {
   var it = KB[id];

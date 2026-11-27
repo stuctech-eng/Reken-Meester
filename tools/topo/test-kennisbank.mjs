@@ -389,7 +389,9 @@ var KNL = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/kanale
 var PBE = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/parken-be.js")).href);
 var WBE = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/water-be.js")).href);
 var SBE = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/streken-be.js")).href);
-function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE), kopie(W62.WATER_NLBE), kopie(E62.EILANDEN_NL), kopie(T5B.TAALGEBIEDEN), kopie(GG.GEMEENTEN_NL), kopie(STR.STREKEN_NL), kopie(GB.GRENSGEBIEDEN), kopie(KN.KONINKRIJK), kopie(WNL.WATER_NL), kopie(PNL.PARKEN_NL), kopie(KNL.KANALEN_NL), kopie(PBE.PARKEN_BE), kopie(WBE.WATER_BE), kopie(SBE.STREKEN_BE)), rel: kopie(H62.HOOFDSTEDEN_NLBE).concat(kopie(GGR.GRENSGEMEENTEN_NL)), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
+// T5c-3: de gemeenschappen van Belgie (nb22)
+var GBE = await import(pathToFileURL(path.join(ROOT, "src/core/topo/items/gemeenschappen-be.js")).href);
+function basis62() { return { oud: kopie(L.LANDEN).concat(kopie(S.STEDEN)), nieuw: kopie(P62.PROVINCIES).concat(kopie(G62.GEWESTEN), kopie(B62.STEDEN_BE), kopie(W62.WATER_NLBE), kopie(E62.EILANDEN_NL), kopie(T5B.TAALGEBIEDEN), kopie(GG.GEMEENTEN_NL), kopie(STR.STREKEN_NL), kopie(GB.GRENSGEBIEDEN), kopie(KN.KONINKRIJK), kopie(WNL.WATER_NL), kopie(PNL.PARKEN_NL), kopie(KNL.KANALEN_NL), kopie(PBE.PARKEN_BE), kopie(WBE.WATER_BE), kopie(SBE.STREKEN_BE), kopie(GBE.GEMEENSCHAPPEN_BE)), rel: kopie(H62.HOOFDSTEDEN_NLBE).concat(kopie(GGR.GRENSGEMEENTEN_NL)), register: kopie(REGISTER), relaties: undefined, inverseFn: undefined }; }
 function controleer62(c) {
   var fouten = [], n = 0;
   function eis(ok, groep, tekst) { n++; if (!ok) fouten.push({ groep: groep, tekst: tekst }); }
@@ -398,7 +400,7 @@ function controleer62(c) {
   c.oud.concat(c.nieuw).forEach(function(it) { eis(!perId[it.id], "hergebruik", "id een keer in de kennisbank: " + it.id); perId[it.id] = it; });
   ["NLD", "BEL", "DEU"].forEach(function(id) { eis(c.oud.concat(c.nieuw).filter(function(it) { return it.id === id; }).length === 1, "hergebruik", "land bestaat een keer: " + id); });
   c.nieuw.forEach(function(it) {
-    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "taalgebied", "gemeente", "streek", "grenspunt", "bijzonder-gebied", "gebied", "stad", "zee", "rivier", "eiland", "eilandengroep", "meer", "zeearm", "natuurgebied", "kanaal"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2 of T5b: " + it.id);
+    eis(!!SOORT_PER_ID[it.soort] && ["provincie", "gewest", "taalgebied", "gemeente", "streek", "grenspunt", "bijzonder-gebied", "gebied", "stad", "zee", "rivier", "eiland", "eilandengroep", "meer", "zeearm", "natuurgebied", "kanaal", "gemeenschap"].indexOf(it.soort) >= 0, "soort", "bekende soort van fase 6.2 of T5b: " + it.id);
     eis(gelijk(it.geometrie.kaart, {}), "georef", "nog geen kaartverwijzingen: " + it.id);
     var g = it.geometrie.bron;
     if (it.soort === "stad" && it.geometrie.punt.status !== "vastgesteld") eis(g === null, "georef", "open punt zonder GEOREF: " + it.id);
@@ -408,6 +410,7 @@ function controleer62(c) {
     else if (it.soort === "natuurgebied" && g === null) eis(/^park-be-/.test(it.id) && /A2/.test(it.geometrie.geen || ""), "georef", "Vlaams park zonder vlak (A2): " + it.id);
     else if (it.soort === "streek" && it.feiten.grens) eis(g === null && it.feiten.grens.waarde === "globaal" && /A2/.test(it.geometrie.geen || ""), "georef", "globale streek zonder vlak (A2): " + it.id);
     else if (it.soort === "eilandengroep") eis(g === null && /D3 a/.test(it.geometrie.geen || ""), "georef", "eilandengroep zonder eigen vlak (D3 a): " + it.id);
+    else if (it.soort === "gemeenschap") eis(g === null && /A2/.test(it.geometrie.geen || ""), "georef", "gemeenschap zonder eigen vlak (A2): " + it.id);
     else eis(!!g && !!reg[g.bronId] && reg[g.bronId].bestanden[g.bestand] === g.sha256 && g.herkomst === undefined && g.status === undefined, "georef", "GEOREF in het register met dezelfde SHA, zonder herkomst en status: " + it.id);
     var feiten = [["naam", it.naam]];
     Object.keys(it.feiten).sort().forEach(function(k) { feiten.push(["feiten." + k, it.feiten[k]]); });
@@ -428,7 +431,7 @@ function controleer62(c) {
   // NL-provincies (CBS-code PVnn) en de steden van fase 6.1 (CBS) liggen in NLD; Belgische provincies (NIS) en gewesten in BEL
   function verwachtLand(it) {
     if (it.soort === "provincie") return /^PV[0-9]{2}$/.test(it.feiten.code && it.feiten.code.waarde) ? "NLD" : /^[0-9]{5}$/.test(it.feiten.code && it.feiten.code.waarde) ? "BEL" : null;
-    if (it.soort === "gewest" || it.soort === "taalgebied") return "BEL";
+    if (it.soort === "gewest" || it.soort === "taalgebied" || it.soort === "gemeenschap") return "BEL";
     if (it.soort === "stad") return /^stad-be-/.test(it.id) ? "BEL" : null;
     if (it.soort === "eiland" || it.soort === "eilandengroep") return "NLD";
     if (it.soort === "streek") return /^streek-be-/.test(it.id) ? "BEL" : "NLD";
@@ -468,7 +471,7 @@ function controleer62(c) {
   // ---- relaties ----
   var alleItems = c.oud.concat(c.nieuw), idx = IX.bouwIndex(alleItems, c.rel, c.relaties, c.inverseFn), R = c.relaties || RELATIES;
   eis(idx.dubbel.length === 0, "index", "geen dubbele relaties");
-  eis(idx.heen.length === 31 + GGR.GRENSGEMEENTEN_NL.length + 7, "index", "31 relaties (24 uit hoofdsteden-nlbe.js, 2 van Brussel, 5 hoort-bij van de Waddeneilanden), plus de grensgemeenten en 7 van het Koninkrijk (" + idx.heen.length + ")");
+  eis(idx.heen.length === 31 + GGR.GRENSGEMEENTEN_NL.length + 7 + 5, "index", "31 relaties (24 uit hoofdsteden-nlbe.js, 2 van Brussel, 5 hoort-bij van de Waddeneilanden), plus de grensgemeenten, 7 van het Koninkrijk en 5 bevoegd-in van de gemeenschappen (T5c-3) (" + idx.heen.length + ")");
   // T5b-1: elke grensgemeente grenst aan Belgie of Duitsland, en elke grenst-aan van een gemeente gaat naar BEL of DEU
   c.nieuw.filter(function(it) { return it.soort === "gemeente"; }).forEach(function(it) { eis(idx.heen.some(function(r) { return r.type === "grenst-aan" && r.van === it.id && (r.naar === "BEL" || r.naar === "DEU"); }), "grens", "grensgemeente grenst aan BEL of DEU: " + it.id); });
   idx.heen.filter(function(r) { return /^gem-nl-/.test(r.van); }).forEach(function(r) { eis(r.type === "grenst-aan" && (r.naar === "BEL" || r.naar === "DEU") && !!perId[r.van], "grens", "relatie van een gemeente: grenst-aan naar BEL of DEU: " + r.van + " " + r.naar); });

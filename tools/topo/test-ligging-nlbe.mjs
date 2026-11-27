@@ -35,7 +35,7 @@ var R = (await laad("src/core/topo/relaties.js")).RELATIES;
 var REG = (await laad("src/core/topo/bronnen.js")).REGISTER;
 var IX = await laad("src/core/topo/relatie-index.js");
 var LADEN = await laad("src/core/topo/laden.js");
-var D = await LADEN.laadTopo(["nlbe"], ["nlbe/gebieden"]);
+var D = await LADEN.laadTopo(["nlbe"], ["nlbe/gebieden", "nlbe/grens"]);
 var P = (await laad("src/core/topo/items/provincies.js")).PROVINCIES;
 var SNL = (await laad("src/core/topo/items/steden-nl.js")).STEDEN;
 var SBE = (await laad("src/core/topo/items/steden-be.js")).STEDEN_BE;
@@ -123,6 +123,17 @@ eis(twijfel.length === 0, "park -> provincie: geen aandeel tussen 1 en 5 % (" + 
 function provVan(park) { return parkRel.filter(function(r) { return r.van === park; }).map(function(r) { return D.naamVan(r.naar); }).sort().join(", "); }
 eis(provVan("park-nl-de-hoge-veluwe") === "Gelderland" && provVan("streek-nl-biesbosch") === "Noord-Brabant, Zuid-Holland" && provVan("park-nl-oosterschelde") === "Zeeland" && provVan("park-be-vallee-de-la-semois") === "Luxemburg, Namen", "bekende gevallen: Hoge Veluwe, Biesbosch, Oosterschelde, Semois");
 eis(D.laag("nlbe", "parken").items.concat(D.laag("nlbe", "parken-be").items).every(function(it) { return parkRel.some(function(r) { return r.van === it.id; }); }), "elk park op de kaart ligt in minstens een provincie");
+
+// taalgebied -> gewest (T5c-3), met scanlijnen: elk taalgebied ligt voor minstens 99 % in precies het gewest van de relatie
+var gewG = D.laag("nlbe", "gewesten").doelen.map(function(d) { return { id: d.id, e: randen(d.ringen) }; }), taalFout = [];
+D.laag("nlbe", "taalgebieden").doelen.forEach(function(d) {
+  var e = randen(d.ringen), b = bbox(d.ringen), s = gewG.map(function(q) { return { id: q.id, a: 0 }; });
+  for (var y = Math.floor(b[1] / STAP) * STAP + STAP / 2; y < b[3]; y += STAP) { var ps = stukken(e, y); if (!ps.length) continue; gewG.forEach(function(q, k) { s[k].a += overlap(ps, stukken(q.e, y)); }); }
+  var som = s.reduce(function(a, x) { return a + x.a; }, 0), r = ligtIn.filter(function(x) { return x.van === d.id; });
+  var groot = s.filter(function(x) { return x.a >= 0.99 * som; });
+  if (r.length !== 1 || groot.length !== 1 || groot[0].id !== r[0].naar) taalFout.push(d.id);
+});
+eis(taalFout.length === 0 && ligtIn.filter(function(x) { return /^taalgebied-/.test(x.van); }).length === 4, "taalgebied -> gewest: 4, elk voor minstens 99 % in zijn gewest (scanlijnen) (" + taalFout.join(", ") + ")");
 
 // mutanten
 function kopie(x) { return JSON.parse(JSON.stringify(x)); }

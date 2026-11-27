@@ -25,7 +25,7 @@ function benoem(laag, prefix, vraag, typen) { return { sjabloon: "benoem", kaart
 function relatie(rel, gevraagd, prefix, pool, tekst, zonder) { return { sjabloon: "relatie", relatie: rel, gevraagd: gevraagd, prefix: prefix, pool: pool, tekst: tekst, zonder: zonder || [] }; }
 // T5a (plan T5 par. 4)
 function wijsRelatie(rel, prefix, laag, tekst, zonder) { return { sjabloon: "wijs-relatie", relatie: rel, prefix: prefix, kaart: K, laag: laag, tekst: tekst, zonder: zonder || [] }; }
-function nietBij(rel, prefix, pool, tekst) { return { sjabloon: "niet-bij", relatie: rel, prefix: prefix, pool: pool, tekst: tekst }; }
+function nietBij(rel, prefix, pool, tekst, minDoelen) { var o = { sjabloon: "niet-bij", relatie: rel, prefix: prefix, pool: pool, tekst: tekst }; if (minDoelen) o.minDoelen = minDoelen; return o; }
 function typLeeg(laag, prefix, vraag, metRelatie) { return { sjabloon: "benoem", kaart: K, laag: laag, prefix: prefix, vraag: vraag, typen: false, alleenTypen: true, metRelatie: metRelatie || null, zonder: [] }; }
 function wijsVrij(laag, prefix, soortwoord, zonder) { return { sjabloon: "wijs-aan", kaart: K, laag: laag, prefix: prefix, soortwoord: soortwoord, zonder: zonder || [], vrijeStart: true }; }
 function meet(soort) { return { sjabloon: soort, kaart: K, laag: "steden", prefix: "", zonder: [IJMOND], minKm: 40 }; }
@@ -107,6 +107,11 @@ var DEFS = [
   { id: "nb21", niveau: "G", label: "Het Koninkrijk der Nederlanden", desc: "Aruba, Curaçao, Sint Maarten, Bonaire, Sint Eustatius en Saba: herkennen en hun plaats in het Koninkrijk", minCorrect: 12, onderdelen: [
     { sjabloon: "benoem", kaart: "koninkrijk", laag: "koninkrijk", prefix: "", vraag: "Welk eiland is oranje?", typen: true, zonder: [] },
     STATUS_KONINKRIJK ] },
+  // nb22 (T1 par. 2.3): Brussel-Hoofdstad alleen met de institutionele bevoegdheid in de vraag, nooit typen, nooit een enkel antwoord
+  { id: "nb22", niveau: "G", label: "België: taalgebieden en gemeenschappen", desc: "In welk gewest ligt een taalgebied, en welke gemeenschap is er bevoegd", minCorrect: 8, onderdelen: [
+    relatie("ligt-in", "naar", "taalgebied-be-", { soort: "gewest", prefix: "gewest-be-" }, function(n) { return "In welk gewest ligt het " + n + "?"; }),
+    relatie("bevoegd-in", "van", "taalgebied-be-", { soort: "gemeenschap", prefix: "gemeenschap-be-" }, function(n) { return "Welke gemeenschap is bevoegd in het " + n + "?"; }, ["taalgebied-be-bru"]),
+    nietBij("valt-onder-gemeenschap", "taalgebied-be-bru", { soort: "gemeenschap", prefix: "gemeenschap-be-" }, function(n) { return "Welke gemeenschap is níet bevoegd voor instellingen (zoals scholen) in het " + n + "?"; }, 2) ] },
   { id: "nb23", niveau: "G", label: "Grensgebieden", desc: "Het Drielandenpunt, Baarle, Zeeuws-Vlaanderen en de Dollard: herkennen en het buurland", minCorrect: 8, onderdelen: [
     benoemGrens("grenspunten", "grenspunt-drielandenpunt"), benoemGrens("baarle", "gebied-baarle"),
     benoemGrens("streken", "streek-nl-zeeuws-vlaanderen"), benoemGrens("zeearmen", "zeearm-dollard"),
@@ -248,6 +253,12 @@ var HULP = {
     tip: "Aruba, Curaçao en Sint Maarten zijn landen binnen het Koninkrijk, net als Nederland. Bonaire, Sint Eustatius en Saba horen bij Nederland zelf.",
     uitleg: "Het Koninkrijk der Nederlanden bestaat uit vier landen: Nederland, Aruba, Curaçao en Sint Maarten. Bonaire, Sint Eustatius en Saba zijn openbare lichamen van Nederland: bijzondere gemeenten. Aruba, Curaçao en Bonaire liggen bij elkaar, voor de kust van Venezuela; Sint Maarten, Saba en Sint Eustatius liggen verder naar het noordoosten.",
     voorbeeld: "Wat is Saba binnen het Koninkrijk? Saba hoort bij Nederland zelf: een bijzondere gemeente van Nederland (openbaar lichaam).",
+  },
+  nb22: {
+    strategy: "Taal en bestuur",
+    tip: "Het Nederlands taalgebied ligt in het Vlaams Gewest, het Frans en het Duits taalgebied in het Waals Gewest, Brussel-Hoofdstad in het Brussels Hoofdstedelijk Gewest.",
+    uitleg: "De Vlaamse Gemeenschap is bevoegd in het Nederlands taalgebied, de Franse in het Frans taalgebied en de Duitstalige in het Duits taalgebied (Grondwet, art. 127 en 130). In Brussel-Hoofdstad zijn de Vlaamse en de Franse Gemeenschap bevoegd, maar alleen voor instellingen die bij een van beide horen, zoals Nederlandstalige en Franstalige scholen.",
+    voorbeeld: "Welke gemeenschap is níet bevoegd voor instellingen in Brussel-Hoofdstad? Daar zijn de Vlaamse en de Franse Gemeenschap bevoegd voor hun eigen scholen; de Duitstalige niet.",
   },
   nb23: {
     strategy: "Grensgebieden",

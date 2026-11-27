@@ -17,6 +17,8 @@
 //   provincievlakken van de kaart nlbe (Clipper, in kaarteenheden). Een provincie telt als haar overlap minstens 5 % is van de overlap
 //   van het park met alle provincies (zo telt ook een park dat grotendeels water is, zoals de Oosterschelde). De uitkomst moet duidelijk
 //   zijn: geen aandeel tussen 1 en 5 %; anders stopt het script.
+// 6 ligt-in, taalgebied -> gewest (T5c-3, nb22): het vlak van het taalgebied (laag taalgebieden) ligt voor minstens 99 % van zijn
+//   overlap met de gewesten in een gewest (beide uit Statbel); anders stopt het script.
 // De test controleert 1 tot en met 3 ook met de geometrie (punt in vlak, op de kaart), en 5 met een tweede bibliotheek.
 
 import fs from "fs";
@@ -123,8 +125,19 @@ var PROVV = doelenVan("provincies-nl").concat(doelenVan("provincies-be")).map(fu
   });
 });
 
+// 6 taalgebied -> gewest
+var GEWV = doelenVan("gewesten").map(function(d) { return { id: d.id, p: paden(d) }; });
+doelenVan("taalgebieden").forEach(function(d) {
+  var p = bewerk(ClipperLib.ClipType.ctUnion, paden(d));
+  var s = GEWV.map(function(q) { return { id: q.id, a: opp(bewerk(ClipperLib.ClipType.ctIntersection, p, q.p)) }; }), som = s.reduce(function(a, x) { return a + x.a; }, 0);
+  var g = s.filter(function(x) { return x.a >= 0.99 * som; });
+  if (g.length !== 1) throw new Error("taalgebied niet in een gewest: " + d.id);
+  REL.push({ type: "ligt-in", van: d.id, naar: g[0].id, kwalificaties: {}, herkomst: "afgeleid", status: "vastgesteld",
+    afleiding: { script: SCRIPT, regel: "het vlak van het taalgebied ligt op de kaart nlbe voor minstens 99 % van zijn overlap met de gewesten in dit gewest (Clipper, kaarteenheden)", invoer: [{ bronId: "STB", sha256: uitKaart("STB") }] } });
+});
+
 var tekst = "// GEGENEREERD door " + SCRIPT + "; niet met de hand bewerken.\n" +
-  "// De afgeleide liggingsrelaties van Nederland en Belgie (plan T5 par. 4.1, 4.2 en 4.6; plan T5c): ligt-in (stad -> provincie, provincie -> gewest,\n// nationaal park -> provincie)\n" +
+  "// De afgeleide liggingsrelaties van Nederland en Belgie (plan T5 par. 4.1, 4.2 en 4.6; plan T5c): ligt-in (stad -> provincie, provincie -> gewest,\n// nationaal park -> provincie, taalgebied -> gewest)\n" +
   "// en grenst-aan (provincie <-> provincie). Per relatie de afleiding met de SHA-256 van de invoer.\n" +
   "// NO BACKTICKS / TEMPLATE LITERALS anywhere in this file.\n" +
   "export var LIGGING_NLBE = " + JSON.stringify(REL) + ";\n";

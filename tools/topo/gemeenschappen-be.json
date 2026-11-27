@@ -1,0 +1,27 @@
+{
+  "toelichting": "De drie gemeenschappen van Belgie en waar ze bevoegd zijn (plan T1 par. 1.4 en 2.2; plan T5c, nb22). Letterlijk uit de Belgische Grondwet: art. 2 (de gemeenschappen), art. 127, par. 2 en art. 130, par. 2 (waar hun decreten kracht van wet hebben). In het tweetalige gebied Brussel-Hoofdstad alleen voor de instellingen die wegens hun activiteiten uitsluitend tot de ene of de andere gemeenschap behoren (reikwijdte instellingen).",
+  "bron": {
+    "uitgever": "Belgische Senaat",
+    "document": "De Belgische Grondwet, gecoordineerde tekst van 17 februari 1994 met de herzieningen tot en met 25 juni 2025 (uitgave Senaat 2025)",
+    "url": "https://senaat.be/doc/20250625_GRONDWET.pdf",
+    "bestand": "20250625_GRONDWET.pdf",
+    "sha256": "53c2ed839d51349d314c654050656a7fcfb63111fca8affb6fd0b0e5ff7ab500",
+    "geraadpleegd": "2026-11-27"
+  },
+  "gemeenschappen": {
+    "artikel": "art. 2",
+    "passage": "België omvat drie gemeenschappen: de Vlaamse Gemeenschap, de Franse Gemeenschap en de Duitstalige Gemeenschap.",
+    "items": {
+      "gemeenschap-be-vl": "Vlaamse Gemeenschap",
+      "gemeenschap-be-fr": "Franse Gemeenschap",
+      "gemeenschap-be-de": "Duitstalige Gemeenschap"
+    }
+  },
+  "bevoegd": [
+    { "van": "gemeenschap-be-vl", "naar": "taalgebied-be-nl", "reikwijdte": "taalgebied", "artikel": "art. 127, par. 2", "passage": "Deze decreten hebben kracht van wet respectievelijk in het Nederlandse taalgebied en in het Franse taalgebied, alsmede ten aanzien van de instellingen gevestigd in het tweetalige gebied Brussel-Hoofdstad die, wegens hun activiteiten, moeten worden beschouwd uitsluitend te behoren tot de ene of de andere gemeenschap." },
+    { "van": "gemeenschap-be-fr", "naar": "taalgebied-be-fr", "reikwijdte": "taalgebied", "artikel": "art. 127, par. 2", "passage": "Deze decreten hebben kracht van wet respectievelijk in het Nederlandse taalgebied en in het Franse taalgebied, alsmede ten aanzien van de instellingen gevestigd in het tweetalige gebied Brussel-Hoofdstad die, wegens hun activiteiten, moeten worden beschouwd uitsluitend te behoren tot de ene of de andere gemeenschap." },
+    { "van": "gemeenschap-be-vl", "naar": "taalgebied-be-bru", "reikwijdte": "instellingen", "artikel": "art. 127, par. 2", "passage": "Deze decreten hebben kracht van wet respectievelijk in het Nederlandse taalgebied en in het Franse taalgebied, alsmede ten aanzien van de instellingen gevestigd in het tweetalige gebied Brussel-Hoofdstad die, wegens hun activiteiten, moeten worden beschouwd uitsluitend te behoren tot de ene of de andere gemeenschap." },
+    { "van": "gemeenschap-be-fr", "naar": "taalgebied-be-bru", "reikwijdte": "instellingen", "artikel": "art. 127, par. 2", "passage": "Deze decreten hebben kracht van wet respectievelijk in het Nederlandse taalgebied en in het Franse taalgebied, alsmede ten aanzien van de instellingen gevestigd in het tweetalige gebied Brussel-Hoofdstad die, wegens hun activiteiten, moeten worden beschouwd uitsluitend te behoren tot de ene of de andere gemeenschap." },
+    { "van": "gemeenschap-be-de", "naar": "taalgebied-be-de", "reikwijdte": "taalgebied", "artikel": "art. 130, par. 2", "passage": "Deze decreten hebben kracht van wet in het Duitse taalgebied." }
+  ]
+}

@@ -344,6 +344,8 @@ var NB = await import(bron("src/core/topo/sjablonen/niet-bij.js"));
 var LG = (await import(bron("src/core/topo/afgeleid/ligging-nlbe.js"))).LIGGING_NLBE;
 var HS = (await import(bron("src/core/topo/afgeleid/hoofdsteden-nlbe.js"))).HOOFDSTEDEN_NLBE;
 var GB = (await import(bron("src/core/topo/afgeleid/grensgebieden-nlbe.js"))).GRENSGEBIEDEN_NLBE;
+// T5c-3 (nb22): de bevoegdheden rechtstreeks uit de tabel (de Grondwet), niet uit de kennisbank
+var GEMT = JSON.parse(fs.readFileSync(path.join(ROOT, "tools/topo/gemeenschappen-be.json"), "utf8")).bevoegd;
 // onafhankelijke rekenregels (een andere vorm dan meten.js): richting met vectoren, afstand met de cosinusregel
 function rad(x) { return x * Math.PI / 180; }
 function vec(p) { return [Math.cos(rad(p.lat)) * Math.cos(rad(p.lon)), Math.cos(rad(p.lat)) * Math.sin(rad(p.lon)), Math.sin(rad(p.lat))]; }
@@ -379,9 +381,21 @@ function controleerT5(def, q) {
       if (q.choices.some(function(c) { return c !== q.answer && inProv.map(D.naamVan).indexOf(c) >= 0; })) f.push("park: een andere provincie van het park staat bij de foute keuzes");
     }
     if (o.relatie === "grenst-aan" && buurIds(q.relatie.genoemd).indexOf(q.relatie.antwoordId) < 0) f.push("grenst-aan klopt niet");
+    if (o.relatie === "bevoegd-in") {
+      var bevT = GEMT.filter(function(r) { return r.naar === q.relatie.genoemd; });
+      if (q.relatie.genoemd === "taalgebied-be-bru") f.push("nb22: een enkel antwoord bij Brussel-Hoofdstad");
+      if (bevT.length !== 1 || bevT[0].van !== q.relatie.antwoordId || bevT[0].reikwijdte !== "taalgebied") f.push("nb22: niet de bevoegde gemeenschap volgens de Grondwet");
+    }
   } else if (o.sjabloon === "wijs-relatie") {
     if (provVan(q.relatie.genoemd) !== q.kaart.antwoordId || q.answer !== D.naamVan(q.kaart.antwoordId)) f.push("aanwijzen: niet de provincie van de stad");
     if (q.kaart.laag !== o.laag || q.inputType !== "kaart" || q.question !== o.tekst(D.naamVan(q.relatie.genoemd))) f.push("aanwijzen: laag, invoer of vraagtekst");
+  } else if (o.sjabloon === "niet-bij" && o.relatie === "valt-onder-gemeenschap") {
+    var bev = GEMT.filter(function(r) { return r.naar === q.relatie.genoemd; });
+    if (bev.some(function(r) { return r.van === q.relatie.antwoordId; }) || q.answer !== D.naamVan(q.relatie.antwoordId)) f.push("nb22: het antwoord is wel bevoegd");
+    if (!bev.length || !bev.every(function(r) { return r.reikwijdte === "instellingen"; }) || !/instellingen/.test(q.question)) f.push("nb22: Brussel-Hoofdstad zonder de reikwijdte instellingen");
+    var rest = q.choices.filter(function(c) { return c !== q.answer; }).sort().join();
+    if (rest !== bev.map(function(r) { return D.naamVan(r.van); }).sort().join()) f.push("nb22: de andere keuzes zijn niet precies de bevoegde gemeenschappen");
+    if (q.inputType) f.push("nb22: Brussel-Hoofdstad met typen");
   } else if (o.sjabloon === "niet-bij") {
     var X = q.relatie.genoemd, bu = buurIds(X), ant = q.relatie.antwoordId;
     if (bu.length < 3 || bu.indexOf(ant) >= 0 || ant === X || ant.slice(0, 7) !== X.slice(0, 7)) f.push("niet-bij: het antwoord is een buur, X zelf of uit een ander land");
@@ -451,6 +465,8 @@ for (var dT of V.TOPO_NLBE_DEFS.filter(function(d) { return d.niveau; })) {
 eis(D.sleutelsVanDef(defVan("nb13")).length === 38 && D.sleutelsVanDef(defVan("nb14")).length === 22 && D.sleutelsVanDef(defVan("nb24")).length === 44 && D.sleutelsVanDef(defVan("nb25")).length === 58, "T5a/T5b: kennisitems nb13 38, nb14 22, nb24 44 (met Leuven en Waver), nb25 45 (met Brussel, Leuven en Waver)");
 // T5c-3: nb27 grensgemeenten (aanwijzen zonder hulp en typen); Bergen (L.) en Stein (L.) ook zonder (L.)
 eis(D.sleutelsVanDef(defVan("nb27")).length === 122 && D.namenVan("gem-nl-gm0893").indexOf("Bergen") >= 0 && D.namenVan("gem-nl-gm0971").indexOf("Stein") >= 0 && JSON.stringify(V.delenVanVaardigheid("nb27")) === "[\"nlbe/grens\"]", "T5c-3: nb27 122 kennisitems, de varianten Bergen en Stein, het deel grens");
+// T5c-3: nb22 taalgebieden en gemeenschappen
+eis(D.sleutelsVanDef(defVan("nb22")).length === 8 && D.ids("gemeenschap").length === 3 && D.relaties("valt-onder-gemeenschap").length === 5, "T5c-3: nb22 8 kennisitems, 3 gemeenschappen, 5 bevoegdheden (ook in de andere richting)");
 // T5c-3: nb21 Koninkrijk: 6 eilanden benoemen (b) en hun status (st); de kaart koninkrijk
 eis(D.sleutelsVanDef(defVan("nb21")).length === 12 && D.sleutelsVanDef(defVan("nb21")).filter(function(k) { return /\|st$/.test(k); }).length === 6, "T5c-3: nb21 12 kennisitems, waarvan 6 status");
 // T5c-3 (B4): nb23, benoemen met de vier grensgebieden als keuzes en het buurland
@@ -458,7 +474,7 @@ eis(D.sleutelsVanDef(defVan("nb23")).length === 8 && JSON.stringify(V.delenVanVa
 eis(GB.map(function(r) { return r.van + ">" + r.naar; }).sort().join() === "gebied-baarle>BEL,grenspunt-drielandenpunt>BEL,grenspunt-drielandenpunt>DEU,streek-nl-zeeuws-vlaanderen>BEL,zeearm-dollard>DEU", "T5c-3: de buurlanden van de grensgebieden");
 // T5c-2 (plan T5c): de nieuwe vaardigheden; de volgorde in de rij
 eis(D.sleutelsVanDef(defVan("nb15")).length === 44 && D.sleutelsVanDef(defVan("nb18")).length === 50 && D.sleutelsVanDef(defVan("nb19")).length === 32 && D.sleutelsVanDef(defVan("nb20")).length === 48, "T5c-2: kennisitems nb15 44, nb18 50, nb19 32, nb20 48");
-eis(V.TOPO_NLBE_ORDER.join() === "nb01,nb02,nb03,nb04,nb05,nb06,nb07,nb08,nb09,nb10,nb11,nb12,nb13,nb14,nb15,nb18,nb19,nb20,nb21,nb23,nb24,nb25,nb26,nb27,nb28", "T5c-2: de volgorde van de vaardigheden");
+eis(V.TOPO_NLBE_ORDER.join() === "nb01,nb02,nb03,nb04,nb05,nb06,nb07,nb08,nb09,nb10,nb11,nb12,nb13,nb14,nb15,nb18,nb19,nb20,nb21,nb22,nb23,nb24,nb25,nb26,nb27,nb28", "T5c-2: de volgorde van de vaardigheden");
 eis(D.sleutelsVanDef(defVan("nb18")).indexOf("kanaal-noordzeekanaal|a") >= 0 && D.sleutelsVanDef(defVan("nb25")).indexOf("meer-ijsselmeer|a") >= 0, "T5c-2: kanalen aanwijzen in nb18 (de lijnproef slaagde), meren in nb25");
 eis(JSON.stringify(V.delenVanVaardigheid("nb15")) === "[\"nlbe/water\"]" && JSON.stringify(V.delenVanVaardigheid("nb20")) === "[\"nlbe/gebieden\"]" && JSON.stringify(V.delenVanVaardigheid("nb01")) === "[]", "T5c-2: de delen van de kaart per vaardigheid");
 eis(D.sleutelsVanDef(defVan("nb24")).every(function(s) { return /\|s$/.test(s); }), "T5a: nb24 vraagt schrijven (s)");
