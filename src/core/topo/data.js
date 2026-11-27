@@ -33,6 +33,7 @@ import { LIGGING_NLBE } from "./afgeleid/ligging-nlbe.js";
 import { GRENSGEMEENTEN_NL } from "./afgeleid/grensgemeenten-nl.js";
 import { GRENSGEBIEDEN_NLBE } from "./afgeleid/grensgebieden-nlbe.js";
 import { WATER_STEDEN_NL, WATER_TWIJFEL_NL } from "./afgeleid/water-steden-nl.js";
+import { STROOMT_DOOR_NL, STROOMT_DOOR_TWIJFEL_NL } from "./afgeleid/stroomt-door-nl.js";
 import { RELATIES as RELATIESOORTEN } from "./relaties.js";
 import { maakWijsAan, vraagIds } from "./sjablonen/wijs-aan.js";
 import { maakBenoem } from "./sjablonen/benoem.js";
@@ -70,7 +71,7 @@ export function ids(soort, prefix) {
 // van de kennisbank ze leest (relatie-index.js, bouwIndex)
 // T5a: ook de afgeleide liggingsrelaties (ligt-in, grenst-aan; afgeleid/ligging-nlbe.js). Een symmetrische relatie (grenst-aan) staat
 // daar een keer; hier ook in de andere richting, zodat elke provincie als bron voorkomt.
-var RELATIES = HOOFDSTEDEN_NLBE.concat(LIGGING_NLBE, GRENSGEMEENTEN_NL, GRENSGEBIEDEN_NLBE, WATER_STEDEN_NL);
+var RELATIES = HOOFDSTEDEN_NLBE.concat(LIGGING_NLBE, GRENSGEMEENTEN_NL, GRENSGEBIEDEN_NLBE, WATER_STEDEN_NL, STROOMT_DOOR_NL);
 Object.keys(KB).sort().forEach(function(id) { (KB[id].relaties || []).forEach(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = id; RELATIES.push(x); }); });
 RELATIES = RELATIES.filter(function(r) { return r.status === "vastgesteld"; });
 RELATIES = RELATIES.concat(RELATIES.filter(function(r) { return RELATIESOORTEN[r.type] && RELATIESOORTEN[r.type].symmetrisch; }).map(function(r) { var x = {}; for (var k in r) x[k] = r[k]; x.van = r.naar; x.naar = r.van; return x; }));
@@ -81,10 +82,10 @@ export function relaties(type) {
   return RELATIES.filter(function(r) { return r.type === type; });
 }
 
-// T5c-3 (nb17): twijfelparen (WATER_TWIJFEL_NL): geen relatie, maar ook nooit "aantoonbaar niet". twijfel(type, van, naar) geeft
+// T5c-3 (nb17, nb16): twijfelparen (WATER_TWIJFEL_NL, STROOMT_DOOR_TWIJFEL_NL): geen relatie, maar ook nooit "aantoonbaar niet". twijfel(type, van, naar) geeft
 // true als het paar in de heenrichting een twijfelpaar is; een inverse soort (heeft-aan-oever) kijkt naar het omgekeerde paar.
 var TWIJFEL = {};
-WATER_TWIJFEL_NL.forEach(function(r) { TWIJFEL[r.type + "|" + r.van + "|" + r.naar] = 1; });
+WATER_TWIJFEL_NL.concat(STROOMT_DOOR_TWIJFEL_NL).forEach(function(r) { TWIJFEL[r.type + "|" + r.van + "|" + r.naar] = 1; });
 export function twijfel(type, van, naar) {
   var t = RELATIESOORTEN[type];
   if (t && t.richting === "terug") return !!TWIJFEL[t.inverse + "|" + naar + "|" + van];

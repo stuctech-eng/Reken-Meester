@@ -44,6 +44,8 @@ var STATUS_KONINKRIJK = { sjabloon: "status", kaart: "koninkrijk", laag: "konink
   omschrijving: { "land binnen het Koninkrijk": "een land binnen het Koninkrijk", "openbaar lichaam": "een bijzondere gemeente van Nederland (openbaar lichaam)" },
   extra: ["een provincie van Nederland"],
   tekst: function(n) { return "Wat is " + n + " binnen het Koninkrijk der Nederlanden?"; } };
+// het lidwoord van een water in een vraag: het Zwarte Water, de Maas
+function lidwoord(n) { return n === "Zwarte Water" ? "het " : "de "; }
 function provNL() { return { soort: "provincie", prefix: "prov-nl-" }; }
 function provBE() { return { soort: "provincie", prefix: "prov-be-" }; }
 
@@ -96,6 +98,11 @@ var DEFS = [
     benoem("rivieren", "", "Welke rivier is oranje?", true), benoem("rivieren-nl", "", "Welke rivier is oranje?", true),
     benoem("rivieren-vlak", "", "Welke rivier is oranje?", true), benoem("zeearmen", "", "Welke zeearm is oranje?", true),
     wijsAan("rivieren", "", "de rivier"), wijsAan("rivieren-nl", "", "de rivier"), wijsAan("rivieren-vlak", "", "de rivier"), wijsAan("zeearmen", "", "de zeearm") ] },
+  // nb16 (B1 b): door welke provincies een rivier stroomt (minstens 10 %; tussen 1 en 10 % twijfel, nooit als foute keuze); waar een
+  // rivier ontspringt en uitmondt volgt later
+  { id: "nb16", niveau: "G", label: "Van bron naar zee", desc: "Door welke provincies stroomt een rivier", minCorrect: 17, onderdelen: [
+    relatie("stroomt-door", "naar", "rivier-", provNL(), function(n) { return "Door welke provincie stroomt " + lidwoord(n) + n + "?"; }),
+    nietBij("stroomt-door", "rivier-", provNL(), function(n) { return "Door welke provincie stroomt " + lidwoord(n) + n + " níet?"; }) ] },
   // nb17 (B3): een stad ligt aan een rivier binnen 500 m van haar bebouwing; tussen 500 m en 3 km twijfel (nooit als foute keuze)
   { id: "nb17", niveau: "G", label: "Steden aan het water", desc: "Aan welke rivier ligt een stad", minCorrect: 11, onderdelen: [
     relatie("ligt-aan", "naar", "stad-nl-", { ids: RIVIEREN_NL }, function(n) { return "Aan welke rivier ligt " + n + "?"; }, [IJMOND]),
@@ -236,6 +243,12 @@ var HULP = {
     tip: "Een rivier is een lijn of een smal vlak. Een zeearm is een brede arm van de zee: in Zeeland en Zuid-Holland, en de Dollard in het noordoosten.",
     uitleg: "De Rijn en de Maas komen Nederland binnen in het oosten en het zuiden en stromen naar het westen, naar de zee. In het westen splitsen ze in smallere rivieren. De zeearmen liggen tussen de eilanden in de zuidwesthoek.",
     voorbeeld: "Tik de Westerschelde aan: dat is de zeearm het verst naar het zuiden, tussen Zeeuws-Vlaanderen en de rest van Zeeland.",
+  },
+  nb16: {
+    strategy: "Volg de rivier",
+    tip: "Volg de rivier op de kaart van oost naar west: door welke provincies komt hij?",
+    uitleg: "Een rivier stroomt door een provincie als een flink stuk ervan (minstens een tiende) in die provincie ligt. De Maas stroomt door Limburg, Noord-Brabant en Gelderland; de IJssel door Gelderland en Overijssel.",
+    voorbeeld: "Door welke provincie stroomt de Overijsselse Vecht? De naam zegt het al: Overijssel.",
   },
   nb17: {
     strategy: "Steden aan het water",
